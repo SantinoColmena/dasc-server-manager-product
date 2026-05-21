@@ -1,0 +1,41 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Variables de entorno
+.env
+config.env
+*.env
+
+# Datos locales
+app/data/*.db
+app/data/*.sqlite
+app/data/users.json
+
+# Logs
+*.log
+logs/
+alert_logs/
+auth_logs/
+
+# Backups
+*.sql
+*.sql.gz
+*.dump
+backups/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker local
+docker-compose.override.yml
