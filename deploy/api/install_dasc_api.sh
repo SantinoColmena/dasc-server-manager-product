@@ -260,7 +260,12 @@ for TARGET_HOST in "${TARGET_HOSTS[@]}"; do
     exit 1
   }
 
-  echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
+  APP_USER_HOME="$(getent passwd "$APP_USER" | cut -d: -f6)"
+mkdir -p "${APP_USER_HOME}/.ssh"
+chown "$APP_USER:$APP_GROUP" "${APP_USER_HOME}/.ssh"
+chmod 700 "${APP_USER_HOME}/.ssh"
+
+echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
   if [[ -z "${DASC_PASS:-}" ]]; then
     echo
     read -rsp "Introduce la contraseña actual del usuario dasc en ${TARGET_HOST}: " DASC_PASS
