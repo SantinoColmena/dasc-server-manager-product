@@ -16,6 +16,7 @@ DB_RESTORE_PASS="${DB_RESTORE_PASS:-dasc_restore_2026}"
 INSTALL_BACKUP_SCRIPT="/usr/local/bin/backups_api.sh"
 INSTALL_SERVICES_SCRIPT="/usr/local/bin/servicios_api.sh"
 INSTALL_RESTORE_SCRIPT="/usr/local/bin/restore_api.sh"
+INSTALL_RESTORE_DRILL_SCRIPT="/usr/local/bin/restore_drill_api.sh"
 SUDOERS_FILE="/etc/sudoers.d/dasc-servicios"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
@@ -45,6 +46,11 @@ fi
 
 if [[ ! -f "$PACKAGE_DIR/restore_api.sh" ]]; then
   echo "ERROR: falta restore_api.sh en package/"
+  exit 1
+fi
+
+if [[ ! -f "$PACKAGE_DIR/restore_drill_api.sh" ]]; then
+  echo "ERROR: falta restore_drill_api.sh en package/"
   exit 1
 fi
 
@@ -122,18 +128,21 @@ echo "==> Instalando scripts administrativos"
 sed -i 's/\r$//' "$PACKAGE_DIR/backups_api.sh"
 sed -i 's/\r$//' "$PACKAGE_DIR/servicios_api.sh"
 sed -i 's/\r$//' "$PACKAGE_DIR/restore_api.sh"
+sed -i 's/\r$//' "$PACKAGE_DIR/restore_drill_api.sh"
 
 cp "$PACKAGE_DIR/backups_api.sh" "$INSTALL_BACKUP_SCRIPT"
 cp "$PACKAGE_DIR/servicios_api.sh" "$INSTALL_SERVICES_SCRIPT"
 cp "$PACKAGE_DIR/restore_api.sh" "$INSTALL_RESTORE_SCRIPT"
+cp "$PACKAGE_DIR/restore_drill_api.sh" "$INSTALL_RESTORE_DRILL_SCRIPT"
 
-chown root:root "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT"
-chmod 755 "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT"
+chown root:root "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
+chmod 755 "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
 
 echo "==> Validando sintaxis de scripts"
 bash -n "$INSTALL_BACKUP_SCRIPT"
 bash -n "$INSTALL_SERVICES_SCRIPT"
 bash -n "$INSTALL_RESTORE_SCRIPT"
+bash -n "$INSTALL_RESTORE_DRILL_SCRIPT"
 
 echo "==> Creando ${APP_HOME}/.my.cnf"
 cat > "${APP_HOME}/.my.cnf" <<EOF2
@@ -186,6 +195,7 @@ systemctl --no-pager --full status cron || true
 ls -l "${INSTALL_BACKUP_SCRIPT}"
 ls -l "${INSTALL_SERVICES_SCRIPT}"
 ls -l "${INSTALL_RESTORE_SCRIPT}"
+ls -l "${INSTALL_RESTORE_DRILL_SCRIPT}"
 ls -ld "${BACKUP_DIR}"
 sudo -u "${APP_USER}" test -f "${APP_HOME}/.my.cnf" && echo ".my.cnf OK"
 sudo -u "${APP_USER}" test -f "${APP_HOME}/.my_restore.cnf" && echo ".my_restore.cnf OK"
@@ -230,6 +240,6 @@ echo "APP_USER=${APP_USER}"
 echo "DB_HOST=${DB_HOST}"
 echo "DB_NAME=${DB_NAME}"
 echo "Backups en: ${BACKUP_DIR}"
-echo "Scripts: ${INSTALL_BACKUP_SCRIPT}, ${INSTALL_RESTORE_SCRIPT} y ${INSTALL_SERVICES_SCRIPT}"
+echo "Scripts: ${INSTALL_BACKUP_SCRIPT}, ${INSTALL_RESTORE_SCRIPT}, ${INSTALL_RESTORE_DRILL_SCRIPT} y ${INSTALL_SERVICES_SCRIPT}"
 echo "SSH listo para autenticación por contraseña y clave pública"
 echo "============================================"
