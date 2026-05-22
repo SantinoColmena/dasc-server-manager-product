@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 NGINX_SITE_AVAILABLE="/etc/nginx/sites-available/dasc-api"
