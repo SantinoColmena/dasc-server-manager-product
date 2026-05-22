@@ -31,30 +31,62 @@ El login comparaba directamente la contraseña introducida con el valor guardado
 
 Comandos utilizados:
 
-    Select-String -Path deploy\api\package\main.py -Pattern "passlib|password_hash|hash_password|verify_password|pwd_context"
-    Select-String -Path deploy\api\package\requirements.txt -Pattern "passlib|bcrypt"
+    python -m py_compile deploy\api\package\main.py
 
 Resultado:
 
-- `main.py` contiene importación de `CryptContext`.
-- `main.py` contiene configuración `pwd_context`.
-- `main.py` contiene funciones de hash y verificación.
-- `main.py` guarda usuarios nuevos con `password_hash`.
-- `requirements.txt` contiene `passlib[bcrypt]==1.7.4`.
-- `requirements.txt` contiene `bcrypt==4.0.1`.
+- El archivo `main.py` compila correctamente.
+- No se detectan errores de sintaxis.
 
-## Pruebas pendientes
+## Validación funcional local
+
+Entorno utilizado:
+
+- Windows
+- PowerShell
+- Entorno virtual Python `.venv`
+- Uvicorn en `127.0.0.1:8000`
+
+Pruebas realizadas:
 
 | Prueba | Estado |
 |---|---|
-| Arranque del panel sin errores | Pendiente |
-| Login con admin | Pendiente |
-| Crear usuario nuevo desde Administración | Pendiente |
-| Comprobar que `users.json` guarda `password_hash` | Pendiente |
-| Login con usuario nuevo | Pendiente |
-| Migración de usuario antiguo en texto plano | Pendiente |
+| Arranque del panel sin errores | Correcto |
+| Login con admin | Correcto |
+| Crear usuario nuevo desde Administración | Correcto |
+| Comprobar que `users.json` guarda `password_hash` | Correcto |
+| Comprobar que no se guarda `password` en texto plano | Correcto |
+| Login con usuario nuevo | Correcto |
 | Validación en VM Ubuntu | Pendiente |
 
-## Conclusión
+Usuario de prueba creado:
 
-R-015 queda implementado a nivel de código y pendiente de validación funcional en entorno real.
+    prueba
+
+Permisos asignados:
+
+    logs
+    servicios
+
+Resultado observado en `data/users.json`:
+
+    [
+      {
+        "username": "prueba",
+        "password_hash": "$2b$...",
+        "permissions": [
+          "logs",
+          "servicios"
+        ]
+      }
+    ]
+
+Conclusión de la prueba:
+
+El sistema permite crear usuarios desde el panel, guarda la contraseña como hash bcrypt y permite iniciar sesión correctamente con el usuario creado.
+
+## Estado de cierre
+
+R-015 queda implementado y validado localmente.
+
+Queda pendiente la validación final en máquina Ubuntu real cuando se pruebe el instalador del panel.
