@@ -264,3 +264,24 @@ Resultados:
 | Checksum de base referenciada conservado | Correcto |
 
 Con esta prueba, la retención segura queda validada también en laboratorio real.
+
+## Validación visual del panel
+
+Se realizó una validación visual adicional del panel desde Windows mediante:
+
+    https://192.168.1.244
+
+Resultado:
+
+| Prueba | Estado |
+|---|---|
+| Acceso HTTPS desde Windows | Correcto |
+| Login de administrador | Correcto |
+| Dashboard / Inicio | Correcto |
+| Backups | Correcto |
+| Servicios | Correcto |
+| Logs | Correcto |
+| Registro de login en `dasc_logs.eventos` | Correcto |
+| Estado real de backups en `lab-backup` | Correcto |
+
+Con esta prueba se confirma que la Fase 2 queda validada también desde el uso visual del panel.
