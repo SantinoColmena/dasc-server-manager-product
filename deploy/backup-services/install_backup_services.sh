@@ -59,7 +59,7 @@ apt update
 
 # En Ubuntu 22.04/Isard, mysqlbinlog suele venir en mysql-server-core-8.0.
 # Usamos cliente MySQL para asegurar mysql, mysqldump y mysqlbinlog.
-DEBIAN_FRONTEND=noninteractive apt install -y \
+DEBIAN_FRONTEND=noninteractive apt install -y python3 \
   openssh-server \
   sudo \
   cron \
@@ -125,10 +125,29 @@ chmod 755 "${BACKUP_DIR}"
 chmod 755 "${APP_HOME}"
 
 echo "==> Instalando scripts administrativos"
-sed -i 's/\r$//' "$PACKAGE_DIR/backups_api.sh"
-sed -i 's/\r$//' "$PACKAGE_DIR/servicios_api.sh"
-sed -i 's/\r$//' "$PACKAGE_DIR/restore_api.sh"
-sed -i 's/\r$//' "$PACKAGE_DIR/restore_drill_api.sh"
+normalize_script_file() {
+  local file="$1"
+
+  python3 - "$file" <<'PY'
+from pathlib import Path
+import sys
+
+p = Path(sys.argv[1])
+data = p.read_bytes()
+
+if data.startswith(b"\xef\xbb\xbf"):
+    data = data[3:]
+
+data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+p.write_bytes(data)
+PY
+}
+
+normalize_script_file "$PACKAGE_DIR/backups_api.sh"
+normalize_script_file "$PACKAGE_DIR/servicios_api.sh"
+normalize_script_file "$PACKAGE_DIR/restore_api.sh"
+normalize_script_file "$PACKAGE_DIR/restore_drill_api.sh"
 
 cp "$PACKAGE_DIR/backups_api.sh" "$INSTALL_BACKUP_SCRIPT"
 cp "$PACKAGE_DIR/servicios_api.sh" "$INSTALL_SERVICES_SCRIPT"

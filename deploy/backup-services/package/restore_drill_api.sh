@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 shopt -s extglob
 
@@ -67,7 +67,14 @@ if [[ -z "$line" ]]; then
   fail "no existe backup con ese ID"
 fi
 
-IFS=$'\t' read -r id timestamp type db path base_id status notes <<< "$line"
+id="$(awk -F '\t' '{print $1}' <<< "$line")"
+timestamp="$(awk -F '\t' '{print $2}' <<< "$line")"
+type="$(awk -F '\t' '{print $3}' <<< "$line")"
+db="$(awk -F '\t' '{print $4}' <<< "$line")"
+path="$(awk -F '\t' '{print $5}' <<< "$line")"
+base_id="$(awk -F '\t' '{print $6}' <<< "$line")"
+status="$(awk -F '\t' '{print $7}' <<< "$line")"
+notes="$(awk -F '\t' '{print $8}' <<< "$line")"
 
 if [[ "$status" != "OK" ]]; then
   fail "el backup no está en estado OK"

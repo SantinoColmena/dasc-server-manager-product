@@ -71,7 +71,14 @@ if [[ -z "$line" ]]; then
   exit 1
 fi
 
-IFS=$'\t' read -r id timestamp type db path base_id status notes <<< "$line"
+id="$(awk -F '\t' '{print $1}' <<< "$line")"
+timestamp="$(awk -F '\t' '{print $2}' <<< "$line")"
+type="$(awk -F '\t' '{print $3}' <<< "$line")"
+db="$(awk -F '\t' '{print $4}' <<< "$line")"
+path="$(awk -F '\t' '{print $5}' <<< "$line")"
+base_id="$(awk -F '\t' '{print $6}' <<< "$line")"
+status="$(awk -F '\t' '{print $7}' <<< "$line")"
+notes="$(awk -F '\t' '{print $8}' <<< "$line")"
 
 if [[ "$status" != "OK" ]]; then
   echo "ERROR: el backup ID=${BACKUP_ID} no tiene estado OK"
@@ -144,13 +151,13 @@ echo "[$(date -Iseconds)] INICIO restore id=${BACKUP_ID} db=${db} file=${normali
 audit_log "backup.restore.start" "OK" "id=${BACKUP_ID}" "db=${db}" "file=${normalized}"
 
 if [[ "$normalized" == *.gz ]]; then
-  if ! gzip -dc "$normalized" | mysql --defaults-extra-file="$RESTORE_CNF" --protocol=tcp; then
+  if ! gzip -dc "$normalized" | mysql --defaults-file="$RESTORE_CNF" --protocol=tcp; then
     echo "[$(date -Iseconds)] ERROR restore id=${BACKUP_ID} db=${db} file=${normalized}" >> "$RESTORE_LOG"
     audit_log "backup.restore" "ERROR" "id=${BACKUP_ID}" "db=${db}" "file=${normalized}"
     exit 1
   fi
 else
-  if ! mysql --defaults-extra-file="$RESTORE_CNF" --protocol=tcp < "$normalized"; then
+  if ! mysql --defaults-file="$RESTORE_CNF" --protocol=tcp < "$normalized"; then
     echo "[$(date -Iseconds)] ERROR restore id=${BACKUP_ID} db=${db} file=${normalized}" >> "$RESTORE_LOG"
     audit_log "backup.restore" "ERROR" "id=${BACKUP_ID}" "db=${db}" "file=${normalized}"
     exit 1
