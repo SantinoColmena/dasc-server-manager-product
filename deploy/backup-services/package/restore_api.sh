@@ -7,6 +7,7 @@ BACKUP_ROOT="${2:-/home/dasc/backups}"
 CONFIRM="${3:-}"
 
 HISTORY_FILE="${BACKUP_ROOT}/.dasc/history.tsv"
+CHECKSUM_FILE="${BACKUP_ROOT}/.dasc/checksums.sha256"
 RESTORE_LOG="${BACKUP_ROOT}/.dasc/restore.log"
 RESTORE_CNF="/home/dasc/.my_restore.cnf"
 
@@ -76,6 +77,42 @@ if [[ ! -f "$normalized" ]]; then
 fi
 
 mkdir -p "$(dirname "$RESTORE_LOG")"
+
+if [[ ! -f "$CHECKSUM_FILE" ]]; then
+  echo "ERROR: no existe manifiesto de integridad: $CHECKSUM_FILE"
+  exit 1
+fi
+
+expected_sha=""
+while read -r hash file_path; do
+  if [[ "${file_path:-}" == "$normalized" ]]; then
+    expected_sha="$hash"
+  fi
+done < "$CHECKSUM_FILE"
+
+if [[ -z "$expected_sha" ]]; then
+  echo "ERROR: el backup no tiene checksum registrado"
+  exit 1
+fi
+
+actual_sha="$(sha256sum "$normalized" | awk '{print $1}')"
+
+if [[ "$actual_sha" != "$expected_sha" ]]; then
+  echo "ERROR: integridad fallida. SHA256 esperado=${expected_sha} actual=${actual_sha}"
+  echo "[$(date -Iseconds)] ERROR integridad id=${BACKUP_ID} file=${normalized}" >> "$RESTORE_LOG"
+  exit 1
+fi
+
+if [[ "$normalized" == *.gz ]]; then
+  gzip -t "$normalized" || {
+    echo "ERROR: el fichero comprimido no supera gzip -t"
+    echo "[$(date -Iseconds)] ERROR gzip id=${BACKUP_ID} file=${normalized}" >> "$RESTORE_LOG"
+    exit 1
+  }
+fi
+
+echo "[$(date -Iseconds)] INTEGRIDAD OK id=${BACKUP_ID} sha256=${actual_sha} file=${normalized}" >> "$RESTORE_LOG"
+
 
 echo "[$(date -Iseconds)] INICIO restore id=${BACKUP_ID} db=${db} file=${normalized}" >> "$RESTORE_LOG"
 
