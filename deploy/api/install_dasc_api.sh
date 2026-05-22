@@ -137,6 +137,43 @@ else
   echo "==> ADMIN_PASSWORD existente conservada"
 fi
 
+
+dedupe_config_csv_key() {
+  local config_file="${CONFIG_FILE:-${INSTALL_DIR}/config.env}"
+  local key="$1"
+
+  if [[ ! -f "$config_file" ]]; then
+    return 0
+  fi
+
+  python3 - "$config_file" "$key" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+key = sys.argv[2]
+
+lines = path.read_text(encoding="utf-8").splitlines()
+out = []
+
+for line in lines:
+    if line.startswith(key + "="):
+        raw = line.split("=", 1)[1]
+        seen = []
+        for item in raw.split(","):
+            item = item.strip()
+            if item and item not in seen:
+                seen.append(item)
+        out.append(f"{key}={','.join(seen)}")
+    else:
+        out.append(line)
+
+path.write_text("\n".join(out) + "\n", encoding="utf-8")
+PY
+}
+
+dedupe_config_csv_key "DASC_SSH_ALLOWED_HOSTS"
+
 echo "==> Ajustando permisos iniciales"
 chown -R "$APP_USER:$APP_GROUP" /opt/dasc
 chmod 750 "$PADRE_DIR"

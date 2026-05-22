@@ -247,3 +247,20 @@ La validación ha demostrado que el sistema puede:
 6. Auditar operaciones críticas.
 7. Registrar eventos remotos del panel.
 8. Exponer el panel mediante reverse proxy HTTPS.
+
+## Validación adicional de retención segura
+
+Después del cierre principal se ejecutó una validación específica de R-021.
+
+Resultados:
+
+| Prueba | Estado |
+|---|---|
+| Backup antiguo pasa a `PRUNED` | Correcto |
+| Fichero físico purgado | Correcto |
+| Checksum eliminado | Correcto |
+| Auditoría `backup.prune` registrada | Correcto |
+| Base referenciada por incremental conservada | Correcto |
+| Checksum de base referenciada conservado | Correcto |
+
+Con esta prueba, la retención segura queda validada también en laboratorio real.
