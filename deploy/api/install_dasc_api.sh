@@ -200,51 +200,103 @@ systemctl enable "$SERVICE_NAME"
 echo "==> Reiniciando servicio"
 systemctl restart "$SERVICE_NAME"
 
-echo "==> Preparando clave SSH para la API"
-APP_HOME="$(eval echo "~${APP_USER}")"
-sudo -u "$APP_USER" mkdir -p "${APP_HOME}/.ssh"
-sudo -u "$APP_USER" chmod 700 "${APP_HOME}/.ssh"
+echo "==> Preparando clave SSH dedicada para la API"
+SSH_DIR="${INSTALL_DIR}/.ssh"
+SSH_KEY_FILE="${SSH_DIR}/id_rsa_dasc"
+SSH_KNOWN_HOSTS_FILE="${SSH_DIR}/known_hosts_dasc"
 
-if [[ ! -f "${APP_HOME}/.ssh/id_rsa" ]]; then
-  sudo -u "$APP_USER" ssh-keygen -t rsa -b 4096 -N "" -f "${APP_HOME}/.ssh/id_rsa"
-  echo "==> Clave SSH generada"
+mkdir -p "$SSH_DIR"
+chown "$APP_USER:$APP_GROUP" "$SSH_DIR"
+chmod 700 "$SSH_DIR"
+
+if [[ ! -f "$SSH_KEY_FILE" ]]; then
+  sudo -u "$APP_USER" ssh-keygen -t ed25519 -N "" -f "$SSH_KEY_FILE"
+  echo "==> Clave SSH dedicada generada en ${SSH_KEY_FILE}"
 else
-  echo "==> La clave SSH ya existe, se reutiliza"
+  echo "==> Clave SSH dedicada existente detectada. Se reutiliza."
 fi
 
-cp "${APP_HOME}/.ssh/id_rsa.pub" "${INSTALL_DIR}/api_panel.pub"
+chown "$APP_USER:$APP_GROUP" "$SSH_KEY_FILE" "$SSH_KEY_FILE.pub"
+chmod 600 "$SSH_KEY_FILE"
+chmod 644 "$SSH_KEY_FILE.pub"
+
+cp "$SSH_KEY_FILE.pub" "${INSTALL_DIR}/api_panel.pub"
 chown "$APP_USER:$APP_GROUP" "${INSTALL_DIR}/api_panel.pub"
 chmod 644 "${INSTALL_DIR}/api_panel.pub"
 echo "==> Clave pública exportada a ${INSTALL_DIR}/api_panel.pub"
 
 BACKUP_HOST="$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
+SERVICES_HOST="$(read_env_value "SERVICIOS_HOST" "$CONFIG_FILE" || true)"
+
 if [[ -z "$BACKUP_HOST" || "$BACKUP_HOST" == CAMBIAR_* ]]; then
   echo "ERROR: BACKUPS_HOST no está configurado correctamente en config.env"
   exit 1
 fi
 
-echo "==> Configurando acceso SSH automático al servidor de backups (${BACKUP_HOST})"
-if [[ -z "${DASC_PASS:-}" ]]; then
-  echo
-  read -rsp "Introduce la contraseña actual del usuario dasc en ${BACKUP_HOST}: " DASC_PASS
-  echo
+if [[ -z "$SERVICES_HOST" || "$SERVICES_HOST" == CAMBIAR_* ]]; then
+  SERVICES_HOST="$BACKUP_HOST"
 fi
 
-if [[ -z "$DASC_PASS" ]]; then
-  echo "ERROR: la contraseña de dasc no puede estar vacía."
-  exit 1
+write_env_value "DASC_SSH_KEY" "$SSH_KEY_FILE"
+write_env_value "DASC_SSH_KNOWN_HOSTS" "$SSH_KNOWN_HOSTS_FILE"
+write_env_value "DASC_SSH_TIMEOUT" "30"
+write_env_value "DASC_SSH_CONNECT_TIMEOUT" "10"
+write_env_value "DASC_SSH_ALLOWED_HOSTS" "${BACKUP_HOST},${SERVICES_HOST}"
+
+touch "$SSH_KNOWN_HOSTS_FILE"
+chown "$APP_USER:$APP_GROUP" "$SSH_KNOWN_HOSTS_FILE"
+chmod 644 "$SSH_KNOWN_HOSTS_FILE"
+
+TARGET_HOSTS=("$BACKUP_HOST")
+if [[ "$SERVICES_HOST" != "$BACKUP_HOST" ]]; then
+  TARGET_HOSTS+=("$SERVICES_HOST")
 fi
 
-sudo -u "$APP_USER" sshpass -p "$DASC_PASS" ssh-copy-id -o StrictHostKeyChecking=no "dasc@${BACKUP_HOST}" || {
-  echo "ERROR: no se pudo copiar la clave automáticamente a dasc@${BACKUP_HOST}."
-  exit 1
-}
+for TARGET_HOST in "${TARGET_HOSTS[@]}"; do
+  echo "==> Registrando host SSH en known_hosts_dasc: ${TARGET_HOST}"
+  ssh-keygen -R "$TARGET_HOST" -f "$SSH_KNOWN_HOSTS_FILE" >/dev/null 2>&1 || true
+  ssh-keyscan -H "$TARGET_HOST" >> "$SSH_KNOWN_HOSTS_FILE" 2>/dev/null || {
+    echo "ERROR: no se pudo obtener la huella SSH de ${TARGET_HOST}"
+    exit 1
+  }
 
-echo "==> Verificando acceso SSH sin contraseña"
-sudo -u "$APP_USER" ssh -o BatchMode=yes -o StrictHostKeyChecking=no "dasc@${BACKUP_HOST}" "hostname >/dev/null" || {
-  echo "ERROR: la verificación SSH sin contraseña ha fallado."
-  exit 1
-}
+  echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
+  if [[ -z "${DASC_PASS:-}" ]]; then
+    echo
+    read -rsp "Introduce la contraseña actual del usuario dasc en ${TARGET_HOST}: " DASC_PASS
+    echo
+  fi
+
+  if [[ -z "$DASC_PASS" ]]; then
+    echo "ERROR: la contraseña de dasc no puede estar vacía."
+    exit 1
+  fi
+
+  sudo -u "$APP_USER" sshpass -p "$DASC_PASS" ssh-copy-id \
+    -i "$SSH_KEY_FILE.pub" \
+    -o StrictHostKeyChecking=yes \
+    -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
+    "dasc@${TARGET_HOST}" || {
+      echo "ERROR: no se pudo copiar la clave automáticamente a dasc@${TARGET_HOST}."
+      exit 1
+    }
+
+  echo "==> Verificando acceso SSH sin contraseña contra ${TARGET_HOST}"
+  sudo -u "$APP_USER" ssh \
+    -i "$SSH_KEY_FILE" \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=yes \
+    -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
+    "dasc@${TARGET_HOST}" "hostname >/dev/null" || {
+      echo "ERROR: la verificación SSH sin contraseña ha fallado contra ${TARGET_HOST}."
+      exit 1
+    }
+
+  unset DASC_PASS
+done
+
+chmod 640 "$CONFIG_FILE"
+chown "$APP_USER:$APP_GROUP" "$CONFIG_FILE"
 
 echo "==> Comprobando estado"
 systemctl --no-pager --full status "$SERVICE_NAME" || true

@@ -61,6 +61,69 @@ SCRIPT_RESTORE = os.getenv("SCRIPT_RESTORE", "/usr/local/bin/restore_api.sh")
 BACKUP_AUTOMATION_MARKER = "# DASC_BACKUP_AUTO"
 BACKUP_AUTOMATION_LOG = os.getenv("BACKUP_AUTOMATION_LOG", "/home/dasc/backups/.dasc/cron.log")
 
+
+# =====================
+# CONFIG SSH ENDURECIDO
+# =====================
+SSH_KEY_PATH = os.getenv("DASC_SSH_KEY", "/opt/dasc/api/.ssh/id_rsa_dasc")
+SSH_KNOWN_HOSTS_PATH = os.getenv("DASC_SSH_KNOWN_HOSTS", "/opt/dasc/api/.ssh/known_hosts_dasc")
+SSH_TIMEOUT = int(os.getenv("DASC_SSH_TIMEOUT", "30"))
+SSH_CONNECT_TIMEOUT = int(os.getenv("DASC_SSH_CONNECT_TIMEOUT", "10"))
+SSH_STDIN_MAX_LENGTH = int(os.getenv("DASC_SSH_STDIN_MAX_LENGTH", "20000"))
+
+_default_ssh_hosts = f"{SERVIDOR_BACKUPS},{SERVIDOR_SERVICIOS}"
+SSH_ALLOWED_HOSTS = {
+    item.strip()
+    for item in os.getenv("DASC_SSH_ALLOWED_HOSTS", _default_ssh_hosts).split(",")
+    if item.strip()
+}
+
+
+def is_allowed_ssh_host(host: str) -> bool:
+    return bool(host and host in SSH_ALLOWED_HOSTS)
+
+
+def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
+    if not is_allowed_ssh_host(host):
+        raise ValueError(f"Host SSH no permitido: {host}")
+
+    allowed_scripts = {
+        SCRIPT_SERVICIOS,
+        SCRIPT_BACKUPS,
+        SCRIPT_RESTORE,
+        "cat",
+        "crontab",
+        "/bin/bash",
+    }
+
+    if script not in allowed_scripts:
+        raise ValueError(f"Script SSH no permitido: {script}")
+
+    if any(len(str(arg)) > 1000 for arg in args):
+        raise ValueError("Argumento SSH demasiado largo")
+
+    if script == "cat" and args != ["/home/dasc/backups/.dasc/history.tsv"]:
+        raise ValueError("Uso de cat no permitido")
+
+    if script == "crontab" and args != ["-l"]:
+        raise ValueError("Uso de crontab no permitido")
+
+    if script == "/bin/bash" and args != ["-lc", "hostname && date"]:
+        raise ValueError("Uso de /bin/bash no permitido en ssh_run")
+
+
+def build_ssh_base_command(host: str) -> list[str]:
+    return [
+        "ssh",
+        "-i", SSH_KEY_PATH,
+        "-o", "BatchMode=yes",
+        "-o", "StrictHostKeyChecking=yes",
+        "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
+        "-o", f"ConnectTimeout={SSH_CONNECT_TIMEOUT}",
+        f"{USUARIO}@{host}",
+    ]
+
+
 # =====================
 # ALERTAS TELEGRAM
 # =====================
@@ -780,59 +843,106 @@ def get_alert_stats() -> dict[str, Any]:
 # SSH + LOGS
 # =====================
 def ssh_run(host: str, script: str, args: list[str]) -> dict[str, Any]:
-    cmd = [
-    "ssh",
-    "-i", "/opt/dasc/api/.ssh/id_rsa_dasc",
-    "-o", "BatchMode=yes",
-    "-o", "StrictHostKeyChecking=yes",
-    "-o", "UserKnownHostsFile=/opt/dasc/api/.ssh/known_hosts_dasc",
-    f"{USUARIO}@{host}",
-    script,
-    ] + args
-    res = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        validate_ssh_run(host, script, args)
+        cmd = build_ssh_base_command(host) + [script] + args
 
-    out = (res.stdout or "").strip()
-    err = (res.stderr or "").strip()
+        res = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=SSH_TIMEOUT,
+        )
 
-    return {
-        "ok": res.returncode == 0,
-        "code": res.returncode,
-        "host": host,
-        "stdout": out,
-        "stderr": err,
-        "text": out if res.returncode == 0 else f"ERROR ({res.returncode}): {err or out}",
-    }
+        out = (res.stdout or "").strip()
+        err = (res.stderr or "").strip()
+
+        return {
+            "ok": res.returncode == 0,
+            "code": res.returncode,
+            "host": host,
+            "script": script,
+            "stdout": out,
+            "stderr": err,
+            "text": out if res.returncode == 0 else f"ERROR ({res.returncode}): {err or out}",
+        }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "ok": False,
+            "code": 124,
+            "host": host,
+            "script": script,
+            "stdout": "",
+            "stderr": "Timeout SSH",
+            "text": f"ERROR (124): Timeout SSH tras {SSH_TIMEOUT} segundos",
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "code": 1,
+            "host": host,
+            "script": script,
+            "stdout": "",
+            "stderr": str(e),
+            "text": f"ERROR: {e}",
+        }
+
 
 def ssh_run_stdin(host: str, script_text: str) -> dict[str, Any]:
-    cmd = [
-        "ssh",
-        "-i", "/opt/dasc/api/.ssh/id_rsa_dasc",
-        "-o", "BatchMode=yes",
-        "-o", "StrictHostKeyChecking=yes",
-        "-o", "UserKnownHostsFile=/opt/dasc/api/.ssh/known_hosts_dasc",
-        f"{USUARIO}@{host}",
-        "bash",
-        "-s",
-    ]
+    try:
+        if not is_allowed_ssh_host(host):
+            raise ValueError(f"Host SSH no permitido: {host}")
 
-    res = subprocess.run(
-        cmd,
-        input=script_text,
-        capture_output=True,
-        text=True,
-    )
+        if len(script_text or "") > SSH_STDIN_MAX_LENGTH:
+            raise ValueError("Script remoto demasiado largo")
 
-    out = (res.stdout or "").strip()
-    err = (res.stderr or "").strip()
+        cmd = build_ssh_base_command(host) + ["bash", "-s"]
 
-    return {
-        "ok": res.returncode == 0,
-        "code": res.returncode,
-        "host": host,
-        "stdout": out,
-        "stderr": err,
-        "text": out if res.returncode == 0 else f"ERROR ({res.returncode}): {err or out}",
-    }
+        res = subprocess.run(
+            cmd,
+            input=script_text,
+            capture_output=True,
+            text=True,
+            timeout=SSH_TIMEOUT,
+        )
+
+        out = (res.stdout or "").strip()
+        err = (res.stderr or "").strip()
+
+        return {
+            "ok": res.returncode == 0,
+            "code": res.returncode,
+            "host": host,
+            "script": "bash -s",
+            "stdout": out,
+            "stderr": err,
+            "text": out if res.returncode == 0 else f"ERROR ({res.returncode}): {err or out}",
+        }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "ok": False,
+            "code": 124,
+            "host": host,
+            "script": "bash -s",
+            "stdout": "",
+            "stderr": "Timeout SSH",
+            "text": f"ERROR (124): Timeout SSH tras {SSH_TIMEOUT} segundos",
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "code": 1,
+            "host": host,
+            "script": "bash -s",
+            "stdout": "",
+            "stderr": str(e),
+            "text": f"ERROR: {e}",
+        }
+
 
 def cargar_historial_backups(limit: int = 50) -> list[dict[str, str]]:
     """Carga el historial generado por backups_api.sh desde el servidor de backups."""
@@ -1254,15 +1364,15 @@ def leer_backup_remoto(remote_path: str) -> dict[str, Any]:
 
     cmd = [
         "ssh",
-        "-i", "/opt/dasc/api/.ssh/id_rsa_dasc",
+        "-i", SSH_KEY_PATH,
         "-o", "BatchMode=yes",
         "-o", "StrictHostKeyChecking=yes",
-        "-o", "UserKnownHostsFile=/opt/dasc/api/.ssh/known_hosts_dasc",
+        "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
         f"{USUARIO}@{SERVIDOR_BACKUPS}",
         remote_cmd,
     ]
 
-    res = subprocess.run(cmd, capture_output=True)
+    res = subprocess.run(cmd, capture_output=True, timeout=SSH_TIMEOUT)
     err = (res.stderr or b"").decode("utf-8", errors="replace").strip()
 
     if res.returncode == 0:
@@ -1843,10 +1953,10 @@ def run_ssh_terminal_command(host: str, command: str) -> dict[str, Any]:
     started = datetime.now()
     cmd = [
         "ssh",
-        "-i", "/opt/dasc/api/.ssh/id_rsa_dasc",
+        "-i", SSH_KEY_PATH,
         "-o", "BatchMode=yes",
         "-o", "StrictHostKeyChecking=yes",
-        "-o", "UserKnownHostsFile=/opt/dasc/api/.ssh/known_hosts_dasc",
+        "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
         f"{USUARIO}@{host}",
         "bash",
         "-s",
