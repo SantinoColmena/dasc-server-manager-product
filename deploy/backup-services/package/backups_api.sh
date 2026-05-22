@@ -15,6 +15,132 @@ HISTORY_FILE="${HISTORY_DIR}/history.tsv"
 CHECKSUM_FILE="${HISTORY_DIR}/checksums.sha256"
 COUNTER_FILE="${HISTORY_DIR}/next_id"
 
+
+safe_retention_cleanup() {
+  local dest="$1"
+  local retention_days="$2"
+  local history_file="$3"
+  local checksum_file="$4"
+
+  if [[ "$retention_days" == "0" ]]; then
+    echo "INFO: Retención desactivada"
+    return 0
+  fi
+
+  if [[ "$dest" != /home/dasc/backups* ]]; then
+    echo "ERROR: retención cancelada, destino no permitido: $dest"
+    return 1
+  fi
+
+  if [[ ! "$retention_days" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: retención no válida: $retention_days"
+    return 1
+  fi
+
+  if [[ ! -f "$history_file" ]]; then
+    echo "INFO: no existe historial, no se aplica retención"
+    return 0
+  fi
+
+  local now_epoch
+  now_epoch="$(date +%s)"
+  local cutoff_epoch
+  cutoff_epoch="$((now_epoch - retention_days * 86400))"
+
+  local tmp_history
+  tmp_history="${history_file}.tmp"
+  local pruned_ids
+  pruned_ids="$(mktemp)"
+
+  awk -F '\t' -v cutoff="$cutoff_epoch" -v pruned_ids="$pruned_ids" '
+    BEGIN { OFS = FS }
+
+    NR == 1 {
+      print $0
+      next
+    }
+
+    {
+      id=$1
+      timestamp=$2
+      type=$3
+      db=$4
+      path=$5
+      base_id=$6
+      status=$7
+      notes=$8
+
+      cmd = "date -d \"" timestamp "\" +%s 2>/dev/null"
+      cmd | getline ts_epoch
+      close(cmd)
+
+      old = 0
+      if (ts_epoch != "" && ts_epoch < cutoff) {
+        old = 1
+      }
+
+      if (status == "OK" && old == 1) {
+        candidate[id] = 1
+        rows[id] = $0
+        paths[id] = path
+        next
+      }
+
+      if (status == "OK" && base_id != "") {
+        referenced[base_id] = 1
+      }
+
+      print $0
+    }
+
+    END {
+      for (id in candidate) {
+        if (referenced[id]) {
+          print rows[id]
+        } else {
+          split(rows[id], cols, FS)
+          cols[7] = "PRUNED"
+          cols[8] = cols[8] ";pruned_at=" strftime("%Y-%m-%dT%H:%M:%S%z")
+          print cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8]
+          print id "\t" paths[id] >> pruned_ids
+        }
+      }
+    }
+  ' "$history_file" > "$tmp_history"
+
+  mv "$tmp_history" "$history_file"
+
+  while IFS=$'\t' read -r id file_path; do
+    [[ -z "${file_path:-}" ]] && continue
+
+    local normalized
+    normalized="$(readlink -m "$file_path")"
+    local allowed_root
+    allowed_root="$(readlink -m "$dest")"
+
+    case "$normalized" in
+      "$allowed_root"/*)
+        if [[ -f "$normalized" ]]; then
+          rm -f "$normalized"
+          echo "INFO: backup purgado por retención segura: ID=${id} PATH=${normalized}"
+        fi
+
+        if [[ -f "$checksum_file" ]]; then
+          local tmp_checksum
+          tmp_checksum="${checksum_file}.tmp"
+          grep -vF "  ${normalized}" "$checksum_file" > "$tmp_checksum" || true
+          mv "$tmp_checksum" "$checksum_file"
+        fi
+        ;;
+      *)
+        echo "AVISO: no se elimina ruta fuera del directorio permitido: $normalized"
+        ;;
+    esac
+  done < "$pruned_ids"
+
+  rm -f "$pruned_ids"
+}
+
 if [[ -z "$TYPE" ]]; then
   echo "ERROR: tipo de backup obligatorio"
   exit 1
@@ -118,9 +244,7 @@ fi
 TIMESTAMP="$(date -Iseconds)"
 echo -e "${ID}\t${TIMESTAMP}\t${TYPE}\t${DB}\t${FINAL_FILE}\t${BASE_ID}\tOK\t${NOTES};sha256=${SHA256};size=${SIZE_BYTES}" >> "$HISTORY_FILE"
 
-if [[ "$RETENTION" != "0" ]]; then
-  find "$DEST" -maxdepth 1 -type f -name "*.sql*" -mtime +"$RETENTION" -delete || true
-fi
+safe_retention_cleanup "$DEST" "$RETENTION" "$HISTORY_FILE" "$CHECKSUM_FILE"
 
 echo "OK: Backup ${TYPE} creado en ${FINAL_FILE}"
 echo "ID: ${ID}"
