@@ -13,8 +13,31 @@ NOTES="${8:-manual}"
 HISTORY_DIR="${DEST}/.dasc"
 HISTORY_FILE="${HISTORY_DIR}/history.tsv"
 CHECKSUM_FILE="${HISTORY_DIR}/checksums.sha256"
+AUDIT_LOG="${HISTORY_DIR}/audit.log"
 COUNTER_FILE="${HISTORY_DIR}/next_id"
 
+
+
+audit_log() {
+  local action="$1"
+  local result="$2"
+  shift 2 || true
+
+  mkdir -p "$(dirname "$AUDIT_LOG")"
+
+  {
+    printf 'timestamp=%s action=%s result=%s' "$(date -Iseconds)" "$action" "$result"
+
+    local item
+    for item in "$@"; do
+      item="${item//$'\n'/ }"
+      item="${item//$'\r'/ }"
+      printf ' %s' "$item"
+    done
+
+    printf '\n'
+  } >> "$AUDIT_LOG"
+}
 
 safe_retention_cleanup() {
   local dest="$1"
@@ -123,6 +146,7 @@ safe_retention_cleanup() {
         if [[ -f "$normalized" ]]; then
           rm -f "$normalized"
           echo "INFO: backup purgado por retención segura: ID=${id} PATH=${normalized}"
+          audit_log "backup.prune" "OK" "id=${id}" "file=${normalized}" "retention_days=${retention_days}"
         fi
 
         if [[ -f "$checksum_file" ]]; then
@@ -134,6 +158,7 @@ safe_retention_cleanup() {
         ;;
       *)
         echo "AVISO: no se elimina ruta fuera del directorio permitido: $normalized"
+        audit_log "backup.prune" "WARNING" "file=${normalized}" "reason=outside_allowed_root"
         ;;
     esac
   done < "$pruned_ids"
@@ -235,6 +260,7 @@ TMP_MANIFEST="${CHECKSUM_FILE}.tmp"
 grep -vF "  ${FINAL_FILE}" "$CHECKSUM_FILE" > "$TMP_MANIFEST" || true
 mv "$TMP_MANIFEST" "$CHECKSUM_FILE"
 echo "${SHA256}  ${FINAL_FILE}" >> "$CHECKSUM_FILE"
+audit_log "backup.integrity" "OK" "id=${ID}" "sha256=${SHA256}" "size=${SIZE_BYTES}" "file=${FINAL_FILE}"
 
 BASE_ID=""
 if [[ "$TYPE" != "full" ]]; then
@@ -243,6 +269,7 @@ fi
 
 TIMESTAMP="$(date -Iseconds)"
 echo -e "${ID}\t${TIMESTAMP}\t${TYPE}\t${DB}\t${FINAL_FILE}\t${BASE_ID}\tOK\t${NOTES};sha256=${SHA256};size=${SIZE_BYTES}" >> "$HISTORY_FILE"
+audit_log "backup.create" "OK" "id=${ID}" "type=${TYPE}" "db=${DB}" "file=${FINAL_FILE}" "sha256=${SHA256}" "size=${SIZE_BYTES}"
 
 safe_retention_cleanup "$DEST" "$RETENTION" "$HISTORY_FILE" "$CHECKSUM_FILE"
 
