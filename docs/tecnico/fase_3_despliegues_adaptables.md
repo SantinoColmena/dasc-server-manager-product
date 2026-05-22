@@ -136,5 +136,5 @@ La Fase 3 se podrá cerrar cuando:
 - R-027: iniciada.
 - R-028: preparada a nivel de variables.
 - R-029: preparada a nivel de variables.
-- R-030: pendiente de implementar en instalador.
+- R-030: implementada primera versión del asistente scripts/generar_config_perfil.sh. Pendiente integración final en instaladores.
 - R-031: iniciada con este documento.
