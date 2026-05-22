@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASC · Logs</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header class="header">
+    <a href="/" class="brand">
+        <img src="{{ url_for('static', path='img/logo-dasc.png') }}" class="logo" alt="DASC">
+        <div class="brand-text">
+            <span class="brand-title">DASC Service</span>
+            <span class="brand-subtitle">Server Manager</span>
+        </div>
+    </a>
+    <h1>Logs y monitorización</h1>
+    <a href="https://agora.xtec.cat/iesmvm/" class="brand-right">
+        <img src="{{ url_for('static', path='img/logo-instituto.png') }}" class="logo" alt="MVM">
+    </a>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <h2>Menú</h2>
+        <nav class="menu">
+            <a href="/"><i class="fa-solid fa-house"></i> Panel</a>
+            {% if can_backups %}<a href="/backups"><i class="fa-solid fa-database"></i> Copias</a>{% endif %}
+            {% if can_logs %}<a href="/logs" class="active"><i class="fa-solid fa-file-lines"></i> Logs</a>{% endif %}
+            {% if can_servicios %}<a href="/servicios"><i class="fa-solid fa-server"></i> Servicios</a>{% endif %}
+            {% if can_terminal %}<a href="/terminal"><i class="fa-solid fa-terminal"></i> Terminal</a>{% endif %}
+            {% if can_alertas %}<a href="/alertas"><i class="fa-solid fa-bell"></i> Alertas</a>{% endif %}
+            {% if is_admin %}<a href="/admin/usuarios"><i class="fa-solid fa-user-shield"></i> Administración</a>{% endif %}
+            {% if is_admin %}<a href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> Logs de inicio de sesión</a>{% endif %}
+        </nav>
+
+        <div class="history">
+            <h3>Resumen rápido</h3>
+            <p><span class="dot ok"></span> Eventos OK: {{ logs_ok }}</p>
+            <p><span class="dot warn"></span> Eventos con error: {{ logs_error }}</p>
+            {% if logs_last %}<p><span class="dot ok"></span> Último registro: {{ logs_last }}</p>{% endif %}
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h2 class="page-title">Auditoría del sistema</h2>
+            </div>
+            <div class="topbar-actions">
+                <div class="status-pill"><i class="fa-solid fa-user"></i> {{ user }}</div>
+                <form method="post" action="/logout" class="logout-form">
+                    <button type="submit" class="btn"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div><div class="kpi-label">Eventos cargados</div><div class="kpi-value">{{ logs_total }}</div></div>
+                <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div class="kpi-card">
+                <div><div class="kpi-label">Resultado OK</div><div class="kpi-value ok">{{ logs_ok }}</div></div>
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="kpi-card">
+                <div><div class="kpi-label">Resultado ERROR</div><div class="kpi-value error">{{ logs_error }}</div></div>
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+
+        <section class="card card-mini">
+            <div class="card-head">
+                <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="card-title">
+                    <h3>Monitorización externa</h3>
+                    <p>Acceso directo a Cacti desde el panel.</p>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="btn primary" href="{{ cacti_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Cacti</a>
+            </div>
+        </section>
+
+        <section class="card card-mini" style="margin-top: 18px;">
+            <div class="card-head">
+                <div class="card-icon"><i class="fa-solid fa-file-lines"></i></div>
+                <div class="card-title">
+                    <h3>Eventos de DASC Web</h3>
+                    <p>Últimos 100 registros de auditoría almacenados en base de datos.</p>
+                </div>
+            </div>
+
+            {% if eventos %}
+            <div class="svc-table-wrap">
+                <table class="svc-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Origen</th>
+                            <th>Tipo</th>
+                            <th>Usuario</th>
+                            <th>IP</th>
+                            <th>Recurso</th>
+                            <th>Resultado</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in eventos %}
+                        <tr>
+                            <td>{{ e.id }}</td>
+                            <td>{{ e.fecha }}</td>
+                            <td>{{ e.origen }}</td>
+                            <td>{{ e.tipo }}</td>
+                            <td>{{ e.usuario or '-' }}</td>
+                            <td>{{ e.ip_origen or '-' }}</td>
+                            <td>{{ e.recurso or '-' }}</td>
+                            <td>
+                                {% if e.resultado == 'OK' %}
+                                <span class="svc-badge active"><i class="fa-solid fa-circle-check"></i> OK</span>
+                                {% else %}
+                                <span class="svc-badge failed"><i class="fa-solid fa-triangle-exclamation"></i> ERROR</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ e.detalle or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay eventos para mostrar. Si la vista se abre vacía, revisa la conectividad con la base de logs.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASC · Administración</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .field input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    .perm-list {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .perm-item {
+      background: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+<header class="header">
+  <a href="/" class="brand">
+    <img src="{{ url_for('static', path='img/logo-dasc.png') }}" class="logo" alt="DASC">
+    <div class="brand-text">
+      <span class="brand-title">DASC Service</span>
+      <span class="brand-subtitle">Server Manager</span>
+    </div>
+  </a>
+
+  <h1>Administración de usuarios</h1>
+
+  <a href="https://agora.xtec.cat/iesmvm/" class="brand-right">
+    <img src="{{ url_for('static', path='img/logo-instituto.png') }}" class="logo" alt="MVM">
+  </a>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h2>Menú</h2>
+    <nav class="menu">
+            <a href="/"><i class="fa-solid fa-house"></i> Panel</a>
+            {% if can_backups %}<a href="/backups"><i class="fa-solid fa-database"></i> Copias</a>{% endif %}
+            {% if can_logs %}<a href="/logs"><i class="fa-solid fa-file-lines"></i> Logs</a>{% endif %}
+            {% if can_servicios %}<a href="/servicios"><i class="fa-solid fa-server"></i> Servicios</a>{% endif %}
+            {% if can_terminal %}<a href="/terminal"><i class="fa-solid fa-terminal"></i> Terminal</a>{% endif %}
+            {% if can_alertas %}<a href="/alertas"><i class="fa-solid fa-bell"></i> Alertas</a>{% endif %}
+            {% if is_admin %}<a href="/admin/usuarios" class="active"><i class="fa-solid fa-user-shield"></i> Administración</a>{% endif %}
+            {% if is_admin %}<a href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> Logs de inicio de sesión</a>{% endif %}
+        </nav>
+
+    <div class="history">
+      <h3>Control</h3>
+      <p><span class="dot ok"></span> Total de usuarios: {{ users_count }}</p>
+      <p><span class="dot ok"></span> Admin protegido</p>
+      <p><span class="dot ok"></span> Permisos delegables: {{ available_permissions|length }}</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% if msg %}
+    <div class="alert {% if ok == '1' %}success{% else %}error{% endif %}">
+      <i class="fa-solid {% if ok == '1' %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+      <span>{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    <div class="topbar">
+      <div>
+        <h2 class="page-title">Usuarios y permisos</h2>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn primary" href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> Logs de inicio de sesión</a>
+        <div class="status-pill"><i class="fa-solid fa-crown"></i> Administrador</div>
+        <form method="post" action="/logout" class="logout-form">
+          <button type="submit" class="btn"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><div><div class="kpi-label">Usuarios totales</div><div class="kpi-value">{{ users_count }}</div></div><i class="fa-solid fa-users"></i></div>
+      <div class="kpi-card"><div><div class="kpi-label">Permisos disponibles</div><div class="kpi-value ok">{{ available_permissions|length }}</div></div><i class="fa-solid fa-key"></i></div>
+      <div class="kpi-card"><div><div class="kpi-label">Cuenta protegida</div><div class="kpi-value">admin</div></div><i class="fa-solid fa-lock"></i></div>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="card-icon"><i class="fa-solid fa-user-plus"></i></div>
+        <div class="card-title">
+          <h3>Crear nuevo usuario</h3>
+        </div>
+      </div>
+
+      <form method="POST" action="/admin/usuarios">
+        <div class="form-grid">
+          <div class="field">
+            <label>Usuario</label>
+            <input type="text" name="username" placeholder="Ej: tecnico1" required>
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="Contraseña del usuario" required>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <strong>Permisos del panel</strong>
+          <div class="perm-list">
+            {% for key, label in available_permissions.items() %}
+            <label class="perm-item"><input type="checkbox" name="permissions" value="{{ key }}"> {{ label }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="margin-top: 18px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Crear usuario</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card card-mini" style="margin-top: 18px;">
+      <div class="card-head">
+        <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="card-title">
+          <h3>Usuarios creados</h3>
+          <p>Listado actual del sistema.</p>
+        </div>
+      </div>
+
+      <div class="svc-table-wrap">
+        <table class="svc-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Permisos</th>
+              <th class="right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>admin</strong></td>
+              <td>Todos</td>
+              <td class="right">No eliminable</td>
+            </tr>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{% if u.permissions %}{{ ', '.join(u.permissions) }}{% else %}Sin permisos{% endif %}</td>
+              <td class="right">
+                <form method="POST" action="/admin/usuarios/delete" class="inline-delete">
+                  <input type="hidden" name="username" value="{{ u.username }}">
+                  <button class="btn small" type="submit"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not users %}
+            <tr>
+              <td colspan="3" style="text-align:center;">Todavía no hay usuarios creados.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
