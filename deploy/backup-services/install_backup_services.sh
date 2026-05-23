@@ -15,6 +15,7 @@ DB_RESTORE_PASS="${DB_RESTORE_PASS:-dasc_restore_2026}"
 
 INSTALL_BACKUP_SCRIPT="/usr/local/bin/backups_api.sh"
 INSTALL_SERVICES_SCRIPT="/usr/local/bin/servicios_api.sh"
+INSTALL_EXTERNAL_SYNC_SCRIPT="/usr/local/bin/sync_external_backup.sh"
 INSTALL_RESTORE_SCRIPT="/usr/local/bin/restore_api.sh"
 INSTALL_RESTORE_DRILL_SCRIPT="/usr/local/bin/restore_drill_api.sh"
 SUDOERS_FILE="/etc/sudoers.d/dasc-servicios"
@@ -41,6 +42,11 @@ fi
 
 if [[ ! -f "$PACKAGE_DIR/servicios_api.sh" ]]; then
   echo "ERROR: falta servicios_api.sh en package/"
+  exit 1
+fi
+
+if [[ ! -f "$PACKAGE_DIR/sync_external_backup.sh" ]]; then
+  echo "ERROR: falta sync_external_backup.sh en package/"
   exit 1
 fi
 
@@ -75,7 +81,7 @@ echo "==> Habilitando CRON"
 systemctl enable --now cron
 
 if [[ -f "$SSHD_CONFIG" ]]; then
-  echo "==> Asegurando autenticación por contraseña y clave pública en SSH"
+  echo "==> Asegurando autenticaciÃ³n por contraseÃ±a y clave pÃºblica en SSH"
   if grep -qE '^[#[:space:]]*PasswordAuthentication' "$SSHD_CONFIG"; then
     sed -i -E 's|^[#[:space:]]*PasswordAuthentication[[:space:]]+.*|PasswordAuthentication yes|g' "$SSHD_CONFIG"
   else
@@ -98,24 +104,24 @@ fi
 
 if [[ -z "${APP_PASSWORD:-}" ]]; then
   echo
-  read -rsp "Introduce la contraseña para ${APP_USER}: " APP_PASSWORD
+  read -rsp "Introduce la contraseÃ±a para ${APP_USER}: " APP_PASSWORD
   echo
-  read -rsp "Repite la contraseña para ${APP_USER}: " APP_PASSWORD_CONFIRM
+  read -rsp "Repite la contraseÃ±a para ${APP_USER}: " APP_PASSWORD_CONFIRM
   echo
 
   if [[ "$APP_PASSWORD" != "$APP_PASSWORD_CONFIRM" ]]; then
-    echo "ERROR: las contraseñas no coinciden."
+    echo "ERROR: las contraseÃ±as no coinciden."
     exit 1
   fi
 fi
 
 if [[ -z "$APP_PASSWORD" ]]; then
-  echo "ERROR: la contraseña de ${APP_USER} no puede estar vacía."
+  echo "ERROR: la contraseÃ±a de ${APP_USER} no puede estar vacÃ­a."
   exit 1
 fi
 
 echo "${APP_USER}:${APP_PASSWORD}" | chpasswd
-echo "==> Contraseña de ${APP_USER} configurada"
+echo "==> ContraseÃ±a de ${APP_USER} configurada"
 
 mkdir -p "${APP_HOME}/.ssh"
 mkdir -p "${BACKUP_DIR}"
@@ -151,11 +157,12 @@ normalize_script_file "$PACKAGE_DIR/restore_drill_api.sh"
 
 cp "$PACKAGE_DIR/backups_api.sh" "$INSTALL_BACKUP_SCRIPT"
 cp "$PACKAGE_DIR/servicios_api.sh" "$INSTALL_SERVICES_SCRIPT"
+cp "$PACKAGE_DIR/sync_external_backup.sh" "$INSTALL_EXTERNAL_SYNC_SCRIPT"
 cp "$PACKAGE_DIR/restore_api.sh" "$INSTALL_RESTORE_SCRIPT"
 cp "$PACKAGE_DIR/restore_drill_api.sh" "$INSTALL_RESTORE_DRILL_SCRIPT"
 
-chown root:root "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
-chmod 755 "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
+chown root:root "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_EXTERNAL_SYNC_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
+chmod 755 "$INSTALL_BACKUP_SCRIPT" "$INSTALL_SERVICES_SCRIPT" "$INSTALL_EXTERNAL_SYNC_SCRIPT" "$INSTALL_RESTORE_SCRIPT" "$INSTALL_RESTORE_DRILL_SCRIPT"
 
 echo "==> Validando sintaxis de scripts"
 bash -n "$INSTALL_BACKUP_SCRIPT"
@@ -184,7 +191,7 @@ EOF2
 chown "${APP_USER}:${APP_GROUP}" "${APP_HOME}/.my_restore.cnf"
 chmod 600 "${APP_HOME}/.my_restore.cnf"
 
-echo "==> Configurando sudoers para controlar servicios sin contraseña"
+echo "==> Configurando sudoers para controlar servicios sin contraseÃ±a"
 cat > "${SUDOERS_FILE}" <<EOF2
 ${APP_USER} ALL=(ALL) NOPASSWD: /usr/bin/systemctl start *, /usr/bin/systemctl stop *, /usr/bin/systemctl restart *, /usr/bin/systemctl status *, /usr/bin/systemctl is-active *
 EOF2
@@ -192,14 +199,14 @@ chmod 440 "${SUDOERS_FILE}"
 visudo -cf "${SUDOERS_FILE}"
 
 if [[ -f "${OPTIONAL_API_PUBKEY}" ]]; then
-  echo "==> Instalando clave pública opcional desde api_panel.pub"
+  echo "==> Instalando clave pÃºblica opcional desde api_panel.pub"
   touch "${APP_HOME}/.ssh/authorized_keys"
   chown "${APP_USER}:${APP_GROUP}" "${APP_HOME}/.ssh/authorized_keys"
   chmod 600 "${APP_HOME}/.ssh/authorized_keys"
   grep -qxF "$(cat "${OPTIONAL_API_PUBKEY}")" "${APP_HOME}/.ssh/authorized_keys" || \
     cat "${OPTIONAL_API_PUBKEY}" >> "${APP_HOME}/.ssh/authorized_keys"
 else
-  echo "==> No se encontró api_panel.pub. La API podrá copiar su clave automáticamente con sshpass."
+  echo "==> No se encontrÃ³ api_panel.pub. La API podrÃ¡ copiar su clave automÃ¡ticamente con sshpass."
 fi
 
 echo "==> Validando herramientas de base de datos"
@@ -213,6 +220,7 @@ systemctl --no-pager --full status ssh || true
 systemctl --no-pager --full status cron || true
 ls -l "${INSTALL_BACKUP_SCRIPT}"
 ls -l "${INSTALL_SERVICES_SCRIPT}"
+ls -l "${INSTALL_EXTERNAL_SYNC_SCRIPT}"
 ls -l "${INSTALL_RESTORE_SCRIPT}"
 ls -l "${INSTALL_RESTORE_DRILL_SCRIPT}"
 ls -ld "${BACKUP_DIR}"
@@ -226,7 +234,7 @@ else
   echo "AVISO: la prueba mysql ha fallado. Revisa DB_HOST, usuario o permisos."
 fi
 
-echo "==> Comprobando usuario de restauración"
+echo "==> Comprobando usuario de restauraciÃ³n"
 if sudo -u "${APP_USER}" mysql --defaults-extra-file="${APP_HOME}/.my_restore.cnf" --protocol=tcp -h "${DB_HOST}" -e "SHOW DATABASES;" >/dev/null; then
   echo "Prueba usuario restore OK"
 else
@@ -246,10 +254,10 @@ if [[ -n "$FIRST_BINLOG" ]]; then
   if sudo -u "${APP_USER}" mysqlbinlog --defaults-extra-file="${APP_HOME}/.my.cnf" --read-from-remote-server --host="${DB_HOST}" --port=3306 "$FIRST_BINLOG" >/dev/null 2>&1; then
     echo "Prueba mysqlbinlog OK"
   else
-    echo "AVISO: mysqlbinlog devolvió avisos/error de versión, pero puede funcionar igualmente con MariaDB."
+    echo "AVISO: mysqlbinlog devolviÃ³ avisos/error de versiÃ³n, pero puede funcionar igualmente con MariaDB."
   fi
 else
-  echo "AVISO: no se han detectado binlogs. Revisa log_bin en la máquina DB."
+  echo "AVISO: no se han detectado binlogs. Revisa log_bin en la mÃ¡quina DB."
 fi
 
 echo
@@ -260,5 +268,5 @@ echo "DB_HOST=${DB_HOST}"
 echo "DB_NAME=${DB_NAME}"
 echo "Backups en: ${BACKUP_DIR}"
 echo "Scripts: ${INSTALL_BACKUP_SCRIPT}, ${INSTALL_RESTORE_SCRIPT}, ${INSTALL_RESTORE_DRILL_SCRIPT} y ${INSTALL_SERVICES_SCRIPT}"
-echo "SSH listo para autenticación por contraseña y clave pública"
+echo "SSH listo para autenticaciÃ³n por contraseÃ±a y clave pÃºblica"
 echo "============================================"
