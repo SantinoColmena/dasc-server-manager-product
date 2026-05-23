@@ -10,14 +10,16 @@ Convertir el MVP académico en una base de producto más limpia, instalable, doc
 
 ## Estado actual
 
-Fase 2 - Seguridad y restauración: **cerrada**.
+Fase 4 - Demo y validación: cerrada documentalmente.
 
 Estado:
 
-- Implementada.
-- Documentada.
-- Validada en laboratorio real Ubuntu con tres máquinas.
-- Fusionada en `main`.
+- Fase 0 cerrada.
+- Fase 1 cerrada.
+- Fase 2 cerrada y validada en laboratorio real.
+- Fase 3 cerrada.
+- Fase 4 cerrada a nivel documental.
+- Pendiente futuro: ejecución de piloto técnico real.
 
 ## Arquitectura validada en laboratorio
 
@@ -34,34 +36,36 @@ Estado:
 | Fase 0 - Preparación | Cerrada |
 | Fase 1 - Núcleo estable | Cerrada |
 | Fase 2 - Seguridad y restauración | Cerrada y validada en laboratorio real |
+| Fase 3 - Despliegues y copia externa | Cerrada |
+| Fase 4 - Demo y validación | Cerrada documentalmente |
 
-## Fase 2 - Resumen
+## Fase 4 - Resumen
 
-Durante la Fase 2 se han validado:
+Durante la Fase 4 se han preparado:
 
-- Hash de contraseñas con bcrypt.
-- Protección de `config.env`.
-- Instaladores reales para API, DB y backup-services.
-- SSH dedicado para DASC.
-- Backups completos reales.
-- Historial de backups.
-- Validación SHA256.
-- Simulacro de recuperación.
-- Restauración controlada.
-- Retención segura.
-- Auditoría local.
-- Logs remotos en MariaDB.
-- Reverse proxy Nginx con HTTPS autofirmado.
-- Acceso real desde navegador Windows.
+- Modo demo sin datos sensibles.
+- Propuesta de dominio y web mínima.
+- Manual rápido para cliente.
+- Base de conocimiento inicial.
+- Lista de 30 posibles perfiles de cliente.
+- Guion de llamada y demo.
+- Checklist de instalación en cliente.
+- Selección del primer piloto técnico.
+- Documento de cierre de fase.
 
 ## Documentación principal
 
 Documentos clave:
 
-- `docs/tecnico/fase_2_seguridad_restauracion.md`
-- `docs/validaciones/Fase_2_validacion_real_laboratorio.md`
-- `docs/validaciones/Fase_2_validacion_visual_panel.md`
-- `docs/validaciones/R-021_retencion_limpieza_backups_real.md`
+- `docs/validaciones/cierre_fase_4_demo_validacion.md`
+- `docs/demo/R-032_modo_demo_sin_datos_sensibles.md`
+- `docs/web/R-033_dominio_y_web_minima.md`
+- `docs/cliente/R-034_manual_rapido_cliente.md`
+- `docs/soporte/R-035_base_conocimiento_inicial.md`
+- `docs/comercial/R-036_lista_30_posibles_clientes.md`
+- `docs/comercial/R-037_guion_llamada_demo.md`
+- `docs/cliente/R-038_checklist_instalacion_cliente.md`
+- `docs/pilotos/R-039_seleccion_primer_piloto_tecnico.md`
 
 ## Arquitecturas previstas
 
@@ -82,7 +86,8 @@ El producto se diseña para poder adaptarse a diferentes escenarios:
 - Control de servicios.
 - Alertas.
 - Monitorización.
+- Documentación de cliente y soporte.
 
 ## Aviso
 
-Este repositorio está evolucionando de MVP académico a base de producto. Aunque la Fase 2 ha sido validada en laboratorio real, no debe utilizarse todavía en producción sin una validación adicional de seguridad, red, permisos y copias externas.
+Este repositorio está evolucionando de MVP académico a base de producto. Aunque varias fases han sido documentadas y validadas en laboratorio, no debe utilizarse todavía en producción sin una validación adicional de seguridad, red, permisos, copias externas y restauración real.
