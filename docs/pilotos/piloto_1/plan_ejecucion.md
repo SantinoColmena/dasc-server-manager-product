@@ -47,7 +47,7 @@ Acciones previstas:
     sudo apt install -y git
     git clone https://github.com/SantinoColmena/dasc-server-manager-product.git
     cd dasc-server-manager-product
-    sudo bash install_db.sh
+    sudo bash deploy/db/install_db.sh
 
 Resultado esperado:
 
@@ -74,8 +74,8 @@ Acciones previstas:
     sudo apt install -y git
     git clone https://github.com/SantinoColmena/dasc-server-manager-product.git
     cd dasc-server-manager-product
-    sudo bash install_backup_services.sh
-    sudo bash install_dasc_api.sh
+    sudo bash deploy/backup-services/install_backup_services.sh
+    sudo bash deploy/api/install_dasc_api.sh
 
 Resultado esperado:
 
@@ -125,3 +125,4 @@ El piloto 1 se considera ejecutado correctamente si:
 - Existe prueba de usuario con permisos limitados.
 - Existe restauración o validación equivalente.
 - Las incidencias quedan documentadas.
+
