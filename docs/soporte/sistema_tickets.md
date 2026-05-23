@@ -1,4 +1,4 @@
-﻿# R-049 - Sistema básico de tickets
+﻿# R-049 - Sistema básico de tickets interno
 
 ## Objetivo
 
@@ -10,77 +10,71 @@ En curso.
 
 ## Decisión actual
 
-Se mantiene GitHub Issues como sistema interno provisional.
+GitHub Issues se mantiene como sistema interno provisional.
 
-No se considera todavía un sistema real de ticketing para clientes.
+No se considera un sistema real de ticketing para clientes.
 
-## Motivo
+## Punto importante
 
-GitHub Issues permite registrar incidencias técnicas y tareas internas, pero no equivale a un sistema profesional de atención al cliente.
+Una PyME no usará GitHub para pedir soporte.
 
-Sirve para esta etapa porque:
+GitHub queda reservado para el equipo de DASC.
 
-- No añade coste.
-- Está integrado en el repositorio.
-- Permite historial.
-- Permite plantillas.
-- Permite clasificar incidencias internas.
-- Ayuda a ordenar el desarrollo.
+## Canal real para clientes
 
-Pero todavía no cubre:
+El cliente deberá poder comunicarse por canales sencillos:
 
-- Portal privado de cliente.
-- SLA automático.
-- Gestión de clientes reales.
-- Notificaciones comerciales.
-- Integración con correo.
-- Panel de soporte externo.
-- Separación clara entre incidencias internas y soporte comercial.
+- Email.
+- Formulario.
+- WhatsApp o teléfono si el plan lo incluye.
+- Panel de ayuda futuro.
+- Portal de cliente futuro si el proyecto crece.
 
-## Alcance real
+## Flujo previsto
 
-Lo creado en R-049 se limita a:
+1. El cliente avisa por un canal sencillo.
+2. El equipo de DASC recoge la información.
+3. El equipo crea un ticket interno en GitHub Issues.
+4. Se clasifica por prioridad.
+5. Se resuelve.
+6. Se responde al cliente por el canal original.
+7. Se documenta internamente.
 
-- Plantilla de incidencia técnica.
-- Plantilla de solicitud de soporte.
-- Configuración básica de Issues.
-- Documento interno de funcionamiento.
-- Validación de estructura.
+## Uso permitido de GitHub Issues
+
+GitHub Issues puede usarse para:
+
+- Incidencias internas.
+- Errores detectados en laboratorio.
+- Mejoras pendientes.
+- Seguimiento técnico.
+- Validaciones.
+- Registro interno de solicitudes recibidas por otro canal.
 
 ## Qué no se debe afirmar
 
 No se debe afirmar todavía que DASC dispone de:
 
-- Sistema de ticketing comercial completo.
-- Portal de soporte para clientes.
-- Gestión profesional de SLA.
+- Portal comercial de soporte.
+- Sistema profesional de ticketing.
 - Mesa de ayuda externa.
-- Sistema equivalente a Jira, Freshdesk, Zendesk o similar.
+- Gestión automática de SLA.
+- Soporte de cliente mediante GitHub.
 
-## Uso permitido
+## Criterio para cerrar R-049
 
-Durante esta fase se puede usar GitHub Issues para:
+R-049 se cerrará cuando se decida una de estas opciones:
 
-- Errores detectados en laboratorio.
-- Mejoras pendientes.
-- Validaciones internas.
-- Incidencias de instalación.
-- Seguimiento técnico del desarrollo.
+### Opción A
 
-## Condición para cerrar R-049
+Aceptar GitHub Issues como sistema interno suficiente para la primera etapa comercial, dejando claro que el cliente no lo usa directamente.
 
-R-049 se cerrará más adelante cuando se decida una de estas dos opciones:
+### Opción B
 
-### Opción A - Sistema interno aceptado
-
-Se acepta GitHub Issues como sistema interno suficiente para la primera etapa comercial.
-
-### Opción B - Sistema externo mínimo
-
-Se configura una herramienta más adecuada para soporte real de clientes.
+Configurar un sistema externo o formulario mínimo para soporte real de clientes.
 
 ## Conclusión
 
-R-049 queda en curso.
+R-049 sigue en curso.
 
-Lo actual sirve como base interna, pero no debe venderse ni documentarse como ticketing real de cliente.
+Lo actual sirve para ordenar el trabajo interno, pero el soporte real al cliente debe ser más sencillo y no depender de GitHub.
