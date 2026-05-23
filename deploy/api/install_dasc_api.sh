@@ -327,10 +327,13 @@ fi
 for TARGET_HOST in "${TARGET_HOSTS[@]}"; do
   echo "==> Registrando host SSH en known_hosts_dasc: ${TARGET_HOST}"
   ssh-keygen -R "$TARGET_HOST" -f "$SSH_KNOWN_HOSTS_FILE" >/dev/null 2>&1 || true
-  ssh-keyscan -H "$TARGET_HOST" >> "$SSH_KNOWN_HOSTS_FILE" 2>/dev/null || {
-    echo "ERROR: no se pudo obtener la huella SSH de ${TARGET_HOST}"
-    exit 1
-  }
+  if ssh-keyscan -H "$TARGET_HOST" >> "$SSH_KNOWN_HOSTS_FILE" 2>/dev/null; then
+    echo "==> Huella SSH registrada correctamente para ${TARGET_HOST}"
+  else
+    echo "AVISO: no se pudo obtener la huella SSH de ${TARGET_HOST}"
+    echo "AVISO: se omite la preparación SSH de ${TARGET_HOST}. La conexión con backups se validará en una puerta posterior."
+    continue
+  fi
 
   APP_USER_HOME="$(getent passwd "$APP_USER" | cut -d: -f6)"
 mkdir -p "${APP_USER_HOME}/.ssh"
