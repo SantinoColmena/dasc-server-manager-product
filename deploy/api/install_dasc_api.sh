@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 APP_NAME="DASC Server Manager"
@@ -179,9 +179,20 @@ PY
 dedupe_config_csv_key "DASC_SSH_ALLOWED_HOSTS"
 
 echo "==> Ajustando permisos iniciales"
+echo "==> Preparando directorios runtime"
+mkdir -p "$INSTALL_DIR/data"
+mkdir -p "$INSTALL_DIR/reports"
+mkdir -p "$INSTALL_DIR/tools"
 chown -R "$APP_USER:$APP_GROUP" /opt/dasc
 chmod 750 "$PADRE_DIR"
 chmod 750 "$INSTALL_DIR"
+if [[ -f "$INSTALL_DIR/tools/generate_operational_report.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/generate_operational_report.sh"
+fi
+
+if [[ -f "$INSTALL_DIR/tools/generate_operational_report.py" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/generate_operational_report.py"
+fi
 chmod 640 "$CONFIG_FILE"
 
 echo "==> Creando entorno virtual"
