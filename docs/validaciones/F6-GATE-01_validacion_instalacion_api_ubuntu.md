@@ -22,6 +22,23 @@ Debe comprobarse que una instalación real crea correctamente:
 - Informe operativo.
 - Validador post-instalación.
 
+## Hallazgo durante la primera prueba
+
+Durante la primera instalación limpia en Ubuntu `lab-pruebas`, el instalador avanzó correctamente hasta crear el servicio y preparar el entorno API, pero falló al intentar registrar la huella SSH del host de backups `192.168.60.30`.
+
+Esto demuestra que el instalador API estaba bloqueando una instalación de 1 servidor por depender de un nodo externo de backups.
+
+## Decisión técnica
+
+Para la validación API en 1 servidor, la parte SSH hacia backups no debe bloquear la instalación.
+
+El instalador debe:
+
+- Intentar registrar la huella SSH si `BACKUPS_HOST` está configurado.
+- Avisar si no puede obtenerla.
+- Continuar la instalación API.
+- Dejar la validación de conexión con backups para una puerta posterior de 2 servidores.
+
 ## Herramienta creada
 
 Se añade el script:
@@ -62,9 +79,25 @@ La validación se considera correcta si:
 - Se puede generar el informe operativo.
 - No se detectan errores de permisos o rutas.
 
+## Separación de puertas
+
+Esta puerta valida solo la instalación API.
+
+No valida todavía:
+
+- Nodo de backups remoto.
+- SSH real contra backups.
+- Restauraciones.
+- Logs contra base de datos remota.
+- Arquitectura PyME de 2 servidores.
+
+Esas comprobaciones deben hacerse en puertas posteriores.
+
 ## Estado
 
-Pendiente de ejecutar en Ubuntu real.
+En curso.
+
+Pendiente repetir instalación limpia tras corregir el comportamiento no bloqueante de SSH hacia backups.
 
 ## Conclusión
 
