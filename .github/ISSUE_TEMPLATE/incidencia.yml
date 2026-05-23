@@ -1,0 +1,100 @@
+﻿name: Incidencia técnica
+description: Registrar un fallo, error o comportamiento inesperado de DASC Server Manager.
+title: "[INCIDENCIA] "
+labels:
+  - incidencia
+  - soporte
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por registrar la incidencia.
+
+        No incluyas contraseñas, tokens, claves privadas, datos personales ni backups reales.
+
+  - type: input
+    id: cliente
+    attributes:
+      label: Cliente o entorno
+      description: Indica el cliente, piloto o entorno afectado sin incluir datos sensibles.
+      placeholder: "Ej: Piloto PyME 1 / Laboratorio / Cliente demo"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - Baja
+        - Media
+        - Alta
+        - Crítica
+    validations:
+      required: true
+
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo afectado
+      options:
+        - Instalación
+        - Panel web
+        - Backups
+        - Restauración
+        - Logs
+        - Alertas
+        - Servicios
+        - Base de datos
+        - Red / SSH
+        - Documentación
+        - Otro
+    validations:
+      required: true
+
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción del problema
+      description: Explica qué ocurre de forma clara.
+      placeholder: "Describe el fallo, cuándo ocurre y qué se esperaba que pasara."
+    validations:
+      required: true
+
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Indica los pasos necesarios para repetir el problema.
+      placeholder: |
+        1. Entrar en...
+        2. Pulsar...
+        3. Aparece...
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidencias
+    attributes:
+      label: Evidencias
+      description: Pega logs, capturas o comandos, eliminando cualquier secreto.
+      placeholder: "Pega aquí errores, salida de terminal o capturas sin datos sensibles."
+    validations:
+      required: false
+
+  - type: textarea
+    id: impacto
+    attributes:
+      label: Impacto
+      description: Explica a qué afecta.
+      placeholder: "Ej: No se pueden lanzar backups / Solo afecta a una pantalla / Bloquea instalación."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: seguridad
+    attributes:
+      label: Confirmación de seguridad
+      options:
+        - label: Confirmo que no he incluido contraseñas, tokens, claves privadas ni datos sensibles.
+          required: true

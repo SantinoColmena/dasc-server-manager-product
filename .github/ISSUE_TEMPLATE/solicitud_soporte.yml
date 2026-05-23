@@ -1,0 +1,74 @@
+﻿name: Solicitud de soporte
+description: Registrar una petición de ayuda, duda, revisión o tarea de soporte.
+title: "[SOPORTE] "
+labels:
+  - soporte
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Usa esta plantilla para dudas, revisiones, instalaciones, mantenimiento o tareas que no sean un fallo directo.
+
+        No incluyas contraseñas, tokens, claves privadas, datos personales ni backups reales.
+
+  - type: input
+    id: cliente
+    attributes:
+      label: Cliente o entorno
+      placeholder: "Ej: Cliente demo / Piloto Lite / Laboratorio"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de solicitud
+      options:
+        - Instalación
+        - Revisión mensual
+        - Duda de uso
+        - Cambio menor
+        - Validación de backup
+        - Validación de restauración
+        - Configuración de alertas
+        - Revisión de logs
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - Baja
+        - Media
+        - Alta
+    validations:
+      required: true
+
+  - type: textarea
+    id: solicitud
+    attributes:
+      label: Solicitud
+      description: Explica qué necesitas.
+      placeholder: "Describe la petición de soporte."
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Añade información útil sin incluir datos sensibles.
+      placeholder: "Versión, perfil Lite/PyME/Pro, fecha aproximada, módulo relacionado..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: seguridad
+    attributes:
+      label: Confirmación de seguridad
+      options:
+        - label: Confirmo que no he incluido contraseñas, tokens, claves privadas ni datos sensibles.
+          required: true
