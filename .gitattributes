@@ -1,3 +1,31 @@
+﻿# Normalización general
+* text=auto
+
+# Scripts Linux siempre con LF
 *.sh text eol=lf
+
+# Scripts Python con LF
+*.py text eol=lf
+
+# Markdown con LF
 *.md text eol=lf
-*.env.example text eol=lf
+
+# YAML con LF
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# PowerShell con CRLF
+*.ps1 text eol=crlf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.gz binary
+*.zip binary
