@@ -20,28 +20,21 @@ Comando usado:
 py -3 .\deploy\api\package\tools\generate_operational_report.py --root .\deploy\api\package --client "DASC interno" --period "2026-05"
 ~~~
 
-Comando alternativo:
+## Resultado obtenido
 
-~~~powershell
-python .\deploy\api\package\tools\generate_operational_report.py --root .\deploy\api\package --client "DASC interno" --period "2026-05"
-~~~
-
-## Resultado esperado
-
-Debe generarse:
+El script generó correctamente el informe operativo en:
 
 ~~~text
 deploy/api/package/reports/informe_operativo_2026-05.md
 ~~~
 
-## Comprobaciones
-
-El informe debe incluir:
+El informe incluyó:
 
 - Cliente o entorno.
 - Periodo.
 - Ruta revisada.
 - Archivo de configuración leído.
+- Modo de configuración.
 - Configuración mínima.
 - Variables relevantes enmascaradas.
 - Archivos runtime.
@@ -49,10 +42,79 @@ El informe debe incluir:
 - Limitaciones.
 - Conclusión.
 
-## Resultado
+## Resultado de configuración
 
-Pendiente de pegar salida real tras ejecutar la prueba.
+La configuración mínima se detectó correctamente usando:
+
+~~~text
+deploy/api/package/config.env.example
+~~~
+
+Todas las variables mínimas aparecieron como presentes.
+
+## Resultado de seguridad
+
+Las variables sensibles se mostraron enmascaradas.
+
+Ejemplos:
+
+~~~text
+ADMIN_PASSWORD = ***
+LOGS_DB_PASS = ***
+SECRET_KEY = ***
+~~~
+
+## Resultado de logs
+
+En la prueba local desde Windows apareció:
+
+~~~text
+No module named 'pymysql'
+~~~
+
+Esto se considera aceptable en esta validación porque la prueba se ejecutó con Python local de Windows y no con el entorno virtual real del API instalado.
+
+En una instalación real, el script debe ejecutarse desde el entorno del API:
+
+~~~bash
+cd /opt/dasc/api
+./venv/bin/python tools/generate_operational_report.py --root /opt/dasc/api --client "Cliente demo" --period "2026-05"
+~~~
+
+## Decisión sobre informes generados
+
+Los informes generados en:
+
+~~~text
+deploy/api/package/reports/*.md
+~~~
+
+no deben versionarse.
+
+Son archivos runtime generados por la herramienta.
+
+Solo se mantiene:
+
+~~~text
+deploy/api/package/reports/.gitkeep
+~~~
 
 ## Conclusión
 
-Esta validación permite demostrar que el informe ya no es solo una herramienta interna del repositorio, sino una utilidad incluida en el paquete API.
+La validación demuestra que el informe operativo ya no es solo una herramienta interna del repositorio.
+
+Ahora existe una utilidad incluida dentro del paquete API, preparada para ejecutarse en una instalación real de DASC Server Manager.
+
+Estado de madurez:
+
+~~~text
+Nivel 2 - Herramienta de producto validada inicial
+~~~
+
+Todavía no es herramienta final de cliente porque falta:
+
+- Integración con panel.
+- Lectura real de backups.
+- Lectura real de restauraciones.
+- Exportación PDF.
+- Envío o entrega simple al cliente.

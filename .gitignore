@@ -87,3 +87,8 @@ id_rsa.pub
 id_ed25519
 id_ed25519.pub
 known_hosts
+
+# DASC - informes generados en runtime
+deploy/api/package/reports/*.md
+!deploy/api/package/reports/.gitkeep
+reports/*.md
