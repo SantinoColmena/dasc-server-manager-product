@@ -1,4 +1,4 @@
-﻿# Inventario técnico - Piloto 2
+# Inventario técnico - Piloto 2
 
 ## Datos generales
 
@@ -22,29 +22,46 @@ Este perfil representa una opción de entrada para microempresas o entornos dond
 | Campo | Valor |
 |---|---|
 | Hostname | piloto-lite |
-| IP | 192.168.60.40 |
-| Sistema operativo | Ubuntu Server |
+| IP interna DASC | 192.168.60.40 |
+| IP de acceso desde navegador | 192.168.1.248 |
+| Sistema operativo | Ubuntu 22.04 |
 | Motor de base de datos | MariaDB |
 | Base de datos protegida | employees |
-| Panel instalado | Pendiente |
+| Panel instalado | Sí |
 | Ruta instalación API | /opt/dasc/api |
 | Servicio systemd | dasc-api |
 | Ruta backups locales | /home/dasc/backups |
 | Ruta copia externa simulada | /home/dasc/external-backups |
-| Logs configurados | Pendiente |
+| Logs configurados | Sí |
 
-## Evidencias previstas
+## Componentes instalados
+
+| Componente | Estado |
+|---|---|
+| MariaDB | Activo |
+| SSH | Activo |
+| Cron | Activo |
+| Scripts de backup | Instalados |
+| Scripts de servicios | Instalados |
+| API FastAPI | Activa |
+| Panel web | Accesible |
+| Logs | Operativos |
+| Copia externa simulada | Operativa |
+
+## Evidencias obtenidas
 
 | Evidencia | Estado |
 |---|---|
-| Captura del panel accesible | Pendiente |
-| Captura de login correcto | Pendiente |
-| Captura de backup ejecutado | Pendiente |
-| Captura de archivo local generado | Pendiente |
-| Captura de copia externa simulada | Pendiente |
-| Captura de logs | Pendiente |
-| Captura de terminal local | Pendiente |
-| Comandos principales usados | Pendiente |
+| Captura del panel accesible | Realizada |
+| Captura de login correcto | Realizada |
+| Captura de backup ejecutado | Realizada |
+| Captura de archivo local generado | Realizada |
+| Captura de copia externa simulada | Validada por comando |
+| Captura de logs | Realizada |
+| Captura de terminal Main | Realizada |
+| Captura de terminal Backup | Realizada |
+| Captura de terminal Database | Realizada |
+| Captura de servicios | Realizada |
 
 ## Riesgos controlados
 

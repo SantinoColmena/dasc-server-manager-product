@@ -69,9 +69,9 @@ DEBIAN_FRONTEND=noninteractive apt install -y python3 \
   openssh-server \
   sudo \
   cron \
-  default-mysql-client \
-  mysql-client-8.0 \
-  mysql-client-core-8.0 \
+  mariadb-client \
+  mariadb-client-8.0 \
+  mariadb-client-core-8.0 \
   mysql-server-core-8.0
 
 echo "==> Habilitando SSH"

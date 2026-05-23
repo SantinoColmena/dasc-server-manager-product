@@ -1,4 +1,4 @@
-﻿# Plan de ejecución - Piloto 2
+# Plan de ejecución - Piloto 2
 
 ## Objetivo
 
@@ -12,33 +12,37 @@ Ejecutar el segundo piloto técnico de DASC Server Manager usando el perfil Lite
 | MariaDB | piloto-lite |
 | Backups locales | piloto-lite |
 | Logs | piloto-lite |
-| Copia externa | Carpeta externa simulada |
+| Copia externa | /home/dasc/external-backups |
 
-## Máquina esperada
+## Máquina usada
 
 - Hostname: piloto-lite.
-- IP propuesta: 192.168.60.40.
-- Sistema operativo: Ubuntu Server.
+- IP interna DASC: 192.168.60.40.
+- IP de acceso desde navegador: 192.168.1.248.
+- Sistema operativo: Ubuntu 22.04.
 - Base de datos: employees.
 - Ruta backups locales: /home/dasc/backups.
 - Ruta copia externa simulada: /home/dasc/external-backups.
 
-## Orden de ejecución
+## Orden ejecutado
 
-1. Preparar VM limpia.
-2. Configurar hostname e IP.
-3. Clonar repositorio.
-4. Instalar base de datos local.
-5. Instalar backups y servicios apuntando a la propia máquina.
-6. Instalar panel DASC.
-7. Configurar logs contra la propia máquina.
-8. Ejecutar backup local.
-9. Simular copia externa.
-10. Validar panel, logs, servicios y terminal.
-11. Registrar incidencias.
-12. Cerrar R-043.
+1. Preparación de VM limpia.
+2. Configuración de hostname.
+3. Configuración de red.
+4. Clonado del repositorio.
+5. Instalación de base de datos local.
+6. Instalación de backups y servicios.
+7. Corrección de incidencia con paquetes MySQL/MariaDB.
+8. Ejecución de backup local.
+9. Creación de copia externa simulada.
+10. Preparación de config.env.example para perfil Lite.
+11. Instalación del panel DASC.
+12. Corrección de hosts SSH permitidos.
+13. Validación desde panel.
+14. Validación por terminal.
+15. Registro de incidencias.
 
-## Comandos previstos
+## Comandos principales usados
 
 Preparación inicial:
 
@@ -55,32 +59,45 @@ Instalación de backups y servicios:
 
     sudo DB_HOST=192.168.60.40 bash deploy/backup-services/install_backup_services.sh
 
+Reparación de MariaDB tras incidencia:
+
+    sudo apt install -y mariadb-server mariadb-client
+    sudo systemctl enable --now mariadb
+    sudo systemctl restart mariadb
+
+Backup local:
+
+    sudo -u dasc /usr/local/bin/backups_api.sh full employees /home/dasc/backups piloto2-lite-full-YYYYMMDD-HHMM.sql gzip 30 manual "prueba piloto 2 lite"
+
+Copia externa simulada:
+
+    sudo mkdir -p /home/dasc/external-backups
+    sudo chown -R dasc:dasc /home/dasc/external-backups
+    sudo -u dasc cp /home/dasc/backups/*.sql.gz /home/dasc/external-backups/
+
 Instalación del panel:
 
     sudo bash deploy/api/install_dasc_api.sh
 
-Creación de carpeta externa simulada:
+Corrección de hosts SSH permitidos:
 
-    sudo mkdir -p /home/dasc/external-backups
-    sudo chown -R dasc:dasc /home/dasc/external-backups
+    DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40
 
-Validación de copia externa simulada:
+## Validaciones realizadas
 
-    sudo -u dasc cp /home/dasc/backups/*.sql.gz /home/dasc/external-backups/
-    ls -lh /home/dasc/external-backups
-
-## Validaciones mínimas
-
-| Prueba | Resultado esperado |
+| Prueba | Resultado |
 |---|---|
-| MariaDB | active |
-| dasc-api | active |
-| Puerto 8000 | escuchando |
-| Backup local | archivo .sql.gz generado |
-| Copia externa simulada | archivo duplicado en external-backups |
-| Logs | eventos visibles |
-| Terminal | hostname ejecutado correctamente |
-| Panel | login correcto |
+| MariaDB | OK |
+| dasc-api | OK |
+| Puerto 8000 | OK |
+| Backup local | OK |
+| Copia externa simulada | OK |
+| Logs | OK |
+| Terminal Main | OK |
+| Terminal Backup | OK |
+| Terminal Database | OK |
+| Servicios | OK |
+| Panel | OK |
 
 ## Limitaciones del perfil Lite
 
@@ -91,10 +108,10 @@ Validación de copia externa simulada:
 
 ## Criterio de cierre
 
-El piloto 2 se considera válido si el sistema funciona en una sola máquina y se demuestra una copia externa simulada o equivalente.
+El piloto 2 se considera válido porque el sistema funciona en una sola máquina y se demuestra una copia externa simulada.
 
 ## Estado
 
 Documentado: Sí  
-Implementado: Pendiente  
-Validado: Pendiente  
+Implementado: Sí  
+Validado: Sí  
