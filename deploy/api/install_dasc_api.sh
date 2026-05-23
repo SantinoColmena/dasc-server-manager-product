@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 
 APP_NAME="DASC Server Manager"
@@ -22,7 +22,7 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 echo "==> Instalando ${APP_NAME}"
-echo "==> Usuario de ejecución: ${APP_USER}"
+echo "==> Usuario de ejecuciÃ³n: ${APP_USER}"
 echo "==> Ruta destino: ${INSTALL_DIR}"
 
 if [[ ! -d "$PACKAGE_DIR" ]]; then
@@ -47,6 +47,10 @@ mkdir -p "$INSTALL_DIR"
 
 echo "==> Copiando archivos del proyecto"
 cp -r "$PACKAGE_DIR"/. "$INSTALL_DIR"
+
+if [[ ! -f "$INSTALL_DIR/config.env" ]]; then
+  cp "$INSTALL_DIR/config.env.example" "$INSTALL_DIR/config.env"
+fi
 
 echo "==> Preparando config.env seguro"
 if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -103,7 +107,7 @@ CURRENT_SECRET_KEY="$(read_env_value "SECRET_KEY" "$CONFIG_FILE" || true)"
 if [[ -z "$CURRENT_SECRET_KEY" || "$CURRENT_SECRET_KEY" == CAMBIAR_* || "$CURRENT_SECRET_KEY" == "cambia-esta-clave-por-una-segura" ]]; then
   NEW_SECRET_KEY="$(generate_secret_key)"
   write_env_value "SECRET_KEY" "$NEW_SECRET_KEY"
-  echo "==> SECRET_KEY generada automáticamente"
+  echo "==> SECRET_KEY generada automÃ¡ticamente"
 else
   echo "==> SECRET_KEY existente conservada"
 fi
@@ -118,19 +122,19 @@ fi
 if [[ "$NEED_ADMIN_PASSWORD" == "yes" ]]; then
   if [[ -z "${ADMIN_PASSWORD_INPUT:-}" ]]; then
     echo
-    read -rsp "Introduce la nueva contraseña del administrador del panel: " ADMIN_PASSWORD_INPUT
+    read -rsp "Introduce la nueva contraseÃ±a del administrador del panel: " ADMIN_PASSWORD_INPUT
     echo
-    read -rsp "Repite la contraseña del administrador del panel: " ADMIN_PASSWORD_CONFIRM
+    read -rsp "Repite la contraseÃ±a del administrador del panel: " ADMIN_PASSWORD_CONFIRM
     echo
 
     if [[ "$ADMIN_PASSWORD_INPUT" != "$ADMIN_PASSWORD_CONFIRM" ]]; then
-      echo "ERROR: las contraseñas del administrador no coinciden."
+      echo "ERROR: las contraseÃ±as del administrador no coinciden."
       exit 1
     fi
   fi
 
   if [[ -z "$ADMIN_PASSWORD_INPUT" ]]; then
-    echo "ERROR: la contraseña del administrador no puede estar vacía."
+    echo "ERROR: la contraseÃ±a del administrador no puede estar vacÃ­a."
     exit 1
   fi
 else
@@ -260,13 +264,13 @@ chmod 644 "$SSH_KEY_FILE.pub"
 cp "$SSH_KEY_FILE.pub" "${INSTALL_DIR}/api_panel.pub"
 chown "$APP_USER:$APP_GROUP" "${INSTALL_DIR}/api_panel.pub"
 chmod 644 "${INSTALL_DIR}/api_panel.pub"
-echo "==> Clave pública exportada a ${INSTALL_DIR}/api_panel.pub"
+echo "==> Clave pÃºblica exportada a ${INSTALL_DIR}/api_panel.pub"
 
 BACKUP_HOST="$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
 SERVICES_HOST="$(read_env_value "SERVICIOS_HOST" "$CONFIG_FILE" || true)"
 
 if [[ -z "$BACKUP_HOST" || "$BACKUP_HOST" == CAMBIAR_* ]]; then
-  echo "ERROR: BACKUPS_HOST no está configurado correctamente en config.env"
+  echo "ERROR: BACKUPS_HOST no estÃ¡ configurado correctamente en config.env"
   exit 1
 fi
 
@@ -316,15 +320,15 @@ mkdir -p "${APP_USER_HOME}/.ssh"
 chown "$APP_USER:$APP_GROUP" "${APP_USER_HOME}/.ssh"
 chmod 700 "${APP_USER_HOME}/.ssh"
 
-echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
+echo "==> Configurando acceso SSH automÃ¡tico al servidor ${TARGET_HOST}"
   if [[ -z "${DASC_PASS:-}" ]]; then
     echo
-    read -rsp "Introduce la contraseña actual del usuario dasc en ${TARGET_HOST}: " DASC_PASS
+    read -rsp "Introduce la contraseÃ±a actual del usuario dasc en ${TARGET_HOST}: " DASC_PASS
     echo
   fi
 
   if [[ -z "$DASC_PASS" ]]; then
-    echo "ERROR: la contraseña de dasc no puede estar vacía."
+    echo "ERROR: la contraseÃ±a de dasc no puede estar vacÃ­a."
     exit 1
   fi
 
@@ -333,18 +337,18 @@ echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
     -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
     "dasc@${TARGET_HOST}" || {
-      echo "ERROR: no se pudo copiar la clave automáticamente a dasc@${TARGET_HOST}."
+      echo "ERROR: no se pudo copiar la clave automÃ¡ticamente a dasc@${TARGET_HOST}."
       exit 1
     }
 
-  echo "==> Verificando acceso SSH sin contraseña contra ${TARGET_HOST}"
+  echo "==> Verificando acceso SSH sin contraseÃ±a contra ${TARGET_HOST}"
   sudo -u "$APP_USER" ssh \
     -i "$SSH_KEY_FILE" \
     -o BatchMode=yes \
     -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
     "dasc@${TARGET_HOST}" "hostname >/dev/null" || {
-      echo "ERROR: la verificación SSH sin contraseña ha fallado contra ${TARGET_HOST}."
+      echo "ERROR: la verificaciÃ³n SSH sin contraseÃ±a ha fallado contra ${TARGET_HOST}."
       exit 1
     }
 
@@ -361,11 +365,12 @@ curl -I http://127.0.0.1:8000 || true
 
 echo
 echo "============================================"
-echo "Instalación completada"
+echo "InstalaciÃ³n completada"
 echo "Panel instalado en: $INSTALL_DIR"
 echo "Servicio: $SERVICE_NAME"
 echo "config.env protegido en: $CONFIG_FILE"
-echo "SSH automático configurado contra: $BACKUP_HOST"
+echo "SSH automÃ¡tico configurado contra: $BACKUP_HOST"
 echo "URL local: http://127.0.0.1:8000"
 echo "URL red:   http://<IP_DEL_SERVIDOR>:8000"
 echo "============================================"
+
