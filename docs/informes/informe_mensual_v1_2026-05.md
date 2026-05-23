@@ -6,10 +6,10 @@
 |---|---|
 | Cliente / entorno | DASC interno |
 | Periodo | 2026-05 |
-| Fecha de generación | 2026-05-23 14:52:38 |
-| Rama | usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]            [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]            [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]            <command> [<args>]  These are common Git commands used in various situations:  start a working area (see also: git help tutorial)    clone      Clone a repository into a new directory    init       Create an empty Git repository or reinitialize an existing one  work on the current change (see also: git help everyday)    add        Add file contents to the index    mv         Move or rename a file, a directory, or a symlink    restore    Restore working tree files    rm         Remove files from the working tree and from the index  examine the history and state (see also: git help revisions)    bisect     Use binary search to find the commit that introduced a bug    diff       Show changes between commits, commit and working tree, etc    grep       Print lines matching a pattern    log        Show commit logs    show       Show various types of objects    status     Show the working tree status  grow, mark and tweak your common history    backfill   Download missing objects in a partial clone    branch     List, create, or delete branches    commit     Record changes to the repository    history    EXPERIMENTAL: Rewrite history    merge      Join two or more development histories together    rebase     Reapply commits on top of another base tip    reset      Set `HEAD` or the index to a known state    switch     Switch branches    tag        Create, list, delete or verify tags  collaborate (see also: git help workflows)    fetch      Download objects and refs from another repository    pull       Fetch from and integrate with another repository or a local branch    push       Update remote refs along with associated objects  'git help -a' and 'git help -g' list available subcommands and some concept guides. See 'git help <command>' or 'git help <concept>' to read about a specific subcommand or concept. See 'git help git' for an overview of the system. |
-| Commit | usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]            [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]            [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]            <command> [<args>]  These are common Git commands used in various situations:  start a working area (see also: git help tutorial)    clone      Clone a repository into a new directory    init       Create an empty Git repository or reinitialize an existing one  work on the current change (see also: git help everyday)    add        Add file contents to the index    mv         Move or rename a file, a directory, or a symlink    restore    Restore working tree files    rm         Remove files from the working tree and from the index  examine the history and state (see also: git help revisions)    bisect     Use binary search to find the commit that introduced a bug    diff       Show changes between commits, commit and working tree, etc    grep       Print lines matching a pattern    log        Show commit logs    show       Show various types of objects    status     Show the working tree status  grow, mark and tweak your common history    backfill   Download missing objects in a partial clone    branch     List, create, or delete branches    commit     Record changes to the repository    history    EXPERIMENTAL: Rewrite history    merge      Join two or more development histories together    rebase     Reapply commits on top of another base tip    reset      Set `HEAD` or the index to a known state    switch     Switch branches    tag        Create, list, delete or verify tags  collaborate (see also: git help workflows)    fetch      Download objects and refs from another repository    pull       Fetch from and integrate with another repository or a local branch    push       Update remote refs along with associated objects  'git help -a' and 'git help -g' list available subcommands and some concept guides. See 'git help <command>' or 'git help <concept>' to read about a specific subcommand or concept. See 'git help git' for an overview of the system. |
-| Versión / tag detectado | usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]            [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]            [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]            <command> [<args>]  These are common Git commands used in various situations:  start a working area (see also: git help tutorial)    clone      Clone a repository into a new directory    init       Create an empty Git repository or reinitialize an existing one  work on the current change (see also: git help everyday)    add        Add file contents to the index    mv         Move or rename a file, a directory, or a symlink    restore    Restore working tree files    rm         Remove files from the working tree and from the index  examine the history and state (see also: git help revisions)    bisect     Use binary search to find the commit that introduced a bug    diff       Show changes between commits, commit and working tree, etc    grep       Print lines matching a pattern    log        Show commit logs    show       Show various types of objects    status     Show the working tree status  grow, mark and tweak your common history    backfill   Download missing objects in a partial clone    branch     List, create, or delete branches    commit     Record changes to the repository    history    EXPERIMENTAL: Rewrite history    merge      Join two or more development histories together    rebase     Reapply commits on top of another base tip    reset      Set `HEAD` or the index to a known state    switch     Switch branches    tag        Create, list, delete or verify tags  collaborate (see also: git help workflows)    fetch      Download objects and refs from another repository    pull       Fetch from and integrate with another repository or a local branch    push       Update remote refs along with associated objects  'git help -a' and 'git help -g' list available subcommands and some concept guides. See 'git help <command>' or 'git help <concept>' to read about a specific subcommand or concept. See 'git help git' for an overview of the system. |
+| Fecha de generación | 2026-05-23 14:54:08 |
+| Rama | main |
+| Commit | c4cec7a |
+| Versión / tag detectado | v1.0-rc1-11-gc4cec7a |
 
 ## 2. Resumen ejecutivo
 
@@ -29,105 +29,20 @@ Objetivos de esta versión:
 - AVISO: hay cambios pendientes.
 
 ~~~text
-usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]
-           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]
-           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]
-           <command> [<args>]
-
-These are common Git commands used in various situations:
-
-start a working area (see also: git help tutorial)
-   clone      Clone a repository into a new directory
-   init       Create an empty Git repository or reinitialize an existing one
-
-work on the current change (see also: git help everyday)
-   add        Add file contents to the index
-   mv         Move or rename a file, a directory, or a symlink
-   restore    Restore working tree files
-   rm         Remove files from the working tree and from the index
-
-examine the history and state (see also: git help revisions)
-   bisect     Use binary search to find the commit that introduced a bug
-   diff       Show changes between commits, commit and working tree, etc
-   grep       Print lines matching a pattern
-   log        Show commit logs
-   show       Show various types of objects
-   status     Show the working tree status
-
-grow, mark and tweak your common history
-   backfill   Download missing objects in a partial clone
-   branch     List, create, or delete branches
-   commit     Record changes to the repository
-   history    EXPERIMENTAL: Rewrite history
-   merge      Join two or more development histories together
-   rebase     Reapply commits on top of another base tip
-   reset      Set `HEAD` or the index to a known state
-   switch     Switch branches
-   tag        Create, list, delete or verify tags
-
-collaborate (see also: git help workflows)
-   fetch      Download objects and refs from another repository
-   pull       Fetch from and integrate with another repository or a local branch
-   push       Update remote refs along with associated objects
-
-'git help -a' and 'git help -g' list available subcommands and some
-concept guides. See 'git help <command>' or 'git help <concept>'
-to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system.
+ M tools/windows/generate_monthly_report.ps1
 ~~~
 
 ## 4. Últimos commits
 
 ~~~text
-usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]
-           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]
-           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]
-           <command> [<args>]
-
-These are common Git commands used in various situations:
-
-start a working area (see also: git help tutorial)
-   clone      Clone a repository into a new directory
-   init       Create an empty Git repository or reinitialize an existing one
-
-work on the current change (see also: git help everyday)
-   add        Add file contents to the index
-   mv         Move or rename a file, a directory, or a symlink
-   restore    Restore working tree files
-   rm         Remove files from the working tree and from the index
-
-examine the history and state (see also: git help revisions)
-   bisect     Use binary search to find the commit that introduced a bug
-   diff       Show changes between commits, commit and working tree, etc
-   grep       Print lines matching a pattern
-   log        Show commit logs
-   show       Show various types of objects
-   status     Show the working tree status
-
-grow, mark and tweak your common history
-   backfill   Download missing objects in a partial clone
-   branch     List, create, or delete branches
-   commit     Record changes to the repository
-   history    EXPERIMENTAL: Rewrite history
-   merge      Join two or more development histories together
-   rebase     Reapply commits on top of another base tip
-   reset      Set `HEAD` or the index to a known state
-   switch     Switch branches
-   tag        Create, list, delete or verify tags
-
-collaborate (see also: git help workflows)
-   fetch      Download objects and refs from another repository
-   pull       Fetch from and integrate with another repository or a local branch
-   push       Update remote refs along with associated objects
-
-'git help -a' and 'git help -g' list available subcommands and some
-concept guides. See 'git help <command>' or 'git help <concept>'
-to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system.
+c4cec7a docs: generar primer informe mensual v1
+a82627f feat: crear generador de informe mensual v1
+e3c5636 docs: aclarar github como soporte interno
+02474bc docs: actualizar auditoria clean mejorada
+757955f chore: mejorar clasificacion de auditoria clean
+bbe6de7 docs: registrar auditoria clean del repositorio
+d35a176 chore: limpiar artefactos sensibles del paquete api
+1d208f6 docs: reordenar fase 6 antes de ventas
 ~~~
 
 ## 5. Auditoría clean

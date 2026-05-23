@@ -35,31 +35,41 @@ function Add-Line {
     $Lines.Add($Text) | Out-Null
 }
 
-function Run-Git {
+function Run-GitCommand {
     param(
-        [string[]]$Args
+        [string[]]$GitArgs
     )
 
     try {
-        $result = & git @Args 2>$null
+        $result = & git @GitArgs 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            return @("No disponible")
+        }
         return $result
     } catch {
-        return @()
+        return @("No disponible")
     }
 }
 
 $lines = New-Object System.Collections.Generic.List[string]
 
-$commit = Run-Git @("rev-parse", "--short", "HEAD")
-$branch = Run-Git @("branch", "--show-current")
-$tag = Run-Git @("describe", "--tags", "--always")
-$lastCommits = Run-Git @("log", "--oneline", "-8")
-$gitStatusRaw = Run-Git @("status", "--short")
+$commit = (Run-GitCommand -GitArgs @("rev-parse", "--short", "HEAD")) -join " "
+$branch = (Run-GitCommand -GitArgs @("branch", "--show-current")) -join " "
+$tag = (Run-GitCommand -GitArgs @("describe", "--tags", "--always")) -join " "
+$lastCommits = Run-GitCommand -GitArgs @("log", "--oneline", "-8")
+$gitStatusRaw = Run-GitCommand -GitArgs @("status", "--short")
+
+if ($gitStatusRaw.Count -eq 1 -and $gitStatusRaw[0] -eq "No disponible") {
+    $gitStatusRaw = @()
+}
+
+$normalizedOutputPathA = $OutputPath.Replace("\", "/")
+$normalizedOutputPathB = $OutputPath.Replace("/", "\")
 
 $gitStatusFiltered = @()
 foreach ($line in $gitStatusRaw) {
-    if ($line -notmatch [regex]::Escape($OutputPath.Replace("\", "/")) -and
-        $line -notmatch [regex]::Escape($OutputPath.Replace("/", "\"))) {
+    if ($line -notmatch [regex]::Escape($normalizedOutputPathA) -and
+        $line -notmatch [regex]::Escape($normalizedOutputPathB)) {
         $gitStatusFiltered += $line
     }
 }
