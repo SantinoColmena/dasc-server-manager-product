@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RepoRoot = "."
 )
 
@@ -64,6 +64,7 @@ Add-Check "Existe carpeta static" (Test-Path -LiteralPath (Join-Path $packageDir
 
 Add-Check "Existe generador Python de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.py")) "Herramienta de producto dentro del paquete."
 Add-Check "Existe wrapper Bash de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.sh")) "Wrapper para servidor Linux."
+Add-Check "Existe validador post-instalación API" (Test-Path -LiteralPath (Join-Path $packageDir "tools\check_api_installation.sh")) "Validador para Ubuntu instalado."
 Add-Check "Existe reports/.gitkeep" (Test-Path -LiteralPath (Join-Path $packageDir "reports\.gitkeep")) "Mantiene la carpeta reports sin versionar informes generados."
 
 $generatedReports = Get-ChildItem -LiteralPath (Join-Path $packageDir "reports") -Filter "*.md" -File -ErrorAction SilentlyContinue
@@ -80,9 +81,11 @@ Add-Check "Instalador prepara data" ($installerContent -match 'mkdir -p "\$INSTA
 Add-Check "Instalador prepara reports" ($installerContent -match 'mkdir -p "\$INSTALL_DIR/reports"') "Debe crear directorio runtime reports."
 Add-Check "Instalador prepara tools" ($installerContent -match 'mkdir -p "\$INSTALL_DIR/tools"') "Debe crear directorio tools."
 Add-Check "Instalador da permisos al wrapper" ($installerContent -match "generate_operational_report\.sh") "Debe dar permisos de ejecución al wrapper."
+Add-Check "Instalador da permisos al validador post-instalación" ($installerContent -match "check_api_installation\.sh") "Debe dar permisos de ejecución al validador."
 
 Add-Check "install_dasc_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Linux deben tener LF."
 Add-Check "generate_operational_report.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\generate_operational_report.sh")) "Los scripts Linux deben tener LF."
+Add-Check "check_api_installation.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\check_api_installation.sh")) "Los scripts Linux deben tener LF."
 
 $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $total = $checks.Count

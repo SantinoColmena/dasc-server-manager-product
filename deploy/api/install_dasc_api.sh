@@ -194,6 +194,9 @@ if [[ -f "$INSTALL_DIR/tools/generate_operational_report.py" ]]; then
   chmod 755 "$INSTALL_DIR/tools/generate_operational_report.py"
 fi
 chmod 640 "$CONFIG_FILE"
+if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/check_api_installation.sh"
+fi
 
 echo "==> Creando entorno virtual"
 if [[ ! -d "$VENV_DIR" ]]; then
@@ -218,6 +221,9 @@ PY
 )"
   write_env_value "ADMIN_PASSWORD" "$ADMIN_PASSWORD_HASH"
   chmod 640 "$CONFIG_FILE"
+if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/check_api_installation.sh"
+fi
   chown "$APP_USER:$APP_GROUP" "$CONFIG_FILE"
   echo "==> ADMIN_PASSWORD guardada como hash bcrypt"
 fi
@@ -367,6 +373,9 @@ echo "==> Configurando acceso SSH automÃ¡tico al servidor ${TARGET_HOST}"
 done
 
 chmod 640 "$CONFIG_FILE"
+if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/check_api_installation.sh"
+fi
 chown "$APP_USER:$APP_GROUP" "$CONFIG_FILE"
 
 echo "==> Comprobando estado"
