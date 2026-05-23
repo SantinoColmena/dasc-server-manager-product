@@ -1,4 +1,4 @@
-﻿# Fase 3 - Despliegues adaptables
+# Fase 3 - Despliegues adaptables
 
 ## Estado inicial
 
@@ -134,7 +134,7 @@ La Fase 3 se podrá cerrar cuando:
 - R-025: iniciada.
 - R-026: iniciada.
 - R-027: iniciada.
-- R-028: preparada a nivel de variables.
-- R-029: preparada a nivel de variables.
+- R-028: implementada y validada en modo local. NAS/SFTP queda preparado para validación futura.
+- R-029: implementada y validada con cifrado GPG simétrico en destino local.
 - R-030: implementada primera versión del asistente scripts/generar_config_perfil.sh. Pendiente integración final en instaladores.
 - R-031: iniciada con este documento.
