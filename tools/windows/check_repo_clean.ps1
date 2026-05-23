@@ -36,6 +36,42 @@ function Get-RelativePath {
     return $FullPath
 }
 
+function Test-IsExampleFile {
+    param(
+        [string]$RelativePath
+    )
+
+    return (
+        $RelativePath -like "*.example" -or
+        $RelativePath -like "*.env.example" -or
+        $RelativePath -like "*\config.env.example" -or
+        $RelativePath -like "config\perfiles\*.example"
+    )
+}
+
+function Test-IsDocumentationFile {
+    param(
+        [string]$RelativePath
+    )
+
+    return (
+        $RelativePath -like "docs\*" -and
+        $RelativePath -notlike "docs\auditoria\*"
+    )
+}
+
+function Test-IsCodeExpectedFile {
+    param(
+        [string]$RelativePath
+    )
+
+    return (
+        $RelativePath -like "*.py" -or
+        $RelativePath -like "*.sh" -or
+        $RelativePath -like "*.ps1"
+    )
+}
+
 $requiredPaths = @(
     "README.md",
     ".gitignore",
@@ -86,15 +122,22 @@ Add-ReportLine ""
 Add-ReportLine "## 1. Estado Git"
 Add-ReportLine ""
 
-$gitStatus = git status --short
+$gitStatusRaw = git status --short
+$gitStatusFiltered = @()
 
-if ([string]::IsNullOrWhiteSpace($gitStatus)) {
-    Add-ReportLine "- OK: el repositorio está limpio."
+foreach ($line in $gitStatusRaw) {
+    if ($line -notmatch "docs/auditoria/repo_clean_check.md" -and $line -notmatch "docs\\auditoria\\repo_clean_check.md") {
+        $gitStatusFiltered += $line
+    }
+}
+
+if ($gitStatusFiltered.Count -eq 0) {
+    Add-ReportLine "- OK: el repositorio está limpio o solo está pendiente el propio informe de auditoría."
 } else {
     Add-ReportLine "- AVISO: hay cambios pendientes."
     Add-ReportLine ""
     Add-ReportLine "~~~text"
-    foreach ($line in $gitStatus) {
+    foreach ($line in $gitStatusFiltered) {
         Add-ReportLine $line
     }
     Add-ReportLine "~~~"
@@ -141,7 +184,7 @@ foreach ($name in $dangerousFiles) {
     foreach ($match in $matches) {
         $dangerFound = $true
         $relative = Get-RelativePath -FullPath $match.FullName
-        Add-ReportLine "- REVISAR: encontrado ``$relative``."
+        Add-ReportLine "- ERROR: encontrado archivo sensible o runtime ``$relative``."
     }
 }
 
@@ -150,10 +193,13 @@ if (-not $dangerFound) {
 }
 
 Add-ReportLine ""
-Add-ReportLine "## 5. Búsqueda básica de posibles secretos"
+Add-ReportLine "## 5. Variables sensibles por categoría"
 Add-ReportLine ""
 
-$secretFindings = New-Object System.Collections.Generic.List[string]
+$exampleFindings = New-Object System.Collections.Generic.List[string]
+$codeFindings = New-Object System.Collections.Generic.List[string]
+$docFindings = New-Object System.Collections.Generic.List[string]
+$riskFindings = New-Object System.Collections.Generic.List[string]
 
 $extensionsToScan = @(
     ".md",
@@ -184,23 +230,78 @@ foreach ($file in $filesToScan) {
         $matches = Select-String -LiteralPath $file.FullName -SimpleMatch -Pattern $pattern -ErrorAction SilentlyContinue
 
         if ($matches) {
-            $secretFindings.Add("$relative -> contiene patrón ``$pattern``") | Out-Null
+            $entry = "$relative -> contiene patrón ``$pattern``"
+
+            if (Test-IsExampleFile -RelativePath $relative) {
+                $exampleFindings.Add($entry) | Out-Null
+            } elseif (Test-IsDocumentationFile -RelativePath $relative) {
+                $docFindings.Add($entry) | Out-Null
+            } elseif (Test-IsCodeExpectedFile -RelativePath $relative) {
+                $codeFindings.Add($entry) | Out-Null
+            } else {
+                $riskFindings.Add($entry) | Out-Null
+            }
         }
     }
 }
 
-if ($secretFindings.Count -eq 0) {
-    Add-ReportLine "- OK: no se han encontrado patrones sensibles básicos."
+Add-ReportLine "### 5.1 Ejemplos permitidos"
+Add-ReportLine ""
+
+if ($exampleFindings.Count -eq 0) {
+    Add-ReportLine "- OK: no se han detectado variables sensibles en archivos de ejemplo."
 } else {
-    Add-ReportLine "- REVISAR: se han encontrado patrones que pueden ser ejemplos o secretos reales."
+    Add-ReportLine "- OK: variables sensibles detectadas en archivos `.example`. Deben mantenerse como valores ficticios."
     Add-ReportLine ""
 
-    foreach ($finding in $secretFindings) {
+    foreach ($finding in $exampleFindings) {
         Add-ReportLine "  - $finding"
     }
+}
 
+Add-ReportLine ""
+Add-ReportLine "### 5.2 Código o instaladores"
+Add-ReportLine ""
+
+if ($codeFindings.Count -eq 0) {
+    Add-ReportLine "- OK: no se han detectado patrones sensibles en código o instaladores."
+} else {
+    Add-ReportLine "- REVISAR: hay variables sensibles en código o instaladores. Es aceptable si se generan, se leen del entorno o se usan como nombre de variable, no como secreto real."
     Add-ReportLine ""
-    Add-ReportLine "Nota: si son valores de ejemplo, deben quedar claramente marcados como ejemplo."
+
+    foreach ($finding in $codeFindings) {
+        Add-ReportLine "  - $finding"
+    }
+}
+
+Add-ReportLine ""
+Add-ReportLine "### 5.3 Documentación"
+Add-ReportLine ""
+
+if ($docFindings.Count -eq 0) {
+    Add-ReportLine "- OK: no se han detectado patrones sensibles en documentación."
+} else {
+    Add-ReportLine "- REVISAR: hay variables sensibles mencionadas en documentación. Deben ser ejemplos o referencias, nunca secretos reales."
+    Add-ReportLine ""
+
+    foreach ($finding in $docFindings) {
+        Add-ReportLine "  - $finding"
+    }
+}
+
+Add-ReportLine ""
+Add-ReportLine "### 5.4 Riesgo real"
+Add-ReportLine ""
+
+if ($riskFindings.Count -eq 0) {
+    Add-ReportLine "- OK: no se han encontrado patrones sensibles en archivos inesperados."
+} else {
+    Add-ReportLine "- ERROR: se han encontrado patrones sensibles en archivos que no parecen ejemplo, documentación ni código esperado."
+    Add-ReportLine ""
+
+    foreach ($finding in $riskFindings) {
+        Add-ReportLine "  - $finding"
+    }
 }
 
 Add-ReportLine ""
@@ -255,14 +356,23 @@ Add-ReportLine ""
 Add-ReportLine "## 8. Resultado provisional"
 Add-ReportLine ""
 
-Add-ReportLine "Esta auditoría no sustituye una validación manual, pero sirve como primera comprobación real antes de avanzar hacia clientes."
+if ($dangerFound -or $riskFindings.Count -gt 0) {
+    Add-ReportLine "Resultado: REVISAR ANTES DE AVANZAR."
+    Add-ReportLine ""
+    Add-ReportLine "Hay posibles archivos sensibles o secretos en ubicaciones inesperadas."
+} else {
+    Add-ReportLine "Resultado: OK PARA SEGUIR CON LIMPIEZA Y PULIDO."
+    Add-ReportLine ""
+    Add-ReportLine "No se han encontrado archivos sensibles típicos ni secretos en ubicaciones inesperadas."
+}
+
 Add-ReportLine ""
 Add-ReportLine "Acciones recomendadas:"
 Add-ReportLine ""
-Add-ReportLine "- Revisar cualquier línea marcada como REVISAR."
-Add-ReportLine "- Confirmar que los valores sensibles son ejemplos."
-Add-ReportLine "- Mantener clientes y ventas en curso hasta que el producto esté limpio."
-Add-ReportLine "- Repetir esta auditoría antes de crear una release nueva."
+Add-ReportLine "- Mantener clientes y ventas en curso hasta completar limpieza funcional."
+Add-ReportLine "- Revisar manualmente los avisos de código, instaladores y documentación."
+Add-ReportLine "- Confirmar que los `.example` solo contienen valores ficticios."
+Add-ReportLine "- Repetir esta auditoría antes de cada release nueva."
 
 $lines | Set-Content -Encoding UTF8 $reportPath
 
