@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio DASC
 
-Fecha: 2026-05-23 14:44:30
+Fecha: 2026-05-23 14:47:05
 
 Ruta revisada:
 
@@ -10,11 +10,7 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ## 1. Estado Git
 
-- AVISO: hay cambios pendientes.
-
-~~~text
-?? docs/auditoria/
-~~~
+- OK: el repositorio está limpio o solo está pendiente el propio informe de auditoría.
 
 ## 2. Estructura mínima obligatoria
 
@@ -36,9 +32,11 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 - OK: no se han encontrado archivos sensibles típicos.
 
-## 5. Búsqueda básica de posibles secretos
+## 5. Variables sensibles por categoría
 
-- REVISAR: se han encontrado patrones que pueden ser ejemplos o secretos reales.
+### 5.1 Ejemplos permitidos
+
+- OK: variables sensibles detectadas en archivos .example. Deben mantenerse como valores ficticios.
 
   - config.env.example -> contiene patrón `TELEGRAM_BOT_TOKEN=`
   - config.env.example -> contiene patrón `TELEGRAM_CHAT_ID=`
@@ -57,16 +55,26 @@ C:\Users\colme\Documents\dasc-server-manager-product
   - config\perfiles\config.single.env.example -> contiene patrón `LOGS_DB_PASS=`
   - config\perfiles\config.single.env.example -> contiene patrón `DB_BACKUP_PASS=`
   - config\perfiles\config.single.env.example -> contiene patrón `SECRET_KEY=`
-  - deploy\api\install_dasc_api.sh -> contiene patrón `ADMIN_PASSWORD=`
-  - deploy\api\install_dasc_api.sh -> contiene patrón `SECRET_KEY=`
   - deploy\api\package\config.env.example -> contiene patrón `TELEGRAM_BOT_TOKEN=`
   - deploy\api\package\config.env.example -> contiene patrón `TELEGRAM_CHAT_ID=`
   - deploy\api\package\config.env.example -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\package\config.env.example -> contiene patrón `LOGS_DB_PASS=`
   - deploy\api\package\config.env.example -> contiene patrón `SECRET_KEY=`
+
+### 5.2 Código o instaladores
+
+- REVISAR: hay variables sensibles en código o instaladores. Es aceptable si se generan, se leen del entorno o se usan como nombre de variable, no como secreto real.
+
+  - deploy\api\install_dasc_api.sh -> contiene patrón `ADMIN_PASSWORD=`
+  - deploy\api\install_dasc_api.sh -> contiene patrón `SECRET_KEY=`
   - deploy\api\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\backup-services\install_backup_services.sh -> contiene patrón `DB_BACKUP_PASS=`
   - deploy\db\install_db.sh -> contiene patrón `LOGS_DB_PASS=`
+
+### 5.3 Documentación
+
+- REVISAR: hay variables sensibles mencionadas en documentación. Deben ser ejemplos o referencias, nunca secretos reales.
+
   - docs\pilotos\R-042_correccion_fallos_piloto_1.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\pilotos\piloto_1\incidencias.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `ADMIN_PASSWORD=`
@@ -74,7 +82,9 @@ C:\Users\colme\Documents\dasc-server-manager-product
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `SECRET_KEY=`
   - docs\tecnico\r-007_mejoras_install_dasc_api.md -> contiene patrón `ADMIN_PASSWORD=`
 
-Nota: si son valores de ejemplo, deben quedar claramente marcados como ejemplo.
+### 5.4 Riesgo real
+
+- OK: no se han encontrado patrones sensibles en archivos inesperados.
 
 ## 6. README
 
@@ -89,11 +99,13 @@ Nota: si son valores de ejemplo, deben quedar claramente marcados como ejemplo.
 
 ## 8. Resultado provisional
 
-Esta auditoría no sustituye una validación manual, pero sirve como primera comprobación real antes de avanzar hacia clientes.
+Resultado: OK PARA SEGUIR CON LIMPIEZA Y PULIDO.
+
+No se han encontrado archivos sensibles típicos ni secretos en ubicaciones inesperadas.
 
 Acciones recomendadas:
 
-- Revisar cualquier línea marcada como REVISAR.
-- Confirmar que los valores sensibles son ejemplos.
-- Mantener clientes y ventas en curso hasta que el producto esté limpio.
-- Repetir esta auditoría antes de crear una release nueva.
+- Mantener clientes y ventas en curso hasta completar limpieza funcional.
+- Revisar manualmente los avisos de código, instaladores y documentación.
+- Confirmar que los .example solo contienen valores ficticios.
+- Repetir esta auditoría antes de cada release nueva.
