@@ -6,131 +6,60 @@ Conseguir el primer cliente de pago para DASC Server Manager o, si no se consigu
 
 ## Estado
 
-En curso.
+En curso, aplazada hasta completar limpieza y pulido previo.
 
-## Punto de partida
+## Decisión actual
 
-La release candidate `v1.0-rc1` ya está creada y etiquetada.
+Aunque R-048 forma parte de la Fase 6, no se va a cerrar todavía.
 
-Esto permite presentar DASC Server Manager como una versión candidata controlada, no como una versión final cerrada.
+Antes de buscar un cliente de pago se prioriza dejar el producto más limpio, revisado e instalable.
+
+## Motivo
+
+La tarea de conseguir clientes aparece en el tracker, pero en la práctica todavía conviene preparar mejor la base del producto.
+
+No se considera correcto intentar cerrar esta tarea sin:
+
+- Producto más pulido.
+- Instaladores revisados.
+- Documentación clara.
+- Uso desde Windows explicado.
+- Alcance real separado de promesas comerciales.
+- Proceso mínimo de soporte definido.
+- Validación de que la release candidate es presentable.
+
+## Estado de la release candidate
+
+Existe `v1.0-rc1`, pero se considera una base candidata, no una versión final lista para producción crítica.
 
 ## Cliente objetivo inicial
 
-El perfil recomendado para el primer cliente es:
+El perfil recomendado para el primer cliente sigue siendo:
 
 - Microempresa o pequeña empresa.
 - 5 a 30 empleados.
 - Uso de base de datos, aplicación local, servidor propio o datos importantes.
 - Sin administrador de sistemas interno.
 - Necesidad de backups, restauración, logs y soporte sencillo.
-- Preocupación por pérdida de datos, errores humanos o falta de control.
 
-Ejemplos de cliente válido:
+## Condición para retomar R-048
 
-- Gestoría.
-- Asesoría.
-- Academia.
-- Clínica pequeña.
-- Taller.
-- Tienda con TPV o stock.
-- Empresa con servidor local.
-- Negocio con base de datos MariaDB/MySQL.
+R-048 se retomará cuando estén completados los trabajos previos de limpieza, documentación, Windows y validación de instaladores.
 
-## Oferta recomendada para primer cliente
+## Criterio de cierre
 
-Para no complicar la primera venta, se recomienda ofrecer un piloto de pago controlado.
-
-### Opción recomendada
-
-**DASC PyME Inicial**
-
-Incluye:
-
-- Revisión del entorno.
-- Instalación de DASC Server Manager.
-- Configuración de backups.
-- Configuración de logs.
-- Validación de una restauración de prueba.
-- Configuración de alertas básicas.
-- Informe inicial de estado.
-- Soporte limitado durante el primer mes.
-
-Precio orientativo:
-
-- Instalación inicial: 250 € a 500 €.
-- Mantenimiento mensual opcional: 39 € a 79 €/mes.
-
-Para el primer cliente real se puede aplicar precio reducido si acepta dar feedback y permitir documentar el caso de uso sin datos sensibles.
-
-## Mensaje comercial principal
-
-DASC Server Manager no se vende como un simple panel técnico.
-
-Se vende como un servicio para que una PyME pueda saber:
-
-- Si sus copias existen.
-- Si se pueden restaurar.
-- Si algo falla.
-- Quién ha realizado acciones importantes.
-- Qué estado tiene su servidor.
-- Qué debe revisar cada mes.
-
-## Qué no prometer
-
-No se debe prometer:
-
-- Seguridad absoluta.
-- Recuperación garantizada en cualquier escenario.
-- Soporte ilimitado.
-- Sustitución completa de un proveedor IT.
-- Cumplimiento legal automático.
-- Instalación sin revisar antes el entorno del cliente.
-
-## Proceso comercial
-
-1. Identificar 5 posibles clientes cercanos.
-2. Contactar con mensaje simple.
-3. Ofrecer revisión inicial gratuita o de bajo coste.
-4. Presentar DASC como piloto de pago controlado.
-5. Definir alcance por escrito.
-6. Instalar solo si el entorno es viable.
-7. Validar backup y restauración.
-8. Entregar informe inicial.
-9. Proponer mantenimiento mensual.
-10. Registrar feedback real.
-
-## Criterio de cierre de R-048
-
-R-048 se cerrará si ocurre una de estas dos situaciones:
+R-048 solo se cerrará si ocurre una de estas dos situaciones:
 
 ### Caso A - Éxito
 
 Se consigue un primer cliente de pago.
 
-Debe quedar documentado:
+### Caso B - Aprendizaje comercial válido
 
-- Tipo de cliente.
-- Perfil Lite, PyME o Pro.
-- Precio acordado.
-- Alcance incluido.
-- Fecha de instalación o inicio.
-- Primer feedback.
-- Riesgos detectados.
+No se consigue cliente, pero se obtiene feedback real de posibles clientes y se documentan objeciones, precio, interés y ajustes necesarios.
 
-### Caso B - No venta, pero aprendizaje válido
+## Conclusión
 
-No se consigue cliente, pero se obtiene feedback real de posibles clientes.
+R-048 permanece abierta.
 
-Debe quedar documentado:
-
-- A quién se contactó.
-- Qué objeciones aparecieron.
-- Qué precio pareció aceptable o caro.
-- Qué parte del producto interesó más.
-- Qué habría que cambiar en la oferta.
-
-## Resultado esperado
-
-El resultado ideal de R-048 es conseguir el primer cliente de pago.
-
-El resultado mínimo válido es descubrir si la oferta actual se entiende, si el precio encaja y qué habría que ajustar antes de buscar más clientes.
+No se debe forzar su cierre hasta tener el producto más pulido y una oportunidad comercial real.

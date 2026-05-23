@@ -2,181 +2,85 @@
 
 ## Objetivo
 
-Montar un sistema básico de tickets para que las incidencias, solicitudes y tareas de soporte de DASC Server Manager no se pierdan en conversaciones informales como WhatsApp.
+Registrar incidencias internas del proyecto y evitar que los fallos o tareas de soporte queden perdidos en conversaciones informales.
 
 ## Estado
 
 En curso.
 
-## Decisión adoptada
+## Decisión actual
 
-Para la primera versión del producto se usará GitHub Issues como sistema básico de tickets.
+Se mantiene GitHub Issues como sistema interno provisional.
 
-La decisión se toma porque:
+No se considera todavía un sistema real de ticketing para clientes.
 
-- Ya existe repositorio del producto.
-- Permite registrar incidencias de forma ordenada.
-- Permite usar etiquetas.
-- Permite tener historial.
-- Permite diferenciar incidencias técnicas y solicitudes de soporte.
-- Evita depender únicamente de mensajes sueltos por WhatsApp.
-- No añade coste mensual inicial.
+## Motivo
 
-## Alcance de R-049
+GitHub Issues permite registrar incidencias técnicas y tareas internas, pero no equivale a un sistema profesional de atención al cliente.
 
-R-049 incluye:
+Sirve para esta etapa porque:
+
+- No añade coste.
+- Está integrado en el repositorio.
+- Permite historial.
+- Permite plantillas.
+- Permite clasificar incidencias internas.
+- Ayuda a ordenar el desarrollo.
+
+Pero todavía no cubre:
+
+- Portal privado de cliente.
+- SLA automático.
+- Gestión de clientes reales.
+- Notificaciones comerciales.
+- Integración con correo.
+- Panel de soporte externo.
+- Separación clara entre incidencias internas y soporte comercial.
+
+## Alcance real
+
+Lo creado en R-049 se limita a:
 
 - Plantilla de incidencia técnica.
 - Plantilla de solicitud de soporte.
-- Documento de funcionamiento del sistema de tickets.
-- Reglas mínimas de prioridad.
-- Criterios de seguridad para no subir secretos.
-- Flujo de entrada, revisión, resolución y cierre.
+- Configuración básica de Issues.
+- Documento interno de funcionamiento.
+- Validación de estructura.
 
-## Fuera de alcance
+## Qué no se debe afirmar
 
-R-049 no incluye todavía:
+No se debe afirmar todavía que DASC dispone de:
 
-- Portal de cliente propio.
-- Sistema avanzado tipo Jira, Freshdesk o Zendesk.
-- Automatización de SLA.
-- Integración con correo.
-- Integración con IA.
-- Panel interno de soporte.
-- Métricas automáticas avanzadas.
+- Sistema de ticketing comercial completo.
+- Portal de soporte para clientes.
+- Gestión profesional de SLA.
+- Mesa de ayuda externa.
+- Sistema equivalente a Jira, Freshdesk, Zendesk o similar.
 
-## Tipos de ticket
+## Uso permitido
 
-### Incidencia técnica
+Durante esta fase se puede usar GitHub Issues para:
 
-Se usa cuando algo falla.
+- Errores detectados en laboratorio.
+- Mejoras pendientes.
+- Validaciones internas.
+- Incidencias de instalación.
+- Seguimiento técnico del desarrollo.
 
-Ejemplos:
+## Condición para cerrar R-049
 
-- Error al ejecutar backup.
-- Fallo al restaurar.
-- Problema con SSH.
-- El panel no carga.
-- Las alertas no se envían.
-- Los logs no aparecen.
-- Un instalador falla.
+R-049 se cerrará más adelante cuando se decida una de estas dos opciones:
 
-### Solicitud de soporte
+### Opción A - Sistema interno aceptado
 
-Se usa cuando el cliente necesita ayuda o una revisión.
+Se acepta GitHub Issues como sistema interno suficiente para la primera etapa comercial.
 
-Ejemplos:
+### Opción B - Sistema externo mínimo
 
-- Revisar estado mensual.
-- Validar una restauración.
-- Cambiar configuración.
-- Revisar logs.
-- Configurar alertas.
-- Resolver una duda de uso.
+Se configura una herramienta más adecuada para soporte real de clientes.
 
-## Prioridades
+## Conclusión
 
-### Baja
+R-049 queda en curso.
 
-No bloquea el uso del sistema.
-
-Ejemplos:
-
-- Duda de documentación.
-- Mejora visual.
-- Texto poco claro.
-- Consulta general.
-
-### Media
-
-Afecta a una función, pero existe alternativa.
-
-Ejemplos:
-
-- Una alerta no llega, pero los backups funcionan.
-- Un filtro no responde.
-- Un informe necesita corrección.
-
-### Alta
-
-Afecta a una función importante.
-
-Ejemplos:
-
-- No se puede lanzar un backup manual.
-- No se puede revisar el historial.
-- No se puede conectar con el nodo de backups.
-
-### Crítica
-
-Afecta a restauración, pérdida de datos o caída completa.
-
-Ejemplos:
-
-- No se puede restaurar.
-- No existen backups recientes.
-- El panel no arranca.
-- Error grave en base de datos.
-- Riesgo de pérdida de datos.
-
-## Flujo de trabajo
-
-1. El cliente comunica el problema.
-2. Se crea un ticket en GitHub Issues.
-3. Se clasifica por tipo, módulo y prioridad.
-4. Se revisa si falta información.
-5. Se investiga el problema.
-6. Se propone solución.
-7. Se documenta lo realizado.
-8. Se cierra el ticket.
-9. Si procede, se crea una mejora futura.
-
-## Reglas de seguridad
-
-Nunca se debe incluir en un ticket:
-
-- Contraseñas.
-- Tokens.
-- Claves privadas.
-- Backups reales.
-- Datos personales.
-- Datos de clientes.
-- Capturas con información sensible.
-- IP pública sensible si no es necesario.
-
-Si hace falta compartir información delicada, se hará por canal privado y se documentará en el ticket solo una referencia genérica.
-
-## Etiquetas recomendadas
-
-Etiquetas mínimas:
-
-- `incidencia`
-- `soporte`
-- `backup`
-- `restauracion`
-- `logs`
-- `alertas`
-- `servicios`
-- `instalacion`
-- `documentacion`
-- `prioridad-baja`
-- `prioridad-media`
-- `prioridad-alta`
-- `prioridad-critica`
-
-## Criterio de cierre de R-049
-
-R-049 se podrá cerrar cuando:
-
-- Existan plantillas de Issues.
-- Exista documentación del sistema de tickets.
-- Se haya definido el flujo de trabajo.
-- Se haya definido cómo priorizar tickets.
-- Se haya documentado la regla de no incluir secretos.
-- El repositorio quede limpio tras el commit.
-
-## Resultado esperado
-
-A partir de R-049, cualquier incidencia o solicitud de soporte debe registrarse como ticket.
-
-WhatsApp o correo pueden usarse para avisar, pero no deben ser el lugar principal donde se pierde la información técnica.
+Lo actual sirve como base interna, pero no debe venderse ni documentarse como ticketing real de cliente.
