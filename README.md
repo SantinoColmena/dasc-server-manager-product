@@ -1,6 +1,6 @@
-# DASC Server Manager Product
+﻿# DASC Server Manager Product
 
-DASC Server Manager es una herramienta local orientada a pequeñas y medianas empresas para centralizar la gestión de copias de seguridad, servicios, logs, restauración, control de servicios, terminal remoto y alertas desde un panel web sencillo.
+DASC Server Manager es una herramienta local orientada a pequeñas y medianas empresas para centralizar la gestión de copias de seguridad, servicios, logs, restauración, control de servicios y alertas desde un panel web sencillo.
 
 Este repositorio corresponde a la versión producto del proyecto, separada del repositorio académico original.
 
@@ -8,95 +8,73 @@ Este repositorio corresponde a la versión producto del proyecto, separada del r
 
 Convertir el MVP académico en una base de producto más limpia, instalable, documentada y adaptable a distintos escenarios de cliente.
 
+El objetivo comercial no es vender solo una licencia, sino ofrecer instalación, mantenimiento, backups verificados, restauración, alertas, informes mensuales y soporte para PYMES que no tienen equipo técnico interno.
+
 ## Estado actual
 
-Fase 5 - Pilotos reales: completada a nivel técnico y documental.
+Fase 6 - Primeras ventas: **en curso**.
 
 Estado:
 
 - Fase 0 cerrada.
 - Fase 1 cerrada.
-- Fase 2 cerrada y validada en laboratorio real.
+- Fase 2 cerrada y validada.
 - Fase 3 cerrada.
-- Fase 4 cerrada a nivel documental.
-- Fase 5 cerrada con pilotos técnicos, incidencias, SLA y costes.
+- Fase 4 cerrada.
+- Fase 5 cerrada.
+- Fase 6 iniciada con preparación de release candidate.
 
-## Arquitecturas validadas
+Versión candidata actual:
 
-| Perfil | Arquitectura | Estado |
+- `v1.0-rc1`
+
+Esta versión candidata no se considera todavía una versión final de producción. Se usará como base controlada para primeros pilotos de pago o primer cliente real.
+
+## Arquitectura validada en laboratorio
+
+| Máquina | Rol | IP laboratorio | IP acceso desde Windows |
+|---|---|---|---|
+| lab-api | API / Panel / Reverse proxy HTTPS | 192.168.60.10 | 192.168.1.244 |
+| lab-db | MariaDB / Logs / Datos | 192.168.60.20 | 192.168.1.243 |
+| lab-backup | Backups + Servicios | 192.168.60.30 | 192.168.1.245 |
+
+## Arquitecturas comerciales previstas
+
+| Perfil | Infraestructura | Uso previsto |
 |---|---|---|
-| Laboratorio original | 3 máquinas Ubuntu | Validado |
-| PyME estándar | 2 servidores | Validado en piloto 1 |
-| Lite | 1 servidor + copia externa simulada | Validado en piloto 2 |
-| Pro | 3 servidores o arquitectura ampliada | Previsto como mejora futura |
+| Lite | 1 servidor + copia externa obligatoria | Microempresa o piloto inicial |
+| PyME | 2 servidores o servidor + nodo de backups | Perfil recomendado |
+| Pro | 3 servidores separados | Separación completa de responsabilidades |
 
-## Pilotos realizados
-
-| Piloto | Perfil | Resultado |
-|---|---|---|
-| Piloto 1 | 2 servidores | Validado |
-| Piloto 2 | 1 servidor + copia externa | Validado |
-| Piloto 3 | Opcional | Cerrado mediante justificación técnica |
-
-## Fases completadas
-
-| Fase | Estado |
-|---|---|
-| Fase 0 - Preparación | Cerrada |
-| Fase 1 - Núcleo estable | Cerrada |
-| Fase 2 - Seguridad y restauración | Cerrada y validada en laboratorio real |
-| Fase 3 - Despliegues y copia externa | Cerrada |
-| Fase 4 - Demo y validación | Cerrada documentalmente |
-| Fase 5 - Pilotos reales | Cerrada |
-
-## Fase 5 - Resumen
-
-Durante la Fase 5 se han validado:
-
-- Instalación piloto en perfil PyME de 2 servidores.
-- Medición de incidencias del piloto 1.
-- Corrección de fallos detectados en piloto 1.
-- Instalación piloto en perfil Lite de 1 servidor + copia externa simulada.
-- Cierre justificado del piloto 3 opcional.
-- Definición de SLA realista.
-- Recalculo de costes reales.
-- Correcciones en instaladores y configuración derivadas de pilotos reales.
-
-## Documentación principal
-
-Documentos clave:
-
-- `docs/pilotos/R-040_instalacion_piloto_1_2_servidores.md`
-- `docs/pilotos/R-041_medicion_incidencias_piloto_1.md`
-- `docs/pilotos/R-042_correccion_fallos_piloto_1.md`
-- `docs/pilotos/R-043_instalacion_piloto_2_1_servidor_externo.md`
-- `docs/pilotos/R-044_piloto_3_opcional.md`
-- `docs/pilotos/R-045_sla_realista.md`
-- `docs/pilotos/R-046_recalculo_costes_reales.md`
-- `docs/pilotos/cierre_fase_5_pilotos_reales.md`
-
-## Arquitecturas previstas
-
-El producto se diseña para poder adaptarse a diferentes escenarios:
-
-- 1 servidor: instalación Lite, siempre con copia externa obligatoria.
-- 2 servidores: instalación PyME recomendada.
-- 3 servidores: instalación Pro con separación completa.
-
-## Módulos previstos
+## Módulos principales
 
 - Panel web FastAPI.
 - Gestión de usuarios y permisos.
 - Backups completos, incrementales y diferenciales.
 - Historial de backups.
-- Restauración y descarga de copias.
+- Restauración controlada.
+- Descarga y eliminación de copias.
+- Validación SHA256.
 - Logs de actividad.
 - Control de servicios.
-- Terminal remoto.
 - Alertas.
 - Monitorización.
-- Documentación de cliente y soporte.
+- Instaladores automatizados.
+- Documentación de soporte y despliegue.
+
+## Documentación principal
+
+Documentos clave:
+
+- `docs/release/v1.0-rc1.md`
+- `docs/validaciones/R-047_validacion_release_candidate_v1_0_rc1.md`
+- `docs/validaciones/Fase_5_cierre_pilotos_reales.md`
+- `docs/producto/sla_realista.md`
+- `docs/producto/costes_reales.md`
+- `docs/producto/paquetes_comerciales.md`
 
 ## Aviso
 
-Este repositorio está evolucionando de MVP académico a base de producto. Aunque varias fases han sido documentadas y validadas en laboratorio y pilotos controlados, no debe utilizarse todavía en producción sin una validación adicional de seguridad, red, permisos, copias externas reales y restauración real con datos del cliente.
+Este repositorio está evolucionando de MVP académico a base de producto.
+
+Aunque existen validaciones reales en laboratorio, DASC Server Manager no debe utilizarse en producción crítica sin una validación adicional del entorno, permisos, red, restauración y copias externas.
