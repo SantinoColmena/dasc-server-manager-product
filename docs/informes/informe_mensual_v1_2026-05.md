@@ -6,10 +6,10 @@
 |---|---|
 | Cliente / entorno | DASC interno |
 | Periodo | 2026-05 |
-| Fecha de generación | 2026-05-23 14:54:08 |
+| Fecha de generación | 2026-05-23 14:54:47 |
 | Rama | main |
-| Commit | c4cec7a |
-| Versión / tag detectado | v1.0-rc1-11-gc4cec7a |
+| Commit | 73c2edb |
+| Versión / tag detectado | v1.0-rc1-12-g73c2edb |
 
 ## 2. Resumen ejecutivo
 
@@ -26,15 +26,12 @@ Objetivos de esta versión:
 
 ## 3. Estado del repositorio
 
-- AVISO: hay cambios pendientes.
-
-~~~text
- M tools/windows/generate_monthly_report.ps1
-~~~
+- OK: el repositorio está limpio o solo está pendiente este informe generado.
 
 ## 4. Últimos commits
 
 ~~~text
+73c2edb fix: corregir generador de informe mensual v1
 c4cec7a docs: generar primer informe mensual v1
 a82627f feat: crear generador de informe mensual v1
 e3c5636 docs: aclarar github como soporte interno
@@ -42,7 +39,6 @@ e3c5636 docs: aclarar github como soporte interno
 757955f chore: mejorar clasificacion de auditoria clean
 bbe6de7 docs: registrar auditoria clean del repositorio
 d35a176 chore: limpiar artefactos sensibles del paquete api
-1d208f6 docs: reordenar fase 6 antes de ventas
 ~~~
 
 ## 5. Auditoría clean
@@ -73,6 +69,6 @@ Pendiente para futuras versiones:
 
 ## 7. Conclusión
 
-El entorno requiere revisión antes de considerarse listo para pasos comerciales.
+El entorno revisado está en buen estado para continuar con limpieza y pulido del producto.
 
 Este informe no debe presentarse todavía como informe final de cliente. Es una primera base automática para evolucionar R-050.
