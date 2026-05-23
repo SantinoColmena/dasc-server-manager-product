@@ -1,8 +1,12 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Entornos virtuales
 .venv/
 venv/
 env/
@@ -11,11 +15,17 @@ env/
 .env
 config.env
 *.env
+deploy/api/package/config.env
 
-# Datos locales
+# Datos locales / runtime
 app/data/*.db
 app/data/*.sqlite
 app/data/users.json
+deploy/api/package/data/*.db
+deploy/api/package/data/*.sqlite
+deploy/api/package/data/users.json
+deploy/api/package/data/auth_logs.json
+deploy/api/package/data/alerts.db
 
 # Logs
 *.log
@@ -28,6 +38,15 @@ auth_logs/
 *.sql.gz
 *.dump
 backups/
+external-backups/
+
+# SSH / claves generadas
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+known_hosts*
+api_panel.pub
 
 # Sistema
 .DS_Store
@@ -39,8 +58,6 @@ Thumbs.db
 
 # Docker local
 docker-compose.override.yml
-deploy/api/package/config.env
-deploy/api/package/data/users.json
+
+# Python cache
 *.pyc
-deploy/api/package/data/alerts.db
-deploy/api/package/data/auth_logs.json

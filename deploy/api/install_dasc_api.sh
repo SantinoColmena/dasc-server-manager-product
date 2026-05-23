@@ -278,7 +278,17 @@ write_env_value "DASC_SSH_KEY" "$SSH_KEY_FILE"
 write_env_value "DASC_SSH_KNOWN_HOSTS" "$SSH_KNOWN_HOSTS_FILE"
 write_env_value "DASC_SSH_TIMEOUT" "30"
 write_env_value "DASC_SSH_CONNECT_TIMEOUT" "10"
-write_env_value "DASC_SSH_ALLOWED_HOSTS" "${BACKUP_HOST},${SERVICES_HOST}"
+DATABASE_HOST="$(read_env_value "TERMINAL_DATABASE_HOST" "$CONFIG_FILE" || true)"
+
+if [[ -z "$DATABASE_HOST" || "$DATABASE_HOST" == CAMBIAR_* ]]; then
+  DATABASE_HOST="$(read_env_value "LOGS_DB_HOST" "$CONFIG_FILE" || true)"
+fi
+
+if [[ -z "$DATABASE_HOST" || "$DATABASE_HOST" == CAMBIAR_* ]]; then
+  DATABASE_HOST="$BACKUP_HOST"
+fi
+
+write_env_value "DASC_SSH_ALLOWED_HOSTS" "127.0.0.1,localhost,${BACKUP_HOST},${SERVICES_HOST},${DATABASE_HOST}"
 
 touch "$SSH_KNOWN_HOSTS_FILE"
 chown "$APP_USER:$APP_GROUP" "$SSH_KNOWN_HOSTS_FILE"
@@ -287,6 +297,10 @@ chmod 644 "$SSH_KNOWN_HOSTS_FILE"
 TARGET_HOSTS=("$BACKUP_HOST")
 if [[ "$SERVICES_HOST" != "$BACKUP_HOST" ]]; then
   TARGET_HOSTS+=("$SERVICES_HOST")
+fi
+
+if [[ "$DATABASE_HOST" != "$BACKUP_HOST" && "$DATABASE_HOST" != "$SERVICES_HOST" ]]; then
+  TARGET_HOSTS+=("$DATABASE_HOST")
 fi
 
 for TARGET_HOST in "${TARGET_HOSTS[@]}"; do

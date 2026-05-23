@@ -1,6 +1,6 @@
-﻿# DASC Server Manager Product
+# DASC Server Manager Product
 
-DASC Server Manager es una herramienta local orientada a pequeñas y medianas empresas para centralizar la gestión de copias de seguridad, servicios, logs, restauración, control de servicios y alertas desde un panel web sencillo.
+DASC Server Manager es una herramienta local orientada a pequeñas y medianas empresas para centralizar la gestión de copias de seguridad, servicios, logs, restauración, control de servicios, terminal remoto y alertas desde un panel web sencillo.
 
 Este repositorio corresponde a la versión producto del proyecto, separada del repositorio académico original.
 
@@ -10,7 +10,7 @@ Convertir el MVP académico en una base de producto más limpia, instalable, doc
 
 ## Estado actual
 
-Fase 4 - Demo y validación: cerrada documentalmente.
+Fase 5 - Pilotos reales: completada a nivel técnico y documental.
 
 Estado:
 
@@ -19,15 +19,24 @@ Estado:
 - Fase 2 cerrada y validada en laboratorio real.
 - Fase 3 cerrada.
 - Fase 4 cerrada a nivel documental.
-- Pendiente futuro: ejecución de piloto técnico real.
+- Fase 5 cerrada con pilotos técnicos, incidencias, SLA y costes.
 
-## Arquitectura validada en laboratorio
+## Arquitecturas validadas
 
-| Máquina | Rol | IP laboratorio | IP acceso desde Windows |
-|---|---|---|---|
-| lab-api | API / Panel / Reverse proxy HTTPS | 192.168.60.10 | 192.168.1.244 |
-| lab-db | MariaDB / Logs / Datos | 192.168.60.20 | 192.168.1.243 |
-| lab-backup | Backups + Servicios | 192.168.60.30 | 192.168.1.245 |
+| Perfil | Arquitectura | Estado |
+|---|---|---|
+| Laboratorio original | 3 máquinas Ubuntu | Validado |
+| PyME estándar | 2 servidores | Validado en piloto 1 |
+| Lite | 1 servidor + copia externa simulada | Validado en piloto 2 |
+| Pro | 3 servidores o arquitectura ampliada | Previsto como mejora futura |
+
+## Pilotos realizados
+
+| Piloto | Perfil | Resultado |
+|---|---|---|
+| Piloto 1 | 2 servidores | Validado |
+| Piloto 2 | 1 servidor + copia externa | Validado |
+| Piloto 3 | Opcional | Cerrado mediante justificación técnica |
 
 ## Fases completadas
 
@@ -38,40 +47,39 @@ Estado:
 | Fase 2 - Seguridad y restauración | Cerrada y validada en laboratorio real |
 | Fase 3 - Despliegues y copia externa | Cerrada |
 | Fase 4 - Demo y validación | Cerrada documentalmente |
+| Fase 5 - Pilotos reales | Cerrada |
 
-## Fase 4 - Resumen
+## Fase 5 - Resumen
 
-Durante la Fase 4 se han preparado:
+Durante la Fase 5 se han validado:
 
-- Modo demo sin datos sensibles.
-- Propuesta de dominio y web mínima.
-- Manual rápido para cliente.
-- Base de conocimiento inicial.
-- Lista de 30 posibles perfiles de cliente.
-- Guion de llamada y demo.
-- Checklist de instalación en cliente.
-- Selección del primer piloto técnico.
-- Documento de cierre de fase.
+- Instalación piloto en perfil PyME de 2 servidores.
+- Medición de incidencias del piloto 1.
+- Corrección de fallos detectados en piloto 1.
+- Instalación piloto en perfil Lite de 1 servidor + copia externa simulada.
+- Cierre justificado del piloto 3 opcional.
+- Definición de SLA realista.
+- Recalculo de costes reales.
+- Correcciones en instaladores y configuración derivadas de pilotos reales.
 
 ## Documentación principal
 
 Documentos clave:
 
-- `docs/validaciones/cierre_fase_4_demo_validacion.md`
-- `docs/demo/R-032_modo_demo_sin_datos_sensibles.md`
-- `docs/web/R-033_dominio_y_web_minima.md`
-- `docs/cliente/R-034_manual_rapido_cliente.md`
-- `docs/soporte/R-035_base_conocimiento_inicial.md`
-- `docs/comercial/R-036_lista_30_posibles_clientes.md`
-- `docs/comercial/R-037_guion_llamada_demo.md`
-- `docs/cliente/R-038_checklist_instalacion_cliente.md`
-- `docs/pilotos/R-039_seleccion_primer_piloto_tecnico.md`
+- `docs/pilotos/R-040_instalacion_piloto_1_2_servidores.md`
+- `docs/pilotos/R-041_medicion_incidencias_piloto_1.md`
+- `docs/pilotos/R-042_correccion_fallos_piloto_1.md`
+- `docs/pilotos/R-043_instalacion_piloto_2_1_servidor_externo.md`
+- `docs/pilotos/R-044_piloto_3_opcional.md`
+- `docs/pilotos/R-045_sla_realista.md`
+- `docs/pilotos/R-046_recalculo_costes_reales.md`
+- `docs/pilotos/cierre_fase_5_pilotos_reales.md`
 
 ## Arquitecturas previstas
 
 El producto se diseña para poder adaptarse a diferentes escenarios:
 
-- 1 servidor: instalación Lite.
+- 1 servidor: instalación Lite, siempre con copia externa obligatoria.
 - 2 servidores: instalación PyME recomendada.
 - 3 servidores: instalación Pro con separación completa.
 
@@ -84,10 +92,11 @@ El producto se diseña para poder adaptarse a diferentes escenarios:
 - Restauración y descarga de copias.
 - Logs de actividad.
 - Control de servicios.
+- Terminal remoto.
 - Alertas.
 - Monitorización.
 - Documentación de cliente y soporte.
 
 ## Aviso
 
-Este repositorio está evolucionando de MVP académico a base de producto. Aunque varias fases han sido documentadas y validadas en laboratorio, no debe utilizarse todavía en producción sin una validación adicional de seguridad, red, permisos, copias externas y restauración real.
+Este repositorio está evolucionando de MVP académico a base de producto. Aunque varias fases han sido documentadas y validadas en laboratorio y pilotos controlados, no debe utilizarse todavía en producción sin una validación adicional de seguridad, red, permisos, copias externas reales y restauración real con datos del cliente.
