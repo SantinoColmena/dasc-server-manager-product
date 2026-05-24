@@ -7,13 +7,13 @@ TEST_TABLE="${TEST_TABLE:-empleados_demo}"
 
 BACKUP_USER="${BACKUP_USER:-dasc_backup}"
 BACKUP_PASS="${BACKUP_PASS:-dasc_backup_2026}"
-BACKUP_ALLOWED_HOST="${BACKUP_ALLOWED_HOST:-192.168.60.30}"
+BACKUP_ALLOWED_HOST="${BACKUP_ALLOWED_HOST:-}"
 RESTORE_USER="${RESTORE_USER:-dasc_restore}"
 RESTORE_PASS="${RESTORE_PASS:-dasc_restore_2026}"
 LOGS_DB_NAME="${LOGS_DB_NAME:-dasc_logs}"
 LOGS_DB_USER="${LOGS_DB_USER:-dasc_logs}"
 LOGS_DB_PASS="${LOGS_DB_PASS:-dasc_logs_2026}"
-LOGS_ALLOWED_HOST="${LOGS_ALLOWED_HOST:-192.168.60.10}"
+LOGS_ALLOWED_HOST="${LOGS_ALLOWED_HOST:-}"
 
 MARIADB_CNF="/etc/mysql/mariadb.conf.d/50-server.cnf"
 
@@ -32,11 +32,33 @@ BINLOG_FORMAT="${BINLOG_FORMAT:-ROW}"
 BINLOG_EXPIRE_DAYS="${BINLOG_EXPIRE_DAYS:-14}"
 BINLOG_MAX_SIZE="${BINLOG_MAX_SIZE:-100M}"
 
+prompt_required_var() {
+  local var_name="$1"
+  local prompt_text="$2"
+  local current_value="${!var_name:-}"
+
+  if [[ -z "$current_value" ]]; then
+    read -rp "$prompt_text: " current_value
+  fi
+
+  if [[ -z "$current_value" ]]; then
+    echo "ERROR: ${var_name} no puede estar vacío."
+    exit 1
+  fi
+
+  printf -v "$var_name" '%s' "$current_value"
+}
 if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: ejecuta este script con sudo."
   exit 1
 fi
 
+prompt_required_var "BACKUP_ALLOWED_HOST" "Introduce la IP o hostname permitido para backups/restauración"
+prompt_required_var "LOGS_ALLOWED_HOST" "Introduce la IP o hostname permitido para logs/API"
+
+echo "==> Parámetros de acceso remoto DB"
+echo "BACKUP_ALLOWED_HOST=${BACKUP_ALLOWED_HOST}"
+echo "LOGS_ALLOWED_HOST=${LOGS_ALLOWED_HOST}"
 echo "==> Instalando MariaDB, SSH y sudo"
 apt update
 DEBIAN_FRONTEND=noninteractive apt install -y mariadb-server mariadb-client openssh-server sudo
