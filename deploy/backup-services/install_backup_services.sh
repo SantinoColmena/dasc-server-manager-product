@@ -6,7 +6,7 @@ APP_GROUP="${APP_GROUP:-$APP_USER}"
 APP_HOME="/home/${APP_USER}"
 BACKUP_DIR="${BACKUP_DIR:-${APP_HOME}/backups}"
 
-DB_HOST="${DB_HOST:-192.168.60.20}"
+DB_HOST="${DB_HOST:-}"
 DB_NAME="${DB_NAME:-employees}"
 DB_BACKUP_USER="${DB_BACKUP_USER:-dasc_backup}"
 DB_BACKUP_PASS="${DB_BACKUP_PASS:-dasc_backup_2026}"
@@ -25,6 +25,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$SCRIPT_DIR/package"
 OPTIONAL_API_PUBKEY="$SCRIPT_DIR/api_panel.pub"
 
+prompt_required_var() {
+  local var_name="$1"
+  local prompt_text="$2"
+  local current_value="${!var_name:-}"
+
+  if [[ -z "$current_value" ]]; then
+    read -rp "$prompt_text: " current_value
+  fi
+
+  if [[ -z "$current_value" ]]; then
+    echo "ERROR: ${var_name} no puede estar vacío."
+    exit 1
+  fi
+
+  printf -v "$var_name" '%s' "$current_value"
+}
 if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: ejecuta este script con sudo."
   exit 1
