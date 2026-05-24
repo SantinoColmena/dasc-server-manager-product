@@ -57,6 +57,17 @@ Add-Check "Existe instalador API" (Test-Path -LiteralPath $installer) "Ruta espe
 Add-Check "No existe config.env real en paquete" (-not (Test-Path -LiteralPath (Join-Path $packageDir "config.env"))) "El paquete no debe incluir secretos reales."
 Add-Check "Existe config.env.example en paquete" (Test-Path -LiteralPath (Join-Path $packageDir "config.env.example")) "El instalador debe crear config.env a partir de este ejemplo."
 
+$configExamplePath = Join-Path $packageDir "config.env.example"
+$configExampleContent = ""
+if (Test-Path -LiteralPath $configExamplePath) {
+    $configExampleContent = Get-Content -LiteralPath $configExamplePath -Raw
+}
+
+Add-Check "config.env.example incluye BACKUP_DB_HOST" ($configExampleContent -match "BACKUP_DB_HOST") "Debe permitir configurar host de backup."
+Add-Check "config.env.example incluye BACKUP_DB_USER" ($configExampleContent -match "BACKUP_DB_USER") "Debe permitir configurar usuario de backup."
+Add-Check "config.env.example incluye BACKUP_DB_PASS" ($configExampleContent -match "BACKUP_DB_PASS") "Debe permitir configurar password de backup."
+Add-Check "config.env.example incluye BACKUP_OUTPUT_DIR" ($configExampleContent -match "BACKUP_OUTPUT_DIR") "Debe permitir configurar salida de backups."
+
 Add-Check "Existe main.py" (Test-Path -LiteralPath (Join-Path $packageDir "main.py")) "Archivo principal del API."
 Add-Check "Existe requirements.txt" (Test-Path -LiteralPath (Join-Path $packageDir "requirements.txt")) "Dependencias del API."
 Add-Check "Existe carpeta templates" (Test-Path -LiteralPath (Join-Path $packageDir "templates")) "Plantillas web."
@@ -65,6 +76,8 @@ Add-Check "Existe carpeta static" (Test-Path -LiteralPath (Join-Path $packageDir
 Add-Check "Existe generador Python de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.py")) "Herramienta de producto dentro del paquete."
 Add-Check "Existe wrapper Bash de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.sh")) "Wrapper para servidor Linux."
 Add-Check "Existe validador post-instalación API" (Test-Path -LiteralPath (Join-Path $packageDir "tools\check_api_installation.sh")) "Validador para Ubuntu instalado."
+Add-Check "Existe generador Python de backup completo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\run_full_db_backup.py")) "Herramienta de backup completo dentro del paquete."
+Add-Check "Existe wrapper Bash de backup completo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\run_full_db_backup.sh")) "Wrapper para backup completo en servidor Linux."
 Add-Check "Existe reports/.gitkeep" (Test-Path -LiteralPath (Join-Path $packageDir "reports\.gitkeep")) "Mantiene la carpeta reports sin versionar informes generados."
 
 $generatedReports = Get-ChildItem -LiteralPath (Join-Path $packageDir "reports") -Filter "*.md" -File -ErrorAction SilentlyContinue
@@ -82,10 +95,13 @@ Add-Check "Instalador prepara reports" ($installerContent -match 'mkdir -p "\$IN
 Add-Check "Instalador prepara tools" ($installerContent -match 'mkdir -p "\$INSTALL_DIR/tools"') "Debe crear directorio tools."
 Add-Check "Instalador da permisos al wrapper" ($installerContent -match "generate_operational_report\.sh") "Debe dar permisos de ejecución al wrapper."
 Add-Check "Instalador da permisos al validador post-instalación" ($installerContent -match "check_api_installation\.sh") "Debe dar permisos de ejecución al validador."
+Add-Check "Instalador da permisos al backup completo" ($installerContent -match "run_full_db_backup\.sh") "Debe dar permisos de ejecución al backup completo."
+Add-Check "Instalador verifica cliente MariaDB" ($installerContent -match "Verificando cliente MariaDB para backups") "Debe asegurar mysqldump o mariadb-dump para backups."
 
 Add-Check "install_dasc_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Linux deben tener LF."
 Add-Check "generate_operational_report.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\generate_operational_report.sh")) "Los scripts Linux deben tener LF."
 Add-Check "check_api_installation.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\check_api_installation.sh")) "Los scripts Linux deben tener LF."
+Add-Check "run_full_db_backup.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\run_full_db_backup.sh")) "Los scripts Linux deben tener LF."
 
 $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $total = $checks.Count

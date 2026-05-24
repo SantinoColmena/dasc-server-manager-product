@@ -41,6 +41,12 @@ echo "==> Instalando dependencias del sistema"
 apt update
 apt install -y python3 python3-venv python3-pip openssh-client curl sshpass
 
+
+echo "==> Verificando cliente MariaDB para backups"
+if ! command -v mysqldump >/dev/null 2>&1 && ! command -v mariadb-dump >/dev/null 2>&1; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-client
+fi
 echo "==> Creando estructura destino"
 mkdir -p "$PADRE_DIR"
 mkdir -p "$INSTALL_DIR"
@@ -192,6 +198,14 @@ fi
 
 if [[ -f "$INSTALL_DIR/tools/generate_operational_report.py" ]]; then
   chmod 755 "$INSTALL_DIR/tools/generate_operational_report.py"
+fi
+
+if [[ -f "$INSTALL_DIR/tools/run_full_db_backup.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/run_full_db_backup.sh"
+fi
+
+if [[ -f "$INSTALL_DIR/tools/run_full_db_backup.py" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/run_full_db_backup.py"
 fi
 chmod 640 "$CONFIG_FILE"
 if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then

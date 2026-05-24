@@ -1,13 +1,13 @@
 ﻿# ValidaciÃ³n automÃ¡tica del paquete API instalable
 
-Fecha: 2026-05-23 18:33:54
+Fecha: 2026-05-24 08:01:05
 
 ## Resumen
 
 | Campo | Valor |
 |---|---|
-| Total comprobaciones | 23 |
-| Correctas | 23 |
+| Total comprobaciones | 32 |
+| Correctas | 32 |
 | Fallidas | 0 |
 
 ## Resultado
@@ -24,6 +24,10 @@ El paquete API cumple las comprobaciones mÃ­nimas para seguir avanzando hacia 
 | OK | Existe instalador API | Ruta esperada: deploy/api/install_dasc_api.sh |
 | OK | No existe config.env real en paquete | El paquete no debe incluir secretos reales. |
 | OK | Existe config.env.example en paquete | El instalador debe crear config.env a partir de este ejemplo. |
+| OK | config.env.example incluye BACKUP_DB_HOST | Debe permitir configurar host de backup. |
+| OK | config.env.example incluye BACKUP_DB_USER | Debe permitir configurar usuario de backup. |
+| OK | config.env.example incluye BACKUP_DB_PASS | Debe permitir configurar password de backup. |
+| OK | config.env.example incluye BACKUP_OUTPUT_DIR | Debe permitir configurar salida de backups. |
 | OK | Existe main.py | Archivo principal del API. |
 | OK | Existe requirements.txt | Dependencias del API. |
 | OK | Existe carpeta templates | Plantillas web. |
@@ -31,6 +35,8 @@ El paquete API cumple las comprobaciones mÃ­nimas para seguir avanzando hacia 
 | OK | Existe generador Python de informe operativo | Herramienta de producto dentro del paquete. |
 | OK | Existe wrapper Bash de informe operativo | Wrapper para servidor Linux. |
 | OK | Existe validador post-instalaciÃ³n API | Validador para Ubuntu instalado. |
+| OK | Existe generador Python de backup completo | Herramienta de backup completo dentro del paquete. |
+| OK | Existe wrapper Bash de backup completo | Wrapper para backup completo en servidor Linux. |
 | OK | Existe reports/.gitkeep | Mantiene la carpeta reports sin versionar informes generados. |
 | OK | No hay informes runtime versionables en reports | Los informes generados deben ignorarse y no subirse. |
 | OK | Instalador requiere config.env.example | El instalador no debe depender de config.env real en el repo. |
@@ -40,9 +46,12 @@ El paquete API cumple las comprobaciones mÃ­nimas para seguir avanzando hacia 
 | OK | Instalador prepara tools | Debe crear directorio tools. |
 | OK | Instalador da permisos al wrapper | Debe dar permisos de ejecuciÃ³n al wrapper. |
 | OK | Instalador da permisos al validador post-instalaciÃ³n | Debe dar permisos de ejecuciÃ³n al validador. |
+| OK | Instalador da permisos al backup completo | Debe dar permisos de ejecuciÃ³n al backup completo. |
+| OK | Instalador verifica cliente MariaDB | Debe asegurar mysqldump o mariadb-dump para backups. |
 | OK | install_dasc_api.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | generate_operational_report.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | check_api_installation.sh usa LF | Los scripts Linux deben tener LF. |
+| OK | run_full_db_backup.sh usa LF | Los scripts Linux deben tener LF. |
 
 ## ConclusiÃ³n
 
