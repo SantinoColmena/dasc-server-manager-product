@@ -1,13 +1,13 @@
 ﻿# ValidaciÃ³n automÃ¡tica del paquete API instalable
 
-Fecha: 2026-05-24 08:06:08
+Fecha: 2026-05-24 08:07:32
 
 ## Resumen
 
 | Campo | Valor |
 |---|---|
-| Total comprobaciones | 32 |
-| Correctas | 32 |
+| Total comprobaciones | 34 |
+| Correctas | 34 |
 | Fallidas | 0 |
 
 ## Resultado
@@ -48,6 +48,8 @@ El paquete API cumple las comprobaciones mÃ­nimas para seguir avanzando hacia 
 | OK | Instalador da permisos al validador post-instalaciÃ³n | Debe dar permisos de ejecuciÃ³n al validador. |
 | OK | Instalador da permisos al backup completo | Debe dar permisos de ejecuciÃ³n al backup completo. |
 | OK | Instalador verifica cliente MariaDB | Debe asegurar mysqldump o mariadb-dump para backups. |
+| OK | Instalador tiene mensaje SSH remoto no bloqueante | Debe mostrar un mensaje final correcto sobre SSH no bloqueante. |
+| OK | Instalador mensaje SSH remoto bien cerrado | Evita lÃ­neas echo con comillas sin cerrar. |
 | OK | install_dasc_api.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | generate_operational_report.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | check_api_installation.sh usa LF | Los scripts Linux deben tener LF. |

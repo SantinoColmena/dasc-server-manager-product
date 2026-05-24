@@ -406,7 +406,7 @@ echo "InstalaciÃ³n completada"
 echo "Panel instalado en: $INSTALL_DIR"
 echo "Servicio: $SERVICE_NAME"
 echo "config.env protegido en: $CONFIG_FILE"
-echo "SSH remoto: modo no bloqueante. Validación completa en puerta posterior.
+echo "SSH remoto: modo no bloqueante. Validacion completa en puerta posterior."
 echo "URL local: http://127.0.0.1:8000"
 echo "URL red:   http://<IP_DEL_SERVIDOR>:8000"
 echo "============================================"

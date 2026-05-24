@@ -97,6 +97,8 @@ Add-Check "Instalador da permisos al wrapper" ($installerContent -match "generat
 Add-Check "Instalador da permisos al validador post-instalación" ($installerContent -match "check_api_installation\.sh") "Debe dar permisos de ejecución al validador."
 Add-Check "Instalador da permisos al backup completo" ($installerContent -match "run_full_db_backup\.sh") "Debe dar permisos de ejecución al backup completo."
 Add-Check "Instalador verifica cliente MariaDB" ($installerContent -match "Verificando cliente MariaDB para backups") "Debe asegurar mysqldump o mariadb-dump para backups."
+Add-Check "Instalador tiene mensaje SSH remoto no bloqueante" ($installerContent -match 'echo "SSH remoto: modo no bloqueante\. Validacion completa en puerta posterior\."') "Debe mostrar un mensaje final correcto sobre SSH no bloqueante."
+Add-Check "Instalador mensaje SSH remoto bien cerrado" ($installerContent -notmatch '(?m)^\s*echo "SSH remoto:[^"]*$') "Evita líneas echo con comillas sin cerrar."
 
 Add-Check "install_dasc_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Linux deben tener LF."
 Add-Check "generate_operational_report.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\generate_operational_report.sh")) "Los scripts Linux deben tener LF."
