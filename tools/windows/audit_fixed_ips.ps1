@@ -216,7 +216,7 @@ if ($findings.Count -eq 0) {
     foreach ($item in $ordered) {
         $lineSafe = $item.Line.Replace("|", "/")
         $fileSafe = $item.File.Replace("|", "/")
-        $md.Add("| $($item.Severity) | $($item.Zone) | $($item.IP) | `$fileSafe` | $($item.LineNumber) | `$lineSafe` |")
+        $md.Add(('| {0} | {1} | {2} | `{3}` | {4} | `{5}` |' -f $item.Severity, $item.Zone, $item.IP, $fileSafe, $item.LineNumber, $lineSafe))
     }
 }
 
