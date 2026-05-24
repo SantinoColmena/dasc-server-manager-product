@@ -7,6 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $rootPath = (Resolve-Path $Root).Path
 $outputPath = Join-Path $rootPath $Output
+$outputFullPath = [System.IO.Path]::GetFullPath($outputPath)
 
 $excludedDirs = @(
     ".git",
@@ -132,6 +133,7 @@ function Get-Severity {
 
 $files = Get-ChildItem -Path $rootPath -Recurse -File | Where-Object {
     -not (Test-IsExcludedPath $_.FullName) -and
+    ([System.IO.Path]::GetFullPath($_.FullName) -ne $outputFullPath) -and
     (
         $allowedExtensions -contains $_.Extension -or
         $_.Name -like "*.env.example" -or

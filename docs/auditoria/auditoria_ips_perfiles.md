@@ -1,6 +1,6 @@
 # AuditorÃ­a de IPs fijas y perfiles
 
-Fecha: 2026-05-24 08:40:55
+Fecha: 2026-05-24 08:41:51
 
 ## Objetivo
 
@@ -10,11 +10,11 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 
 | Campo | Valor |
 |---|---|
-| Total referencias IP detectadas | 415 |
+| Total referencias IP detectadas | 209 |
 | Severidad ALTA | 8 |
 | Severidad MEDIA | 36 |
 | Severidad BAJA | 10 |
-| Severidad INFO | 361 |
+| Severidad INFO | 155 |
 
 ## Criterio de severidad
 
@@ -41,218 +41,12 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | BAJA | ejemplo_configuracion | 192.168.60.30 | `deploy\api\package\config.env.example` | 13 | `BACKUPS_HOST=192.168.60.30` |
 | BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 14 | `TERMINAL_DATABASE_HOST=192.168.60.20` |
 | BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 18 | `LOGS_DB_HOST=192.168.60.20` |
-| BAJA | ejemplo_configuracion | 127.0.0.1 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | BAJA | ejemplo_configuracion | 192.168.60.40 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | BAJA | ejemplo_configuracion | 192.168.60.30 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
+| BAJA | ejemplo_configuracion | 127.0.0.1 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 39 | `BACKUP_DB_HOST=192.168.60.20` |
 | BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 48 | `RESTORE_DB_HOST=192.168.60.20` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 32 | `/ ALTA / instalador / 127.0.0.1 / $fileSafe / 342 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 33 | `/ ALTA / instalador / 127.0.0.1 / $fileSafe / 417 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 34 | `/ ALTA / instalador / 127.0.0.1 / $fileSafe / 426 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 35 | `/ ALTA / instalador / 192.168.60.20 / $fileSafe / 9 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 36 | `/ ALTA / instalador / 192.168.60.30 / $fileSafe / 10 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 37 | `/ ALTA / instalador / 192.168.60.10 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 38 | `/ ALTA / instalador / 127.0.0.1 / $fileSafe / 6 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 39 | `/ ALTA / instalador / 127.0.0.1 / $fileSafe / 101 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 40 | `/ BAJA / ejemplo_configuracion / 192.168.60.30 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 41 | `/ BAJA / ejemplo_configuracion / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 42 | `/ BAJA / ejemplo_configuracion / 192.168.60.20 / $fileSafe / 14 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 43 | `/ BAJA / ejemplo_configuracion / 192.168.60.20 / $fileSafe / 18 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 44 | `/ BAJA / ejemplo_configuracion / 192.168.60.30 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 45 | `/ BAJA / ejemplo_configuracion / 192.168.60.40 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 46 | `/ BAJA / ejemplo_configuracion / 127.0.0.1 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 47 | `/ BAJA / ejemplo_configuracion / 192.168.60.20 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 48 | `/ BAJA / ejemplo_configuracion / 192.168.60.20 / $fileSafe / 39 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 49 | `/ BAJA / ejemplo_configuracion / 192.168.60.20 / $fileSafe / 48 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 50 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 53 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 51 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 52 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 24 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 53 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 25 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 54 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 32 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 55 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 45 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 56 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 57 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 14 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 58 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 38 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 59 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 65 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 60 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 61 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 62 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 25 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.248 | `docs\auditoria\auditoria_ips_perfiles.md` | 63 | `/ INFO / documentacion / 192.168.1.248 / $fileSafe / 26 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 64 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 20 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.248 | `docs\auditoria\auditoria_ips_perfiles.md` | 65 | `/ INFO / documentacion / 192.168.1.248 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 66 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 56 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 67 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 56 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 68 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 60 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 69 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 84 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 70 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 84 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 71 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 84 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 72 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 84 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 73 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 80 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 74 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 32 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.248 | `docs\auditoria\auditoria_ips_perfiles.md` | 75 | `/ INFO / documentacion / 192.168.1.248 / $fileSafe / 33 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.248 | `docs\auditoria\auditoria_ips_perfiles.md` | 76 | `/ INFO / documentacion / 192.168.1.248 / $fileSafe / 54 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 77 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 120 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 78 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 25 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 79 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 26 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 80 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 27 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 81 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 55 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 82 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 56 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 83 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 57 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 84 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 86 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 85 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 87 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 86 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 88 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 87 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 38 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 88 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 39 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 89 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 40 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 90 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 211 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 91 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 112 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 92 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 310 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 93 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 316 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 94 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 322 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 95 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 336 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 96 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 351 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 97 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 357 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 98 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 129 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 99 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 100 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 27 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 101 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 78 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 102 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 35 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 103 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 40 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 104 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 40 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 105 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 114 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 106 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 27 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 107 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 118 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 108 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 109 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.0 | `docs\auditoria\auditoria_ips_perfiles.md` | 110 | `/ INFO / documentacion / 192.168.60.0 / $fileSafe / 24 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 111 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 31 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 112 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 32 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 113 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 66 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 114 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 76 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 115 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 94 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 116 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 117 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.250 | `docs\auditoria\auditoria_ips_perfiles.md` | 118 | `/ INFO / documentacion / 192.168.1.250 / $fileSafe / 54 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 119 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 28 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 120 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 29 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 121 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 64 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 122 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 81 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 123 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 144 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 124 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 158 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 125 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 126 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 127 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 59 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 128 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 103 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 129 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 135 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 130 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 165 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 131 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 107 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 132 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 108 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 133 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 134 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 135 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 120 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 136 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 137 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 138 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 139 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 140 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 56 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 141 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 88 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 142 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 192 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 143 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 11 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 144 | `/ INFO / documentacion / 192.168.1.244 / $fileSafe / 11 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 145 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.243 | `docs\auditoria\auditoria_ips_perfiles.md` | 146 | `/ INFO / documentacion / 192.168.1.243 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 147 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.245 | `docs\auditoria\auditoria_ips_perfiles.md` | 148 | `/ INFO / documentacion / 192.168.1.245 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.0 | `docs\auditoria\auditoria_ips_perfiles.md` | 149 | `/ INFO / documentacion / 192.168.60.0 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 150 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 34 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 151 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 35 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 152 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 39 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 153 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 122 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 154 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 123 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.137 | `docs\auditoria\auditoria_ips_perfiles.md` | 155 | `/ INFO / documentacion / 192.168.1.137 / $fileSafe / 143 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 156 | `/ INFO / documentacion / 192.168.1.244 / $fileSafe / 160 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 157 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 207 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 158 | `/ INFO / documentacion / 192.168.1.244 / $fileSafe / 272 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 159 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 160 | `/ INFO / documentacion / 192.168.1.244 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 161 | `/ INFO / documentacion / 192.168.1.244 / $fileSafe / 14 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.137 | `docs\auditoria\auditoria_ips_perfiles.md` | 162 | `/ INFO / documentacion / 192.168.1.137 / $fileSafe / 43 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 163 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 19 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 164 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 20 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 165 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 166 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 81 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 167 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 82 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 168 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 83 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 169 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 111 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 170 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 177 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 171 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 178 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 172 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 179 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 173 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 180 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 174 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 48 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 175 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 176 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 30 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 177 | `/ INFO / documentacion / 127.0.0.1 / $fileSafe / 20 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 178 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 179 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 180 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 51 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 181 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 52 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 182 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 53 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 183 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 11 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 184 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 185 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 186 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 41 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 187 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 42 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 188 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 43 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 189 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 44 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 190 | `/ INFO / documentacion / 192.168.60.10 / $fileSafe / 11 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 191 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 28 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 192 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 29 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 193 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 30 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 194 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 31 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 195 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 50 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 196 | `/ INFO / documentacion / 192.168.60.30 / $fileSafe / 51 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 197 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 52 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 198 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 53 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 199 | `/ INFO / documentacion / 192.168.60.20 / $fileSafe / 98 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.248 | `docs\auditoria\auditoria_ips_perfiles.md` | 200 | `/ INFO / documentacion / 192.168.1.248 / $fileSafe / 25 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 201 | `/ INFO / documentacion / 192.168.60.40 / $fileSafe / 76 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 202 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 12 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 203 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 13 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 204 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 14 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 205 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 18 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 206 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.40 | `docs\auditoria\auditoria_ips_perfiles.md` | 207 | `/ MEDIA / codigo_o_recurso / 192.168.60.40 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 208 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 209 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 210 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 18 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 211 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 19 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 212 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 20 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 213 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 214 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 22 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 215 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 23 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 216 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 17 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 217 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 18 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 218 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 19 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 219 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 20 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 220 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 21 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 221 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 22 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 222 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 15 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 223 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 16 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 224 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 17 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 225 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 18 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 226 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 43 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 227 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 44 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 228 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 45 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 229 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 47 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 230 | `/ MEDIA / codigo_o_recurso / 127.0.0.1 / $fileSafe / 53 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.10 | `docs\auditoria\auditoria_ips_perfiles.md` | 231 | `/ MEDIA / codigo_o_recurso / 192.168.60.10 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.244 | `docs\auditoria\auditoria_ips_perfiles.md` | 232 | `/ MEDIA / codigo_o_recurso / 192.168.1.244 / $fileSafe / 37 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.243 | `docs\auditoria\auditoria_ips_perfiles.md` | 233 | `/ MEDIA / codigo_o_recurso / 192.168.1.243 / $fileSafe / 38 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.20 | `docs\auditoria\auditoria_ips_perfiles.md` | 234 | `/ MEDIA / codigo_o_recurso / 192.168.60.20 / $fileSafe / 38 / $lineSafe /` |
-| INFO | documentacion | 192.168.60.30 | `docs\auditoria\auditoria_ips_perfiles.md` | 235 | `/ MEDIA / codigo_o_recurso / 192.168.60.30 / $fileSafe / 39 / $lineSafe /` |
-| INFO | documentacion | 192.168.1.245 | `docs\auditoria\auditoria_ips_perfiles.md` | 236 | `/ MEDIA / codigo_o_recurso / 192.168.1.245 / $fileSafe / 39 / $lineSafe /` |
-| INFO | documentacion | 127.0.0.1 | `docs\auditoria\auditoria_ips_perfiles.md` | 237 | `/ MEDIA / herramienta_producto / 127.0.0.1 / $fileSafe / 103 / $lineSafe /` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\cierre_fase_5_pilotos_reales.md` | 53 | `- Host SSH no permitido para 192.168.60.40.` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_1\incidencias.md` | 16 | `/ 4 / 23/05/2026 / Terminal / Terminal Database fallaba por host key SSH no registrada para 192.168.60.20 / Media / Corregida / Se añadió la huella ED25519 al known_hosts dedicado de DASC /` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_1\inventario_tecnico.md` | 24 | `/ Servidor cliente / Base de datos protegida / 192.168.60.20 / Pendiente /` |
@@ -272,9 +66,9 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 56 | `sudo BACKUP_ALLOWED_HOST=192.168.60.40 LOGS_ALLOWED_HOST=192.168.60.40 bash deploy/db/install_db.sh` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 56 | `sudo BACKUP_ALLOWED_HOST=192.168.60.40 LOGS_ALLOWED_HOST=192.168.60.40 bash deploy/db/install_db.sh` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 60 | `sudo DB_HOST=192.168.60.40 bash deploy/backup-services/install_backup_services.sh` |
-| INFO | documentacion | 192.168.60.30 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
-| INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 127.0.0.1 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
+| INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
+| INFO | documentacion | 192.168.60.30 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\R-042_correccion_fallos_piloto_1.md` | 80 | `- La huella SSH de 192.168.60.20 no estaba registrada.` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\R-043_instalacion_piloto_2_1_servidor_externo.md` | 32 | `/ IP de gestión interna / 192.168.60.40 /` |
@@ -306,8 +100,8 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-01_validacion_instalacion_api_ubuntu.md` | 27 | `Durante la primera instalación limpia en Ubuntu `lab-pruebas`, el instalador avanzó correctamente hasta crear el servicio y preparar el entorno API, pero falló al intentar registrar la huella SSH del host de backups `192.168.60.30`.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01_validacion_instalacion_api_ubuntu.md` | 78 | `- El panel responde en `http://127.0.0.1:8000`.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 35 | `- El panel respondió localmente en `http://127.0.0.1:8000`.` |
-| INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
+| INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 114 | `No se pudo conectar con MySQL en 192.168.60.20.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01B_cierre_reinstalacion_api_entorno_existente.md` | 27 | `- El panel respondía localmente en `http://127.0.0.1:8000`.` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01B_cierre_reinstalacion_api_entorno_existente.md` | 118 | `No se pudo conectar con MySQL en 192.168.60.20.` |
@@ -349,8 +143,8 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 192.168.60.10 | `docs\validaciones\F6-GATE-04A_auditoria_ips_perfiles.md` | 16 | `192.168.60.10` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04A_auditoria_ips_perfiles.md` | 17 | `192.168.60.20` |
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-04A_auditoria_ips_perfiles.md` | 18 | `192.168.60.30` |
-| INFO | documentacion | 192.168.1.244 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 11 | `/ lab-api / API / Panel / Reverse proxy / 192.168.60.10 / 192.168.1.244 /` |
 | INFO | documentacion | 192.168.60.10 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 11 | `/ lab-api / API / Panel / Reverse proxy / 192.168.60.10 / 192.168.1.244 /` |
+| INFO | documentacion | 192.168.1.244 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 11 | `/ lab-api / API / Panel / Reverse proxy / 192.168.60.10 / 192.168.1.244 /` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 12 | `/ lab-db / Base de datos MariaDB / 192.168.60.20 / 192.168.1.243 /` |
 | INFO | documentacion | 192.168.1.243 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 12 | `/ lab-db / Base de datos MariaDB / 192.168.60.20 / 192.168.1.243 /` |
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 13 | `/ lab-backup / Backups + Servicios / 192.168.60.30 / 192.168.1.245 /` |
