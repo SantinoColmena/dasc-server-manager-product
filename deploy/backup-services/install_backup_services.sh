@@ -77,6 +77,10 @@ if [[ ! -f "$PACKAGE_DIR/restore_drill_api.sh" ]]; then
 fi
 
 echo "==> Instalando paquetes necesarios"
+prompt_required_var "DB_HOST" "Introduce la IP o hostname del servidor DB"
+
+echo "==> Parámetros backup-services"
+echo "DB_HOST=${DB_HOST}"
 apt update
 
 # En Ubuntu 22.04/Isard, mysqlbinlog suele venir en mysql-server-core-8.0.
