@@ -207,6 +207,14 @@ fi
 if [[ -f "$INSTALL_DIR/tools/run_full_db_backup.py" ]]; then
   chmod 755 "$INSTALL_DIR/tools/run_full_db_backup.py"
 fi
+
+if [[ -f "$INSTALL_DIR/tools/cleanup_db_backups.sh" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/cleanup_db_backups.sh"
+fi
+
+if [[ -f "$INSTALL_DIR/tools/cleanup_db_backups.py" ]]; then
+  chmod 755 "$INSTALL_DIR/tools/cleanup_db_backups.py"
+fi
 chmod 640 "$CONFIG_FILE"
 if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then
   chmod 755 "$INSTALL_DIR/tools/check_api_installation.sh"

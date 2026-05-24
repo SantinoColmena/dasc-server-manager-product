@@ -67,6 +67,7 @@ Add-Check "config.env.example incluye BACKUP_DB_HOST" ($configExampleContent -ma
 Add-Check "config.env.example incluye BACKUP_DB_USER" ($configExampleContent -match "BACKUP_DB_USER") "Debe permitir configurar usuario de backup."
 Add-Check "config.env.example incluye BACKUP_DB_PASS" ($configExampleContent -match "BACKUP_DB_PASS") "Debe permitir configurar password de backup."
 Add-Check "config.env.example incluye BACKUP_OUTPUT_DIR" ($configExampleContent -match "BACKUP_OUTPUT_DIR") "Debe permitir configurar salida de backups."
+Add-Check "config.env.example incluye BACKUP_RETENTION_KEEP" ($configExampleContent -match "BACKUP_RETENTION_KEEP") "Debe permitir configurar retención de backups."
 
 Add-Check "Existe main.py" (Test-Path -LiteralPath (Join-Path $packageDir "main.py")) "Archivo principal del API."
 Add-Check "Existe requirements.txt" (Test-Path -LiteralPath (Join-Path $packageDir "requirements.txt")) "Dependencias del API."
@@ -88,6 +89,8 @@ Add-Check "Existe wrapper Bash de informe operativo" (Test-Path -LiteralPath (Jo
 Add-Check "Existe validador post-instalación API" (Test-Path -LiteralPath (Join-Path $packageDir "tools\check_api_installation.sh")) "Validador para Ubuntu instalado."
 Add-Check "Existe generador Python de backup completo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\run_full_db_backup.py")) "Herramienta de backup completo dentro del paquete."
 Add-Check "Existe wrapper Bash de backup completo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\run_full_db_backup.sh")) "Wrapper para backup completo en servidor Linux."
+Add-Check "Existe herramienta Python de limpieza de backups" (Test-Path -LiteralPath (Join-Path $packageDir "tools\cleanup_db_backups.py")) "Herramienta de retención dentro del paquete."
+Add-Check "Existe wrapper Bash de limpieza de backups" (Test-Path -LiteralPath (Join-Path $packageDir "tools\cleanup_db_backups.sh")) "Wrapper para limpieza de backups en Linux."
 Add-Check "Existe reports/.gitkeep" (Test-Path -LiteralPath (Join-Path $packageDir "reports\.gitkeep")) "Mantiene la carpeta reports sin versionar informes generados."
 
 $generatedReports = Get-ChildItem -LiteralPath (Join-Path $packageDir "reports") -Filter "*.md" -File -ErrorAction SilentlyContinue
@@ -106,6 +109,7 @@ Add-Check "Instalador prepara tools" ($installerContent -match 'mkdir -p "\$INST
 Add-Check "Instalador da permisos al wrapper" ($installerContent -match "generate_operational_report\.sh") "Debe dar permisos de ejecución al wrapper."
 Add-Check "Instalador da permisos al validador post-instalación" ($installerContent -match "check_api_installation\.sh") "Debe dar permisos de ejecución al validador."
 Add-Check "Instalador da permisos al backup completo" ($installerContent -match "run_full_db_backup\.sh") "Debe dar permisos de ejecución al backup completo."
+Add-Check "Instalador da permisos a limpieza de backups" ($installerContent -match "cleanup_db_backups\.sh") "Debe dar permisos de ejecución a la limpieza de backups."
 Add-Check "Instalador verifica cliente MariaDB" ($installerContent -match "Verificando cliente MariaDB para backups") "Debe asegurar mysqldump o mariadb-dump para backups."
 Add-Check "Instalador tiene mensaje SSH remoto no bloqueante" ($installerContent -match 'echo "SSH remoto: modo no bloqueante\. Validacion completa en puerta posterior\."') "Debe mostrar un mensaje final correcto sobre SSH no bloqueante."
 Add-Check "Instalador mensaje SSH remoto bien cerrado" ($installerContent -notmatch '(?m)^\s*echo "SSH remoto:[^"]*$') "Evita líneas echo con comillas sin cerrar."
@@ -114,6 +118,7 @@ Add-Check "install_dasc_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Lin
 Add-Check "generate_operational_report.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\generate_operational_report.sh")) "Los scripts Linux deben tener LF."
 Add-Check "check_api_installation.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\check_api_installation.sh")) "Los scripts Linux deben tener LF."
 Add-Check "run_full_db_backup.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\run_full_db_backup.sh")) "Los scripts Linux deben tener LF."
+Add-Check "cleanup_db_backups.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\cleanup_db_backups.sh")) "Los scripts Linux deben tener LF."
 
 $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $total = $checks.Count
