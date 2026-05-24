@@ -1,5 +1,6 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -12,7 +13,6 @@ SENSITIVE_WORDS = [
     "KEY",
     "CHAT_ID",
 ]
-
 
 REQUIRED_KEYS = [
     "SECRET_KEY",
@@ -65,13 +65,20 @@ def mask_value(key: str, value: str) -> str:
     return value
 
 
+def safe_cell(value) -> str:
+    text = str(value if value is not None else "-")
+    text = text.replace("|", "/")
+    text = text.replace("\n", " ")
+    return text
+
+
 def markdown_table(rows):
     output = []
     output.append("| Campo | Valor |")
     output.append("|---|---|")
 
     for key, value in rows:
-        output.append(f"| {key} | {value} |")
+        output.append(f"| {safe_cell(key)} | {safe_cell(value)} |")
 
     return output
 
@@ -116,6 +123,7 @@ def inspect_logs_db(env: dict):
     }
 
     required = ["LOGS_DB_HOST", "LOGS_DB_NAME", "LOGS_DB_USER", "LOGS_DB_PASS"]
+
     if not all(env.get(k) for k in required):
         result["status"] = "No comprobada: faltan variables LOGS_DB_*"
         return result
@@ -160,6 +168,76 @@ def inspect_logs_db(env: dict):
     return result
 
 
+def load_backup_metadata(meta_path: Path) -> dict:
+    try:
+        data = json.loads(meta_path.read_text(encoding="utf-8", errors="ignore"))
+        data["_meta_path"] = str(meta_path)
+        data["_meta_exists"] = True
+        return data
+    except Exception as exc:
+        return {
+            "_meta_path": str(meta_path),
+            "_meta_exists": False,
+            "_error": str(exc),
+        }
+
+
+def inspect_backups(env: dict):
+    backup_dir = Path(env.get("BACKUP_OUTPUT_DIR", "/var/backups/dasc/mysql/full")).expanduser()
+
+    result = {
+        "status": "No comprobado",
+        "backup_dir": str(backup_dir),
+        "latest": None,
+        "recent": [],
+        "error": None,
+    }
+
+    if not backup_dir.exists():
+        result["status"] = "No comprobado: no existe el directorio de backups"
+        return result
+
+    meta_files = sorted(
+        backup_dir.glob("*.sql.meta.json"),
+        key=lambda item: item.stat().st_mtime,
+        reverse=True,
+    )
+
+    if not meta_files:
+        result["status"] = "No hay backups con metadata"
+        return result
+
+    for meta_file in meta_files[:5]:
+        meta = load_backup_metadata(meta_file)
+
+        output_path = Path(str(meta.get("output", ""))) if meta.get("output") else None
+        sha_path = Path(str(output_path) + ".sha256") if output_path else None
+
+        output_exists = output_path.exists() if output_path else False
+        sha_exists = sha_path.exists() if sha_path else False
+        real_size = output_path.stat().st_size if output_exists else 0
+
+        meta["output_exists"] = output_exists
+        meta["sha_exists"] = sha_exists
+        meta["real_size_bytes"] = real_size
+
+        if output_exists and sha_exists and meta.get("has_create_table") is True:
+            meta["validation_status"] = "OK"
+        else:
+            meta["validation_status"] = "REVISAR"
+
+        result["recent"].append(meta)
+
+    result["latest"] = result["recent"][0]
+
+    if result["latest"]["validation_status"] == "OK":
+        result["status"] = "OK"
+    else:
+        result["status"] = "REVISAR"
+
+    return result
+
+
 def build_report(root: Path, client: str, period: str, output_path: Path):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -171,14 +249,17 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
         config_mode = "ejemplo"
 
     env = load_env_file(config_path)
+
     config_rows, missing_config = check_config(env)
     runtime_rows = inspect_runtime_files(root)
     logs_db = inspect_logs_db(env)
+    backups = inspect_backups(env)
 
     lines = []
 
     lines.append("# Informe operativo DASC Server Manager")
     lines.append("")
+
     lines.append("## 1. Datos generales")
     lines.append("")
     lines.extend(markdown_table([
@@ -211,8 +292,14 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
     lines.append("|---|---|")
 
     for key in sorted(env.keys()):
-        if key in REQUIRED_KEYS or key.startswith("TELEGRAM_") or key.startswith("ALERTS_") or key.endswith("_HOST"):
-            lines.append(f"| {key} | {mask_value(key, env.get(key, ''))} |")
+        if (
+            key in REQUIRED_KEYS
+            or key.startswith("TELEGRAM_")
+            or key.startswith("ALERTS_")
+            or key.startswith("BACKUP_")
+            or key.endswith("_HOST")
+        ):
+            lines.append(f"| {safe_cell(key)} | {safe_cell(mask_value(key, env.get(key, '')))} |")
 
     lines.append("")
 
@@ -244,31 +331,86 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
         lines.append("|---|---|---|---|---|---|")
 
         for event in logs_db["recent_events"]:
-            fecha = str(event.get("fecha", "-"))
-            tipo = str(event.get("tipo", "-"))
-            usuario = str(event.get("usuario", "-"))
-            recurso = str(event.get("recurso", "-")).replace("|", "/")
-            resultado = str(event.get("resultado", "-"))
-            detalle = str(event.get("detalle", "-")).replace("|", "/")
+            fecha = safe_cell(event.get("fecha", "-"))
+            tipo = safe_cell(event.get("tipo", "-"))
+            usuario = safe_cell(event.get("usuario", "-"))
+            recurso = safe_cell(event.get("recurso", "-"))
+            resultado = safe_cell(event.get("resultado", "-"))
+            detalle = safe_cell(event.get("detalle", "-"))
             lines.append(f"| {fecha} | {tipo} | {usuario} | {recurso} | {resultado} | {detalle} |")
 
         lines.append("")
 
-    lines.append("## 7. Limitaciones de esta versión")
+    lines.append("## 7. Backups completos")
+    lines.append("")
+
+    latest_backup = backups.get("latest")
+
+    if latest_backup:
+        lines.extend(markdown_table([
+            ("Estado", backups["status"]),
+            ("Directorio", backups["backup_dir"]),
+            ("Último backup", latest_backup.get("output", "No disponible")),
+            ("Fecha metadata", latest_backup.get("generated_at", "No disponible")),
+            ("Base de datos", latest_backup.get("database", "No disponible")),
+            ("Host origen", latest_backup.get("host", "No disponible")),
+            ("Usuario backup", latest_backup.get("user", "No disponible")),
+            ("Tamaño bytes", latest_backup.get("real_size_bytes", latest_backup.get("size_bytes", "No disponible"))),
+            ("SHA256", latest_backup.get("sha256", "No disponible")),
+            ("Archivo SQL existe", "OK" if latest_backup.get("output_exists") else "FALTA"),
+            ("Archivo SHA256 existe", "OK" if latest_backup.get("sha_exists") else "FALTA"),
+            ("Contiene CREATE TABLE", latest_backup.get("has_create_table", "No disponible")),
+            ("Contiene INSERT INTO", latest_backup.get("has_insert_into", "No disponible")),
+            ("Binario dump", latest_backup.get("dump_binary", "No disponible")),
+            ("Etiqueta", latest_backup.get("label", "No disponible")),
+        ]))
+        lines.append("")
+
+        if backups["recent"]:
+            lines.append("Últimos backups detectados:")
+            lines.append("")
+            lines.append("| Fecha | Base | Archivo | Tamaño | Estado |")
+            lines.append("|---|---|---|---|---|")
+
+            for item in backups["recent"]:
+                lines.append(
+                    f"| {safe_cell(item.get('generated_at', '-'))} "
+                    f"| {safe_cell(item.get('database', '-'))} "
+                    f"| {safe_cell(item.get('output', '-'))} "
+                    f"| {safe_cell(item.get('real_size_bytes', item.get('size_bytes', '-')))} "
+                    f"| {safe_cell(item.get('validation_status', '-'))} |"
+                )
+
+            lines.append("")
+    else:
+        lines.extend(markdown_table([
+            ("Estado", backups["status"]),
+            ("Directorio", backups["backup_dir"]),
+        ]))
+        lines.append("")
+
+    if backups.get("error"):
+        lines.append("Error detectado en backups:")
+        lines.append("")
+        lines.append("~~~text")
+        lines.append(str(backups["error"]))
+        lines.append("~~~")
+        lines.append("")
+
+    lines.append("## 8. Limitaciones de esta versión")
     lines.append("")
     lines.append("Esta versión todavía no sustituye un informe mensual final para cliente.")
     lines.append("")
     lines.append("Pendiente para evolucionar a herramienta lista para cliente:")
     lines.append("")
-    lines.append("- Consultar estado real de backups.")
-    lines.append("- Incluir última restauración de prueba.")
+    lines.append("- Incluir última restauración de prueba de forma automática.")
     lines.append("- Incluir alertas enviadas.")
     lines.append("- Incluir estado de servicios.")
     lines.append("- Generar una versión resumida para cliente no técnico.")
     lines.append("- Exportar a PDF o enviar por email.")
     lines.append("")
 
-    lines.append("## 8. Conclusión")
+    lines.append("## 9. Conclusión")
     lines.append("")
 
     if missing_config:
@@ -276,12 +418,25 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
         lines.append("")
         lines.append("Faltan variables mínimas para considerar el entorno preparado:")
         lines.append("")
+
         for key in missing_config:
             lines.append(f"- {key}")
+
     elif logs_db["status"] == "ERROR":
         lines.append("Resultado: OPERATIVO PARCIAL.")
         lines.append("")
         lines.append("La configuración mínima existe, pero la base de datos de logs no se pudo consultar.")
+
+    elif backups["status"] in ("ERROR", "REVISAR"):
+        lines.append("Resultado: OPERATIVO PARCIAL.")
+        lines.append("")
+        lines.append("La configuración y logs funcionan, pero el estado de backups requiere revisión.")
+
+    elif backups["status"] == "OK":
+        lines.append("Resultado: BASE OPERATIVA OK CON BACKUP.")
+        lines.append("")
+        lines.append("El informe operativo puede generarse desde el paquete API, consulta logs reales y detecta el último backup completo válido.")
+
     else:
         lines.append("Resultado: BASE OPERATIVA OK.")
         lines.append("")

@@ -1,13 +1,13 @@
 ﻿# ValidaciÃ³n automÃ¡tica del paquete API instalable
 
-Fecha: 2026-05-24 08:08:59
+Fecha: 2026-05-24 08:12:13
 
 ## Resumen
 
 | Campo | Valor |
 |---|---|
-| Total comprobaciones | 34 |
-| Correctas | 34 |
+| Total comprobaciones | 37 |
+| Correctas | 37 |
 | Fallidas | 0 |
 
 ## Resultado
@@ -33,6 +33,9 @@ El paquete API cumple las comprobaciones mÃ­nimas para seguir avanzando hacia 
 | OK | Existe carpeta templates | Plantillas web. |
 | OK | Existe carpeta static | Archivos estÃ¡ticos. |
 | OK | Existe generador Python de informe operativo | Herramienta de producto dentro del paquete. |
+| OK | Informe operativo inspecciona backups | Debe consultar metadata de backups. |
+| OK | Informe operativo lee BACKUP_OUTPUT_DIR | Debe usar directorio configurable de backups. |
+| OK | Informe operativo muestra secciÃ³n Backups completos | Debe incluir secciÃ³n de backups en informe. |
 | OK | Existe wrapper Bash de informe operativo | Wrapper para servidor Linux. |
 | OK | Existe validador post-instalaciÃ³n API | Validador para Ubuntu instalado. |
 | OK | Existe generador Python de backup completo | Herramienta de backup completo dentro del paquete. |

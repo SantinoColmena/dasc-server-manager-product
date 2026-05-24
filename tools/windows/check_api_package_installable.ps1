@@ -74,6 +74,16 @@ Add-Check "Existe carpeta templates" (Test-Path -LiteralPath (Join-Path $package
 Add-Check "Existe carpeta static" (Test-Path -LiteralPath (Join-Path $packageDir "static")) "Archivos estáticos."
 
 Add-Check "Existe generador Python de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.py")) "Herramienta de producto dentro del paquete."
+
+$operationalReportPath = Join-Path $packageDir "tools\generate_operational_report.py"
+$operationalReportContent = ""
+if (Test-Path -LiteralPath $operationalReportPath) {
+    $operationalReportContent = Get-Content -LiteralPath $operationalReportPath -Raw
+}
+
+Add-Check "Informe operativo inspecciona backups" ($operationalReportContent -match "inspect_backups") "Debe consultar metadata de backups."
+Add-Check "Informe operativo lee BACKUP_OUTPUT_DIR" ($operationalReportContent -match "BACKUP_OUTPUT_DIR") "Debe usar directorio configurable de backups."
+Add-Check "Informe operativo muestra sección Backups completos" ($operationalReportContent -match "Backups completos") "Debe incluir sección de backups en informe."
 Add-Check "Existe wrapper Bash de informe operativo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\generate_operational_report.sh")) "Wrapper para servidor Linux."
 Add-Check "Existe validador post-instalación API" (Test-Path -LiteralPath (Join-Path $packageDir "tools\check_api_installation.sh")) "Validador para Ubuntu instalado."
 Add-Check "Existe generador Python de backup completo" (Test-Path -LiteralPath (Join-Path $packageDir "tools\run_full_db_backup.py")) "Herramienta de backup completo dentro del paquete."
