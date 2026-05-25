@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DASC Central Support</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            color: #24292f;
+        }
+
+        .wrapper {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .header,
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 18px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .summary-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .summary-card strong {
+            display: block;
+            font-size: 28px;
+            margin-top: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #d8dee4;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            font-size: 13px;
+            color: #57606a;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #ddf4ff;
+            color: #0969da;
+        }
+
+        .muted {
+            color: #57606a;
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1>DASC Central Support</h1>
+            <p>Prototipo local de panel central de soporte multi-cliente.</p>
+            <p class="muted">Cliente demo: {{ demo_client_id }}</p>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                Total tickets
+                <strong>{{ total }}</strong>
+            </div>
+
+            <div class="summary-card">
+                Modo
+                <strong>Local</strong>
+            </div>
+
+            <div class="summary-card">
+                Coste licencia
+                <strong>0 €</strong>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Tickets centralizados</h2>
+
+            {% if tickets %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID central</th>
+                            <th>Cliente</th>
+                            <th>Ticket local</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Servicio</th>
+                            <th>Contacto</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                            <tr>
+                                <td><strong>{{ ticket.id }}</strong></td>
+                                <td>
+                                    {{ ticket.nombre_cliente }}
+                                    <div class="muted">{{ ticket.cliente_id }}</div>
+                                </td>
+                                <td>{{ ticket.ticket_local_id or "-" }}</td>
+                                <td>{{ ticket.tipo }}</td>
+                                <td><span class="badge">{{ ticket.prioridad }}</span></td>
+                                <td><span class="badge">{{ ticket.estado }}</span></td>
+                                <td>{{ ticket.servicio }}</td>
+                                <td>
+                                    {{ ticket.contacto }}
+                                    <div class="muted">{{ ticket.email }}</div>
+                                </td>
+                                <td>{{ ticket.fecha_recepcion }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No hay tickets centralizados todavía.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
