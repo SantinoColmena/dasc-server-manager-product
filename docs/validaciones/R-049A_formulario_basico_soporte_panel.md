@@ -6,7 +6,7 @@ Implementar una primera versión funcional de formulario de soporte dentro del p
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
