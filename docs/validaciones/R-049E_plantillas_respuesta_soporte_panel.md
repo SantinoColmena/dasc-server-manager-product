@@ -6,7 +6,7 @@ Permitir que el equipo DASC pueda generar respuestas tipo desde el detalle de un
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
