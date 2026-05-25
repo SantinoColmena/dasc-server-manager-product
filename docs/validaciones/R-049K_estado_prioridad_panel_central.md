@@ -6,7 +6,7 @@ Permitir que el equipo técnico DASC pueda cambiar el estado y la prioridad de u
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
