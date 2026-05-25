@@ -6,7 +6,7 @@ Permitir que el equipo DASC pueda cambiar el estado y la prioridad de un ticket 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
