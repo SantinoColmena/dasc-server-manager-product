@@ -6,7 +6,7 @@ Definir la arquitectura objetivo para centralizar incidencias de varios clientes
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
