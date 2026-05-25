@@ -6,7 +6,7 @@ Corregir definitivamente el listado local `/soporte/tickets` para que muestre la
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

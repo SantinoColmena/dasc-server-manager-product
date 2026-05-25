@@ -6,7 +6,7 @@ Aplicar el fix real al listado `/soporte/tickets` para que muestre la referencia
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema
 

@@ -6,7 +6,7 @@ Mostrar en el panel local la referencia del ticket central asociado a cada ticke
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 

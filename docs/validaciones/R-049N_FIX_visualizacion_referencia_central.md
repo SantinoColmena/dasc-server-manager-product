@@ -6,7 +6,7 @@ Corregir la visualización de la referencia central en el listado y detalle loca
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 
