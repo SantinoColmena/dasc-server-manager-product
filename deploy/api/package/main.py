@@ -3172,12 +3172,25 @@ def backups_run(
 
 import json as _support_json
 import sqlite3 as _support_sqlite3
+import urllib.request as _support_urlrequest
+import urllib.error as _support_urlerror
 from datetime import datetime as _support_datetime
 from pathlib import Path as _SupportPath
 
 SUPPORT_DATA_DIR = globals().get("DATA_DIR", _SupportPath(__file__).resolve().parent / "data")
 SUPPORT_TICKETS_FILE = SUPPORT_DATA_DIR / "support_tickets.json"
 SUPPORT_TICKETS_DB = SUPPORT_DATA_DIR / "support_tickets.db"
+# =====================
+# R-049L - CONFIG API CENTRAL SOPORTE
+# =====================
+
+CENTRAL_SUPPORT_ENABLED = os.getenv("CENTRAL_SUPPORT_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_SUPPORT_URL = os.getenv("CENTRAL_SUPPORT_URL", "http://127.0.0.1:8010/api/v1/support/tickets").strip()
+CENTRAL_SUPPORT_CLIENT_ID = os.getenv("CENTRAL_SUPPORT_CLIENT_ID", "cliente-demo-a").strip()
+CENTRAL_SUPPORT_CLIENT_NAME = os.getenv("CENTRAL_SUPPORT_CLIENT_NAME", "Cliente Demo A").strip()
+CENTRAL_SUPPORT_TOKEN = os.getenv("CENTRAL_SUPPORT_TOKEN", "dasc-central-demo-token-lab").strip()
+CENTRAL_SUPPORT_TIMEOUT = int(os.getenv("CENTRAL_SUPPORT_TIMEOUT", "5"))
+
 
 SUPPORT_TYPES = [
     "Incidencia",
@@ -3449,6 +3462,94 @@ def next_support_ticket_id():
 
     return f"{prefix}{max_num + 1:03d}"
 
+# =====================
+# R-049L - ENVIO A API CENTRAL
+# =====================
+
+def send_support_ticket_to_central(ticket):
+    if not CENTRAL_SUPPORT_ENABLED:
+        return {
+            "ok": True,
+            "sent": False,
+            "skipped": True,
+            "detail": "Integración central desactivada",
+        }
+
+    if not CENTRAL_SUPPORT_URL or not CENTRAL_SUPPORT_CLIENT_ID or not CENTRAL_SUPPORT_TOKEN:
+        return {
+            "ok": False,
+            "sent": False,
+            "skipped": False,
+            "detail": "Faltan variables CENTRAL_SUPPORT_URL, CENTRAL_SUPPORT_CLIENT_ID o CENTRAL_SUPPORT_TOKEN",
+        }
+
+    payload = {
+        "cliente_id": CENTRAL_SUPPORT_CLIENT_ID,
+        "nombre_cliente": ticket.get("cliente") or CENTRAL_SUPPORT_CLIENT_NAME,
+        "ticket_local_id": ticket.get("id", ""),
+        "tipo": ticket.get("tipo", "Incidencia"),
+        "prioridad": ticket.get("prioridad", "Media"),
+        "servicio": ticket.get("servicio", "Otro"),
+        "descripcion": ticket.get("descripcion", ""),
+        "evidencia": ticket.get("evidencia", ""),
+        "contacto": ticket.get("contacto", ""),
+        "email": ticket.get("email", ""),
+        "fecha_origen": ticket.get("fecha_apertura", ""),
+        "version_panel": os.getenv("DASC_VERSION", "lab-local"),
+        "origen": "panel-local",
+    }
+
+    data = _support_json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+    req = _support_urlrequest.Request(
+        CENTRAL_SUPPORT_URL,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
+        },
+        method="POST",
+    )
+
+    try:
+        with _support_urlrequest.urlopen(req, timeout=CENTRAL_SUPPORT_TIMEOUT) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+            try:
+                parsed = _support_json.loads(raw)
+            except Exception:
+                parsed = {}
+
+            return {
+                "ok": 200 <= response.status < 300,
+                "sent": 200 <= response.status < 300,
+                "skipped": False,
+                "status": response.status,
+                "central_ticket_id": parsed.get("central_ticket_id", ""),
+                "detail": raw,
+            }
+
+    except _support_urlerror.HTTPError as e:
+        raw = e.read().decode("utf-8", errors="replace")
+        return {
+            "ok": False,
+            "sent": False,
+            "skipped": False,
+            "status": e.code,
+            "central_ticket_id": "",
+            "detail": raw,
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "sent": False,
+            "skipped": False,
+            "status": 0,
+            "central_ticket_id": "",
+            "detail": str(e),
+        }
+
+
 
 @app.get("/soporte")
 def soporte_page(request: Request):
@@ -3532,6 +3633,30 @@ def soporte_create(
 
     save_support_ticket(ticket)
 
+    central_result = send_support_ticket_to_central(ticket)
+
+    if central_result.get("sent"):
+        central_msg = f"Ticket creado y enviado al panel central: {central_result.get('central_ticket_id', '')}"
+        central_log_result = "OK"
+        central_log_detail = f"Enviado a central: {central_result.get('central_ticket_id', '')}"
+    elif central_result.get("skipped"):
+        central_msg = "Ticket creado correctamente"
+        central_log_result = "OK"
+        central_log_detail = central_result.get("detail", "Integración central desactivada")
+    else:
+        central_msg = "Ticket creado. Aviso: no se pudo enviar al panel central"
+        central_log_result = "ERROR"
+        central_log_detail = central_result.get("detail", "Error desconocido")
+
+    log_event(
+        tipo="soporte",
+        resultado=central_log_result,
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso=f"POST /soporte central {ticket_id}",
+        detalle=central_log_detail[:250],
+    )
+
     log_event(
         tipo="soporte",
         resultado="OK",
@@ -3542,7 +3667,7 @@ def soporte_create(
     )
 
     return RedirectResponse(
-        url=f"/soporte?ok=1&ticket_id={ticket_id}&msg=Ticket+creado+correctamente",
+        url=f"/soporte?ok=1&ticket_id={ticket_id}&msg={quote(central_msg)}",
         status_code=303,
     )
 
