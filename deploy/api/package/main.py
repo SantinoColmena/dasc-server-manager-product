@@ -3167,15 +3167,17 @@ def backups_run(
     )
 
 # =====================
-# R-049A - SOPORTE BASICO
+# R-049A/R-049B - SOPORTE BASICO + SQLITE
 # =====================
 
 import json as _support_json
+import sqlite3 as _support_sqlite3
 from datetime import datetime as _support_datetime
 from pathlib import Path as _SupportPath
 
 SUPPORT_DATA_DIR = globals().get("DATA_DIR", _SupportPath(__file__).resolve().parent / "data")
 SUPPORT_TICKETS_FILE = SUPPORT_DATA_DIR / "support_tickets.json"
+SUPPORT_TICKETS_DB = SUPPORT_DATA_DIR / "support_tickets.db"
 
 SUPPORT_TYPES = [
     "Incidencia",
@@ -3204,44 +3206,246 @@ SUPPORT_SERVICES = [
 ]
 
 
-def ensure_support_tickets_file():
+def support_now():
+    return _support_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def support_db_connect():
     SUPPORT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    conn = _support_sqlite3.connect(str(SUPPORT_TICKETS_DB))
+    conn.row_factory = _support_sqlite3.Row
+    return conn
+
+
+def ensure_support_db():
+    SUPPORT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    with support_db_connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS support_tickets (
+                id TEXT PRIMARY KEY,
+                fecha_apertura TEXT NOT NULL,
+                fecha_actualizacion TEXT NOT NULL,
+                cliente TEXT NOT NULL,
+                contacto TEXT NOT NULL,
+                email TEXT NOT NULL,
+                telefono TEXT,
+                canal TEXT NOT NULL,
+                tipo TEXT NOT NULL,
+                prioridad TEXT NOT NULL,
+                servicio TEXT NOT NULL,
+                descripcion TEXT NOT NULL,
+                evidencia TEXT,
+                estado TEXT NOT NULL,
+                creado_por TEXT NOT NULL,
+                origen TEXT NOT NULL DEFAULT 'panel'
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_support_tickets_estado
+            ON support_tickets (estado)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_support_tickets_prioridad
+            ON support_tickets (prioridad)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_support_tickets_fecha
+            ON support_tickets (fecha_apertura)
+            """
+        )
+
+        conn.commit()
+
+    migrate_support_json_to_sqlite()
+
+
+def migrate_support_json_to_sqlite():
     if not SUPPORT_TICKETS_FILE.exists():
-        SUPPORT_TICKETS_FILE.write_text("[]", encoding="utf-8")
+        return
 
-
-def load_support_tickets():
-    ensure_support_tickets_file()
     try:
         data = _support_json.loads(SUPPORT_TICKETS_FILE.read_text(encoding="utf-8"))
-        if isinstance(data, list):
-            return data
     except Exception:
-        pass
-    return []
+        return
+
+    if not isinstance(data, list):
+        return
+
+    with support_db_connect() as conn:
+        for ticket in data:
+            if not isinstance(ticket, dict):
+                continue
+
+            ticket_id = str(ticket.get("id", "")).strip()
+            if not ticket_id:
+                continue
+
+            fecha_apertura = str(ticket.get("fecha_apertura", support_now()))
+            estado = str(ticket.get("estado", "Abierto"))
+
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO support_tickets (
+                    id,
+                    fecha_apertura,
+                    fecha_actualizacion,
+                    cliente,
+                    contacto,
+                    email,
+                    telefono,
+                    canal,
+                    tipo,
+                    prioridad,
+                    servicio,
+                    descripcion,
+                    evidencia,
+                    estado,
+                    creado_por,
+                    origen
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    ticket_id,
+                    fecha_apertura,
+                    fecha_apertura,
+                    str(ticket.get("cliente", "")),
+                    str(ticket.get("contacto", "")),
+                    str(ticket.get("email", "")),
+                    str(ticket.get("telefono", "")),
+                    str(ticket.get("canal", "Panel DASC")),
+                    str(ticket.get("tipo", "Incidencia")),
+                    str(ticket.get("prioridad", "Media")),
+                    str(ticket.get("servicio", "Otro")),
+                    str(ticket.get("descripcion", "")),
+                    str(ticket.get("evidencia", "")),
+                    estado,
+                    str(ticket.get("creado_por", "anon")),
+                    "json_migrado",
+                ),
+            )
+
+        conn.commit()
 
 
-def save_support_tickets(tickets):
-    ensure_support_tickets_file()
-    SUPPORT_TICKETS_FILE.write_text(
-        _support_json.dumps(tickets, indent=2, ensure_ascii=False),
-        encoding="utf-8"
-    )
+def support_row_to_dict(row):
+    return dict(row)
 
 
-def next_support_ticket_id(tickets):
+def load_support_tickets(limit=10):
+    ensure_support_db()
+
+    with support_db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                fecha_apertura,
+                fecha_actualizacion,
+                cliente,
+                contacto,
+                email,
+                telefono,
+                canal,
+                tipo,
+                prioridad,
+                servicio,
+                descripcion,
+                evidencia,
+                estado,
+                creado_por,
+                origen
+            FROM support_tickets
+            ORDER BY fecha_apertura DESC, id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return [support_row_to_dict(row) for row in rows]
+
+
+def save_support_ticket(ticket):
+    ensure_support_db()
+
+    now = support_now()
+
+    with support_db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO support_tickets (
+                id,
+                fecha_apertura,
+                fecha_actualizacion,
+                cliente,
+                contacto,
+                email,
+                telefono,
+                canal,
+                tipo,
+                prioridad,
+                servicio,
+                descripcion,
+                evidencia,
+                estado,
+                creado_por,
+                origen
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ticket["id"],
+                ticket["fecha_apertura"],
+                now,
+                ticket["cliente"],
+                ticket["contacto"],
+                ticket["email"],
+                ticket.get("telefono", ""),
+                ticket["canal"],
+                ticket["tipo"],
+                ticket["prioridad"],
+                ticket["servicio"],
+                ticket["descripcion"],
+                ticket.get("evidencia", ""),
+                ticket["estado"],
+                ticket["creado_por"],
+                "panel",
+            ),
+        )
+        conn.commit()
+
+
+def next_support_ticket_id():
+    ensure_support_db()
+
     year = _support_datetime.now().year
     prefix = f"DASC-{year}-"
     max_num = 0
 
-    for ticket in tickets:
-        ticket_id = str(ticket.get("id", ""))
-        if ticket_id.startswith(prefix):
-            try:
-                num = int(ticket_id.replace(prefix, ""))
-                max_num = max(max_num, num)
-            except Exception:
-                pass
+    with support_db_connect() as conn:
+        rows = conn.execute(
+            "SELECT id FROM support_tickets WHERE id LIKE ?",
+            (f"{prefix}%",),
+        ).fetchall()
+
+    for row in rows:
+        ticket_id = str(row["id"])
+        try:
+            num = int(ticket_id.replace(prefix, ""))
+            max_num = max(max_num, num)
+        except Exception:
+            pass
 
     return f"{prefix}{max_num + 1:03d}"
 
@@ -3249,7 +3453,7 @@ def next_support_ticket_id(tickets):
 @app.get("/soporte")
 def soporte_page(request: Request):
     context = get_common_context(request)
-    tickets = load_support_tickets()
+    tickets = load_support_tickets(limit=10)
 
     context["ok"] = request.query_params.get("ok")
     context["msg"] = request.query_params.get("msg")
@@ -3257,7 +3461,8 @@ def soporte_page(request: Request):
     context["support_types"] = SUPPORT_TYPES
     context["support_priorities"] = SUPPORT_PRIORITIES
     context["support_services"] = SUPPORT_SERVICES
-    context["tickets"] = list(reversed(tickets))[:10]
+    context["tickets"] = tickets
+    context["support_storage"] = "SQLite"
 
     return templates.TemplateResponse(request, "soporte.html", context)
 
@@ -3300,12 +3505,11 @@ def soporte_create(
     if servicio not in SUPPORT_SERVICES:
         servicio = "Otro"
 
-    tickets = load_support_tickets()
-    ticket_id = next_support_ticket_id(tickets)
+    ticket_id = next_support_ticket_id()
 
     ticket = {
         "id": ticket_id,
-        "fecha_apertura": _support_datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "fecha_apertura": support_now(),
         "cliente": empresa,
         "contacto": contacto,
         "email": email,
@@ -3320,8 +3524,7 @@ def soporte_create(
         "creado_por": request.session.get("user", "anon"),
     }
 
-    tickets.append(ticket)
-    save_support_tickets(tickets)
+    save_support_ticket(ticket)
 
     log_event(
         tipo="soporte",

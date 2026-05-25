@@ -197,6 +197,7 @@
 
             <div class="support-card">
                 <h2>Últimos tickets</h2>
+                <p class="ticket-meta">Almacenamiento: {{ support_storage or "Local" }}</p>
 
                 {% if tickets %}
                     <div class="ticket-list">
