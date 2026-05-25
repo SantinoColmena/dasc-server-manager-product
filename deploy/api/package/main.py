@@ -3735,6 +3735,12 @@ def soporte_ticket_detail_page(request: Request, ticket_id: str):
     context["support_statuses"] = SUPPORT_STATUSES
     context["support_priorities"] = SUPPORT_PRIORITIES
     context["history"] = get_support_ticket_history(ticket_id)
+    context["response_templates"] = get_support_response_templates()
+    selected_template_key = request.query_params.get("plantilla", "")
+    selected_template, selected_response_text = render_support_response_template(ticket, selected_template_key)
+    context["selected_template_key"] = selected_template_key
+    context["selected_template"] = selected_template
+    context["selected_response_text"] = selected_response_text
     context["ok"] = request.query_params.get("ok")
     context["msg"] = request.query_params.get("msg")
     return templates.TemplateResponse(request, "soporte_ticket_detalle.html", context)
@@ -3936,3 +3942,195 @@ def soporte_ticket_update_status_priority(
         url=f"/soporte/tickets/{ticket_id}?ok=0&msg=No+se+pudo+actualizar",
         status_code=303,
     )
+
+# =====================
+# R-049E - PLANTILLAS RESPUESTA SOPORTE
+# =====================
+
+SUPPORT_RESPONSE_TEMPLATES = [
+    {
+        "key": "recepcion",
+        "titulo": "Confirmación de recepción",
+        "uso": "Confirmar que la solicitud ha sido recibida.",
+        "texto": """Hola {contacto},
+
+Hemos recibido tu solicitud correctamente.
+
+Referencia interna: {ticket_id}
+
+La hemos registrado internamente y vamos a revisarla según la prioridad indicada.
+
+Servicio afectado: {servicio}
+Tipo de solicitud: {tipo}
+Prioridad: {prioridad}
+
+Te informaremos cuando tengamos un diagnóstico o si necesitamos más información.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "mas_informacion",
+        "titulo": "Solicitud de más información",
+        "uso": "Pedir datos adicionales para poder diagnosticar.",
+        "texto": """Hola {contacto},
+
+Para poder revisar la solicitud {ticket_id}, necesitamos algunos datos adicionales:
+
+- Fecha y hora aproximada del problema.
+- Mensaje de error, si aparece.
+- Captura de pantalla, si es posible.
+- Indicar si afecta a todos los usuarios o solo a uno.
+- Confirmar si el problema continúa actualmente.
+
+Con esa información podremos continuar el diagnóstico.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "analisis",
+        "titulo": "Incidencia en análisis",
+        "uso": "Informar de que el equipo DASC está revisando el caso.",
+        "texto": """Hola {contacto},
+
+Estamos revisando la solicitud {ticket_id}.
+
+El caso queda en análisis técnico. Estamos comprobando el estado del servicio afectado y revisando las evidencias disponibles.
+
+Servicio afectado: {servicio}
+Estado actual del ticket: {estado}
+
+Te informaremos con el resultado o con el siguiente paso necesario.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "servicio_operativo",
+        "titulo": "Servicio operativo",
+        "uso": "Responder cuando el servicio funciona correctamente.",
+        "texto": """Hola {contacto},
+
+Hemos revisado el servicio indicado en la solicitud {ticket_id} y actualmente se encuentra operativo.
+
+Las comprobaciones realizadas indican que no hay una caída activa del servicio.
+
+Si el problema continúa desde vuestro equipo o red, indícanos por favor:
+
+- Hora exacta del intento.
+- Usuario afectado.
+- Captura del error.
+- Navegador utilizado.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "resuelto",
+        "titulo": "Incidencia resuelta",
+        "uso": "Comunicar el cierre correcto de una incidencia.",
+        "texto": """Hola {contacto},
+
+La solicitud {ticket_id} ha quedado resuelta.
+
+Hemos aplicado las acciones necesarias y verificado que el servicio vuelve a funcionar correctamente.
+
+Resumen:
+
+- Servicio revisado: {servicio}
+- Estado final: {estado}
+- Validación final realizada.
+
+Damos el ticket por cerrado. Si vuelve a ocurrir, puedes responder a este mismo hilo o abrir una nueva solicitud.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "restauracion",
+        "titulo": "Restauración de backup",
+        "uso": "Pedir confirmación antes de restaurar datos.",
+        "texto": """Hola {contacto},
+
+Hemos recibido la solicitud {ticket_id} relacionada con restauración.
+
+Antes de ejecutar la restauración necesitamos confirmar:
+
+- Base de datos o servicio afectado.
+- Fecha aproximada a la que se desea restaurar.
+- Motivo de la restauración.
+- Confirmación de que entendéis que puede sobrescribir datos actuales.
+
+No ejecutaremos la restauración hasta recibir confirmación.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "mantenimiento",
+        "titulo": "Mantenimiento programado",
+        "uso": "Avisar o coordinar una intervención planificada.",
+        "texto": """Hola {contacto},
+
+La solicitud {ticket_id} requiere una intervención planificada.
+
+Para evitar impacto en el servicio, proponemos realizarla en una ventana de mantenimiento acordada.
+
+Servicio afectado: {servicio}
+
+Por favor, indícanos qué horario sería más adecuado para vuestra empresa.
+
+Un saludo,
+Equipo DASC""",
+    },
+    {
+        "key": "whatsapp",
+        "titulo": "Respuesta breve WhatsApp",
+        "uso": "Confirmación corta para canal rápido.",
+        "texto": """Hola {contacto}, hemos recibido tu aviso.
+
+Referencia interna: {ticket_id}
+
+Lo registramos internamente y lo revisamos. Te informaremos por este canal o por email cuando tengamos una actualización.""",
+    },
+]
+
+
+def get_support_response_templates():
+    return SUPPORT_RESPONSE_TEMPLATES
+
+
+def get_support_response_template(template_key):
+    template_key = (template_key or "").strip()
+
+    for template in SUPPORT_RESPONSE_TEMPLATES:
+        if template["key"] == template_key:
+            return template
+
+    return None
+
+
+def render_support_response_template(ticket, template_key):
+    template = get_support_response_template(template_key)
+
+    if not template:
+        return None, ""
+
+    values = {
+        "ticket_id": ticket.get("id", ""),
+        "cliente": ticket.get("cliente", ""),
+        "contacto": ticket.get("contacto", ""),
+        "email": ticket.get("email", ""),
+        "servicio": ticket.get("servicio", ""),
+        "tipo": ticket.get("tipo", ""),
+        "prioridad": ticket.get("prioridad", ""),
+        "estado": ticket.get("estado", ""),
+    }
+
+    try:
+        text = template["texto"].format(**values)
+    except Exception:
+        text = template["texto"]
+
+    return template, text

@@ -182,6 +182,48 @@
             <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
         </div>
     
+        
+        <div class="detail-card">
+            <h2>Plantillas de respuesta</h2>
+            <p>Selecciona una respuesta tipo para copiarla y enviarla al cliente por email, WhatsApp o sistema de tickets.</p>
+
+            <form method="get" action="/soporte/tickets/{{ ticket.id }}">
+                <div class="detail-grid">
+                    <div class="field">
+                        <span>Plantilla</span>
+                        <select name="plantilla" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
+                            <option value="">Seleccionar plantilla</option>
+                            {% for item in response_templates %}
+                                <option value="{{ item.key }}" {% if selected_template_key == item.key %}selected{% endif %}>{{ item.titulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <span>Uso recomendado</span>
+                        {% if selected_template %}
+                            {{ selected_template.uso }}
+                        {% else %}
+                            Selecciona una plantilla para ver su uso recomendado.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-top:16px;">
+                    <button class="detail-button" type="submit">Generar respuesta</button>
+                </div>
+            </form>
+
+            {% if selected_response_text %}
+                <h3>Respuesta generada</h3>
+                <textarea id="respuesta-generada" readonly style="width:100%;min-height:260px;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box;">{{ selected_response_text }}</textarea>
+
+                <div style="margin-top:12px;">
+                    <button class="detail-button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('respuesta-generada').value)">Copiar respuesta</button>
+                </div>
+            {% endif %}
+        </div>
+
         <div class="detail-card">
             <h2>Historial interno</h2>
 
