@@ -3165,3 +3165,174 @@ def backups_run(
         url=f"/backups?ok={ok}&msg={quote(result['text'])}",
         status_code=303,
     )
+
+# =====================
+# R-049A - SOPORTE BASICO
+# =====================
+
+import json as _support_json
+from datetime import datetime as _support_datetime
+from pathlib import Path as _SupportPath
+
+SUPPORT_DATA_DIR = globals().get("DATA_DIR", _SupportPath(__file__).resolve().parent / "data")
+SUPPORT_TICKETS_FILE = SUPPORT_DATA_DIR / "support_tickets.json"
+
+SUPPORT_TYPES = [
+    "Incidencia",
+    "Consulta",
+    "Cambio",
+    "Mantenimiento",
+    "Restauración",
+    "Informe",
+]
+
+SUPPORT_PRIORITIES = [
+    "Crítica",
+    "Alta",
+    "Media",
+    "Baja",
+]
+
+SUPPORT_SERVICES = [
+    "API / Panel",
+    "DB / Logs",
+    "Backups",
+    "Alertas",
+    "Informes",
+    "Soporte",
+    "Otro",
+]
+
+
+def ensure_support_tickets_file():
+    SUPPORT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not SUPPORT_TICKETS_FILE.exists():
+        SUPPORT_TICKETS_FILE.write_text("[]", encoding="utf-8")
+
+
+def load_support_tickets():
+    ensure_support_tickets_file()
+    try:
+        data = _support_json.loads(SUPPORT_TICKETS_FILE.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+    return []
+
+
+def save_support_tickets(tickets):
+    ensure_support_tickets_file()
+    SUPPORT_TICKETS_FILE.write_text(
+        _support_json.dumps(tickets, indent=2, ensure_ascii=False),
+        encoding="utf-8"
+    )
+
+
+def next_support_ticket_id(tickets):
+    year = _support_datetime.now().year
+    prefix = f"DASC-{year}-"
+    max_num = 0
+
+    for ticket in tickets:
+        ticket_id = str(ticket.get("id", ""))
+        if ticket_id.startswith(prefix):
+            try:
+                num = int(ticket_id.replace(prefix, ""))
+                max_num = max(max_num, num)
+            except Exception:
+                pass
+
+    return f"{prefix}{max_num + 1:03d}"
+
+
+@app.get("/soporte")
+def soporte_page(request: Request):
+    context = get_common_context(request)
+    tickets = load_support_tickets()
+
+    context["ok"] = request.query_params.get("ok")
+    context["msg"] = request.query_params.get("msg")
+    context["ticket_id"] = request.query_params.get("ticket_id")
+    context["support_types"] = SUPPORT_TYPES
+    context["support_priorities"] = SUPPORT_PRIORITIES
+    context["support_services"] = SUPPORT_SERVICES
+    context["tickets"] = list(reversed(tickets))[:10]
+
+    return templates.TemplateResponse(request, "soporte.html", context)
+
+
+@app.post("/soporte")
+def soporte_create(
+    request: Request,
+    empresa: str = Form(...),
+    contacto: str = Form(...),
+    email: str = Form(...),
+    telefono: str = Form(""),
+    tipo: str = Form(...),
+    prioridad: str = Form(...),
+    servicio: str = Form(...),
+    descripcion: str = Form(...),
+    evidencia: str = Form(""),
+):
+    empresa = (empresa or "").strip()
+    contacto = (contacto or "").strip()
+    email = (email or "").strip()
+    telefono = (telefono or "").strip()
+    tipo = (tipo or "").strip()
+    prioridad = (prioridad or "").strip()
+    servicio = (servicio or "").strip()
+    descripcion = (descripcion or "").strip()
+    evidencia = (evidencia or "").strip()
+
+    if not empresa or not contacto or not email or not descripcion:
+        return RedirectResponse(
+            url="/soporte?ok=0&msg=Faltan+campos+obligatorios",
+            status_code=303,
+        )
+
+    if tipo not in SUPPORT_TYPES:
+        tipo = "Incidencia"
+
+    if prioridad not in SUPPORT_PRIORITIES:
+        prioridad = "Media"
+
+    if servicio not in SUPPORT_SERVICES:
+        servicio = "Otro"
+
+    tickets = load_support_tickets()
+    ticket_id = next_support_ticket_id(tickets)
+
+    ticket = {
+        "id": ticket_id,
+        "fecha_apertura": _support_datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "cliente": empresa,
+        "contacto": contacto,
+        "email": email,
+        "telefono": telefono,
+        "canal": "Panel DASC",
+        "tipo": tipo,
+        "prioridad": prioridad,
+        "servicio": servicio,
+        "descripcion": descripcion,
+        "evidencia": evidencia,
+        "estado": "Abierto",
+        "creado_por": request.session.get("user", "anon"),
+    }
+
+    tickets.append(ticket)
+    save_support_tickets(tickets)
+
+    log_event(
+        tipo="soporte",
+        resultado="OK",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso=f"POST /soporte {ticket_id}",
+        detalle=f"Ticket de soporte creado: {tipo} / {prioridad} / {servicio}",
+    )
+
+    return RedirectResponse(
+        url=f"/soporte?ok=1&ticket_id={ticket_id}&msg=Ticket+creado+correctamente",
+        status_code=303,
+    )
