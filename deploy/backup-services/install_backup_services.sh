@@ -83,9 +83,45 @@ echo "==> Parámetros backup-services"
 echo "DB_HOST=${DB_HOST}"
 apt update
 
-# En Ubuntu 22.04/Isard, mysqlbinlog suele venir en mysql-server-core-8.0.
-# Usamos cliente MySQL para asegurar mysql, mysqldump y mysqlbinlog.
-DEBIAN_FRONTEND=noninteractive apt install -y python3 \
+echo "==> Instalando cliente MariaDB/MySQL y utilidades"
+if ! DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client gzip rsync openssh-client sudo; then
+  echo "AVISO: no se pudo instalar mariadb-client. Probando default-mysql-client."
+  DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client gzip rsync openssh-client sudo
+fi
+
+ensure_cmd_alias() {
+  local expected="$1"
+  local fallback="$2"
+
+  if command -v "$expected" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if command -v "$fallback" >/dev/null 2>&1; then
+    local fallback_path
+    fallback_path="$(command -v "$fallback")"
+
+    cat > "/usr/local/bin/${expected}" <<EOF
+#!/usr/bin/env bash
+exec "${fallback_path}" "\$@"
+EOF
+    chmod 755 "/usr/local/bin/${expected}"
+    return 0
+  fi
+
+  return 1
+}
+
+ensure_cmd_alias "mysql" "mariadb" || true
+ensure_cmd_alias "mysqldump" "mariadb-dump" || true
+ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
+
+for required_cmd in mysql mysqldump mysqlbinlog gzip rsync ssh; do
+  if ! command -v "$required_cmd" >/dev/null 2>&1; then
+    echo "ERROR: falta comando requerido: $required_cmd"
+    exit 1
+  fi
+done
   openssh-server \
   sudo \
   cron \
