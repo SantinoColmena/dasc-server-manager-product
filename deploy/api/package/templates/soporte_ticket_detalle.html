@@ -183,6 +183,18 @@
         </div>
     
         
+        
+        <div class="detail-card">
+            <h2>Resumen para Jira/Zammad</h2>
+            <p>Resumen técnico preparado para copiarlo en una herramienta externa de ticketing.</p>
+
+            <textarea id="resumen-externo" readonly style="width:100%;min-height:360px;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box;">{{ external_summary_text }}</textarea>
+
+            <div style="margin-top:12px;">
+                <button class="detail-button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('resumen-externo').value)">Copiar resumen</button>
+            </div>
+        </div>
+
         <div class="detail-card">
             <h2>Plantillas de respuesta</h2>
             <p>Selecciona una respuesta tipo para copiarla y enviarla al cliente por email, WhatsApp o sistema de tickets.</p>

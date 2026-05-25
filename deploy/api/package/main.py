@@ -3734,7 +3734,9 @@ def soporte_ticket_detail_page(request: Request, ticket_id: str):
     context["ticket"] = ticket
     context["support_statuses"] = SUPPORT_STATUSES
     context["support_priorities"] = SUPPORT_PRIORITIES
-    context["history"] = get_support_ticket_history(ticket_id)
+    history = get_support_ticket_history(ticket_id)
+    context["history"] = history
+    context["external_summary_text"] = render_support_external_summary(ticket, history)
     context["response_templates"] = get_support_response_templates()
     selected_template_key = request.query_params.get("plantilla", "")
     selected_template, selected_response_text = render_support_response_template(ticket, selected_template_key)
@@ -4134,3 +4136,82 @@ def render_support_response_template(ticket, template_key):
         text = template["texto"]
 
     return template, text
+
+# =====================
+# R-049F - RESUMEN JIRA ZAMMAD
+# =====================
+
+def format_support_history_for_external_summary(history):
+    if not history:
+        return "Sin historial interno registrado."
+
+    lines = []
+
+    for item in reversed(history):
+        fecha = item.get("fecha", "")
+        usuario = item.get("usuario", "")
+        accion = item.get("accion", "")
+        valor_anterior = item.get("valor_anterior", "") or "-"
+        valor_nuevo = item.get("valor_nuevo", "") or "-"
+        detalle = item.get("detalle", "") or ""
+
+        line = f"- {fecha} | {usuario} | {accion}: {valor_anterior} -> {valor_nuevo}"
+        if detalle:
+            line += f" | {detalle}"
+
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
+def render_support_external_summary(ticket, history):
+    history_text = format_support_history_for_external_summary(history)
+
+    return f"""# Resumen técnico de ticket DASC
+
+## Identificación
+
+Ticket interno: {ticket.get("id", "")}
+Estado: {ticket.get("estado", "")}
+Prioridad: {ticket.get("prioridad", "")}
+Tipo: {ticket.get("tipo", "")}
+Servicio afectado: {ticket.get("servicio", "")}
+
+## Cliente
+
+Empresa: {ticket.get("cliente", "")}
+Contacto: {ticket.get("contacto", "")}
+Email: {ticket.get("email", "")}
+Teléfono: {ticket.get("telefono", "") or "-"}
+
+## Fechas
+
+Fecha apertura: {ticket.get("fecha_apertura", "")}
+Última actualización: {ticket.get("fecha_actualizacion", "")}
+
+## Canal y origen
+
+Canal: {ticket.get("canal", "")}
+Creado por: {ticket.get("creado_por", "")}
+Origen: {ticket.get("origen", "")}
+
+## Descripción
+
+{ticket.get("descripcion", "")}
+
+## Evidencia
+
+{ticket.get("evidencia", "") or "Sin evidencia registrada."}
+
+## Historial interno
+
+{history_text}
+
+## Próximo paso recomendado
+
+Revisar el caso, confirmar diagnóstico y actualizar el estado del ticket en DASC.
+
+## Nota
+
+Este resumen se ha generado desde DASC Server Manager para copiarlo en Jira, Zammad u otra herramienta interna de soporte.
+"""
