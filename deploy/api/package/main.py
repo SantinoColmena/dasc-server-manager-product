@@ -3890,7 +3890,13 @@ def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
     with support_db_connect() as conn:
         rows = conn.execute(sql, params).fetchall()
 
-    return [support_row_to_dict(row) for row in rows]
+    tickets = [support_row_to_dict(row) for row in rows]
+
+    # R-049N-FIX4 search_support_tickets enriched real
+    if "enrich_support_tickets_with_central" in globals():
+        tickets = enrich_support_tickets_with_central(tickets)
+
+    return tickets
 
 
 def get_support_ticket(ticket_id):
