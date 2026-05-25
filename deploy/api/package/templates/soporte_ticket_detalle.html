@@ -133,12 +133,71 @@
             </div>
         </div>
 
+        
+        {% if ok == "1" %}
+            <div class="detail-card" style="background:#dafbe1;color:#116329;font-weight:700;">
+                Ticket actualizado correctamente.
+            </div>
+        {% elif ok == "0" %}
+            <div class="detail-card" style="background:#ffebe9;color:#82071e;font-weight:700;">
+                No se pudo actualizar el ticket.
+            </div>
+        {% endif %}
+
+        <div class="detail-card">
+            <h2>Actualizar estado y prioridad</h2>
+
+            <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado">
+                <div class="detail-grid">
+                    <div class="field">
+                        <span>Estado</span>
+                        <select name="estado" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
+                            {% for item in support_statuses %}
+                                <option value="{{ item }}" {% if ticket.estado == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <span>Prioridad</span>
+                        <select name="prioridad" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
+                            {% for item in support_priorities %}
+                                <option value="{{ item }}" {% if ticket.prioridad == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px;">
+                    <button class="detail-button" type="submit">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+
         <div class="detail-card">
             <h2>Descripción</h2>
             <pre>{{ ticket.descripcion }}</pre>
 
             <h2>Evidencia</h2>
             <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+        </div>
+    
+        <div class="detail-card">
+            <h2>Historial interno</h2>
+
+            {% if history %}
+                {% for item in history %}
+                    <div class="field" style="margin-bottom:10px;">
+                        <span>{{ item.fecha }} · {{ item.usuario }} · {{ item.accion }}</span>
+                        {{ item.valor_anterior or "-" }} → {{ item.valor_nuevo or "-" }}
+                        {% if item.detalle %}
+                            <div style="margin-top:4px;">{{ item.detalle }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No hay cambios registrados todavía.</p>
+            {% endif %}
         </div>
     </div>
 </body>

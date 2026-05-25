@@ -3732,4 +3732,207 @@ def soporte_ticket_detail_page(request: Request, ticket_id: str):
         )
 
     context["ticket"] = ticket
+    context["support_statuses"] = SUPPORT_STATUSES
+    context["support_priorities"] = SUPPORT_PRIORITIES
+    context["history"] = get_support_ticket_history(ticket_id)
+    context["ok"] = request.query_params.get("ok")
+    context["msg"] = request.query_params.get("msg")
     return templates.TemplateResponse(request, "soporte_ticket_detalle.html", context)
+
+# =====================
+# R-049D - ESTADOS Y PRIORIDADES TICKETS
+# =====================
+
+def ensure_support_history_table():
+    ensure_support_db()
+
+    with support_db_connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS support_ticket_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id TEXT NOT NULL,
+                fecha TEXT NOT NULL,
+                usuario TEXT NOT NULL,
+                accion TEXT NOT NULL,
+                valor_anterior TEXT,
+                valor_nuevo TEXT,
+                detalle TEXT
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_support_history_ticket
+            ON support_ticket_history (ticket_id)
+            """
+        )
+
+        conn.commit()
+
+
+def add_support_ticket_history(ticket_id, usuario, accion, valor_anterior="", valor_nuevo="", detalle=""):
+    ensure_support_history_table()
+
+    with support_db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO support_ticket_history (
+                ticket_id,
+                fecha,
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ticket_id,
+                support_now(),
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle,
+            ),
+        )
+        conn.commit()
+
+
+def get_support_ticket_history(ticket_id):
+    ensure_support_history_table()
+
+    with support_db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                ticket_id,
+                fecha,
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle
+            FROM support_ticket_history
+            WHERE ticket_id = ?
+            ORDER BY fecha DESC, id DESC
+            """,
+            (ticket_id,),
+        ).fetchall()
+
+    return [support_row_to_dict(row) for row in rows]
+
+
+def update_support_ticket_status_priority(ticket_id, nuevo_estado, nueva_prioridad, usuario):
+    ensure_support_db()
+
+    ticket = get_support_ticket(ticket_id)
+    if not ticket:
+        return False, "Ticket no encontrado"
+
+    nuevo_estado = (nuevo_estado or "").strip()
+    nueva_prioridad = (nueva_prioridad or "").strip()
+
+    if nuevo_estado not in SUPPORT_STATUSES:
+        return False, "Estado no válido"
+
+    if nueva_prioridad not in SUPPORT_PRIORITIES:
+        return False, "Prioridad no válida"
+
+    estado_anterior = ticket.get("estado", "")
+    prioridad_anterior = ticket.get("prioridad", "")
+
+    cambios = []
+
+    if estado_anterior != nuevo_estado:
+        cambios.append(f"estado: {estado_anterior} -> {nuevo_estado}")
+
+    if prioridad_anterior != nueva_prioridad:
+        cambios.append(f"prioridad: {prioridad_anterior} -> {nueva_prioridad}")
+
+    if not cambios:
+        return True, "Sin cambios"
+
+    now = support_now()
+
+    with support_db_connect() as conn:
+        conn.execute(
+            """
+            UPDATE support_tickets
+            SET
+                estado = ?,
+                prioridad = ?,
+                fecha_actualizacion = ?
+            WHERE id = ?
+            """,
+            (
+                nuevo_estado,
+                nueva_prioridad,
+                now,
+                ticket_id,
+            ),
+        )
+        conn.commit()
+
+    if estado_anterior != nuevo_estado:
+        add_support_ticket_history(
+            ticket_id=ticket_id,
+            usuario=usuario,
+            accion="Cambio de estado",
+            valor_anterior=estado_anterior,
+            valor_nuevo=nuevo_estado,
+            detalle=f"Estado actualizado desde la vista interna",
+        )
+
+    if prioridad_anterior != nueva_prioridad:
+        add_support_ticket_history(
+            ticket_id=ticket_id,
+            usuario=usuario,
+            accion="Cambio de prioridad",
+            valor_anterior=prioridad_anterior,
+            valor_nuevo=nueva_prioridad,
+            detalle=f"Prioridad actualizada desde la vista interna",
+        )
+
+    return True, "; ".join(cambios)
+
+
+@app.post("/soporte/tickets/{ticket_id}/estado")
+def soporte_ticket_update_status_priority(
+    request: Request,
+    ticket_id: str,
+    estado: str = Form(...),
+    prioridad: str = Form(...),
+):
+    usuario = request.session.get("user", "anon")
+
+    ok, msg = update_support_ticket_status_priority(
+        ticket_id=ticket_id,
+        nuevo_estado=estado,
+        nueva_prioridad=prioridad,
+        usuario=usuario,
+    )
+
+    log_event(
+        tipo="soporte",
+        resultado="OK" if ok else "ERROR",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso=f"POST /soporte/tickets/{ticket_id}/estado",
+        detalle=msg,
+    )
+
+    if ok:
+        return RedirectResponse(
+            url=f"/soporte/tickets/{ticket_id}?ok=1&msg=Ticket+actualizado",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        url=f"/soporte/tickets/{ticket_id}?ok=0&msg=No+se+pudo+actualizar",
+        status_code=303,
+    )
