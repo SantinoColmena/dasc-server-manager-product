@@ -226,6 +226,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>CENTRAL</th>
                             <th>Cliente</th>
                             <th>Tipo</th>
                             <th>Prioridad</th>
@@ -239,6 +240,14 @@
                         {% for ticket in tickets %}
                             <tr>
                                 <td class="ticket-id">{{ ticket.id }}</td>
+                            <td>
+                                {% if ticket.central_ticket_id %}
+                                    <strong>{{ ticket.central_ticket_id }}</strong>
+                                    <div class="muted">{{ ticket.central_sync_status or "sent" }}</div>
+                                {% else %}
+                                    <span class="muted">Sin central</span>
+                                {% endif %}
+                            </td>
                                 <td>
                                     {{ ticket.cliente }}
                                     <div class="muted">{{ ticket.contacto }} · {{ ticket.email }}</div>

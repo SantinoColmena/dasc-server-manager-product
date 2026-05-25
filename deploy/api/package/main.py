@@ -3834,6 +3834,7 @@ def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
 
 
 def get_support_ticket(ticket_id):
+    ensure_support_ticket_central_columns()  # R-049N detail
     ensure_support_db()
 
     with support_db_connect() as conn:
