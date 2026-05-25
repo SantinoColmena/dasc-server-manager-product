@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ ticket.id }} - DASC Central Support</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            color: #24292f;
+        }
+
+        .wrapper {
+            max-width: 1050px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 18px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #1f6feb;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .button.secondary {
+            background: #57606a;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .field {
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            padding: 12px;
+            background: #f6f8fa;
+        }
+
+        .field span {
+            display: block;
+            color: #57606a;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #ddf4ff;
+            color: #0969da;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            padding: 14px;
+            font-family: inherit;
+        }
+
+        @media (max-width: 850px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="actions">
+            <a href="/" class="button secondary">Volver al panel central</a>
+        </div>
+
+        <div class="card">
+            <h1>{{ ticket.id }}</h1>
+            <p>
+                <span class="badge">{{ ticket.estado }}</span>
+                <span class="badge">{{ ticket.prioridad }}</span>
+                <span class="badge">{{ ticket.tipo }}</span>
+            </p>
+
+            <div class="grid">
+                <div class="field">
+                    <span>Cliente</span>
+                    {{ ticket.nombre_cliente }}
+                </div>
+
+                <div class="field">
+                    <span>ID cliente</span>
+                    {{ ticket.cliente_id }}
+                </div>
+
+                <div class="field">
+                    <span>Ticket local</span>
+                    {{ ticket.ticket_local_id or "-" }}
+                </div>
+
+                <div class="field">
+                    <span>Servicio afectado</span>
+                    {{ ticket.servicio }}
+                </div>
+
+                <div class="field">
+                    <span>Contacto</span>
+                    {{ ticket.contacto }}
+                </div>
+
+                <div class="field">
+                    <span>Email</span>
+                    {{ ticket.email }}
+                </div>
+
+                <div class="field">
+                    <span>Fecha recepción central</span>
+                    {{ ticket.fecha_recepcion }}
+                </div>
+
+                <div class="field">
+                    <span>Última actualización</span>
+                    {{ ticket.fecha_actualizacion }}
+                </div>
+
+                <div class="field">
+                    <span>Fecha origen cliente</span>
+                    {{ ticket.fecha_origen or "-" }}
+                </div>
+
+                <div class="field">
+                    <span>Versión panel local</span>
+                    {{ ticket.version_panel or "-" }}
+                </div>
+
+                <div class="field">
+                    <span>Origen</span>
+                    {{ ticket.origen or "-" }}
+                </div>
+
+                <div class="field">
+                    <span>Coste licencia</span>
+                    0 €
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Descripción</h2>
+            <pre>{{ ticket.descripcion }}</pre>
+
+            <h2>Evidencia</h2>
+            <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+        </div>
+    </div>
+</body>
+</html>

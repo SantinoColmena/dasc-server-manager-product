@@ -318,3 +318,58 @@ def dashboard(request: Request):
             "demo_client_id": DEMO_CLIENT_ID,
         },
     )
+
+# =====================
+# R-049J - DETALLE TICKET CENTRAL
+# =====================
+
+def get_central_ticket(ticket_id):
+    init_db()
+
+    with db_connect() as conn:
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                fecha_recepcion,
+                fecha_actualizacion,
+                cliente_id,
+                nombre_cliente,
+                ticket_local_id,
+                tipo,
+                prioridad,
+                servicio,
+                descripcion,
+                evidencia,
+                contacto,
+                email,
+                fecha_origen,
+                version_panel,
+                origen,
+                estado
+            FROM central_tickets
+            WHERE id = ?
+            """,
+            (ticket_id,),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    return dict(row)
+
+
+@app.get("/tickets/{ticket_id}", response_class=HTMLResponse)
+def central_ticket_detail(request: Request, ticket_id: str):
+    ticket = get_central_ticket(ticket_id)
+
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket central no encontrado")
+
+    return templates.TemplateResponse(
+        request,
+        "central_ticket_detail.html",
+        {
+            "ticket": ticket,
+        },
+    )

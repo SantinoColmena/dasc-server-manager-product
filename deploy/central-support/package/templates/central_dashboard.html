@@ -137,7 +137,7 @@
                     <tbody>
                         {% for ticket in tickets %}
                             <tr>
-                                <td><strong>{{ ticket.id }}</strong></td>
+                                <td><strong><a href="/tickets/{{ ticket.id }}">{{ ticket.id }}</a></strong></td>
                                 <td>
                                     {{ ticket.nombre_cliente }}
                                     <div class="muted">{{ ticket.cliente_id }}</div>
