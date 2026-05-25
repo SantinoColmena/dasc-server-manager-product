@@ -3524,6 +3524,66 @@ def update_support_ticket_central_sync(
         )
         conn.commit()
 
+
+# =====================
+# R-049N-FIX - ENRIQUECER TICKETS CON CENTRAL
+# =====================
+
+def get_support_ticket_central_sync(ticket_id):
+    if not ticket_id:
+        return {}
+
+    ensure_support_ticket_central_columns()
+
+    with _support_sqlite3.connect(str(SUPPORT_TICKETS_DB)) as conn:
+        conn.row_factory = _support_sqlite3.Row
+        row = conn.execute(
+            """
+            SELECT
+                central_ticket_id,
+                central_sync_status,
+                central_sync_detail,
+                central_sync_at
+            FROM support_tickets
+            WHERE id = ?
+            """,
+            (ticket_id,),
+        ).fetchone()
+
+    if not row:
+        return {}
+
+    return {
+        "central_ticket_id": row["central_ticket_id"] or "",
+        "central_sync_status": row["central_sync_status"] or "",
+        "central_sync_detail": row["central_sync_detail"] or "",
+        "central_sync_at": row["central_sync_at"] or "",
+    }
+
+
+def enrich_support_ticket_with_central(ticket):
+    if not ticket:
+        return ticket
+
+    try:
+        ticket_id = ticket.get("id")
+    except Exception:
+        return ticket
+
+    sync = get_support_ticket_central_sync(ticket_id)
+
+    for key, value in sync.items():
+        ticket[key] = value
+
+    return ticket
+
+
+def enrich_support_tickets_with_central(tickets):
+    if not tickets:
+        return tickets
+
+    return [enrich_support_ticket_with_central(ticket) for ticket in tickets]
+
 # =====================
 # R-049L - ENVIO A API CENTRAL
 # =====================
@@ -3938,7 +3998,7 @@ def soporte_ticket_detail_page(request: Request, ticket_id: str):
 
     context = get_common_context(request)
     ticket = get_support_ticket(ticket_id)
-
+    ticket = enrich_support_ticket_with_central(ticket)
     if not ticket:
         return RedirectResponse(
             url="/soporte/tickets?msg=Ticket+no+encontrado",
@@ -4053,6 +4113,8 @@ def update_support_ticket_status_priority(ticket_id, nuevo_estado, nueva_priorid
     ensure_support_db()
 
     ticket = get_support_ticket(ticket_id)
+
+    ticket = enrich_support_ticket_with_central(ticket)
     if not ticket:
         return False, "Ticket no encontrado"
 
