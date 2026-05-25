@@ -6,7 +6,7 @@ Guardar en la base SQLite local la relación entre un ticket creado en el panel 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
