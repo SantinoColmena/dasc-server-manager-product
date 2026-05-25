@@ -339,7 +339,32 @@ if [[ -z "$DATABASE_HOST" || "$DATABASE_HOST" == CAMBIAR_* ]]; then
   DATABASE_HOST="$BACKUP_HOST"
 fi
 
-write_env_value "DASC_SSH_ALLOWED_HOSTS" "127.0.0.1,localhost,${BACKUP_HOST},${SERVICES_HOST},${DATABASE_HOST}"
+build_unique_csv() {
+  local result=""
+  local item=""
+
+  for item in "$@"; do
+    if [[ -z "$item" ]]; then
+      continue
+    fi
+
+    case ",${result}," in
+      *,"${item}",*)
+        ;;
+      *)
+        if [[ -z "$result" ]]; then
+          result="$item"
+        else
+          result="${result},${item}"
+        fi
+        ;;
+    esac
+  done
+
+  printf '%s\n' "$result"
+}
+DASC_ALLOWED_HOSTS="$(build_unique_csv "127.0.0.1" "localhost" "${BACKUP_HOST}" "${SERVICES_HOST}" "${DATABASE_HOST}")"
+write_env_value "DASC_SSH_ALLOWED_HOSTS" "${DASC_ALLOWED_HOSTS}"
 
 touch "$SSH_KNOWN_HOSTS_FILE"
 chown "$APP_USER:$APP_GROUP" "$SSH_KNOWN_HOSTS_FILE"
