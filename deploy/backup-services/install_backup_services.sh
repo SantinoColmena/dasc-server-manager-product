@@ -83,12 +83,18 @@ echo "==> Parámetros backup-services"
 echo "DB_HOST=${DB_HOST}"
 apt update
 
-echo "==> Instalando cliente MariaDB/MySQL y utilidades"
-if ! DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client gzip rsync openssh-client sudo; then
-  echo "AVISO: no se pudo instalar mariadb-client. Probando default-mysql-client."
-  DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client gzip rsync openssh-client sudo
-fi
+echo "==> Instalando dependencias base"
+DEBIAN_FRONTEND=noninteractive apt install -y \
+  python3 \
+  openssh-server \
+  sudo \
+  cron \
+  gzip \
+  rsync \
+  openssh-client \
+  mariadb-client
 
+echo "==> Verificando utilidades MariaDB/MySQL"
 ensure_cmd_alias() {
   local expected="$1"
   local fallback="$2"
@@ -116,19 +122,19 @@ ensure_cmd_alias "mysql" "mariadb" || true
 ensure_cmd_alias "mysqldump" "mariadb-dump" || true
 ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
 
+if ! command -v mysqlbinlog >/dev/null 2>&1; then
+  echo "==> mysqlbinlog no disponible con mariadb-client. Instalando mysql-server-core-8.0"
+  DEBIAN_FRONTEND=noninteractive apt install -y mysql-server-core-8.0 || true
+fi
+
+ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
+
 for required_cmd in mysql mysqldump mysqlbinlog gzip rsync ssh; do
   if ! command -v "$required_cmd" >/dev/null 2>&1; then
     echo "ERROR: falta comando requerido: $required_cmd"
     exit 1
   fi
 done
-  openssh-server \
-  sudo \
-  cron \
-  mariadb-client \
-  mariadb-client-8.0 \
-  mariadb-client-core-8.0 \
-  mysql-server-core-8.0
 
 echo "==> Habilitando SSH"
 systemctl enable --now ssh
