@@ -6,7 +6,7 @@ Aclarar que la restricción actual de soporte usando `admin` es una medida tempo
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
