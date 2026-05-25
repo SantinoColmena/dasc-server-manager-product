@@ -91,10 +91,14 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
   cron \
   gzip \
   rsync \
-  openssh-client \
-  mariadb-client
+  openssh-client
 
-echo "==> Verificando utilidades MariaDB/MySQL"
+echo "==> Instalando cliente MySQL/MariaDB"
+if ! DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client; then
+  echo "AVISO: no se pudo instalar default-mysql-client. Probando mariadb-client."
+  DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client
+fi
+
 ensure_cmd_alias() {
   local expected="$1"
   local fallback="$2"
@@ -120,13 +124,6 @@ EOF
 
 ensure_cmd_alias "mysql" "mariadb" || true
 ensure_cmd_alias "mysqldump" "mariadb-dump" || true
-ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
-
-if ! command -v mysqlbinlog >/dev/null 2>&1; then
-  echo "==> mysqlbinlog no disponible con mariadb-client. Instalando mysql-server-core-8.0"
-  DEBIAN_FRONTEND=noninteractive apt install -y mysql-server-core-8.0 || true
-fi
-
 ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
 
 for required_cmd in mysql mysqldump mysqlbinlog gzip rsync ssh; do
