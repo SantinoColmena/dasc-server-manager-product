@@ -6,7 +6,7 @@ Evolucionar el almacenamiento inicial de tickets desde JSON local hacia una base
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
