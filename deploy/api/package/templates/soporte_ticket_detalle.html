@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ ticket.id }} - Soporte DASC</title>
+    <link rel="stylesheet" href="/static/css/estilo.css">
+    <style>
+        .detail-wrapper {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .detail-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 18px;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .detail-button {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            background: #1f6feb;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .detail-button.secondary {
+            background: #57606a;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .field {
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            padding: 12px;
+            background: #f6f8fa;
+        }
+
+        .field span {
+            display: block;
+            color: #57606a;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            padding: 14px;
+            font-family: inherit;
+        }
+
+        @media (max-width: 800px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-wrapper">
+        <div class="detail-actions">
+            <a href="/soporte/tickets" class="detail-button secondary">Volver a tickets</a>
+            <a href="/soporte" class="detail-button">Nuevo ticket</a>
+        </div>
+
+        <div class="detail-card">
+            <h1>{{ ticket.id }}</h1>
+            <p>{{ ticket.tipo }} · {{ ticket.prioridad }} · {{ ticket.estado }}</p>
+
+            <div class="detail-grid">
+                <div class="field">
+                    <span>Cliente</span>
+                    {{ ticket.cliente }}
+                </div>
+
+                <div class="field">
+                    <span>Contacto</span>
+                    {{ ticket.contacto }}
+                </div>
+
+                <div class="field">
+                    <span>Email</span>
+                    {{ ticket.email }}
+                </div>
+
+                <div class="field">
+                    <span>Teléfono</span>
+                    {{ ticket.telefono or "-" }}
+                </div>
+
+                <div class="field">
+                    <span>Servicio</span>
+                    {{ ticket.servicio }}
+                </div>
+
+                <div class="field">
+                    <span>Canal</span>
+                    {{ ticket.canal }}
+                </div>
+
+                <div class="field">
+                    <span>Fecha apertura</span>
+                    {{ ticket.fecha_apertura }}
+                </div>
+
+                <div class="field">
+                    <span>Creado por</span>
+                    {{ ticket.creado_por }}
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <h2>Descripción</h2>
+            <pre>{{ ticket.descripcion }}</pre>
+
+            <h2>Evidencia</h2>
+            <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+        </div>
+    </div>
+</body>
+</html>

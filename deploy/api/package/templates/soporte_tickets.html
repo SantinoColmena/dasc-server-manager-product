@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tickets de soporte - DASC Server Manager</title>
+    <link rel="stylesheet" href="/static/css/estilo.css">
+    <style>
+        .tickets-wrapper {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .tickets-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .tickets-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tickets-button {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            background: #1f6feb;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .tickets-button.secondary {
+            background: #57606a;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .summary-card,
+        .filter-card,
+        .tickets-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .summary-card strong {
+            display: block;
+            font-size: 26px;
+            margin-top: 6px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .filter-grid label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .filter-grid input,
+        .filter-grid select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 10px;
+        }
+
+        .tickets-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tickets-table th,
+        .tickets-table td {
+            padding: 12px;
+            border-bottom: 1px solid #d8dee4;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .tickets-table th {
+            font-size: 13px;
+            color: #57606a;
+            text-transform: uppercase;
+        }
+
+        .ticket-id {
+            font-weight: 800;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #ddf4ff;
+            color: #0969da;
+        }
+
+        .badge.priority {
+            background: #fff8c5;
+            color: #9a6700;
+        }
+
+        .muted {
+            color: #57606a;
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tickets-header {
+                flex-direction: column;
+            }
+
+            .tickets-table {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tickets-wrapper">
+        <div class="tickets-header">
+            <div>
+                <h1>Tickets de soporte</h1>
+                <p>Vista interna para el equipo DASC.</p>
+            </div>
+
+            <div class="tickets-actions">
+                <a href="/soporte" class="tickets-button">Nuevo ticket</a>
+                <a href="/" class="tickets-button secondary">Volver al panel</a>
+            </div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                Total tickets
+                <strong>{{ counts.total }}</strong>
+            </div>
+
+            <div class="summary-card">
+                Abiertos
+                <strong>{{ counts.por_estado.get("Abierto", 0) }}</strong>
+            </div>
+
+            <div class="summary-card">
+                Cerrados
+                <strong>{{ counts.por_estado.get("Cerrado", 0) }}</strong>
+            </div>
+        </div>
+
+        <div class="filter-card">
+            <form method="get" action="/soporte/tickets">
+                <div class="filter-grid">
+                    <div>
+                        <label>Estado</label>
+                        <select name="estado">
+                            <option value="">Todos</option>
+                            {% for item in support_statuses %}
+                                <option value="{{ item }}" {% if filters.estado == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Prioridad</label>
+                        <select name="prioridad">
+                            <option value="">Todas</option>
+                            {% for item in support_priorities %}
+                                <option value="{{ item }}" {% if filters.prioridad == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Tipo</label>
+                        <select name="tipo">
+                            <option value="">Todos</option>
+                            {% for item in support_types %}
+                                <option value="{{ item }}" {% if filters.tipo == item %}selected{% endif %}>{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Búsqueda</label>
+                        <input type="text" name="q" value="{{ filters.q }}" placeholder="ID, cliente, email, servicio...">
+                    </div>
+
+                    <div>
+                        <button class="tickets-button" type="submit">Filtrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tickets-card" style="margin-top:18px;">
+            {% if tickets %}
+                <table class="tickets-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                            <tr>
+                                <td class="ticket-id">{{ ticket.id }}</td>
+                                <td>
+                                    {{ ticket.cliente }}
+                                    <div class="muted">{{ ticket.contacto }} · {{ ticket.email }}</div>
+                                </td>
+                                <td>{{ ticket.tipo }}</td>
+                                <td><span class="badge priority">{{ ticket.prioridad }}</span></td>
+                                <td><span class="badge">{{ ticket.estado }}</span></td>
+                                <td>{{ ticket.servicio }}</td>
+                                <td>
+                                    {{ ticket.fecha_apertura }}
+                                    <div class="muted">por {{ ticket.creado_por }}</div>
+                                </td>
+                                <td><a href="/soporte/tickets/{{ ticket.id }}">Ver</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No hay tickets que coincidan con los filtros.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

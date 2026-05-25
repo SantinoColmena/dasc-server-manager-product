@@ -3539,3 +3539,197 @@ def soporte_create(
         url=f"/soporte?ok=1&ticket_id={ticket_id}&msg=Ticket+creado+correctamente",
         status_code=303,
     )
+
+# =====================
+# R-049C - VISTA INTERNA TICKETS
+# =====================
+
+SUPPORT_STATUSES = [
+    "Abierto",
+    "En análisis",
+    "En curso",
+    "Esperando cliente",
+    "Cerrado",
+]
+
+
+def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
+    ensure_support_db()
+
+    where = []
+    params = []
+
+    estado = (estado or "").strip()
+    prioridad = (prioridad or "").strip()
+    tipo = (tipo or "").strip()
+    q = (q or "").strip()
+
+    if estado:
+        where.append("estado = ?")
+        params.append(estado)
+
+    if prioridad:
+        where.append("prioridad = ?")
+        params.append(prioridad)
+
+    if tipo:
+        where.append("tipo = ?")
+        params.append(tipo)
+
+    if q:
+        like = f"%{q}%"
+        where.append(
+            """
+            (
+                id LIKE ?
+                OR cliente LIKE ?
+                OR contacto LIKE ?
+                OR email LIKE ?
+                OR servicio LIKE ?
+                OR descripcion LIKE ?
+                OR evidencia LIKE ?
+            )
+            """
+        )
+        params.extend([like, like, like, like, like, like, like])
+
+    sql = """
+        SELECT
+            id,
+            fecha_apertura,
+            fecha_actualizacion,
+            cliente,
+            contacto,
+            email,
+            telefono,
+            canal,
+            tipo,
+            prioridad,
+            servicio,
+            descripcion,
+            evidencia,
+            estado,
+            creado_por,
+            origen
+        FROM support_tickets
+    """
+
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+
+    sql += " ORDER BY fecha_apertura DESC, id DESC LIMIT ?"
+    params.append(limit)
+
+    with support_db_connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
+
+    return [support_row_to_dict(row) for row in rows]
+
+
+def get_support_ticket(ticket_id):
+    ensure_support_db()
+
+    with support_db_connect() as conn:
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                fecha_apertura,
+                fecha_actualizacion,
+                cliente,
+                contacto,
+                email,
+                telefono,
+                canal,
+                tipo,
+                prioridad,
+                servicio,
+                descripcion,
+                evidencia,
+                estado,
+                creado_por,
+                origen
+            FROM support_tickets
+            WHERE id = ?
+            """,
+            (ticket_id,),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    return support_row_to_dict(row)
+
+
+def support_ticket_counts():
+    ensure_support_db()
+
+    counts = {
+        "total": 0,
+        "por_estado": {},
+        "por_prioridad": {},
+    }
+
+    with support_db_connect() as conn:
+        total_row = conn.execute("SELECT COUNT(*) AS total FROM support_tickets").fetchone()
+        counts["total"] = total_row["total"] if total_row else 0
+
+        for row in conn.execute(
+            "SELECT estado, COUNT(*) AS total FROM support_tickets GROUP BY estado ORDER BY estado"
+        ):
+            counts["por_estado"][row["estado"]] = row["total"]
+
+        for row in conn.execute(
+            "SELECT prioridad, COUNT(*) AS total FROM support_tickets GROUP BY prioridad ORDER BY prioridad"
+        ):
+            counts["por_prioridad"][row["prioridad"]] = row["total"]
+
+    return counts
+
+
+@app.get("/soporte/tickets")
+def soporte_tickets_page(
+    request: Request,
+    estado: str = "",
+    prioridad: str = "",
+    tipo: str = "",
+    q: str = "",
+):
+    context = get_common_context(request)
+
+    tickets = search_support_tickets(
+        estado=estado,
+        prioridad=prioridad,
+        tipo=tipo,
+        q=q,
+        limit=100,
+    )
+
+    context["tickets"] = tickets
+    context["counts"] = support_ticket_counts()
+    context["support_statuses"] = SUPPORT_STATUSES
+    context["support_priorities"] = SUPPORT_PRIORITIES
+    context["support_types"] = SUPPORT_TYPES
+    context["filters"] = {
+        "estado": estado,
+        "prioridad": prioridad,
+        "tipo": tipo,
+        "q": q,
+    }
+
+    return templates.TemplateResponse(request, "soporte_tickets.html", context)
+
+
+@app.get("/soporte/tickets/{ticket_id}")
+def soporte_ticket_detail_page(request: Request, ticket_id: str):
+    context = get_common_context(request)
+    ticket = get_support_ticket(ticket_id)
+
+    if not ticket:
+        return RedirectResponse(
+            url="/soporte/tickets?msg=Ticket+no+encontrado",
+            status_code=303,
+        )
+
+    context["ticket"] = ticket
+    return templates.TemplateResponse(request, "soporte_ticket_detalle.html", context)
