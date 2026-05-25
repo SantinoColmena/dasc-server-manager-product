@@ -3452,6 +3452,9 @@ def next_support_ticket_id():
 
 @app.get("/soporte")
 def soporte_page(request: Request):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
     context = get_common_context(request)
     tickets = load_support_tickets(limit=10)
 
@@ -3480,6 +3483,9 @@ def soporte_create(
     descripcion: str = Form(...),
     evidencia: str = Form(""),
 ):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
     empresa = (empresa or "").strip()
     contacto = (contacto or "").strip()
     email = (email or "").strip()
@@ -3695,6 +3701,9 @@ def soporte_tickets_page(
     tipo: str = "",
     q: str = "",
 ):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
     context = get_common_context(request)
 
     tickets = search_support_tickets(
@@ -3722,6 +3731,9 @@ def soporte_tickets_page(
 
 @app.get("/soporte/tickets/{ticket_id}")
 def soporte_ticket_detail_page(request: Request, ticket_id: str):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
     context = get_common_context(request)
     ticket = get_support_ticket(ticket_id)
 
@@ -3916,6 +3928,9 @@ def soporte_ticket_update_status_priority(
     estado: str = Form(...),
     prioridad: str = Form(...),
 ):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
     usuario = request.session.get("user", "anon")
 
     ok, msg = update_support_ticket_status_priority(
