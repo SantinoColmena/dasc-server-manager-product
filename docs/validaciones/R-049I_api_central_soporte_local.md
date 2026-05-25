@@ -6,7 +6,7 @@ Crear el primer prototipo gratuito de una API central DASC capaz de recibir inci
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 

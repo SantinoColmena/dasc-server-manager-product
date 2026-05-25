@@ -6,7 +6,7 @@ Corregir el error `Internal Server Error` al abrir el panel central DASC en nave
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 
