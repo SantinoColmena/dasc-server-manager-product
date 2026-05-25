@@ -310,9 +310,9 @@ def dashboard(request: Request):
     tickets = list_tickets(limit=100)
 
     return templates.TemplateResponse(
+        request,
         "central_dashboard.html",
         {
-            "request": request,
             "tickets": tickets,
             "total": len(tickets),
             "demo_client_id": DEMO_CLIENT_ID,
