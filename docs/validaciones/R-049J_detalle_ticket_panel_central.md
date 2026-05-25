@@ -6,7 +6,7 @@ Añadir una vista de detalle para tickets recibidos en el panel central DASC.
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
