@@ -109,3 +109,92 @@ Portal cliente limitado
 DASC Server Manager debe separar claramente cliente y equipo técnico.
 
 La zona de soporte implementada hasta ahora queda reservada al equipo DASC.
+
+## Aclaración de roles para producto real
+
+En la validación actual se usa el rol `admin` para restringir las rutas internas de soporte.
+
+Esta decisión es válida para laboratorio, pero no representa el modelo final de producto.
+
+## Diferencia importante
+
+~~~text
+admin actual del panel != técnico DASC definitivo
+~~~
+
+En un producto real deben separarse claramente:
+
+~~~text
+cliente_admin
+dasc_tecnico
+~~~
+
+## cliente_admin
+
+El `cliente_admin` pertenece a la empresa cliente.
+
+Puede administrar aspectos internos de su propio panel, por ejemplo:
+
+~~~text
+Usuarios del cliente
+Visibilidad interna
+Consulta de backups
+Consulta de informes
+Consulta de estado
+Solicitud simple de soporte
+~~~
+
+Pero no debe acceder a:
+
+~~~text
+Tickets internos de todos los clientes
+Historial técnico DASC
+Resumen Jira/Zammad
+Notas internas
+Prioridades internas globales
+Herramientas de soporte DASC
+~~~
+
+## dasc_tecnico
+
+El `dasc_tecnico` pertenece al equipo DASC.
+
+Debe trabajar desde un panel central DASC, no entrando manualmente al panel de cada cliente para revisar incidencias.
+
+Puede acceder a:
+
+~~~text
+Tickets centralizados
+Historial técnico
+Cambios de estado y prioridad
+Plantillas de respuesta
+Resumen para Jira/Zammad
+Diagnóstico interno
+Cierre con evidencia
+~~~
+
+## Decisión sobre la implementación actual
+
+La restricción actual usando `is_admin(request)` se considera una medida temporal de laboratorio.
+
+Sirve para validar que las rutas internas no quedan abiertas a usuarios normales.
+
+No debe interpretarse como arquitectura final.
+
+## Decisión de producto
+
+La arquitectura final debe evolucionar hacia:
+
+~~~text
+Panel local del cliente
+        ↓
+API central DASC
+        ↓
+Panel central DASC
+        ↓
+Equipo técnico DASC
+~~~
+
+El técnico DASC no debería depender de entrar en cada panel local de cliente para ver incidencias.
+
+Las incidencias deben centralizarse en un sistema propio de DASC.
