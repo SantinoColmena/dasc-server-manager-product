@@ -1,6 +1,6 @@
 # AuditorÃ­a de IPs fijas y perfiles
 
-Fecha: 2026-05-24 08:51:19
+Fecha: 2026-05-25 11:14:17
 
 ## Objetivo
 
@@ -10,11 +10,11 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 
 | Campo | Valor |
 |---|---|
-| Total referencias IP detectadas | 246 |
+| Total referencias IP detectadas | 251 |
 | Severidad ALTA | 5 |
 | Severidad MEDIA | 36 |
-| Severidad BAJA | 10 |
-| Severidad INFO | 195 |
+| Severidad BAJA | 2 |
+| Severidad INFO | 208 |
 
 ## Criterio de severidad
 
@@ -34,16 +34,8 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | ALTA | instalador | 127.0.0.1 | `deploy\api\install_dasc_api.sh` | 426 | `echo "URL local: http://127.0.0.1:8000"` |
 | ALTA | instalador | 127.0.0.1 | `deploy\proxy\install_reverse_proxy.sh` | 6 | `UPSTREAM_HOST="${UPSTREAM_HOST:-127.0.0.1}"` |
 | ALTA | instalador | 127.0.0.1 | `deploy\proxy\install_reverse_proxy.sh` | 101 | `curl -k -I https://127.0.0.1 // true` |
-| BAJA | ejemplo_configuracion | 192.168.60.30 | `deploy\api\package\config.env.example` | 12 | `SERVICIOS_HOST=192.168.60.30` |
-| BAJA | ejemplo_configuracion | 192.168.60.30 | `deploy\api\package\config.env.example` | 13 | `BACKUPS_HOST=192.168.60.30` |
-| BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 14 | `TERMINAL_DATABASE_HOST=192.168.60.20` |
-| BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 18 | `LOGS_DB_HOST=192.168.60.20` |
-| BAJA | ejemplo_configuracion | 192.168.60.40 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
-| BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
-| BAJA | ejemplo_configuracion | 127.0.0.1 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
-| BAJA | ejemplo_configuracion | 192.168.60.30 | `deploy\api\package\config.env.example` | 37 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
-| BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 39 | `BACKUP_DB_HOST=192.168.60.20` |
-| BAJA | ejemplo_configuracion | 192.168.60.20 | `deploy\api\package\config.env.example` | 48 | `RESTORE_DB_HOST=192.168.60.20` |
+| BAJA | ejemplo_configuracion | 127.0.0.1 | `deploy\api\package\config.env.example` | 10 | `# - Se permite 127.0.0.1 para servicios locales.` |
+| BAJA | ejemplo_configuracion | 127.0.0.1 | `deploy\api\package\config.env.example` | 57 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,IP_SERVIDOR_DB,IP_SERVIDOR_BACKUPS,IP_SERVIDOR_SERVICIOS` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\cierre_fase_5_pilotos_reales.md` | 53 | `- Host SSH no permitido para 192.168.60.40.` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_1\incidencias.md` | 16 | `/ 4 / 23/05/2026 / Terminal / Terminal Database fallaba por host key SSH no registrada para 192.168.60.20 / Media / Corregida / Se añadió la huella ED25519 al known_hosts dedicado de DASC /` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_1\inventario_tecnico.md` | 24 | `/ Servidor cliente / Base de datos protegida / 192.168.60.20 / Pendiente /` |
@@ -63,8 +55,8 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 56 | `sudo BACKUP_ALLOWED_HOST=192.168.60.40 LOGS_ALLOWED_HOST=192.168.60.40 bash deploy/db/install_db.sh` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 56 | `sudo BACKUP_ALLOWED_HOST=192.168.60.40 LOGS_ALLOWED_HOST=192.168.60.40 bash deploy/db/install_db.sh` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 60 | `sudo DB_HOST=192.168.60.40 bash deploy/backup-services/install_backup_services.sh` |
-| INFO | documentacion | 192.168.60.30 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 192.168.60.40 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
+| INFO | documentacion | 192.168.60.30 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 127.0.0.1 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\piloto_2\plan_ejecucion.md` | 84 | `DASC_SSH_ALLOWED_HOSTS=127.0.0.1,localhost,192.168.60.20,192.168.60.30,192.168.60.40` |
 | INFO | documentacion | 192.168.60.20 | `docs\pilotos\R-042_correccion_fallos_piloto_1.md` | 80 | `- La huella SSH de 192.168.60.20 no estaba registrada.` |
@@ -97,8 +89,8 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-01_validacion_instalacion_api_ubuntu.md` | 27 | `Durante la primera instalación limpia en Ubuntu `lab-pruebas`, el instalador avanzó correctamente hasta crear el servicio y preparar el entorno API, pero falló al intentar registrar la huella SSH del host de backups `192.168.60.30`.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01_validacion_instalacion_api_ubuntu.md` | 78 | `- El panel responde en `http://127.0.0.1:8000`.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 35 | `- El panel respondió localmente en `http://127.0.0.1:8000`.` |
-| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 40 | `Durante la primera ejecución se detectó que el instalador intentaba registrar la huella SSH de hosts remotos como `192.168.60.30` y `192.168.60.20`.` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01A_cierre_instalacion_limpia_api_ubuntu.md` | 114 | `No se pudo conectar con MySQL en 192.168.60.20.` |
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-01B_cierre_reinstalacion_api_entorno_existente.md` | 27 | `- El panel respondía localmente en `http://127.0.0.1:8000`.` |
 | INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-01B_cierre_reinstalacion_api_entorno_existente.md` | 118 | `No se pudo conectar con MySQL en 192.168.60.20.` |
@@ -180,6 +172,19 @@ Detectar referencias a IPs fijas dentro del repositorio para preparar instalador
 | INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-04C_parametrizacion_instalador_db.md` | 79 | `Puede usar `127.0.0.1` o la IP local si API y DB están en el mismo servidor.` |
 | INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-04C_parametrizacion_instalador_db.md` | 93 | `- `deploy/db/install_db.sh` no usa `192.168.60.30` como valor por defecto.` |
 | INFO | documentacion | 192.168.60.10 | `docs\validaciones\F6-GATE-04C_parametrizacion_instalador_db.md` | 94 | `- `deploy/db/install_db.sh` no usa `192.168.60.10` como valor por defecto.` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 22 | `DB_HOST=192.168.60.20` |
+| INFO | documentacion | 192.168.60.10 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 39 | `/ API / panel / lab-pruebas / 192.168.60.10 /` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 40 | `/ DB / logs / lab-db-gate02 / 192.168.60.20 /` |
+| INFO | documentacion | 192.168.60.30 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 41 | `/ Backups / servicios / lab-backups-gate04d / 192.168.60.30 /` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 48 | `sudo DB_HOST=192.168.60.20 bash deploy/backup-services/install_backup_services.sh` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 79 | `host=192.168.60.20` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 82 | `host=192.168.60.20` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_cierre_parametrizacion_instalador_backup_services.md` | 88 | `Host: 192.168.60.20` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_parametrizacion_instalador_backup_services.md` | 22 | `DB_HOST=192.168.60.20` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_parametrizacion_instalador_backup_services.md` | 48 | `DB_HOST=192.168.60.20` |
+| INFO | documentacion | 127.0.0.1 | `docs\validaciones\F6-GATE-04D_parametrizacion_instalador_backup_services.md` | 75 | `Puede usar `127.0.0.1` o la IP local si la base de datos está en el mismo servidor.` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_parametrizacion_instalador_backup_services.md` | 89 | `- `deploy/backup-services/install_backup_services.sh` no usa `192.168.60.20` como valor por defecto.` |
+| INFO | documentacion | 192.168.60.20 | `docs\validaciones\F6-GATE-04D_parametrizacion_instalador_backup_services.md` | 100 | `sudo DB_HOST=192.168.60.20 bash deploy/backup-services/install_backup_services.sh` |
 | INFO | documentacion | 192.168.1.244 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 11 | `/ lab-api / API / Panel / Reverse proxy / 192.168.60.10 / 192.168.1.244 /` |
 | INFO | documentacion | 192.168.60.10 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 11 | `/ lab-api / API / Panel / Reverse proxy / 192.168.60.10 / 192.168.1.244 /` |
 | INFO | documentacion | 192.168.1.243 | `docs\validaciones\Fase_2_validacion_real_laboratorio.md` | 12 | `/ lab-db / Base de datos MariaDB / 192.168.60.20 / 192.168.1.243 /` |
