@@ -4,8 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Header, HTTPException, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
@@ -366,10 +366,214 @@ def central_ticket_detail(request: Request, ticket_id: str):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket central no encontrado")
 
+    history = get_central_ticket_history(ticket_id)
+
     return templates.TemplateResponse(
         request,
         "central_ticket_detail.html",
         {
             "ticket": ticket,
+            "history": history,
+            "msg": request.query_params.get("msg"),
+            "estados": CENTRAL_TICKET_STATES,
+            "prioridades": CENTRAL_TICKET_PRIORITIES,
         },
+    )
+
+# =====================
+# R-049K - ESTADO PRIORIDAD CENTRAL
+# =====================
+
+CENTRAL_TICKET_STATES = [
+    "Nuevo",
+    "En análisis",
+    "Pendiente cliente",
+    "En curso",
+    "Resuelto",
+    "Cerrado",
+]
+
+CENTRAL_TICKET_PRIORITIES = [
+    "Baja",
+    "Media",
+    "Alta",
+    "Crítica",
+]
+
+
+def ensure_central_history_table():
+    init_db()
+
+    with db_connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS central_ticket_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id TEXT NOT NULL,
+                fecha TEXT NOT NULL,
+                usuario TEXT NOT NULL,
+                accion TEXT NOT NULL,
+                valor_anterior TEXT,
+                valor_nuevo TEXT,
+                detalle TEXT
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_central_history_ticket
+            ON central_ticket_history (ticket_id)
+            """
+        )
+
+        conn.commit()
+
+
+def get_central_ticket_history(ticket_id, limit=50):
+    ensure_central_history_table()
+
+    with db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                ticket_id,
+                fecha,
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle
+            FROM central_ticket_history
+            WHERE ticket_id = ?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (ticket_id, limit),
+        ).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def add_central_ticket_history(
+    ticket_id,
+    usuario,
+    accion,
+    valor_anterior,
+    valor_nuevo,
+    detalle,
+):
+    ensure_central_history_table()
+
+    with db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO central_ticket_history (
+                ticket_id,
+                fecha,
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ticket_id,
+                now_text(),
+                usuario,
+                accion,
+                valor_anterior,
+                valor_nuevo,
+                detalle,
+            ),
+        )
+        conn.commit()
+
+
+def update_central_ticket_status_priority(ticket_id, estado, prioridad, usuario):
+    ticket = get_central_ticket(ticket_id)
+
+    if not ticket:
+        return False, "Ticket central no encontrado"
+
+    estado = (estado or "").strip()
+    prioridad = (prioridad or "").strip()
+
+    if estado not in CENTRAL_TICKET_STATES:
+        return False, "Estado no válido"
+
+    if prioridad not in CENTRAL_TICKET_PRIORITIES:
+        return False, "Prioridad no válida"
+
+    old_estado = ticket.get("estado", "")
+    old_prioridad = ticket.get("prioridad", "")
+
+    changes = []
+
+    if old_estado != estado:
+        changes.append(("Cambio de estado", old_estado, estado))
+
+    if old_prioridad != prioridad:
+        changes.append(("Cambio de prioridad", old_prioridad, prioridad))
+
+    if not changes:
+        return True, "Sin cambios"
+
+    with db_connect() as conn:
+        conn.execute(
+            """
+            UPDATE central_tickets
+            SET estado = ?, prioridad = ?, fecha_actualizacion = ?
+            WHERE id = ?
+            """,
+            (
+                estado,
+                prioridad,
+                now_text(),
+                ticket_id,
+            ),
+        )
+        conn.commit()
+
+    for accion, valor_anterior, valor_nuevo in changes:
+        add_central_ticket_history(
+            ticket_id=ticket_id,
+            usuario=usuario,
+            accion=accion,
+            valor_anterior=valor_anterior,
+            valor_nuevo=valor_nuevo,
+            detalle="Actualización realizada desde panel central DASC",
+        )
+
+    return True, "Ticket actualizado"
+
+
+@app.post("/tickets/{ticket_id}/estado")
+def central_ticket_update_status_priority(
+    request: Request,
+    ticket_id: str,
+    estado: str = Form(...),
+    prioridad: str = Form(...),
+):
+    usuario = "dasc_tecnico_lab"
+
+    ok, msg = update_central_ticket_status_priority(
+        ticket_id=ticket_id,
+        estado=estado,
+        prioridad=prioridad,
+        usuario=usuario,
+    )
+
+    if not ok:
+        return RedirectResponse(
+            url=f"/tickets/{ticket_id}?msg=Error:+{msg.replace(' ', '+')}",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        url=f"/tickets/{ticket_id}?msg={msg.replace(' ', '+')}",
+        status_code=303,
     )

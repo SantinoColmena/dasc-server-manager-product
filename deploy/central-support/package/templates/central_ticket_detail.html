@@ -86,6 +86,47 @@
             font-family: inherit;
         }
 
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #d0d7de;
+            background: #ffffff;
+        }
+
+        .form-actions {
+            margin-top: 14px;
+        }
+
+        .alert-ok {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+
+        .history-item {
+            border: 1px solid #d0d7de;
+            background: #f6f8fa;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .history-item small {
+            color: #57606a;
+        }
+
         @media (max-width: 850px) {
             .grid {
                 grid-template-columns: 1fr;
@@ -170,12 +211,69 @@
             </div>
         </div>
 
+
+        {% if msg %}
+        <div class="alert-ok">
+            {{ msg }}
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2>Actualizar estado y prioridad</h2>
+            <p>Gestión interna del equipo DASC sobre el ticket centralizado.</p>
+
+            <form method="post" action="/tickets/{{ ticket.id }}/estado">
+                <div class="form-grid">
+                    <div class="field">
+                        <span>Estado</span>
+                        <select name="estado" required>
+                            {% for estado in estados %}
+                                <option value="{{ estado }}" {% if estado == ticket.estado %}selected{% endif %}>{{ estado }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <span>Prioridad</span>
+                        <select name="prioridad" required>
+                            {% for prioridad in prioridades %}
+                                <option value="{{ prioridad }}" {% if prioridad == ticket.prioridad %}selected{% endif %}>{{ prioridad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="button" type="submit">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
         <div class="card">
             <h2>Descripción</h2>
             <pre>{{ ticket.descripcion }}</pre>
 
             <h2>Evidencia</h2>
             <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+        </div>
+
+        <div class="card">
+            <h2>Historial interno central</h2>
+
+            {% if history %}
+                {% for item in history %}
+                    <div class="history-item">
+                        <small>{{ item.fecha }} - {{ item.usuario }} - {{ item.accion }}</small>
+                        <div>
+                            <strong>{{ item.valor_anterior or "-" }}</strong>
+                            →
+                            <strong>{{ item.valor_nuevo or "-" }}</strong>
+                        </div>
+                        <div>{{ item.detalle or "" }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Sin historial interno todavía.</p>
+            {% endif %}
         </div>
     </div>
 </body>
