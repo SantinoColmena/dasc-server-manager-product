@@ -3462,6 +3462,68 @@ def next_support_ticket_id():
 
     return f"{prefix}{max_num + 1:03d}"
 
+
+# =====================
+# R-049M - CENTRAL TICKET ID LOCAL
+# =====================
+
+def ensure_support_ticket_central_columns():
+    SUPPORT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    with _support_sqlite3.connect(str(SUPPORT_TICKETS_DB)) as conn:
+        rows = conn.execute("PRAGMA table_info(support_tickets)").fetchall()
+        columns = {row[1] for row in rows}
+
+        if not columns:
+            return
+
+        if "central_ticket_id" not in columns:
+            conn.execute("ALTER TABLE support_tickets ADD COLUMN central_ticket_id TEXT DEFAULT ''")
+
+        if "central_sync_status" not in columns:
+            conn.execute("ALTER TABLE support_tickets ADD COLUMN central_sync_status TEXT DEFAULT ''")
+
+        if "central_sync_detail" not in columns:
+            conn.execute("ALTER TABLE support_tickets ADD COLUMN central_sync_detail TEXT DEFAULT ''")
+
+        if "central_sync_at" not in columns:
+            conn.execute("ALTER TABLE support_tickets ADD COLUMN central_sync_at TEXT DEFAULT ''")
+
+        conn.commit()
+
+
+def update_support_ticket_central_sync(
+    ticket_id,
+    central_ticket_id="",
+    central_sync_status="",
+    central_sync_detail="",
+):
+    ensure_support_ticket_central_columns()
+
+    if not ticket_id:
+        return
+
+    with _support_sqlite3.connect(str(SUPPORT_TICKETS_DB)) as conn:
+        conn.execute(
+            """
+            UPDATE support_tickets
+            SET
+                central_ticket_id = ?,
+                central_sync_status = ?,
+                central_sync_detail = ?,
+                central_sync_at = ?
+            WHERE id = ?
+            """,
+            (
+                central_ticket_id or "",
+                central_sync_status or "",
+                central_sync_detail or "",
+                _support_datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ticket_id,
+            ),
+        )
+        conn.commit()
+
 # =====================
 # R-049L - ENVIO A API CENTRAL
 # =====================
@@ -3647,6 +3709,20 @@ def soporte_create(
         central_msg = "Ticket creado. Aviso: no se pudo enviar al panel central"
         central_log_result = "ERROR"
         central_log_detail = central_result.get("detail", "Error desconocido")
+
+    if central_result.get("sent"):
+        central_sync_status = "sent"
+    elif central_result.get("skipped"):
+        central_sync_status = "disabled"
+    else:
+        central_sync_status = "error"
+
+    update_support_ticket_central_sync(
+        ticket_id=ticket_id,
+        central_ticket_id=central_result.get("central_ticket_id", ""),
+        central_sync_status=central_sync_status,
+        central_sync_detail=central_log_detail[:500],
+    )
 
     log_event(
         tipo="soporte",
