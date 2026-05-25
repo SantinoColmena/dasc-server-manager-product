@@ -6,7 +6,7 @@ Conectar el panel local del cliente con la API central DASC para enviar tickets 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
