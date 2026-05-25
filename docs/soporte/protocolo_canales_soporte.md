@@ -92,35 +92,6 @@ Toda solicitud debe terminar registrada internamente.
 Los canales externos deben ser simples para el cliente.
 
 La trazabilidad y gestión técnica se mantienen dentro del equipo DASC.
-
-## Relación con Jira o Zammad
-
-Si DASC adopta una herramienta de ticketing, el protocolo no cambia para el cliente.
-
-El cambio está en la gestión interna:
-
-~~~text
-Solicitud recibida por email, formulario, WhatsApp o teléfono
-        ↓
-Registro interno en Jira o Zammad
-        ↓
-Clasificación
-        ↓
-Diagnóstico
-        ↓
-Respuesta al cliente
-        ↓
-Cierre con evidencia
-~~~
-
-Jira Service Management Free queda como opción recomendada inicial.
-
-Zammad self-hosted queda como alternativa open source.
-
-Freshdesk se reserva para una fase comercial real.
-
-GLPI se descarta temporalmente para no añadir complejidad.
-
 ## Relación con Jira o Zammad
 
 Si DASC adopta una herramienta de ticketing, el protocolo no cambia para el cliente.
