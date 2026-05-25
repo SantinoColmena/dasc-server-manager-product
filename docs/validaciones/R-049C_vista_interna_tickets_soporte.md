@@ -6,7 +6,7 @@ Crear una vista interna para que el equipo DASC pueda consultar tickets de sopor
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
