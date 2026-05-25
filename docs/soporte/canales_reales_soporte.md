@@ -164,3 +164,28 @@ Internamente se debe registrar:
 DASC Server Manager debe usar canales simples para el cliente y mantener la gestión técnica de soporte de forma interna.
 
 El cliente no necesita GitHub para recibir soporte.
+
+## Integración con herramientas gratuitas de ticketing
+
+Los canales anteriores no obligan a gestionar todo manualmente.
+
+DASC puede conectar esos canales con una herramienta interna de ticketing.
+
+Opciones contempladas:
+
+| Herramienta | Uso | Decisión |
+|---|---|---|
+| Jira Service Management Free | Ticketing profesional inicial para equipo pequeño | Recomendada |
+| Zammad self-hosted | Ticketing open source autogestionado | Alternativa |
+| Freshdesk | Ticketing comercial con periodo gratuito limitado | Futura |
+| GLPI | ITSM/inventario/ticketing | Descartada temporalmente |
+
+El cliente seguirá usando canales simples.
+
+~~~text
+Email / Formulario / WhatsApp / Teléfono
+~~~
+
+El equipo DASC podrá registrar o centralizar esas solicitudes en Jira o Zammad.
+
+GitHub sigue siendo únicamente herramienta interna de desarrollo.
