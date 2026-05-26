@@ -6,7 +6,7 @@ Automatizar el reintento de envío de tickets locales pendientes hacia el panel 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
