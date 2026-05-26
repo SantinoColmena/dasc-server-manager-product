@@ -6,7 +6,7 @@ Crear un instalador real para ejecutar el panel central DASC como servicio syste
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 

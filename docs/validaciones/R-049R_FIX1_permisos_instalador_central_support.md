@@ -6,7 +6,7 @@ Corregir el instalador systemd de `central-support` para que el servicio pueda a
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 
