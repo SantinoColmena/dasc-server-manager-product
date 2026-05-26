@@ -222,6 +222,14 @@
 
         <div class="tickets-card" style="margin-top:18px;">
             {% if tickets %}
+                
+            {% if central_pending_count and central_pending_count > 0 %}
+                <form method="post" action="/soporte/tickets/reintentar-central" style="margin: 16px 0;">
+                    <button class="btn" type="submit">
+                        Reintentar envío central pendiente ({{ central_pending_count }})
+                    </button>
+                </form>
+            {% endif %}
                 <table class="tickets-table">
                     <thead>
                         <tr>

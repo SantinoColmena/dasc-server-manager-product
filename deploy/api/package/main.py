@@ -3961,6 +3961,142 @@ def support_ticket_counts():
     return counts
 
 
+
+# =====================
+# R-049O - COLA OFFLINE Y REINTENTOS CENTRAL
+# =====================
+
+def get_pending_central_sync_tickets(limit=50):
+    ensure_support_ticket_central_columns()
+    ensure_support_db()
+
+    with support_db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                fecha_apertura,
+                fecha_actualizacion,
+                cliente,
+                contacto,
+                email,
+                telefono,
+                canal,
+                tipo,
+                prioridad,
+                servicio,
+                descripcion,
+                evidencia,
+                estado,
+                creado_por,
+                origen,
+                central_ticket_id,
+                central_sync_status,
+                central_sync_detail,
+                central_sync_at
+            FROM support_tickets
+            WHERE
+                COALESCE(central_ticket_id, '') = ''
+                AND COALESCE(central_sync_status, '') IN ('error', '')
+            ORDER BY fecha_apertura ASC, id ASC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    tickets = [support_row_to_dict(row) for row in rows]
+    return enrich_support_tickets_with_central(tickets)
+
+
+def retry_support_ticket_to_central(ticket_id):
+    ticket = get_support_ticket(ticket_id)
+    ticket = enrich_support_ticket_with_central(ticket)
+
+    if not ticket:
+        return {
+            "ok": False,
+            "sent": False,
+            "ticket_id": ticket_id,
+            "detail": "Ticket local no encontrado",
+        }
+
+    if ticket.get("central_ticket_id"):
+        return {
+            "ok": True,
+            "sent": False,
+            "ticket_id": ticket_id,
+            "central_ticket_id": ticket.get("central_ticket_id", ""),
+            "detail": "Ticket ya sincronizado previamente",
+        }
+
+    central_result = send_support_ticket_to_central(ticket)
+
+    if central_result.get("sent"):
+        central_sync_status = "sent"
+        central_log_result = "OK"
+        central_log_detail = f"Reintento enviado a central: {central_result.get('central_ticket_id', '')}"
+    elif central_result.get("skipped"):
+        central_sync_status = "disabled"
+        central_log_result = "OK"
+        central_log_detail = central_result.get("detail", "Integración central desactivada")
+    else:
+        central_sync_status = "error"
+        central_log_result = "ERROR"
+        central_log_detail = central_result.get("detail", "Error desconocido")
+
+    update_support_ticket_central_sync(
+        ticket_id=ticket_id,
+        central_ticket_id=central_result.get("central_ticket_id", ""),
+        central_sync_status=central_sync_status,
+        central_sync_detail=central_log_detail[:500],
+    )
+
+    return {
+        "ok": central_result.get("sent", False),
+        "sent": central_result.get("sent", False),
+        "ticket_id": ticket_id,
+        "central_ticket_id": central_result.get("central_ticket_id", ""),
+        "status": central_sync_status,
+        "log_result": central_log_result,
+        "detail": central_log_detail,
+    }
+
+
+def retry_pending_central_sync_tickets(limit=50):
+    pending = get_pending_central_sync_tickets(limit=limit)
+    results = []
+
+    for ticket in pending:
+        results.append(retry_support_ticket_to_central(ticket.get("id")))
+
+    return results
+
+
+@app.post("/soporte/tickets/reintentar-central")
+def soporte_retry_central_pending(request: Request):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    results = retry_pending_central_sync_tickets(limit=50)
+
+    total = len(results)
+    sent = sum(1 for item in results if item.get("sent"))
+    errors = sum(1 for item in results if item.get("status") == "error")
+
+    log_event(
+        tipo="soporte",
+        resultado="OK" if errors == 0 else "ERROR",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /soporte/tickets/reintentar-central",
+        detalle=f"Reintentos central: total={total}, enviados={sent}, errores={errors}",
+    )
+
+    return RedirectResponse(
+        url=f"/soporte/tickets?msg=Reintentos+central:+total+{total},+enviados+{sent},+errores+{errors}",
+        status_code=303,
+    )
+
 @app.get("/soporte/tickets")
 def soporte_tickets_page(
     request: Request,
