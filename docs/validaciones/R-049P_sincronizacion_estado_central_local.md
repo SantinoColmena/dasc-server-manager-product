@@ -6,7 +6,7 @@ Permitir que el panel local actualice el estado y la prioridad de un ticket loca
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
