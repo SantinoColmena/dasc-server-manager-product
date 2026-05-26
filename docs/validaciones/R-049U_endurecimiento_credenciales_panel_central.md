@@ -6,7 +6,7 @@ Endurecer la autenticación del panel central DASC para que las credenciales de 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

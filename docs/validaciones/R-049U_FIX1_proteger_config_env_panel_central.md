@@ -6,7 +6,7 @@ Proteger el archivo config.env del panel central DASC para que no pueda ser modi
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
