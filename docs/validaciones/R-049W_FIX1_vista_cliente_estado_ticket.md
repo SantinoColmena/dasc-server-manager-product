@@ -6,7 +6,7 @@ Separar la experiencia del cliente de la vista técnica interna del equipo DASC.
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

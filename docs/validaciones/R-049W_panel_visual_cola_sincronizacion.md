@@ -6,7 +6,7 @@ Crear una vista técnica interna para revisar el estado de sincronización entre
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
