@@ -6,7 +6,7 @@ Añadir autenticación básica al panel central DASC para evitar que las vistas 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
