@@ -6,7 +6,7 @@ Separar el soporte visible en el panel local del cliente de la gestión interna 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
