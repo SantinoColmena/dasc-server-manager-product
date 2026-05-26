@@ -3673,12 +3673,28 @@ def send_support_ticket_to_central(ticket):
 
 
 
+
+# =====================
+# R-049T-A - SEPARACION SOPORTE LOCAL CLIENTE
+# =====================
+
+def is_local_internal_support_enabled():
+    return os.getenv("DASC_LOCAL_INTERNAL_SUPPORT_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def local_internal_support_redirect():
+    return RedirectResponse(
+        url="/soporte?ok=0&msg=Gestion+interna+reservada+al+panel+central+DASC",
+        status_code=303,
+    )
+
 @app.get("/soporte")
 def soporte_page(request: Request):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
 
     context = get_common_context(request)
+    context["local_internal_support_enabled"] = is_local_internal_support_enabled()
     tickets = load_support_tickets(limit=10)
 
     context["ok"] = request.query_params.get("ok")
@@ -4077,6 +4093,9 @@ def soporte_retry_central_pending(request: Request):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
 
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
+
     results = retry_pending_central_sync_tickets(limit=50)
 
     total = len(results)
@@ -4107,6 +4126,9 @@ def soporte_tickets_page(
 ):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
 
     context = get_common_context(request)
 
@@ -4314,6 +4336,9 @@ def soporte_ticket_sync_central_status(request: Request, ticket_id: str):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
 
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
+
     usuario = request.session.get("user", "anon")
 
     result = sync_support_ticket_from_central(ticket_id, usuario=usuario)
@@ -4342,6 +4367,9 @@ def soporte_ticket_sync_central_status(request: Request, ticket_id: str):
 def soporte_ticket_detail_page(request: Request, ticket_id: str):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
 
     context = get_common_context(request)
     ticket = get_support_ticket(ticket_id)
@@ -4541,6 +4569,9 @@ def soporte_ticket_update_status_priority(
 ):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
 
     usuario = request.session.get("user", "anon")
 
