@@ -78,6 +78,11 @@ print(secrets.token_urlsafe(24))
 PY
 )}"
 
+  CENTRAL_DEMO_TOKEN_VALUE="${DASC_CENTRAL_DEMO_TOKEN:-$(python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(32))
+PY
+)}"
   cat > "${ENV_FILE}" <<EOF
 # DASC Central Support
 DASC_CENTRAL_AUTH_ENABLED=true
@@ -93,7 +98,7 @@ DASC_CENTRAL_TECH_PASSWORD=${CENTRAL_TECH_PASSWORD_VALUE}
 # Cliente demo para integración local-central
 DASC_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
 DASC_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
-DASC_CENTRAL_DEMO_TOKEN=dasc-central-demo-token-lab
+DASC_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
 EOF
 
   chmod 600 "${ENV_FILE}"
