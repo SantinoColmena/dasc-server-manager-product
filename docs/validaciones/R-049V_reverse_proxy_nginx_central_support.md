@@ -6,7 +6,7 @@ Preparar el panel central DASC para acceder mediante Nginx, evitando depender di
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
