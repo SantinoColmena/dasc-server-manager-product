@@ -4,278 +4,365 @@
     <meta charset="UTF-8">
     <title>{{ ticket.id }} - DASC Central Support</title>
     <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe3ee;
+            --blue: #2563eb;
+            --blue-soft: #dbeafe;
+            --green-soft: #dcfce7;
+            --yellow-soft: #fef3c7;
+            --red-soft: #fee2e2;
+            --shadow: 0 16px 34px rgba(15, 23, 42, .08);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f6f8fa;
             margin: 0;
-            color: #24292f;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
 
         .wrapper {
-            max-width: 1050px;
+            max-width: 1100px;
             margin: 30px auto;
-            padding: 20px;
+            padding: 0 20px 48px;
         }
 
-        .card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            margin-bottom: 18px;
-        }
-
-        .actions {
+        .top-actions {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
         .button {
             display: inline-block;
-            padding: 10px 14px;
+            border: 0;
             border-radius: 10px;
-            background: #1f6feb;
-            color: white;
-            text-decoration: none;
+            padding: 10px 14px;
+            background: var(--blue);
+            color: #fff;
             font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
         }
 
         .button.secondary {
-            background: #57606a;
+            background: #475569;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: var(--shadow);
+            margin-bottom: 18px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+            letter-spacing: -.02em;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--blue-soft);
+            color: #1d4ed8;
+            white-space: nowrap;
+            margin-right: 6px;
+        }
+
+        .badge.priority-critical,
+        .badge.priority-crítica {
+            background: var(--red-soft);
+            color: #991b1b;
+        }
+
+        .badge.priority-alta {
+            background: var(--yellow-soft);
+            color: #92400e;
+        }
+
+        .badge.status-cerrado,
+        .badge.status-resuelto {
+            background: var(--green-soft);
+            color: #166534;
         }
 
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
+            margin-top: 18px;
         }
 
         .field {
-            border: 1px solid #d0d7de;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 12px;
             padding: 12px;
-            background: #f6f8fa;
+            min-height: 64px;
         }
 
         .field span {
             display: block;
-            color: #57606a;
-            font-size: 13px;
-            margin-bottom: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 999px;
-            font-size: 12px;
+        .field strong {
+            display: block;
+            font-size: 15px;
+            word-break: break-word;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        label {
+            display: block;
             font-weight: 700;
-            background: #ddf4ff;
-            color: #0969da;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        select {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fff;
+            font-size: 14px;
         }
 
         pre {
             white-space: pre-wrap;
             word-break: break-word;
-            background: #f6f8fa;
-            border: 1px solid #d0d7de;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 12px;
             padding: 14px;
-            font-family: inherit;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-top: 12px;
-        }
-
-        select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #d0d7de;
-            background: #ffffff;
-        }
-
-        .form-actions {
-            margin-top: 14px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .alert-ok {
             background: #dcfce7;
             border: 1px solid #86efac;
             color: #166534;
-            padding: 12px;
             border-radius: 12px;
+            padding: 12px 14px;
             margin-bottom: 18px;
             font-weight: 700;
         }
 
         .history-item {
-            border: 1px solid #d0d7de;
-            background: #f6f8fa;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 10px;
         }
 
         .history-item small {
-            color: #57606a;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
         }
 
-        @media (max-width: 850px) {
+        @media (max-width: 900px) {
+            .layout,
             .grid {
                 grid-template-columns: 1fr;
+            }
+
+            .top-actions {
+                display: block;
+            }
+
+            .top-actions a {
+                margin-bottom: 8px;
             }
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="actions">
-            <a href="/" class="button secondary">Volver al panel central</a>
-            {% if auth_enabled %}<a href="/logout" class="button secondary">Cerrar sesion</a>{% endif %}
+        <div class="top-actions">
+            <div>
+                <a href="/" class="button secondary">Volver al panel central</a>
+            </div>
+
+            {% if auth_enabled %}
+                <div>
+                    <a href="/logout" class="button secondary">Cerrar sesión</a>
+                </div>
+            {% endif %}
         </div>
 
-        <div class="card">
+        <section class="card hero">
             <h1>{{ ticket.id }}</h1>
+
             <p>
-                <span class="badge">{{ ticket.estado }}</span>
-                <span class="badge">{{ ticket.prioridad }}</span>
+                <span class="badge status-{{ ticket.estado|lower|replace(' ', '-') }}">{{ ticket.estado }}</span>
+                <span class="badge priority-{{ ticket.prioridad|lower }}">{{ ticket.prioridad }}</span>
                 <span class="badge">{{ ticket.tipo }}</span>
+            </p>
+
+            <p class="muted">
+                Ticket centralizado recibido desde {{ ticket.origen or "panel local" }}.
+                Gestionado por el equipo DASC.
             </p>
 
             <div class="grid">
                 <div class="field">
                     <span>Cliente</span>
-                    {{ ticket.nombre_cliente }}
-                </div>
-
-                <div class="field">
-                    <span>ID cliente</span>
-                    {{ ticket.cliente_id }}
+                    <strong>{{ ticket.nombre_cliente }}</strong>
+                    <div class="muted">{{ ticket.cliente_id }}</div>
                 </div>
 
                 <div class="field">
                     <span>Ticket local</span>
-                    {{ ticket.ticket_local_id or "-" }}
+                    <strong>{{ ticket.ticket_local_id or "-" }}</strong>
                 </div>
 
                 <div class="field">
                     <span>Servicio afectado</span>
-                    {{ ticket.servicio }}
+                    <strong>{{ ticket.servicio }}</strong>
                 </div>
 
                 <div class="field">
                     <span>Contacto</span>
-                    {{ ticket.contacto }}
-                </div>
-
-                <div class="field">
-                    <span>Email</span>
-                    {{ ticket.email }}
+                    <strong>{{ ticket.contacto }}</strong>
+                    <div class="muted">{{ ticket.email }}</div>
                 </div>
 
                 <div class="field">
                     <span>Fecha recepción central</span>
-                    {{ ticket.fecha_recepcion }}
+                    <strong>{{ ticket.fecha_recepcion }}</strong>
                 </div>
 
                 <div class="field">
                     <span>Última actualización</span>
-                    {{ ticket.fecha_actualizacion }}
+                    <strong>{{ ticket.fecha_actualizacion }}</strong>
                 </div>
 
                 <div class="field">
                     <span>Fecha origen cliente</span>
-                    {{ ticket.fecha_origen or "-" }}
+                    <strong>{{ ticket.fecha_origen or "-" }}</strong>
                 </div>
 
                 <div class="field">
                     <span>Versión panel local</span>
-                    {{ ticket.version_panel or "-" }}
-                </div>
-
-                <div class="field">
-                    <span>Origen</span>
-                    {{ ticket.origen or "-" }}
-                </div>
-
-                <div class="field">
-                    <span>Coste licencia</span>
-                    0 €
+                    <strong>{{ ticket.version_panel or "-" }}</strong>
                 </div>
             </div>
-        </div>
-
+        </section>
 
         {% if msg %}
-        <div class="alert-ok">
-            {{ msg }}
-        </div>
+            <div class="alert-ok">{{ msg }}</div>
         {% endif %}
 
-        <div class="card">
-            <h2>Actualizar estado y prioridad</h2>
-            <p>Gestión interna del equipo DASC sobre el ticket centralizado.</p>
+        <div class="layout">
+            <section class="card">
+                <h2>Descripción y evidencia</h2>
 
-            <form method="post" action="/tickets/{{ ticket.id }}/estado">
-                <div class="form-grid">
-                    <div class="field">
-                        <span>Estado</span>
-                        <select name="estado" required>
-                            {% for estado in estados %}
-                                <option value="{{ estado }}" {% if estado == ticket.estado %}selected{% endif %}>{{ estado }}</option>
-                            {% endfor %}
-                        </select>
+                <h3>Descripción</h3>
+                <pre>{{ ticket.descripcion }}</pre>
+
+                <h3>Evidencia</h3>
+                <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+            </section>
+
+            <aside class="card">
+                <h2>Gestión interna</h2>
+                <p class="muted">Actualización operativa del ticket centralizado.</p>
+
+                <form method="post" action="/tickets/{{ ticket.id }}/estado">
+                    <div class="form-grid">
+                        <div>
+                            <label>Estado</label>
+                            <select name="estado" required>
+                                {% for estado in estados %}
+                                    <option value="{{ estado }}" {% if estado == ticket.estado %}selected{% endif %}>{{ estado }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Prioridad</label>
+                            <select name="prioridad" required>
+                                {% for prioridad in prioridades %}
+                                    <option value="{{ prioridad }}" {% if prioridad == ticket.prioridad %}selected{% endif %}>{{ prioridad }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button class="button" type="submit">Guardar cambios</button>
                     </div>
-
-                    <div class="field">
-                        <span>Prioridad</span>
-                        <select name="prioridad" required>
-                            {% for prioridad in prioridades %}
-                                <option value="{{ prioridad }}" {% if prioridad == ticket.prioridad %}selected{% endif %}>{{ prioridad }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button class="button" type="submit">Guardar cambios</button>
-                </div>
-            </form>
-        </div>
-        <div class="card">
-            <h2>Descripción</h2>
-            <pre>{{ ticket.descripcion }}</pre>
-
-            <h2>Evidencia</h2>
-            <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+                </form>
+            </aside>
         </div>
 
-        <div class="card">
+        <section class="card">
             <h2>Historial interno central</h2>
 
             {% if history %}
                 {% for item in history %}
                     <div class="history-item">
-                        <small>{{ item.fecha }} - {{ item.usuario }} - {{ item.accion }}</small>
-                        <div>
-                            <strong>{{ item.valor_anterior or "-" }}</strong>
-                            →
-                            <strong>{{ item.valor_nuevo or "-" }}</strong>
-                        </div>
-                        <div>{{ item.detalle or "" }}</div>
+                        <small>{{ item.fecha }} · {{ item.usuario }} · {{ item.accion }}</small>
+                        <strong>{{ item.valor_anterior }} → {{ item.valor_nuevo }}</strong>
+                        <div>{{ item.detalle }}</div>
                     </div>
                 {% endfor %}
             {% else %}
-                <p>Sin historial interno todavía.</p>
+                <p class="muted">No hay cambios registrados todavía.</p>
             {% endif %}
-        </div>
+        </section>
     </div>
 </body>
 </html>

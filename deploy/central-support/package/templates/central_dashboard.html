@@ -4,168 +4,412 @@
     <meta charset="UTF-8">
     <title>DASC Central Support</title>
     <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe3ee;
+            --blue: #2563eb;
+            --blue-soft: #dbeafe;
+            --green-soft: #dcfce7;
+            --yellow-soft: #fef3c7;
+            --red-soft: #fee2e2;
+            --shadow: 0 16px 34px rgba(15, 23, 42, .08);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f6f8fa;
             margin: 0;
-            color: #24292f;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
 
         .wrapper {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 20px;
+            max-width: 1280px;
+            margin: 34px auto;
+            padding: 0 22px 48px;
         }
 
-        .header,
-        .card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            margin-bottom: 18px;
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 32px;
+            letter-spacing: -.03em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .session-box {
+            text-align: right;
+            min-width: 230px;
+        }
+
+        .session-pill {
+            display: inline-block;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .button {
+            display: inline-block;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            background: var(--blue);
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: #475569;
         }
 
         .summary {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 18px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin: 20px 0;
         }
 
         .summary-card {
-            background: #ffffff;
-            border-radius: 16px;
+            background: var(--card);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
             padding: 18px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .summary-card span {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
         }
 
         .summary-card strong {
             display: block;
             font-size: 28px;
-            margin-top: 6px;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: var(--shadow);
+            margin-top: 18px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr auto;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 18px;
+            padding: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fff;
+            font-size: 14px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px;
         }
 
         th,
         td {
-            padding: 12px;
-            border-bottom: 1px solid #d8dee4;
+            padding: 13px 12px;
+            border-bottom: 1px solid var(--line);
             text-align: left;
             vertical-align: top;
         }
 
         th {
-            font-size: 13px;
-            color: #57606a;
+            color: #475569;
+            font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: .04em;
+            background: #f8fafc;
+        }
+
+        tr:hover td {
+            background: #f8fbff;
+        }
+
+        .ticket-link {
+            color: #1d4ed8;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .ticket-link:hover {
+            text-decoration: underline;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 8px;
             border-radius: 999px;
+            padding: 5px 9px;
             font-size: 12px;
-            font-weight: 700;
-            background: #ddf4ff;
-            color: #0969da;
+            font-weight: 800;
+            background: var(--blue-soft);
+            color: #1d4ed8;
+            white-space: nowrap;
         }
 
-        .muted {
-            color: #57606a;
-            font-size: 13px;
+        .badge.priority-critical,
+        .badge.priority-crítica {
+            background: var(--red-soft);
+            color: #991b1b;
         }
 
-        @media (max-width: 900px) {
-            .summary {
-                grid-template-columns: 1fr;
+        .badge.priority-alta {
+            background: var(--yellow-soft);
+            color: #92400e;
+        }
+
+        .badge.status-cerrado,
+        .badge.status-resuelto {
+            background: var(--green-soft);
+            color: #166534;
+        }
+
+        .empty {
+            padding: 34px;
+            text-align: center;
+            color: var(--muted);
+            background: #f8fafc;
+            border-radius: 14px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        @media (max-width: 980px) {
+            .hero {
+                display: block;
             }
 
-            table {
-                font-size: 13px;
+            .session-box {
+                text-align: left;
+                margin-top: 18px;
+            }
+
+            .summary {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="header">
-            <h1>DASC Central Support</h1>
-            <p>Prototipo local de panel central de soporte multi-cliente.</p>
-            <p class="muted">Cliente demo: {{ demo_client_id }}</p>
+        <section class="hero">
+            <div>
+                <h1>DASC Central Support</h1>
+                <p>Panel interno multi-cliente para gestionar solicitudes recibidas desde paneles locales.</p>
+                <p class="muted" style="margin-top:8px;">Cliente demo configurado: {{ demo_client_id }}</p>
+            </div>
+
             {% if auth_enabled %}
-                <div style="margin-top: 14px;">
-                    <span class="muted">Sesion: {{ current_user }} · {{ current_role }}</span>
-                    <a href="/logout" style="float:right; text-decoration:none; background:#4b5563; color:white; padding:8px 12px; border-radius:8px;">Cerrar sesion</a>
+                <div class="session-box">
+                    <div class="session-pill">Sesión: {{ current_user }} · {{ current_role }}</div>
+                    <br>
+                    <a href="/logout" class="button secondary">Cerrar sesión</a>
                 </div>
             {% endif %}
-        </div>
+        </section>
 
-        <div class="summary">
+        <section class="summary">
             <div class="summary-card">
-                Total tickets
+                <span>Total tickets</span>
                 <strong>{{ total }}</strong>
             </div>
 
             <div class="summary-card">
-                Modo
-                <strong>Local</strong>
+                <span>Nuevos</span>
+                <strong>{{ nuevos }}</strong>
             </div>
 
             <div class="summary-card">
-                Coste licencia
-                <strong>0 €</strong>
+                <span>En gestión</span>
+                <strong>{{ en_gestion }}</strong>
             </div>
-        </div>
 
-        <div class="card">
-            <h2>Tickets centralizados</h2>
+            <div class="summary-card">
+                <span>Críticos</span>
+                <strong>{{ criticos }}</strong>
+            </div>
+
+            <div class="summary-card">
+                <span>Cerrados / resueltos</span>
+                <strong>{{ cerrados }}</strong>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Tickets centralizados</h2>
+                    <p class="muted">Mostrando {{ total_filtrado }} de {{ total }} tickets registrados.</p>
+                </div>
+            </div>
+
+            <form class="filters" method="get" action="/">
+                <div>
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="">Todos</option>
+                        {% for estado in estados %}
+                            <option value="{{ estado }}" {% if filters.estado == estado %}selected{% endif %}>{{ estado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Prioridad</label>
+                    <select name="prioridad">
+                        <option value="">Todas</option>
+                        {% for prioridad in prioridades %}
+                            <option value="{{ prioridad }}" {% if filters.prioridad == prioridad %}selected{% endif %}>{{ prioridad }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Búsqueda</label>
+                    <input type="text" name="q" value="{{ filters.q }}" placeholder="ID, cliente, email, servicio...">
+                </div>
+
+                <button class="button" type="submit">Filtrar</button>
+            </form>
 
             {% if tickets %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID central</th>
-                            <th>Cliente</th>
-                            <th>Ticket local</th>
-                            <th>Tipo</th>
-                            <th>Prioridad</th>
-                            <th>Estado</th>
-                            <th>Servicio</th>
-                            <th>Contacto</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ticket in tickets %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                             <tr>
-                                <td><strong><a href="/tickets/{{ ticket.id }}">{{ ticket.id }}</a></strong></td>
-                                <td>
-                                    {{ ticket.nombre_cliente }}
-                                    <div class="muted">{{ ticket.cliente_id }}</div>
-                                </td>
-                                <td>{{ ticket.ticket_local_id or "-" }}</td>
-                                <td>{{ ticket.tipo }}</td>
-                                <td><span class="badge">{{ ticket.prioridad }}</span></td>
-                                <td><span class="badge">{{ ticket.estado }}</span></td>
-                                <td>{{ ticket.servicio }}</td>
-                                <td>
-                                    {{ ticket.contacto }}
-                                    <div class="muted">{{ ticket.email }}</div>
-                                </td>
-                                <td>{{ ticket.fecha_recepcion }}</td>
+                                <th>ID central</th>
+                                <th>Cliente</th>
+                                <th>Ticket local</th>
+                                <th>Tipo</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Servicio</th>
+                                <th>Contacto</th>
+                                <th>Fecha</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            {% for ticket in tickets %}
+                                <tr>
+                                    <td>
+                                        <a class="ticket-link" href="/tickets/{{ ticket.id }}">{{ ticket.id }}</a>
+                                    </td>
+                                    <td>
+                                        <strong>{{ ticket.nombre_cliente }}</strong>
+                                        <div class="muted">{{ ticket.cliente_id }}</div>
+                                    </td>
+                                    <td>{{ ticket.ticket_local_id or "-" }}</td>
+                                    <td>{{ ticket.tipo }}</td>
+                                    <td>
+                                        <span class="badge priority-{{ ticket.prioridad|lower }}">{{ ticket.prioridad }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge status-{{ ticket.estado|lower|replace(' ', '-') }}">{{ ticket.estado }}</span>
+                                    </td>
+                                    <td>{{ ticket.servicio }}</td>
+                                    <td>
+                                        {{ ticket.contacto }}
+                                        <div class="muted">{{ ticket.email }}</div>
+                                    </td>
+                                    <td>
+                                        {{ ticket.fecha_recepcion }}
+                                        <div class="muted">Actualizado: {{ ticket.fecha_actualizacion }}</div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% else %}
-                <p>No hay tickets centralizados todavía.</p>
+                <div class="empty">
+                    No hay tickets que coincidan con los filtros actuales.
+                </div>
             {% endif %}
-        </div>
+        </section>
     </div>
 </body>
 </html>
