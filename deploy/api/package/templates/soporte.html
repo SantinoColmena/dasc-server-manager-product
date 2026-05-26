@@ -137,7 +137,10 @@
         {% if ok == "1" %}
             <div class="support-alert ok">
                 Solicitud registrada correctamente.
-                {% if ticket_id %}Referencia interna: {{ ticket_id }}{% endif %}
+                {% if ticket_id %}
+                    Referencia interna: {{ ticket_id }}.
+                    <a href="/soporte/estado/{{ ticket_id }}">Ver estado</a>
+                {% endif %}
             </div>
         {% elif ok == "0" %}
             <div class="support-alert error">
@@ -208,6 +211,9 @@
                                     {{ ticket.fecha_apertura }} · {{ ticket.prioridad }} · {{ ticket.servicio }}
                                 </div>
                                 <div>{{ ticket.cliente }} - {{ ticket.tipo }}</div>
+                                <div style="margin-top:8px;">
+                                    <a href="/soporte/estado/{{ ticket.id }}">Ver estado</a>
+                                </div>
                             </div>
                         {% endfor %}
                     </div>

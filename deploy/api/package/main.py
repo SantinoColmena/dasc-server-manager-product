@@ -4117,6 +4117,60 @@ def soporte_retry_central_pending(request: Request):
     )
 
 
+
+# =====================
+# R-049W-FIX1 - VISTA CLIENTE ESTADO TICKET
+# =====================
+
+def get_support_ticket_client_progress(ticket):
+    estado = (ticket.get("estado") or "").strip()
+
+    if estado in ("Cerrado", "Resuelto"):
+        return {
+            "label": "Finalizado",
+            "percent": 100,
+        }
+
+    if estado in ("En curso", "En análisis"):
+        return {
+            "label": "En revisión por el equipo DASC",
+            "percent": 60,
+        }
+
+    if estado == "Pendiente cliente":
+        return {
+            "label": "Pendiente de información del cliente",
+            "percent": 70,
+        }
+
+    return {
+        "label": "Solicitud registrada",
+        "percent": 25,
+    }
+
+
+@app.get("/soporte/estado/{ticket_id}")
+def soporte_ticket_estado_cliente(request: Request, ticket_id: str):
+    context = get_common_context(request)
+
+    ticket = get_support_ticket(ticket_id)
+    ticket = enrich_support_ticket_with_central(ticket)
+
+    if not ticket:
+        return RedirectResponse(
+            url="/soporte?ok=0&msg=Ticket+no+encontrado",
+            status_code=303,
+        )
+
+    context["ticket"] = ticket
+    context["progress"] = get_support_ticket_client_progress(ticket)
+
+    return templates.TemplateResponse(
+        request,
+        "soporte_ticket_estado_cliente.html",
+        context,
+    )
+
 # =====================
 # R-049W - PANEL VISUAL COLA SINCRONIZACION
 # =====================
