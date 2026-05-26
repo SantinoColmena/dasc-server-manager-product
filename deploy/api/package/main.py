@@ -3997,7 +3997,7 @@ def get_pending_central_sync_tickets(limit=50):
             FROM support_tickets
             WHERE
                 COALESCE(central_ticket_id, '') = ''
-                AND COALESCE(central_sync_status, '') IN ('error', '')
+                AND COALESCE(central_sync_status, '') = 'error'
             ORDER BY fecha_apertura ASC, id ASC
             LIMIT ?
             """,
@@ -4129,6 +4129,8 @@ def soporte_tickets_page(
         "tipo": tipo,
         "q": q,
     }
+
+    context["central_pending_count"] = len(get_pending_central_sync_tickets(limit=200))
 
     return templates.TemplateResponse(request, "soporte_tickets.html", context)
 
