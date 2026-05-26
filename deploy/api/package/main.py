@@ -4116,6 +4116,138 @@ def soporte_retry_central_pending(request: Request):
         status_code=303,
     )
 
+
+# =====================
+# R-049W - PANEL VISUAL COLA SINCRONIZACION
+# =====================
+
+def get_central_sync_state(ticket):
+    central_ticket_id = (ticket.get("central_ticket_id") or "").strip()
+    status = (ticket.get("central_sync_status") or "").strip().lower()
+
+    if central_ticket_id:
+        return "sent"
+
+    if status == "error":
+        return "error"
+
+    if status == "disabled":
+        return "disabled"
+
+    return "no_central"
+
+
+def get_central_sync_label(state):
+    labels = {
+        "sent": "Enviado",
+        "error": "Pendiente / error",
+        "disabled": "Desactivado",
+        "no_central": "Sin central",
+    }
+
+    return labels.get(state, "Sin central")
+
+
+def build_central_sync_summary(tickets):
+    summary = {
+        "total": len(tickets or []),
+        "sent": 0,
+        "error": 0,
+        "disabled": 0,
+        "no_central": 0,
+    }
+
+    for ticket in tickets or []:
+        state = get_central_sync_state(ticket)
+
+        if state not in summary:
+            state = "no_central"
+
+        summary[state] += 1
+
+    summary["pending"] = summary["error"]
+
+    return summary
+
+
+def filter_tickets_by_central_sync(tickets, sync_filter=""):
+    sync_filter = (sync_filter or "").strip().lower()
+
+    if sync_filter in ("", "all"):
+        return tickets
+
+    if sync_filter == "pending":
+        sync_filter = "error"
+
+    return [
+        ticket
+        for ticket in tickets
+        if get_central_sync_state(ticket) == sync_filter
+    ]
+
+
+@app.get("/soporte/sincronizacion")
+def soporte_sync_dashboard(request: Request, sync: str = ""):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
+
+    context = get_common_context(request)
+
+    tickets_all = search_support_tickets(limit=300)
+    summary = build_central_sync_summary(tickets_all)
+    tickets = filter_tickets_by_central_sync(tickets_all, sync)
+
+    context["tickets"] = tickets
+    context["sync_summary"] = summary
+    context["sync_filter"] = (sync or "all").strip().lower()
+    context["sync_filters"] = [
+        {"key": "all", "label": "Todos"},
+        {"key": "sent", "label": "Enviados"},
+        {"key": "pending", "label": "Pendientes / error"},
+        {"key": "disabled", "label": "Desactivados"},
+        {"key": "no_central", "label": "Sin central"},
+    ]
+    context["msg"] = request.query_params.get("msg")
+    context["ok"] = request.query_params.get("ok")
+
+    return templates.TemplateResponse(
+        request,
+        "soporte_sincronizacion.html",
+        context,
+    )
+
+
+@app.post("/soporte/sincronizacion/reintentar-central")
+def soporte_sync_retry_central_pending(request: Request):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
+
+    results = retry_pending_central_sync_tickets(limit=50)
+
+    total = len(results)
+    sent = sum(1 for item in results if item.get("sent"))
+    errors = sum(1 for item in results if item.get("status") == "error")
+
+    log_event(
+        tipo="soporte",
+        resultado="OK" if errors == 0 else "ERROR",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /soporte/sincronizacion/reintentar-central",
+        detalle=f"Reintentos central desde panel sincronizacion: total={total}, enviados={sent}, errores={errors}",
+    )
+
+    return RedirectResponse(
+        url=f"/soporte/sincronizacion?ok=1&msg=Reintentos+central:+total+{total},+enviados+{sent},+errores+{errors}",
+        status_code=303,
+    )
+
 @app.get("/soporte/tickets")
 def soporte_tickets_page(
     request: Request,
@@ -4153,6 +4285,7 @@ def soporte_tickets_page(
     }
 
     context["central_pending_count"] = len(get_pending_central_sync_tickets(limit=200))
+    context["central_sync_summary"] = build_central_sync_summary(tickets)
 
     return templates.TemplateResponse(request, "soporte_tickets.html", context)
 

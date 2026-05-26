@@ -43,7 +43,7 @@
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 14px;
             margin-bottom: 18px;
         }
@@ -154,6 +154,7 @@
 
             <div class="tickets-actions">
                 <a href="/soporte" class="tickets-button">Nuevo ticket</a>
+                <a href="/soporte/sincronizacion" class="tickets-button">Sincronización</a>
                 <a href="/" class="tickets-button secondary">Volver al panel</a>
             </div>
         </div>
@@ -172,6 +173,11 @@
             <div class="summary-card">
                 Cerrados
                 <strong>{{ counts.por_estado.get("Cerrado", 0) }}</strong>
+            </div>
+
+            <div class="summary-card">
+                Pendientes central
+                <strong>{{ central_sync_summary.error if central_sync_summary else central_pending_count }}</strong>
             </div>
         </div>
 
