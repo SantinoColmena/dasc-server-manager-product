@@ -98,10 +98,23 @@
                 <button type="submit">Entrar</button>
             </form>
 
-            <div class="hint">
-                Usuarios de laboratorio por defecto: admin/admin o tecnico/tecnico.
-                En producto real deben cambiarse mediante variables de entorno.
-            </div>
+            {% if central_lab_mode %}
+                <div class="hint">
+                    Modo laboratorio activo. Pueden existir credenciales de prueba.
+                    No usar esta configuración en producción.
+                </div>
+            {% else %}
+                <div class="hint">
+                    Credenciales gestionadas mediante variables de entorno del servicio.
+                    No se muestran usuarios ni contraseñas por seguridad.
+                </div>
+            {% endif %}
+
+            {% if configured_users_count == 0 %}
+                <div class="alert">
+                    No hay usuarios centrales seguros configurados. Revisa config.env.
+                </div>
+            {% endif %}
         </div>
     </div>
 </body>

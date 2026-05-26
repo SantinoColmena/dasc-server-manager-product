@@ -1,5 +1,6 @@
 import os
 import hmac
+import secrets
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -26,11 +27,44 @@ DEMO_CLIENT_TOKEN = os.getenv("DASC_CENTRAL_DEMO_TOKEN", "dasc-central-demo-toke
 # =====================
 
 CENTRAL_AUTH_ENABLED = os.getenv("DASC_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
-CENTRAL_SECRET_KEY = os.getenv("DASC_CENTRAL_SECRET_KEY", "dasc-central-support-secret-lab-change-me")
-CENTRAL_ADMIN_USER = os.getenv("DASC_CENTRAL_ADMIN_USER", "admin")
-CENTRAL_ADMIN_PASSWORD = os.getenv("DASC_CENTRAL_ADMIN_PASSWORD", "admin")
-CENTRAL_TECH_USER = os.getenv("DASC_CENTRAL_TECH_USER", "tecnico")
-CENTRAL_TECH_PASSWORD = os.getenv("DASC_CENTRAL_TECH_PASSWORD", "tecnico")
+CENTRAL_LAB_MODE = os.getenv("DASC_CENTRAL_LAB_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
+
+DEFAULT_LAB_ADMIN_USER = "admin"
+DEFAULT_LAB_ADMIN_PASSWORD = "admin"
+DEFAULT_LAB_TECH_USER = "tecnico"
+DEFAULT_LAB_TECH_PASSWORD = "tecnico"
+
+CENTRAL_SECRET_KEY = os.getenv("DASC_CENTRAL_SECRET_KEY", "").strip()
+if not CENTRAL_SECRET_KEY:
+    CENTRAL_SECRET_KEY = (
+        "dasc-central-support-secret-lab-change-me"
+        if CENTRAL_LAB_MODE
+        else secrets.token_urlsafe(48)
+    )
+
+CENTRAL_ADMIN_USER = os.getenv(
+    "DASC_CENTRAL_ADMIN_USER",
+    DEFAULT_LAB_ADMIN_USER if CENTRAL_LAB_MODE else "",
+)
+CENTRAL_ADMIN_PASSWORD = os.getenv(
+    "DASC_CENTRAL_ADMIN_PASSWORD",
+    DEFAULT_LAB_ADMIN_PASSWORD if CENTRAL_LAB_MODE else "",
+)
+CENTRAL_TECH_USER = os.getenv(
+    "DASC_CENTRAL_TECH_USER",
+    DEFAULT_LAB_TECH_USER if CENTRAL_LAB_MODE else "",
+)
+CENTRAL_TECH_PASSWORD = os.getenv(
+    "DASC_CENTRAL_TECH_PASSWORD",
+    DEFAULT_LAB_TECH_PASSWORD if CENTRAL_LAB_MODE else "",
+)
+
+
+def is_default_lab_credential(username, password):
+    return (
+        (username == DEFAULT_LAB_ADMIN_USER and password == DEFAULT_LAB_ADMIN_PASSWORD)
+        or (username == DEFAULT_LAB_TECH_USER and password == DEFAULT_LAB_TECH_PASSWORD)
+    )
 
 
 app = FastAPI(title=APP_NAME)
@@ -371,19 +405,35 @@ def api_get_support_ticket_status(
 def get_central_users():
     users = {}
 
-    if CENTRAL_ADMIN_USER and CENTRAL_ADMIN_PASSWORD:
-        users[CENTRAL_ADMIN_USER] = {
-            "password": CENTRAL_ADMIN_PASSWORD,
-            "role": "admin",
-            "label": "Administrador central",
+    def add_user(username, password, role, label):
+        username = (username or "").strip()
+        password = password or ""
+
+        if not username or not password:
+            return
+
+        if not CENTRAL_LAB_MODE and is_default_lab_credential(username, password):
+            return
+
+        users[username] = {
+            "password": password,
+            "role": role,
+            "label": label,
         }
 
-    if CENTRAL_TECH_USER and CENTRAL_TECH_PASSWORD:
-        users[CENTRAL_TECH_USER] = {
-            "password": CENTRAL_TECH_PASSWORD,
-            "role": "tecnico",
-            "label": "Tecnico DASC",
-        }
+    add_user(
+        CENTRAL_ADMIN_USER,
+        CENTRAL_ADMIN_PASSWORD,
+        "admin",
+        "Administrador central",
+    )
+
+    add_user(
+        CENTRAL_TECH_USER,
+        CENTRAL_TECH_PASSWORD,
+        "tecnico",
+        "Tecnico DASC",
+    )
 
     return users
 
@@ -441,6 +491,8 @@ def central_login_page(request: Request):
         {
             "msg": request.query_params.get("msg"),
             "auth_enabled": CENTRAL_AUTH_ENABLED,
+            "central_lab_mode": CENTRAL_LAB_MODE,
+            "configured_users_count": len(get_central_users()),
         },
     )
 

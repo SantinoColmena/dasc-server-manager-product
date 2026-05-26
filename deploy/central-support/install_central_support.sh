@@ -48,23 +48,47 @@ python3 -m venv "${INSTALL_DIR}/venv"
 "${INSTALL_DIR}/venv/bin/pip" install -r "${INSTALL_DIR}/requirements.txt"
 
 echo "==> Preparando config.env"
+
+CONFIG_NEEDS_INIT="false"
+
 if [ ! -f "${ENV_FILE}" ]; then
+  CONFIG_NEEDS_INIT="true"
+elif [ ! -s "${ENV_FILE}" ]; then
+  CONFIG_NEEDS_INIT="true"
+elif ! grep -q '^DASC_CENTRAL_SECRET_KEY=' "${ENV_FILE}"; then
+  CONFIG_NEEDS_INIT="true"
+fi
+
+if [ "${CONFIG_NEEDS_INIT}" = "true" ]; then
   CENTRAL_SECRET="$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(48))
 PY
 )"
 
+  CENTRAL_ADMIN_PASSWORD_VALUE="${DASC_CENTRAL_ADMIN_PASSWORD:-$(python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(24))
+PY
+)}"
+
+  CENTRAL_TECH_PASSWORD_VALUE="${DASC_CENTRAL_TECH_PASSWORD:-$(python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(24))
+PY
+)}"
+
   cat > "${ENV_FILE}" <<EOF
 # DASC Central Support
 DASC_CENTRAL_AUTH_ENABLED=true
+DASC_CENTRAL_LAB_MODE=false
 DASC_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
 
-# Usuarios de laboratorio. Cambiar en despliegue real.
-DASC_CENTRAL_ADMIN_USER=admin
-DASC_CENTRAL_ADMIN_PASSWORD=admin
-DASC_CENTRAL_TECH_USER=tecnico
-DASC_CENTRAL_TECH_PASSWORD=tecnico
+# Usuarios centrales. Cambiar según entorno real.
+DASC_CENTRAL_ADMIN_USER=${DASC_CENTRAL_ADMIN_USER:-admin}
+DASC_CENTRAL_ADMIN_PASSWORD=${CENTRAL_ADMIN_PASSWORD_VALUE}
+DASC_CENTRAL_TECH_USER=${DASC_CENTRAL_TECH_USER:-tecnico}
+DASC_CENTRAL_TECH_PASSWORD=${CENTRAL_TECH_PASSWORD_VALUE}
 
 # Cliente demo para integración local-central
 DASC_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
@@ -73,10 +97,18 @@ DASC_CENTRAL_DEMO_TOKEN=dasc-central-demo-token-lab
 EOF
 
   chmod 600 "${ENV_FILE}"
+
+  echo "==> config.env inicializado con credenciales generadas."
+  echo "==> Guarda estas credenciales en un lugar seguro:"
+  echo "    Admin: ${DASC_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
+  echo "    Técnico: ${DASC_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
 else
   echo "==> config.env ya existe, se conserva"
-fi
 
+  if ! grep -q '^DASC_CENTRAL_LAB_MODE=' "${ENV_FILE}"; then
+    echo "DASC_CENTRAL_LAB_MODE=false" >> "${ENV_FILE}"
+  fi
+fi
 echo "==> Ajustando permisos"
 chown -R "${APP_USER}:${APP_GROUP}" "${INSTALL_DIR}"
 chmod 750 "${INSTALL_DIR}"
