@@ -10,7 +10,7 @@ En curso.
 
 ## Problema detectado
 
-Durante la aplicación inicial de R-049T, la sustitución automática del bloque `dashboard()` no localizó el patrón esperado en `main.py`.
+Durante la aplicación inicial de R-049T, la sustitución automática del bloque dashboard no localizó el patrón esperado en main.py.
 
 Como resultado, se actualizaron las plantillas visuales, pero el backend seguía enviando solo:
 
@@ -29,12 +29,26 @@ El nuevo template necesita además:
 - prioridades
 - filters
 
-## Solución aplicada
+## Incidencia adicional
 
-Se reemplaza el bloque completo del dashboard usando búsqueda por índices entre:
+El primer intento de FIX1 solo creó documentación, pero no modificó main.py.
+
+El cambio real se aplica posteriormente sustituyendo el bloque del dashboard desde:
 
 - @app.get("/", response_class=HTMLResponse)
-- @app.get("/health")
+
+hasta el siguiente decorador FastAPI encontrado en el archivo.
+
+## Solución aplicada
+
+Se actualiza la función dashboard para:
+
+- Cargar hasta 500 tickets centrales.
+- Calcular métricas de estado y prioridad.
+- Filtrar por estado.
+- Filtrar por prioridad.
+- Buscar por texto libre.
+- Enviar al template todas las variables necesarias.
 
 ## Validación esperada
 

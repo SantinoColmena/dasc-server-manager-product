@@ -472,62 +472,88 @@ def central_logout(request: Request):
     return RedirectResponse(url="/login?msg=Sesion+cerrada", status_code=303)
 
 @app.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
+def dashboard(
+    request: Request,
+    estado: str = "",
+    prioridad: str = "",
+    q: str = "",
+):
     if not is_central_authenticated(request):
         return central_login_redirect()
 
-    tickets = list_tickets(limit=100)
+    tickets_all = list_tickets(limit=500)
+
+    estado = (estado or "").strip()
+    prioridad = (prioridad or "").strip()
+    q = (q or "").strip().lower()
+
+    def ticket_matches(ticket):
+        if estado and ticket.get("estado") != estado:
+            return False
+
+        if prioridad and ticket.get("prioridad") != prioridad:
+            return False
+
+        if q:
+            searchable = " ".join(
+                str(ticket.get(key, ""))
+                for key in (
+                    "id",
+                    "cliente_id",
+                    "nombre_cliente",
+                    "ticket_local_id",
+                    "tipo",
+                    "prioridad",
+                    "estado",
+                    "servicio",
+                    "contacto",
+                    "email",
+                )
+            ).lower()
+
+            if q not in searchable:
+                return False
+
+        return True
+
+    tickets = [ticket for ticket in tickets_all if ticket_matches(ticket)]
+
+    total = len(tickets_all)
+    nuevos = sum(1 for ticket in tickets_all if ticket.get("estado") == "Nuevo")
+    en_gestion = sum(
+        1
+        for ticket in tickets_all
+        if ticket.get("estado") in ("En análisis", "En curso", "Pendiente cliente")
+    )
+    cerrados = sum(
+        1
+        for ticket in tickets_all
+        if ticket.get("estado") in ("Resuelto", "Cerrado")
+    )
+    criticos = sum(1 for ticket in tickets_all if ticket.get("prioridad") == "Crítica")
 
     return templates.TemplateResponse(
         request,
         "central_dashboard.html",
         {
             "tickets": tickets,
-            "total": len(tickets),
+            "total": total,
+            "total_filtrado": len(tickets),
+            "nuevos": nuevos,
+            "en_gestion": en_gestion,
+            "cerrados": cerrados,
+            "criticos": criticos,
             "demo_client_id": DEMO_CLIENT_ID,
+            "estados": CENTRAL_TICKET_STATES,
+            "prioridades": CENTRAL_TICKET_PRIORITIES,
+            "filters": {
+                "estado": estado,
+                "prioridad": prioridad,
+                "q": q,
+            },
             **get_central_session_context(request),
         },
     )
-
-# =====================
-# R-049J - DETALLE TICKET CENTRAL
-# =====================
-
-def get_central_ticket(ticket_id):
-    init_db()
-
-    with db_connect() as conn:
-        row = conn.execute(
-            """
-            SELECT
-                id,
-                fecha_recepcion,
-                fecha_actualizacion,
-                cliente_id,
-                nombre_cliente,
-                ticket_local_id,
-                tipo,
-                prioridad,
-                servicio,
-                descripcion,
-                evidencia,
-                contacto,
-                email,
-                fecha_origen,
-                version_panel,
-                origen,
-                estado
-            FROM central_tickets
-            WHERE id = ?
-            """,
-            (ticket_id,),
-        ).fetchone()
-
-    if not row:
-        return None
-
-    return dict(row)
-
 
 @app.get("/tickets/{ticket_id}", response_class=HTMLResponse)
 def central_ticket_detail(request: Request, ticket_id: str):
