@@ -6,7 +6,7 @@ Realizar una auditoría final del bloque de soporte central/local antes de darlo
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Comprobaciones realizadas
 
