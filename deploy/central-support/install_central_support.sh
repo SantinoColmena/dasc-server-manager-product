@@ -113,6 +113,10 @@ echo "==> Ajustando permisos"
 chown -R "${APP_USER}:${APP_GROUP}" "${INSTALL_DIR}"
 chmod 750 "${INSTALL_DIR}"
 chmod 750 "${INSTALL_DIR}/data"
+
+# config.env contiene secretos. systemd lo lee como root antes de arrancar el servicio.
+# El proceso de la app no necesita editarlo.
+chown root:root "${ENV_FILE}"
 chmod 600 "${ENV_FILE}"
 
 echo "==> Creando servicio systemd"
