@@ -97,6 +97,12 @@
             <h1>DASC Central Support</h1>
             <p>Prototipo local de panel central de soporte multi-cliente.</p>
             <p class="muted">Cliente demo: {{ demo_client_id }}</p>
+            {% if auth_enabled %}
+                <div style="margin-top: 14px;">
+                    <span class="muted">Sesion: {{ current_user }} · {{ current_role }}</span>
+                    <a href="/logout" style="float:right; text-decoration:none; background:#4b5563; color:white; padding:8px 12px; border-radius:8px;">Cerrar sesion</a>
+                </div>
+            {% endif %}
         </div>
 
         <div class="summary">

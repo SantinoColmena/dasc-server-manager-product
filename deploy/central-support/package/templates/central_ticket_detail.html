@@ -138,6 +138,7 @@
     <div class="wrapper">
         <div class="actions">
             <a href="/" class="button secondary">Volver al panel central</a>
+            {% if auth_enabled %}<a href="/logout" class="button secondary">Cerrar sesion</a>{% endif %}
         </div>
 
         <div class="card">

@@ -1,4 +1,5 @@
 import os
+import hmac
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Optional
 from fastapi import FastAPI, Header, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, Field
 
 
@@ -19,7 +21,20 @@ DEMO_CLIENT_ID = os.getenv("DASC_CENTRAL_DEMO_CLIENT_ID", "cliente-demo-a")
 DEMO_CLIENT_NAME = os.getenv("DASC_CENTRAL_DEMO_CLIENT_NAME", "Cliente Demo A")
 DEMO_CLIENT_TOKEN = os.getenv("DASC_CENTRAL_DEMO_TOKEN", "dasc-central-demo-token-lab")
 
+# =====================
+# R-049Q - CONFIG AUTENTICACION CENTRAL
+# =====================
+
+CENTRAL_AUTH_ENABLED = os.getenv("DASC_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_SECRET_KEY = os.getenv("DASC_CENTRAL_SECRET_KEY", "dasc-central-support-secret-lab-change-me")
+CENTRAL_ADMIN_USER = os.getenv("DASC_CENTRAL_ADMIN_USER", "admin")
+CENTRAL_ADMIN_PASSWORD = os.getenv("DASC_CENTRAL_ADMIN_PASSWORD", "admin")
+CENTRAL_TECH_USER = os.getenv("DASC_CENTRAL_TECH_USER", "tecnico")
+CENTRAL_TECH_PASSWORD = os.getenv("DASC_CENTRAL_TECH_PASSWORD", "tecnico")
+
+
 app = FastAPI(title=APP_NAME)
+app.add_middleware(SessionMiddleware, secret_key=CENTRAL_SECRET_KEY)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
@@ -348,8 +363,119 @@ def api_get_support_ticket_status(
         },
     }
 
+
+# =====================
+# R-049Q - LOGIN Y ROLES PANEL CENTRAL
+# =====================
+
+def get_central_users():
+    users = {}
+
+    if CENTRAL_ADMIN_USER and CENTRAL_ADMIN_PASSWORD:
+        users[CENTRAL_ADMIN_USER] = {
+            "password": CENTRAL_ADMIN_PASSWORD,
+            "role": "admin",
+            "label": "Administrador central",
+        }
+
+    if CENTRAL_TECH_USER and CENTRAL_TECH_PASSWORD:
+        users[CENTRAL_TECH_USER] = {
+            "password": CENTRAL_TECH_PASSWORD,
+            "role": "tecnico",
+            "label": "Tecnico DASC",
+        }
+
+    return users
+
+
+def validate_central_login(username, password):
+    username = (username or "").strip()
+    password = password or ""
+
+    users = get_central_users()
+    user = users.get(username)
+
+    if not user:
+        return None
+
+    expected = user.get("password", "")
+
+    if not hmac.compare_digest(password, expected):
+        return None
+
+    return {
+        "username": username,
+        "role": user.get("role", "tecnico"),
+        "label": user.get("label", username),
+    }
+
+
+def is_central_authenticated(request):
+    if not CENTRAL_AUTH_ENABLED:
+        return True
+
+    return bool(request.session.get("central_user"))
+
+
+def get_central_session_context(request):
+    return {
+        "current_user": request.session.get("central_user", ""),
+        "current_role": request.session.get("central_role", ""),
+        "current_label": request.session.get("central_label", ""),
+        "auth_enabled": CENTRAL_AUTH_ENABLED,
+    }
+
+
+def central_login_redirect():
+    return RedirectResponse(url="/login?msg=Sesion+requerida", status_code=303)
+
+
+@app.get("/login", response_class=HTMLResponse)
+def central_login_page(request: Request):
+    if is_central_authenticated(request) and CENTRAL_AUTH_ENABLED:
+        return RedirectResponse(url="/", status_code=303)
+
+    return templates.TemplateResponse(
+        request,
+        "central_login.html",
+        {
+            "msg": request.query_params.get("msg"),
+            "auth_enabled": CENTRAL_AUTH_ENABLED,
+        },
+    )
+
+
+@app.post("/login")
+def central_login_submit(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+):
+    user = validate_central_login(username, password)
+
+    if not user:
+        return RedirectResponse(
+            url="/login?msg=Credenciales+no+validas",
+            status_code=303,
+        )
+
+    request.session["central_user"] = user["username"]
+    request.session["central_role"] = user["role"]
+    request.session["central_label"] = user["label"]
+
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/logout")
+def central_logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login?msg=Sesion+cerrada", status_code=303)
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
+    if not is_central_authenticated(request):
+        return central_login_redirect()
+
     tickets = list_tickets(limit=100)
 
     return templates.TemplateResponse(
@@ -359,6 +485,7 @@ def dashboard(request: Request):
             "tickets": tickets,
             "total": len(tickets),
             "demo_client_id": DEMO_CLIENT_ID,
+            **get_central_session_context(request),
         },
     )
 
@@ -404,6 +531,9 @@ def get_central_ticket(ticket_id):
 
 @app.get("/tickets/{ticket_id}", response_class=HTMLResponse)
 def central_ticket_detail(request: Request, ticket_id: str):
+    if not is_central_authenticated(request):
+        return central_login_redirect()
+
     ticket = get_central_ticket(ticket_id)
 
     if not ticket:
@@ -420,6 +550,7 @@ def central_ticket_detail(request: Request, ticket_id: str):
             "msg": request.query_params.get("msg"),
             "estados": CENTRAL_TICKET_STATES,
             "prioridades": CENTRAL_TICKET_PRIORITIES,
+            **get_central_session_context(request),
         },
     )
 
@@ -601,7 +732,10 @@ def central_ticket_update_status_priority(
     estado: str = Form(...),
     prioridad: str = Form(...),
 ):
-    usuario = "dasc_tecnico_lab"
+    if not is_central_authenticated(request):
+        return central_login_redirect()
+
+    usuario = request.session.get("central_user", "dasc_tecnico_lab")
 
     ok, msg = update_central_ticket_status_priority(
         ticket_id=ticket_id,
