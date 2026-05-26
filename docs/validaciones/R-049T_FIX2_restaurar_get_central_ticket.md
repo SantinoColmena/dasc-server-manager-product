@@ -6,7 +6,7 @@ Restaurar la función auxiliar `get_central_ticket()` eliminada accidentalmente 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

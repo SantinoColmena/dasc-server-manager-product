@@ -6,7 +6,7 @@ Corregir la lógica del dashboard central para que entregue al template las mét
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

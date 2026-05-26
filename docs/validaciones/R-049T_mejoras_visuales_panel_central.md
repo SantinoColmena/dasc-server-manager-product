@@ -6,7 +6,7 @@ Mejorar la interfaz del panel central DASC para que sea más usable como herrami
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
