@@ -3,6 +3,7 @@ set -euo pipefail
 
 SERVICE_NAME="dasc-central-support"
 INSTALL_DIR="${INSTALL_DIR:-/opt/dasc/central-support}"
+INSTALL_PARENT="${INSTALL_PARENT:-$(dirname "${INSTALL_DIR}")}"
 APP_USER="${APP_USER:-dasc}"
 APP_GROUP="${APP_GROUP:-dasc}"
 APP_HOST="${APP_HOST:-0.0.0.0}"
@@ -27,6 +28,8 @@ if ! id "${APP_USER}" >/dev/null 2>&1; then
 fi
 
 echo "==> Creando directorios"
+mkdir -p "${INSTALL_PARENT}"
+chmod 755 "${INSTALL_PARENT}"
 mkdir -p "${INSTALL_DIR}"
 mkdir -p "${INSTALL_DIR}/data"
 
@@ -35,6 +38,8 @@ rsync -a --delete \
   --exclude "venv" \
   --exclude "__pycache__" \
   --exclude "*.pyc" \
+  --exclude "*.log" \
+  --exclude "data/*.db" \
   "${SOURCE_DIR}/" "${INSTALL_DIR}/"
 
 echo "==> Creando entorno virtual"
@@ -74,6 +79,9 @@ fi
 
 echo "==> Ajustando permisos"
 chown -R "${APP_USER}:${APP_GROUP}" "${INSTALL_DIR}"
+chmod 750 "${INSTALL_DIR}"
+chmod 750 "${INSTALL_DIR}/data"
+chmod 600 "${ENV_FILE}"
 
 echo "==> Creando servicio systemd"
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
