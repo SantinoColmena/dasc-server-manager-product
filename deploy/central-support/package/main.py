@@ -305,6 +305,49 @@ def receive_support_ticket(
     }
 
 
+
+# =====================
+# R-049P - API CONSULTA TICKET CENTRAL
+# =====================
+
+@app.get("/api/v1/support/tickets/{ticket_id}")
+def api_get_support_ticket_status(
+    ticket_id: str,
+    x_dasc_client_token: Optional[str] = Header(default=None),
+    x_dasc_client_id: Optional[str] = Header(default=None),
+):
+    ticket = get_central_ticket(ticket_id)
+
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket central no encontrado")
+
+    client_id = (x_dasc_client_id or "").strip()
+
+    if not client_id:
+        raise HTTPException(status_code=400, detail="Falta cabecera X-DASC-Client-ID")
+
+    if client_id != ticket.get("cliente_id"):
+        raise HTTPException(status_code=403, detail="El ticket no pertenece al cliente indicado")
+
+    if not validate_client_token(client_id, x_dasc_client_token):
+        raise HTTPException(status_code=401, detail="Token de cliente no válido")
+
+    return {
+        "ok": True,
+        "ticket": {
+            "id": ticket.get("id", ""),
+            "cliente_id": ticket.get("cliente_id", ""),
+            "nombre_cliente": ticket.get("nombre_cliente", ""),
+            "ticket_local_id": ticket.get("ticket_local_id", ""),
+            "tipo": ticket.get("tipo", ""),
+            "prioridad": ticket.get("prioridad", ""),
+            "servicio": ticket.get("servicio", ""),
+            "estado": ticket.get("estado", ""),
+            "fecha_recepcion": ticket.get("fecha_recepcion", ""),
+            "fecha_actualizacion": ticket.get("fecha_actualizacion", ""),
+        },
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
     tickets = list_tickets(limit=100)

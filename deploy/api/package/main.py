@@ -4135,6 +4135,209 @@ def soporte_tickets_page(
     return templates.TemplateResponse(request, "soporte_tickets.html", context)
 
 
+
+# =====================
+# R-049P - SINCRONIZACION ESTADO CENTRAL A LOCAL
+# =====================
+
+def get_central_ticket_status_url(central_ticket_id):
+    base = (CENTRAL_SUPPORT_URL or "").strip().rstrip("/")
+
+    if not base:
+        return ""
+
+    if base.endswith("/api/v1/support/tickets"):
+        return f"{base}/{central_ticket_id}"
+
+    if "/api/v1/support/tickets" in base:
+        return f"{base.split('/api/v1/support/tickets')[0]}/api/v1/support/tickets/{central_ticket_id}"
+
+    return f"{base}/api/v1/support/tickets/{central_ticket_id}"
+
+
+def fetch_central_ticket_status(central_ticket_id):
+    if not CENTRAL_SUPPORT_ENABLED:
+        return {
+            "ok": False,
+            "detail": "Integración central desactivada",
+        }
+
+    if not central_ticket_id:
+        return {
+            "ok": False,
+            "detail": "El ticket local no tiene central_ticket_id",
+        }
+
+    url = get_central_ticket_status_url(central_ticket_id)
+
+    if not url:
+        return {
+            "ok": False,
+            "detail": "No se pudo construir la URL de consulta central",
+        }
+
+    req = _support_urlrequest.Request(
+        url,
+        headers={
+            "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
+            "X-DASC-Client-ID": CENTRAL_SUPPORT_CLIENT_ID,
+        },
+        method="GET",
+    )
+
+    try:
+        with _support_urlrequest.urlopen(req, timeout=CENTRAL_SUPPORT_TIMEOUT) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+
+            try:
+                parsed = _support_json.loads(raw)
+            except Exception:
+                parsed = {}
+
+            if not (200 <= response.status < 300):
+                return {
+                    "ok": False,
+                    "status": response.status,
+                    "detail": raw,
+                }
+
+            return {
+                "ok": True,
+                "status": response.status,
+                "ticket": parsed.get("ticket", {}),
+                "detail": raw,
+            }
+
+    except _support_urlerror.HTTPError as e:
+        raw = e.read().decode("utf-8", errors="replace")
+        return {
+            "ok": False,
+            "status": e.code,
+            "detail": raw,
+        }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "status": 0,
+            "detail": str(e),
+        }
+
+
+def map_central_status_to_local(central_estado):
+    central_estado = (central_estado or "").strip()
+
+    mapping = {
+        "Nuevo": "Abierto",
+        "En análisis": "En análisis",
+        "Pendiente cliente": "Pendiente cliente",
+        "En curso": "En curso",
+        "Resuelto": "Resuelto",
+        "Cerrado": "Cerrado",
+    }
+
+    return mapping.get(central_estado, central_estado)
+
+
+def sync_support_ticket_from_central(ticket_id, usuario="central-sync"):
+    ticket = get_support_ticket(ticket_id)
+    ticket = enrich_support_ticket_with_central(ticket)
+
+    if not ticket:
+        return {
+            "ok": False,
+            "detail": "Ticket local no encontrado",
+        }
+
+    central_ticket_id = ticket.get("central_ticket_id", "")
+
+    if not central_ticket_id:
+        return {
+            "ok": False,
+            "detail": "El ticket local no tiene referencia central",
+        }
+
+    result = fetch_central_ticket_status(central_ticket_id)
+
+    if not result.get("ok"):
+        update_support_ticket_central_sync(
+            ticket_id=ticket_id,
+            central_ticket_id=central_ticket_id,
+            central_sync_status=ticket.get("central_sync_status") or "sent",
+            central_sync_detail=f"No se pudo consultar estado central: {result.get('detail', 'Error desconocido')}"[:500],
+        )
+
+        return {
+            "ok": False,
+            "detail": result.get("detail", "No se pudo consultar estado central"),
+        }
+
+    central_ticket = result.get("ticket", {})
+    central_estado = central_ticket.get("estado", "")
+    central_prioridad = central_ticket.get("prioridad", "")
+
+    local_estado = map_central_status_to_local(central_estado)
+    local_prioridad = central_prioridad
+
+    ok, msg = update_support_ticket_status_priority(
+        ticket_id=ticket_id,
+        nuevo_estado=local_estado,
+        nueva_prioridad=local_prioridad,
+        usuario=usuario,
+    )
+
+    detail = (
+        f"Sincronizado desde central {central_ticket_id}: "
+        f"estado central={central_estado}, estado local={local_estado}, "
+        f"prioridad={local_prioridad}"
+    )
+
+    update_support_ticket_central_sync(
+        ticket_id=ticket_id,
+        central_ticket_id=central_ticket_id,
+        central_sync_status="sent",
+        central_sync_detail=detail[:500],
+    )
+
+    return {
+        "ok": ok,
+        "detail": detail if ok else msg,
+        "central_ticket_id": central_ticket_id,
+        "central_estado": central_estado,
+        "local_estado": local_estado,
+        "central_prioridad": central_prioridad,
+    }
+
+
+@app.post("/soporte/tickets/{ticket_id}/sync-central")
+def soporte_ticket_sync_central_status(request: Request, ticket_id: str):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+
+    usuario = request.session.get("user", "anon")
+
+    result = sync_support_ticket_from_central(ticket_id, usuario=usuario)
+
+    log_event(
+        tipo="soporte",
+        resultado="OK" if result.get("ok") else "ERROR",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso=f"POST /soporte/tickets/{ticket_id}/sync-central",
+        detalle=result.get("detail", "")[:250],
+    )
+
+    if result.get("ok"):
+        return RedirectResponse(
+            url=f"/soporte/tickets/{ticket_id}?ok=1&msg=Sincronizado+desde+central",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        url=f"/soporte/tickets/{ticket_id}?ok=0&msg=No+se+pudo+sincronizar+desde+central",
+        status_code=303,
+    )
+
 @app.get("/soporte/tickets/{ticket_id}")
 def soporte_ticket_detail_page(request: Request, ticket_id: str):
     if not is_admin(request):

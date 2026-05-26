@@ -256,6 +256,14 @@
 
         <div class="card">
             <h2>Sincronización central</h2>
+            {% if ticket.central_ticket_id %}
+                <form method="post" action="/soporte/tickets/{{ ticket.id }}/sync-central" style="margin: 8px 0 14px;">
+                    <button class="btn" type="submit">
+                        Sincronizar estado desde central
+                    </button>
+                </form>
+            {% endif %}
+
 
             <div class="grid">
                 <div class="field">
