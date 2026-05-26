@@ -6,7 +6,7 @@ Documentar globalmente el módulo de soporte central/local de DASC Server Manage
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
