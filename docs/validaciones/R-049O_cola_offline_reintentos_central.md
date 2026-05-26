@@ -6,7 +6,7 @@ Permitir que los tickets locales que no pudieron enviarse al panel central pueda
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 

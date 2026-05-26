@@ -6,7 +6,7 @@ Corregir la primera implementación de R-049O antes de validarla en laboratorio.
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problemas detectados
 
