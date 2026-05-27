@@ -6,7 +6,7 @@ Adaptar el instalador de base de datos para evitar valores débiles por defecto 
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Archivo modificado
 
