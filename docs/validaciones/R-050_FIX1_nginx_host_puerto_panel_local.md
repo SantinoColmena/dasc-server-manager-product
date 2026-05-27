@@ -6,7 +6,7 @@ Corregir la visualización del panel local cuando se accede mediante Nginx usand
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

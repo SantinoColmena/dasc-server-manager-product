@@ -6,7 +6,7 @@ Preparar el panel local DASC del cliente para poder acceder mediante Nginx, evit
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
