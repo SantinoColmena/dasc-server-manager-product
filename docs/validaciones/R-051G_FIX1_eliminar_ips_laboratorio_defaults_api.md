@@ -6,7 +6,7 @@ Corregir los defaults de laboratorio detectados durante la validación global R-
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 
