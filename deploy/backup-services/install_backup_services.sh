@@ -9,9 +9,9 @@ BACKUP_DIR="${BACKUP_DIR:-${APP_HOME}/backups}"
 DB_HOST="${DB_HOST:-}"
 DB_NAME="${DB_NAME:-employees}"
 DB_BACKUP_USER="${DB_BACKUP_USER:-dasc_backup}"
-DB_BACKUP_PASS="${DB_BACKUP_PASS:-dasc_backup_2026}"
+DB_BACKUP_PASS="${DB_BACKUP_PASS:-}"
 DB_RESTORE_USER="${DB_RESTORE_USER:-dasc_restore}"
-DB_RESTORE_PASS="${DB_RESTORE_PASS:-dasc_restore_2026}"
+DB_RESTORE_PASS="${DB_RESTORE_PASS:-}"
 
 INSTALL_BACKUP_SCRIPT="/usr/local/bin/backups_api.sh"
 INSTALL_SERVICES_SCRIPT="/usr/local/bin/servicios_api.sh"
@@ -77,6 +77,118 @@ if [[ ! -f "$PACKAGE_DIR/restore_drill_api.sh" ]]; then
 fi
 
 echo "==> Instalando paquetes necesarios"
+# =====================
+# R-051F - PERFIL Y SECRETOS BACKUP-SERVICES
+# =====================
+
+is_empty_or_placeholder() {
+  local value="${1:-}"
+
+  [[ -z "$value" ||
+     "$value" == CAMBIAR_* ||
+     "$value" == "NO_GUARDAR_EN_GIT" ||
+     "$value" == "dasc_backup_2026" ||
+     "$value" == "dasc_restore_2026" ||
+     "$value" == "<IP_SERVIDOR_DB>" ||
+     "$value" == "<IP_SERVIDOR_BACKUPS>" ||
+     "$value" == "<IP_SERVIDOR_DB_BACKUPS>" ]]
+}
+
+prompt_secret_var() {
+  local key="$1"
+  local label="$2"
+  local value="${!key:-}"
+  local input=""
+  local confirm=""
+
+  if ! is_empty_or_placeholder "$value"; then
+    echo "==> ${key} definido externamente (no se muestra)"
+    return 0
+  fi
+
+  read -rsp "${label}: " input
+  echo
+  read -rsp "Repite ${label}: " confirm
+  echo
+
+  if [[ "$input" != "$confirm" ]]; then
+    echo "ERROR: los valores de ${key} no coinciden."
+    exit 1
+  fi
+
+  if is_empty_or_placeholder "$input"; then
+    echo "ERROR: ${key} no puede quedar vacío ni usar valores de laboratorio."
+    exit 1
+  fi
+
+  printf -v "$key" "%s" "$input"
+  echo "==> ${key} configurado manualmente (no se muestra)"
+}
+
+DASC_PROFILE_VALUE="${DASC_PROFILE:-custom}"
+DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+
+case "$DASC_PROFILE_VALUE" in
+  lite|standard|pro|custom)
+    ;;
+  *)
+    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    exit 1
+    ;;
+esac
+
+echo "==> Perfil DASC backup-services seleccionado: ${DASC_PROFILE_VALUE}"
+
+DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/dasc-db-install-secrets.env}"
+
+if [[ -f "$DB_SECRETS_FILE" ]]; then
+  echo "==> Cargando secretos DB desde ${DB_SECRETS_FILE}"
+
+  set -a
+  # shellcheck disable=SC1090
+  . "$DB_SECRETS_FILE"
+  set +a
+
+  # Mapear nombres generados por install_db.sh a nombres usados por backup-services.
+  if is_empty_or_placeholder "$DB_BACKUP_USER" && [[ -n "${BACKUP_USER:-}" ]]; then
+    DB_BACKUP_USER="$BACKUP_USER"
+  fi
+
+  if is_empty_or_placeholder "$DB_BACKUP_PASS" && [[ -n "${BACKUP_PASS:-}" ]]; then
+    DB_BACKUP_PASS="$BACKUP_PASS"
+  fi
+
+  if is_empty_or_placeholder "$DB_RESTORE_USER" && [[ -n "${RESTORE_USER:-}" ]]; then
+    DB_RESTORE_USER="$RESTORE_USER"
+  fi
+
+  if is_empty_or_placeholder "$DB_RESTORE_PASS" && [[ -n "${RESTORE_PASS:-}" ]]; then
+    DB_RESTORE_PASS="$RESTORE_PASS"
+  fi
+
+  if is_empty_or_placeholder "$DB_NAME" && [[ -n "${DB_NAME:-}" ]]; then
+    DB_NAME="$DB_NAME"
+  fi
+else
+  echo "==> No se encontró ${DB_SECRETS_FILE}. Se usarán variables de entorno o entrada manual."
+fi
+
+case "$DASC_PROFILE_VALUE" in
+  lite)
+    if is_empty_or_placeholder "$DB_HOST"; then
+      DB_HOST="127.0.0.1"
+      echo "==> DB_HOST asignado por perfil Lite: ${DB_HOST}"
+    fi
+    ;;
+
+  standard|pro|custom)
+    echo "==> DB_HOST se validará/pedirá para perfil ${DASC_PROFILE_VALUE}"
+    ;;
+esac
+
+prompt_secret_var "DB_BACKUP_PASS" "Introduce la contraseña del usuario DB de backup"
+prompt_secret_var "DB_RESTORE_PASS" "Introduce la contraseña del usuario DB de restauración"
+
 prompt_required_var "DB_HOST" "Introduce la IP o hostname del servidor DB"
 
 echo "==> Parámetros backup-services"
@@ -321,6 +433,16 @@ fi
 
 echo
 echo "============================================"
+# =====================
+# R-051F - RESUMEN DE SECRETOS BACKUP-SERVICES
+# =====================
+
+echo "Credenciales DB configuradas en ficheros locales:"
+echo "- ${APP_HOME}/.my.cnf"
+echo "- ${APP_HOME}/.my_restore.cnf"
+echo "Permisos esperados: 600 y propietario ${APP_USER}:${APP_GROUP}"
+echo "Los valores de contraseña no se muestran por pantalla."
+
 echo "Servidor de Backups + Servicios instalado"
 echo "APP_USER=${APP_USER}"
 echo "DB_HOST=${DB_HOST}"
