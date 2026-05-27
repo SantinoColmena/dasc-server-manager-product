@@ -56,7 +56,20 @@ systemctl --no-pager --full status "$SERVICE_NAME" || true
 
 echo
 echo "==> Health local central"
-curl -s http://127.0.0.1:8010/health | python3 -m json.tool
+for i in {1..30}; do
+  if curl -fsS http://127.0.0.1:8010/health >/tmp/dasc-central-health.json 2>/tmp/dasc-central-health.err; then
+    python3 -m json.tool /tmp/dasc-central-health.json
+    break
+  fi
+
+  sleep 1
+
+  if [ "$i" -eq 30 ]; then
+    echo "ERROR: central-support no responde en /health tras 30 segundos"
+    cat /tmp/dasc-central-health.err || true
+    exit 1
+  fi
+done
 
 echo
 echo "==> Panel central por Nginx"
