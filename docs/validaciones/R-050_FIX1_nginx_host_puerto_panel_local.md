@@ -59,3 +59,23 @@ R-050-FIX1 se considera correcto cuando:
 - El HTML genera rutas estáticas con host/puerto correcto.
 - El panel central por puerto 80 sigue funcionando.
 - El backend directo 8000 sigue funcionando.
+
+## Corrección real aplicada
+
+Durante la primera aplicación del fix se documentó el problema, pero el instalador no cambió porque la línea real dentro del script Bash era:
+
+- proxy_set_header Host \$host;
+
+El símbolo dólar estaba escapado para que Bash no lo expandiera al generar la configuración Nginx.
+
+Se corrige el instalador sustituyendo esa línea por:
+
+- proxy_set_header Host \$http_host;
+- proxy_set_header X-Forwarded-Host \$http_host;
+
+Con esto, al reinstalar la configuración, Nginx genera:
+
+- proxy_set_header Host $http_host;
+- proxy_set_header X-Forwarded-Host $http_host;
+
+y conserva el puerto 8080 en laboratorio.
