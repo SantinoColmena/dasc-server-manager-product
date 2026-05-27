@@ -6,7 +6,7 @@ Revisar la seguridad del panel local DASC y la gestión de secretos antes de con
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
