@@ -6,7 +6,7 @@ Adaptar el instalador del panel/API local para que pueda trabajar con perfiles r
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Archivo modificado
 
