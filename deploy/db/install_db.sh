@@ -6,13 +6,13 @@ DB_NAME="${DB_NAME:-employees}"
 TEST_TABLE="${TEST_TABLE:-empleados_demo}"
 
 BACKUP_USER="${BACKUP_USER:-dasc_backup}"
-BACKUP_PASS="${BACKUP_PASS:-dasc_backup_2026}"
+BACKUP_PASS="${BACKUP_PASS:-}"
 BACKUP_ALLOWED_HOST="${BACKUP_ALLOWED_HOST:-}"
 RESTORE_USER="${RESTORE_USER:-dasc_restore}"
-RESTORE_PASS="${RESTORE_PASS:-dasc_restore_2026}"
+RESTORE_PASS="${RESTORE_PASS:-}"
 LOGS_DB_NAME="${LOGS_DB_NAME:-dasc_logs}"
 LOGS_DB_USER="${LOGS_DB_USER:-dasc_logs}"
-LOGS_DB_PASS="${LOGS_DB_PASS:-dasc_logs_2026}"
+LOGS_DB_PASS="${LOGS_DB_PASS:-}"
 LOGS_ALLOWED_HOST="${LOGS_ALLOWED_HOST:-}"
 
 MARIADB_CNF="/etc/mysql/mariadb.conf.d/50-server.cnf"
@@ -26,7 +26,7 @@ SSHD_CONFIG="/etc/ssh/sshd_config"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OPTIONAL_API_PUBKEY="$SCRIPT_DIR/api_panel.pub"
 
-DB_SERVER_ID="${DB_SERVER_ID:-20}"
+DB_SERVER_ID="${DB_SERVER_ID:-}"
 BINLOG_BASENAME="${BINLOG_BASENAME:-/var/log/mysql/dasc-bin}"
 BINLOG_FORMAT="${BINLOG_FORMAT:-ROW}"
 BINLOG_EXPIRE_DAYS="${BINLOG_EXPIRE_DAYS:-14}"
@@ -52,6 +52,83 @@ if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: ejecuta este script con sudo."
   exit 1
 fi
+
+# =====================
+# R-051E - PERFIL Y SECRETOS DB
+# =====================
+
+is_empty_or_placeholder() {
+  local value="${1:-}"
+
+  [[ -z "$value" ||
+     "$value" == CAMBIAR_* ||
+     "$value" == "NO_GUARDAR_EN_GIT" ||
+     "$value" == "dasc_backup_2026" ||
+     "$value" == "dasc_restore_2026" ||
+     "$value" == "dasc_logs_2026" ||
+     "$value" == "<IP_SERVIDOR_API>" ||
+     "$value" == "<IP_SERVIDOR_DB>" ||
+     "$value" == "<IP_SERVIDOR_BACKUPS>" ||
+     "$value" == "<IP_SERVIDOR_DB_BACKUPS>" ]]
+}
+
+generate_db_secret() {
+  python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(32))
+PY
+}
+
+resolve_secret_var() {
+  local key="$1"
+  local value="${!key:-}"
+
+  if is_empty_or_placeholder "$value"; then
+    printf -v "$key" "%s" "$(generate_db_secret)"
+    echo "==> ${key} generado automaticamente (no se muestra)"
+  else
+    echo "==> ${key} definido externamente (no se muestra)"
+  fi
+}
+
+DASC_PROFILE_VALUE="${DASC_PROFILE:-custom}"
+DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+
+case "$DASC_PROFILE_VALUE" in
+  lite|standard|pro|custom)
+    ;;
+  *)
+    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    exit 1
+    ;;
+esac
+
+echo "==> Perfil DASC DB seleccionado: ${DASC_PROFILE_VALUE}"
+
+if is_empty_or_placeholder "$DB_SERVER_ID"; then
+  case "$DASC_PROFILE_VALUE" in
+    lite)
+      DB_SERVER_ID="10"
+      ;;
+    standard)
+      DB_SERVER_ID="20"
+      ;;
+    pro)
+      DB_SERVER_ID="30"
+      ;;
+    custom)
+      DB_SERVER_ID="20"
+      ;;
+  esac
+
+  echo "==> DB_SERVER_ID asignado por perfil: ${DB_SERVER_ID}"
+else
+  echo "==> DB_SERVER_ID definido externamente: ${DB_SERVER_ID}"
+fi
+
+resolve_secret_var "BACKUP_PASS"
+resolve_secret_var "RESTORE_PASS"
+resolve_secret_var "LOGS_DB_PASS"
 
 prompt_required_var "BACKUP_ALLOWED_HOST" "Introduce la IP o hostname permitido para backups/restauración"
 prompt_required_var "LOGS_ALLOWED_HOST" "Introduce la IP o hostname permitido para logs/API"
@@ -254,6 +331,34 @@ mariadb -e "SHOW BINARY LOGS;"
 echo
 echo "============================================"
 echo "Base de datos instalada correctamente"
+# =====================
+# R-051E - EXPORTAR SECRETOS DB PARA SIGUIENTE INSTALADOR
+# =====================
+
+DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/dasc-db-install-secrets.env}"
+
+cat > "$DB_SECRETS_FILE" <<EOF
+# DASC DB install secrets
+# No copiar este archivo al repositorio.
+DB_NAME=${DB_NAME}
+DB_SERVER_ID=${DB_SERVER_ID}
+BACKUP_ALLOWED_HOST=${BACKUP_ALLOWED_HOST}
+LOGS_ALLOWED_HOST=${LOGS_ALLOWED_HOST}
+BACKUP_USER=${BACKUP_USER}
+BACKUP_PASS=${BACKUP_PASS}
+RESTORE_USER=${RESTORE_USER}
+RESTORE_PASS=${RESTORE_PASS}
+LOGS_DB_NAME=${LOGS_DB_NAME}
+LOGS_DB_USER=${LOGS_DB_USER}
+LOGS_DB_PASS=${LOGS_DB_PASS}
+EOF
+
+chown root:root "$DB_SECRETS_FILE"
+chmod 600 "$DB_SECRETS_FILE"
+
+echo "Secretos DB guardados en: ${DB_SECRETS_FILE}"
+echo "Usar este fichero solo para preparar backup-services. No subirlo a Git."
+
 echo "DB_NAME=${DB_NAME}"
 echo "TEST_TABLE=${TEST_TABLE}"
 echo "BACKUP_USER=${BACKUP_USER}"
