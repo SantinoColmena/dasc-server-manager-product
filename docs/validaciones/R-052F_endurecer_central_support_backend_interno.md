@@ -6,7 +6,7 @@ Endurecer `central-support` para que deje de exponerse directamente en `0.0.0.0:
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 

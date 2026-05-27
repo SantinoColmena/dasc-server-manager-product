@@ -6,7 +6,7 @@ Corregir la validación del hardening de central-support para evitar falsos nega
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problemas detectados
 
