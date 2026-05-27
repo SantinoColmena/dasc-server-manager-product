@@ -6,7 +6,7 @@ Endurecer la instalación local del panel/API DASC para que deje de ejecutarse c
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Problema detectado
 
