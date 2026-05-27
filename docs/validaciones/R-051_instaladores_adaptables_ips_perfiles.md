@@ -6,7 +6,7 @@ Preparar los instaladores de DASC Server Manager para que no dependan de IPs fij
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Contexto
 
