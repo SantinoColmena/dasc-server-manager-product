@@ -6,7 +6,7 @@ Adaptar el instalador de backup-services para perfiles reales y evitar contrase√
 
 ## Estado
 
-En curso.
+Cerrada.
 
 ## Archivo modificado
 
