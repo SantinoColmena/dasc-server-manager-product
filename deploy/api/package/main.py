@@ -40,11 +40,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # CONFIG MULTI-SERVIDOR
 # =====================
 USUARIO = os.getenv("SSH_USER", "dasc")
-SERVIDOR_BACKUPS = os.getenv("BACKUPS_HOST", "192.168.60.30")
-SERVIDOR_SERVICIOS = os.getenv("SERVICIOS_HOST", "192.168.60.30")
+SERVIDOR_BACKUPS = os.getenv("BACKUPS_HOST", "127.0.0.1")
+SERVIDOR_SERVICIOS = os.getenv("SERVICIOS_HOST", "127.0.0.1")
 CACTI_URL = os.getenv("CACTI_URL", "http://127.0.0.1/cacti/")
 
-LOGS_DB_HOST = os.getenv("LOGS_DB_HOST", "192.168.60.20")
+LOGS_DB_HOST = os.getenv("LOGS_DB_HOST", "127.0.0.1")
 LOGS_DB_NAME = os.getenv("LOGS_DB_NAME", "dasc_logs")
 LOGS_DB_USER = os.getenv("LOGS_DB_USER", "dasc_logs")
 LOGS_DB_PASS = os.getenv("LOGS_DB_PASS", "dascpass")
