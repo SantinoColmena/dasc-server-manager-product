@@ -109,6 +109,156 @@ path.write_text("\n".join(out) + "\n", encoding="utf-8")
 PY
 }
 
+# =====================
+# R-051D - PERFIL DE DESPLIEGUE API/PANEL LOCAL
+# =====================
+
+is_empty_or_placeholder() {
+  local value="${1:-}"
+
+  [[ -z "$value" ||
+     "$value" == CAMBIAR_* ||
+     "$value" == "NO_GUARDAR_EN_GIT" ||
+     "$value" == "<IP_SERVIDOR_API>" ||
+     "$value" == "<IP_SERVIDOR_DB>" ||
+     "$value" == "<IP_SERVIDOR_BACKUPS>" ||
+     "$value" == "<IP_SERVIDOR_DB_BACKUPS>" ]]
+}
+
+write_config_if_env_set() {
+  local key="$1"
+  local value="${!key:-}"
+
+  if ! is_empty_or_placeholder "$value"; then
+    write_env_value "$key" "$value"
+    echo "==> ${key} configurado desde variable de entorno"
+  fi
+}
+
+write_config_if_empty() {
+  local key="$1"
+  local value="$2"
+  local current
+
+  current="$(read_env_value "$key" "$CONFIG_FILE" || true)"
+
+  if is_empty_or_placeholder "$current"; then
+    write_env_value "$key" "$value"
+    echo "==> ${key} configurado automáticamente: ${value}"
+  else
+    echo "==> ${key} existente conservado"
+  fi
+}
+
+prompt_config_key() {
+  local key="$1"
+  local label="$2"
+  local default_value="${3:-}"
+  local current
+  local env_value
+  local input
+
+  current="$(read_env_value "$key" "$CONFIG_FILE" || true)"
+
+  if ! is_empty_or_placeholder "$current"; then
+    echo "==> ${key} existente conservado"
+    return 0
+  fi
+
+  env_value="${!key:-}"
+
+  if ! is_empty_or_placeholder "$env_value"; then
+    write_env_value "$key" "$env_value"
+    echo "==> ${key} configurado desde variable de entorno"
+    return 0
+  fi
+
+  if [[ -n "$default_value" ]]; then
+    read -rp "${label} [${default_value}]: " input
+    input="${input:-$default_value}"
+  else
+    read -rp "${label}: " input
+  fi
+
+  if is_empty_or_placeholder "$input"; then
+    echo "ERROR: ${key} no puede quedar vacío."
+    exit 1
+  fi
+
+  write_env_value "$key" "$input"
+  echo "==> ${key} configurado"
+}
+
+DASC_PROFILE_VALUE="${DASC_PROFILE:-$(read_env_value "DASC_PROFILE" "$CONFIG_FILE" || true)}"
+DASC_PROFILE_VALUE="${DASC_PROFILE_VALUE:-custom}"
+DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+
+case "$DASC_PROFILE_VALUE" in
+  lite|standard|pro|custom)
+    ;;
+  *)
+    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    exit 1
+    ;;
+esac
+
+write_env_value "DASC_PROFILE" "$DASC_PROFILE_VALUE"
+echo "==> Perfil DASC API seleccionado: ${DASC_PROFILE_VALUE}"
+
+# Variables opcionales que se pueden pasar desde plantilla/perfil.
+write_config_if_env_set "CENTRAL_SUPPORT_ENABLED"
+write_config_if_env_set "CENTRAL_SUPPORT_URL"
+write_config_if_env_set "CENTRAL_SUPPORT_CLIENT_ID"
+write_config_if_env_set "CENTRAL_SUPPORT_CLIENT_NAME"
+write_config_if_env_set "CENTRAL_SUPPORT_TOKEN"
+write_config_if_env_set "DASC_LOCAL_INTERNAL_SUPPORT_ENABLED"
+
+# Alias cómodos de plantilla.
+if [[ -n "${CLIENT_ID:-}" && -z "${CENTRAL_SUPPORT_CLIENT_ID:-}" ]]; then
+  write_env_value "CENTRAL_SUPPORT_CLIENT_ID" "$CLIENT_ID"
+  echo "==> CENTRAL_SUPPORT_CLIENT_ID configurado desde CLIENT_ID"
+fi
+
+if [[ -n "${CLIENT_NAME:-}" && -z "${CENTRAL_SUPPORT_CLIENT_NAME:-}" ]]; then
+  write_env_value "CENTRAL_SUPPORT_CLIENT_NAME" "$CLIENT_NAME"
+  echo "==> CENTRAL_SUPPORT_CLIENT_NAME configurado desde CLIENT_NAME"
+fi
+
+case "$DASC_PROFILE_VALUE" in
+  lite)
+    write_config_if_empty "BACKUPS_HOST" "127.0.0.1"
+    write_config_if_empty "SERVICIOS_HOST" "127.0.0.1"
+    write_config_if_empty "LOGS_DB_HOST" "127.0.0.1"
+    write_config_if_empty "TERMINAL_DATABASE_HOST" "127.0.0.1"
+    ;;
+
+  standard)
+    prompt_config_key "BACKUPS_HOST" "Introduce IP/hostname del servidor DB+Backups+Logs"
+    STANDARD_SHARED_HOST="$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
+
+    prompt_config_key "SERVICIOS_HOST" "Introduce IP/hostname del servidor de servicios" "$STANDARD_SHARED_HOST"
+    prompt_config_key "LOGS_DB_HOST" "Introduce IP/hostname del servidor de logs/DB" "$STANDARD_SHARED_HOST"
+    prompt_config_key "TERMINAL_DATABASE_HOST" "Introduce IP/hostname del servidor DB para terminal" "$STANDARD_SHARED_HOST"
+    ;;
+
+  pro)
+    prompt_config_key "BACKUPS_HOST" "Introduce IP/hostname del servidor Backups"
+    prompt_config_key "SERVICIOS_HOST" "Introduce IP/hostname del servidor Servicios" "$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
+    prompt_config_key "LOGS_DB_HOST" "Introduce IP/hostname del servidor DB/Logs"
+    prompt_config_key "TERMINAL_DATABASE_HOST" "Introduce IP/hostname del servidor DB para terminal" "$(read_env_value "LOGS_DB_HOST" "$CONFIG_FILE" || true)"
+    ;;
+
+  custom)
+    prompt_config_key "BACKUPS_HOST" "Introduce IP/hostname del servidor Backups"
+    prompt_config_key "SERVICIOS_HOST" "Introduce IP/hostname del servidor Servicios" "$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
+    prompt_config_key "LOGS_DB_HOST" "Introduce IP/hostname del servidor Logs/DB" "$(read_env_value "BACKUPS_HOST" "$CONFIG_FILE" || true)"
+    prompt_config_key "TERMINAL_DATABASE_HOST" "Introduce IP/hostname del servidor DB para terminal" "$(read_env_value "LOGS_DB_HOST" "$CONFIG_FILE" || true)"
+    ;;
+esac
+
+# Valor limpio por defecto para cliente real si no está definido.
+write_config_if_empty "DASC_LOCAL_INTERNAL_SUPPORT_ENABLED" "false"
+
 CURRENT_SECRET_KEY="$(read_env_value "SECRET_KEY" "$CONFIG_FILE" || true)"
 if [[ -z "$CURRENT_SECRET_KEY" || "$CURRENT_SECRET_KEY" == CAMBIAR_* || "$CURRENT_SECRET_KEY" == "cambia-esta-clave-por-una-segura" ]]; then
   NEW_SECRET_KEY="$(generate_secret_key)"
