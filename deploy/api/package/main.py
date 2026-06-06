@@ -9,6 +9,7 @@ import json
 import sqlite3
 import subprocess
 import shlex
+import secrets
 import posixpath
 from pathlib import Path
 from datetime import datetime
@@ -17,13 +18,14 @@ from contextlib import asynccontextmanager
 
 from passlib.context import CryptContext
 import pymysql
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse, Response
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from markupsafe import Markup
 
 
 @asynccontextmanager
@@ -35,7 +37,44 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+# =====================
+# PROTECCIÓN CSRF (M-1)
+# =====================
+# Token sincronizador por sesión: se renderiza como campo oculto en cada
+# formulario POST y se valida mediante una dependencia global. Las llamadas
+# fetch envían el token en la cabecera X-CSRF-Token.
+CSRF_EXEMPT_PATHS = {"/login", "/logout"}
+
+
+def get_csrf_token(request: Request) -> str:
+    token = request.session.get("csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        request.session["csrf_token"] = token
+    return token
+
+
+async def csrf_protect(request: Request) -> None:
+    if request.method in ("GET", "HEAD", "OPTIONS", "TRACE"):
+        return
+    if request.url.path in CSRF_EXEMPT_PATHS:
+        return
+
+    session_token = request.session.get("csrf_token")
+    sent = request.headers.get("x-csrf-token")
+
+    if not sent:
+        try:
+            form = await request.form()
+            sent = form.get("csrf_token")
+        except Exception:
+            sent = None
+
+    if not session_token or not sent or not secrets.compare_digest(str(sent), str(session_token)):
+        raise HTTPException(status_code=403, detail="CSRF token inválido o ausente.")
+
+
+app = FastAPI(lifespan=lifespan, dependencies=[Depends(csrf_protect)])
 
 # =====================
 # CONFIG LOGIN / SESIÓN
@@ -45,6 +84,15 @@ ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 
 templates = Jinja2Templates(directory="templates")
+
+
+def csrf_input(request: Request):
+    """Campo oculto con el token CSRF para insertar dentro de cada formulario."""
+    return Markup(f'<input type="hidden" name="csrf_token" value="{get_csrf_token(request)}">')
+
+
+templates.env.globals["csrf_input"] = csrf_input
+templates.env.globals["csrf_token_value"] = get_csrf_token
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # =====================

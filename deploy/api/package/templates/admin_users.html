@@ -120,6 +120,7 @@
       </div>
 
       <form method="POST" action="/admin/usuarios">
+          {{ csrf_input(request) }}
         <div class="form-grid">
           <div class="field">
             <label>Usuario</label>
@@ -176,6 +177,7 @@
               <td>{% if u.permissions %}{{ ', '.join(u.permissions) }}{% else %}Sin permisos{% endif %}</td>
               <td class="right">
                 <form method="POST" action="/admin/usuarios/delete" class="inline-delete">
+                    {{ csrf_input(request) }}
                   <input type="hidden" name="username" value="{{ u.username }}">
                   <button class="btn small" type="submit"><i class="fa-solid fa-trash"></i> Eliminar</button>
                 </form>

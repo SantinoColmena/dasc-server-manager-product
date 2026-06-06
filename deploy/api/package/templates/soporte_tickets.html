@@ -231,6 +231,7 @@
                 
             {% if central_pending_count and central_pending_count > 0 %}
                 <form method="post" action="/soporte/tickets/reintentar-central" style="margin: 16px 0;">
+                    {{ csrf_input(request) }}
                     <button class="btn" type="submit">
                         Reintentar envío central pendiente ({{ central_pending_count }})
                     </button>

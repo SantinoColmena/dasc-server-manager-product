@@ -148,6 +148,7 @@
             <h2>Actualizar estado y prioridad</h2>
 
             <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado">
+                {{ csrf_input(request) }}
                 <div class="detail-grid">
                     <div class="field">
                         <span>Estado</span>
@@ -258,6 +259,7 @@
             <h2>Sincronización central</h2>
             {% if ticket.central_ticket_id %}
                 <form method="post" action="/soporte/tickets/{{ ticket.id }}/sync-central" style="margin: 8px 0 14px;">
+                    {{ csrf_input(request) }}
                     <button class="btn" type="submit">
                         Sincronizar estado desde central
                     </button>

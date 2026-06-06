@@ -153,6 +153,7 @@
                 <h2>Nueva solicitud</h2>
 
                 <form class="support-form" method="post" action="/soporte">
+                    {{ csrf_input(request) }}
                     <label>Empresa *</label>
                     <input type="text" name="empresa" required>
 

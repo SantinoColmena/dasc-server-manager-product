@@ -185,6 +185,7 @@
 
                 {% if sync_summary.pending and sync_summary.pending > 0 %}
                     <form method="post" action="/soporte/sincronizacion/reintentar-central" style="display:inline;">
+                        {{ csrf_input(request) }}
                         <button class="sync-button warning" type="submit">
                             Reintentar pendientes ({{ sync_summary.pending }})
                         </button>

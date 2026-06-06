@@ -118,6 +118,7 @@
               </td>
               <td class="right">
                 <form method="POST" action="/servicios/accion" class="inline">
+                    {{ csrf_input(request) }}
                   <input type="hidden" name="service" value="{{ s.nombre }}">
                   <button class="btn small" name="action" value="start" type="submit"><i class="fa-solid fa-play"></i> Start</button>
                   <button class="btn small" name="action" value="stop" type="submit"><i class="fa-solid fa-stop"></i> Stop</button>

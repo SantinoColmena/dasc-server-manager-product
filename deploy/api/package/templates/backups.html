@@ -174,6 +174,7 @@
 
       <div class="automation-layout">
         <form class="bkp-form automation-form" method="POST" action="/backups/automation/create">
+            {{ csrf_input(request) }}
           <div class="callout cron-callout">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <div>
@@ -324,6 +325,7 @@
                 <td>{{ auto.created_by or "-" }}</td>
                 <td>
                   <form method="post" action="/backups/automation/delete" style="display:inline;">
+                      {{ csrf_input(request) }}
                     <input type="hidden" name="automation_id" value="{{ auto.id }}">
                     <button type="submit" class="btn small danger">
                       <i class="fa-solid fa-trash"></i> Eliminar
@@ -397,6 +399,7 @@
                   </a>
 
                   <form method="post" action="/backups/restore/preview" style="display:inline;">
+                      {{ csrf_input(request) }}
                     <input type="hidden" name="backup_id" value="{{ b.id }}">
                     <button type="submit" class="btn small restore">
                       <i class="fa-solid fa-rotate-left"></i> Restaurar
@@ -404,6 +407,7 @@
                   </form>
 
                   <form method="post" action="/backups/delete/preview" style="display:inline;">
+                      {{ csrf_input(request) }}
                     <input type="hidden" name="backup_id" value="{{ b.id }}">
                     <button type="submit" class="btn small danger">
                       <i class="fa-solid fa-trash"></i> Eliminar
@@ -438,6 +442,7 @@
       <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
     </div>
     <form class="bkp-form" method="POST" action="/backups/run">
+        {{ csrf_input(request) }}
       <input type="hidden" name="type" value="full">
       <div class="form-grid">
         <label class="field"><span>Base de datos</span><input name="db" placeholder="Ej: employees" required></label>
@@ -466,6 +471,7 @@
       <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
     </div>
     <form class="bkp-form" method="POST" action="/backups/run">
+        {{ csrf_input(request) }}
       <input type="hidden" name="type" value="incremental">
       <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>Incremental real:</strong> se genera a partir de los binary logs desde el último backup registrado.</div></div>
       <div class="form-grid">
@@ -495,6 +501,7 @@
       <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
     </div>
     <form class="bkp-form" method="POST" action="/backups/run">
+        {{ csrf_input(request) }}
       <input type="hidden" name="type" value="differential">
       <div class="form-grid">
         <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
@@ -590,6 +597,7 @@
     </div>
 
     <form method="post" action="/backups/restore/confirm">
+        {{ csrf_input(request) }}
       <input type="hidden" name="backup_id" value="{{ restore_plan.target.id }}">
       <input type="hidden" name="confirm_restore" value="SI">
 
@@ -676,6 +684,7 @@
     </div>
 
     <form method="post" action="/backups/delete/confirm">
+        {{ csrf_input(request) }}
       <input type="hidden" name="backup_id" value="{{ delete_plan.target.id }}">
       <input type="hidden" name="confirm_delete" value="SI">
 

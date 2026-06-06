@@ -382,6 +382,7 @@
 
                 <div class="actions-row">
                     <form method="post" action="/alertas/channel/toggle" class="inline-form">
+                        {{ csrf_input(request) }}
                         <input type="hidden" name="channel_code" value="telegram">
                         <button class="btn" type="submit">
                             <i class="fa-solid fa-power-off"></i>
@@ -390,6 +391,7 @@
                     </form>
 
                     <form method="post" action="/alertas/test" class="inline-form">
+                        {{ csrf_input(request) }}
                         <button class="btn primary" type="submit">
                             <i class="fa-solid fa-flask"></i> Enviar prueba al destino por defecto
                         </button>
@@ -414,6 +416,7 @@
                     </a>
                     {% endif %}
                     <form method="post" action="/alertas/detect" class="inline-form">
+                        {{ csrf_input(request) }}
                         <button class="btn primary" type="submit">
                             <i class="fa-solid fa-magnifying-glass"></i> Detectar chats recientes
                         </button>
@@ -447,6 +450,7 @@
                                 </td>
                                 <td>
                                     <form method="post" action="/alertas/recipient/add-detected" class="inline-form">
+                                        {{ csrf_input(request) }}
                                         <input type="hidden" name="username" value="{{ d.username }}">
                                         <input type="hidden" name="chat_id" value="{{ d.chat_id }}">
                                         <input type="hidden" name="kind" value="{{ d.kind }}">
@@ -483,6 +487,7 @@
                 </div>
 
                 <form method="post" action="/alertas/recipient/add">
+                    {{ csrf_input(request) }}
                     <div class="simple-form-grid">
                         <div class="field-block">
                             <label>Empresa</label>
@@ -560,14 +565,17 @@
                                 <td>
                                     <div class="row-actions">
                                         <form method="post" action="/alertas/recipient/default" class="inline-form">
+                                            {{ csrf_input(request) }}
                                             <input type="hidden" name="recipient_id" value="{{ r.id }}">
                                             <button class="btn" type="submit"><i class="fa-solid fa-star"></i> Poner por defecto</button>
                                         </form>
                                         <form method="post" action="/alertas/recipient/toggle" class="inline-form">
+                                            {{ csrf_input(request) }}
                                             <input type="hidden" name="recipient_id" value="{{ r.id }}">
                                             <button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> Activar / desactivar</button>
                                         </form>
                                         <form method="post" action="/alertas/recipient/delete" class="inline-form" onsubmit="return confirm('¿Eliminar destinatario?');">
+                                            {{ csrf_input(request) }}
                                             <input type="hidden" name="recipient_id" value="{{ r.id }}">
                                             <button class="btn" type="submit"><i class="fa-solid fa-trash"></i> Eliminar</button>
                                         </form>
@@ -631,6 +639,7 @@
                                 </td>
                                 <td>
                                     <form method="post" action="/alertas/rule/toggle" class="inline-form">
+                                        {{ csrf_input(request) }}
                                         <input type="hidden" name="rule_id" value="{{ rule.id }}">
                                         <button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> Cambiar</button>
                                     </form>

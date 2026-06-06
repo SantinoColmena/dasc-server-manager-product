@@ -45,7 +45,7 @@ No cubierto en esta pasada (pendiente):
 | ID | Severidad | Hallazgo | Estado |
 |---|---|---|---|
 | H-1 | 🔴 Alta | Inyección de comandos remota vía SSH en `/backups/run` y `/servicios/accion` | ✅ Resuelto |
-| M-1 | 🟠 Media | CORS `*` con `allow_credentials=True` y sin protección CSRF | 🟡 Parcial (CORS resuelto; CSRF pendiente) |
+| M-1 | 🟠 Media | CORS `*` con `allow_credentials=True` y sin protección CSRF | ✅ Resuelto (CORS restringido + tokens CSRF) |
 | M-2 | 🟠 Media | Cookie de sesión sin `https_only`, sin caducidad ni timeout | ✅ Resuelto |
 | M-3 | 🟠 Media | Sin protección anti fuerza bruta en `/login` | ✅ Resuelto |
 | M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | ✅ Resuelto (instalador genera hash PBKDF2) |
@@ -197,10 +197,13 @@ vulnerable a ataque de temporización. El login de panel sí usa `compare_digest
 
 Tras la auditoría se aplicaron las correcciones de severidad media:
 
-- **M-1 (parcial)** — Se elimina la combinación insegura
-  `allow_origins=["*"]` + `allow_credentials=True`. CORS solo se habilita si se
-  configuran orígenes explícitos en `DASC_CORS_ALLOWED_ORIGINS` (por defecto:
-  solo mismo origen). **Pendiente:** tokens anti-CSRF (mitigado por `SameSite=Lax`).
+- **M-1 (resuelto)** — (a) Se elimina la combinación insegura
+  `allow_origins=["*"]` + `allow_credentials=True`; CORS solo se habilita con
+  orígenes explícitos en `DASC_CORS_ALLOWED_ORIGINS` (por defecto: solo mismo
+  origen). (b) Tokens **CSRF** sincronizadores por sesión: dependencia global
+  `csrf_protect` que valida métodos no seguros, campo oculto `csrf_input` en
+  todos los formularios POST y cabecera `X-CSRF-Token` en las llamadas `fetch`.
+  `/login` y `/logout` quedan exentos.
 - **M-2 (resuelto)** — `SessionMiddleware` con `same_site="lax"`,
   `https_only` configurable (`DASC_SESSION_HTTPS_ONLY`, activar con HTTPS) y
   `max_age` de 8 h (`DASC_SESSION_MAX_AGE`).
@@ -236,14 +239,22 @@ Diferidos con justificación:
   planifica aparte para no introducir riesgo.
 
 Verificación: `py_compile` de ambos paquetes OK · prueba de PBKDF2 (correcta /
-incorrecta / formato inválido) OK · `check_api_package_installable.ps1` OK ·
-`paramiko` sin referencias en el código.
+incorrecta / formato inválido) OK · prueba CSRF con `TestClient` (GET libre;
+POST sin token → 403; POST con token de formulario o cabecera → 303; token
+falso → 403; meta token presente en la terminal) OK ·
+`check_api_package_installable.ps1` OK · `paramiko` sin referencias en el código.
+
+## Estado del barrido
+
+Todos los hallazgos (H-1, M-1…M-5, L-1…L-6) quedan **resueltos, mitigados,
+documentados o diferidos con justificación**. El barrido de código de aplicación
+se considera cerrado.
 
 ## Próximos pasos recomendados
 
-1. Completar M-1 con tokens anti-CSRF en los POST que cambian estado.
-2. Para M-4, que el instalador de Central Support genere y use el hash PBKDF2.
-3. Resolver L-2 y L-3 junto con la auditoría de dependencias pendiente en R-052H.
-4. Documentar L-1 (alcance real del permiso `terminal`).
-5. Continuar con R-053 (validación de instalación desde cero) ya con H-1
-   corregido.
+1. Pendientes de infraestructura de R-052H: activar UFW, HTTPS real/certbot,
+   fail2ban, auditoría de dependencias (`pip-audit`).
+2. Cuando se active HTTPS, poner `DASC_SESSION_HTTPS_ONLY=true`.
+3. Continuar con R-053 (validación de instalación desde cero) ya con H-1 y los
+   M/L aplicados.
+4. Refactor diferido de `main.py` (L-6) cuando haya margen.
