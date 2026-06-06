@@ -83,17 +83,32 @@ import secrets
 print(secrets.token_urlsafe(32))
 PY
 )}"
+
+  # M-4: almacenar las contraseñas como hash PBKDF2-SHA256, nunca en texto plano.
+  hash_central_password() {
+    python3 - "$1" <<'PY'
+import sys, os, hashlib
+plain = sys.argv[1].encode("utf-8")
+salt = os.urandom(16)
+dk = hashlib.pbkdf2_hmac("sha256", plain, salt, 200000)
+print("pbkdf2_sha256$200000$" + salt.hex() + "$" + dk.hex())
+PY
+  }
+
+  CENTRAL_ADMIN_PASSWORD_HASH_VALUE="$(hash_central_password "${CENTRAL_ADMIN_PASSWORD_VALUE}")"
+  CENTRAL_TECH_PASSWORD_HASH_VALUE="$(hash_central_password "${CENTRAL_TECH_PASSWORD_VALUE}")"
+
   cat > "${ENV_FILE}" <<EOF
 # DASC Central Support
 DASC_CENTRAL_AUTH_ENABLED=true
 DASC_CENTRAL_LAB_MODE=false
 DASC_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
 
-# Usuarios centrales. Cambiar según entorno real.
+# Usuarios centrales. Contraseñas almacenadas como hash PBKDF2 (M-4).
 DASC_CENTRAL_ADMIN_USER=${DASC_CENTRAL_ADMIN_USER:-admin}
-DASC_CENTRAL_ADMIN_PASSWORD=${CENTRAL_ADMIN_PASSWORD_VALUE}
+DASC_CENTRAL_ADMIN_PASSWORD_HASH=${CENTRAL_ADMIN_PASSWORD_HASH_VALUE}
 DASC_CENTRAL_TECH_USER=${DASC_CENTRAL_TECH_USER:-tecnico}
-DASC_CENTRAL_TECH_PASSWORD=${CENTRAL_TECH_PASSWORD_VALUE}
+DASC_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
 
 # Cliente demo para integración local-central
 DASC_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
@@ -103,8 +118,8 @@ EOF
 
   chmod 600 "${ENV_FILE}"
 
-  echo "==> config.env inicializado con credenciales generadas."
-  echo "==> Guarda estas credenciales en un lugar seguro:"
+  echo "==> config.env inicializado. Contraseñas almacenadas como hash PBKDF2."
+  echo "==> Estas credenciales se muestran SOLO UNA VEZ. Guárdalas en un lugar seguro:"
   echo "    Admin: ${DASC_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
   echo "    Técnico: ${DASC_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
 else

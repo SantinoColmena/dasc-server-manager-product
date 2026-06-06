@@ -48,7 +48,7 @@ No cubierto en esta pasada (pendiente):
 | M-1 | 🟠 Media | CORS `*` con `allow_credentials=True` y sin protección CSRF | 🟡 Parcial (CORS resuelto; CSRF pendiente) |
 | M-2 | 🟠 Media | Cookie de sesión sin `https_only`, sin caducidad ni timeout | ✅ Resuelto |
 | M-3 | 🟠 Media | Sin protección anti fuerza bruta en `/login` | ✅ Resuelto |
-| M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | 🟡 Mitigado (hash PBKDF2 opcional, retrocompatible) |
+| M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | ✅ Resuelto (instalador genera hash PBKDF2) |
 | M-5 | 🟠 Media | Token de cliente comparado sin tiempo constante | ✅ Resuelto |
 | L-1 | 🟡 Baja | Permiso `terminal` = ejecución remota de comandos por diseño | 📝 Documentado |
 | L-2 | 🟡 Baja | `paramiko` en `requirements.txt` aparentemente sin uso | ✅ Resuelto (eliminado) |
@@ -207,10 +207,12 @@ Tras la auditoría se aplicaron las correcciones de severidad media:
 - **M-3 (resuelto)** — Limitador anti fuerza bruta en `/login` (en memoria, por
   IP): `DASC_LOGIN_MAX_ATTEMPTS` intentos en `DASC_LOGIN_WINDOW_SECONDS`. Apto
   para un worker de Uvicorn.
-- **M-4 (mitigado)** — Central Support admite contraseñas hasheadas
+- **M-4 (resuelto)** — Central Support admite contraseñas hasheadas
   (PBKDF2-SHA256, sin dependencias nuevas) vía
-  `DASC_CENTRAL_ADMIN_PASSWORD_HASH` / `DASC_CENTRAL_TECH_PASSWORD_HASH`.
-  Retrocompatible: si no se define hash, el comportamiento es el anterior.
+  `DASC_CENTRAL_ADMIN_PASSWORD_HASH` / `DASC_CENTRAL_TECH_PASSWORD_HASH`, y el
+  instalador `install_central_support.sh` ahora **genera y almacena el hash**
+  (muestra la contraseña al operador una sola vez). El código mantiene
+  retrocompatibilidad con instalaciones antiguas en texto plano.
 - **M-5 (resuelto)** — `validate_client_token` usa `hmac.compare_digest`.
 
 También se abordaron los hallazgos de severidad baja:
