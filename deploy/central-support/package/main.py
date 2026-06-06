@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -97,7 +98,14 @@ def is_default_lab_credential(username, password):
     )
 
 
-app = FastAPI(title=APP_NAME)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # L-5: inicialización al arranque (sustituye a @app.on_event("startup")).
+    init_db()
+    yield
+
+
+app = FastAPI(title=APP_NAME, lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=CENTRAL_SECRET_KEY)
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -351,9 +359,7 @@ def list_tickets(limit=100):
     return [dict(row) for row in rows]
 
 
-@app.on_event("startup")
-def startup():
-    init_db()
+# L-5: inicialización movida a la función `lifespan` (ver arriba).
 
 
 @app.get("/health")

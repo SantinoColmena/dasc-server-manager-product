@@ -13,6 +13,7 @@ import posixpath
 from pathlib import Path
 from datetime import datetime
 from typing import Any
+from contextlib import asynccontextmanager
 
 from passlib.context import CryptContext
 import pymysql
@@ -24,7 +25,17 @@ from fastapi.responses import RedirectResponse, JSONResponse, Response
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # L-5: inicialización al arranque (sustituye a @app.on_event("startup")).
+    ensure_users_file()
+    init_alerts_db()
+    ensure_default_recipient()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # =====================
 # CONFIG LOGIN / SESIÓN
@@ -731,11 +742,7 @@ def fetch_recent_telegram_chats() -> list[dict[str, Any]]:
     return list(unique.values())
 
 
-@app.on_event("startup")
-def startup_event() -> None:
-    ensure_users_file()
-    init_alerts_db()
-    ensure_default_recipient()
+# L-5: inicialización movida a la función `lifespan` (ver arriba).
 
 
 

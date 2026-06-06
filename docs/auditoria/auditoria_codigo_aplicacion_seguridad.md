@@ -50,12 +50,12 @@ No cubierto en esta pasada (pendiente):
 | M-3 | 🟠 Media | Sin protección anti fuerza bruta en `/login` | ✅ Resuelto |
 | M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | 🟡 Mitigado (hash PBKDF2 opcional, retrocompatible) |
 | M-5 | 🟠 Media | Token de cliente comparado sin tiempo constante | ✅ Resuelto |
-| L-1 | 🟡 Baja | Permiso `terminal` = ejecución remota de comandos por diseño | Documentar |
-| L-2 | 🟡 Baja | `paramiko` en `requirements.txt` aparentemente sin uso | Pendiente |
-| L-3 | 🟡 Baja | Incompatibilidad conocida `passlib 1.7.4` + `bcrypt 4.0.1` | Verificar |
-| L-4 | 🟡 Baja | Fuga de detalle de error (`stderr`/excepciones) al usuario | Pendiente |
-| L-5 | 🟡 Baja | `@app.on_event("startup")` deprecado (Central Support) | Pendiente |
-| L-6 | 🟡 Baja | `main.py` ~5000 líneas en un solo fichero (mantenibilidad) | Pendiente |
+| L-1 | 🟡 Baja | Permiso `terminal` = ejecución remota de comandos por diseño | 📝 Documentado |
+| L-2 | 🟡 Baja | `paramiko` en `requirements.txt` aparentemente sin uso | ✅ Resuelto (eliminado) |
+| L-3 | 🟡 Baja | Incompatibilidad conocida `passlib 1.7.4` + `bcrypt 4.x` | ✅ Mitigado (pin <4.1) |
+| L-4 | 🟡 Baja | Fuga de detalle de error (`stderr`/excepciones) al usuario | ⏸️ Aceptado (panel interno) |
+| L-5 | 🟡 Baja | `@app.on_event("startup")` deprecado (ambos paquetes) | ✅ Resuelto (lifespan) |
+| L-6 | 🟡 Baja | `main.py` ~5000 líneas en un solo fichero (mantenibilidad) | ⏸️ Diferido (refactor) |
 
 ---
 
@@ -213,8 +213,29 @@ Tras la auditoría se aplicaron las correcciones de severidad media:
   Retrocompatible: si no se define hash, el comportamiento es el anterior.
 - **M-5 (resuelto)** — `validate_client_token` usa `hmac.compare_digest`.
 
+También se abordaron los hallazgos de severidad baja:
+
+- **L-1 (documentado)** — El alcance del permiso `terminal` (ejecución remota
+  de comandos en panel, backups y DB) queda recogido aquí; debe reservarse a
+  administradores.
+- **L-2 (resuelto)** — Eliminado `paramiko` de `requirements.txt` (sin uso; el
+  SSH se hace por `subprocess`). Menos superficie de ataque.
+- **L-3 (mitigado)** — `bcrypt` ya estaba fijado en `4.0.1` (< 4.1), versión
+  compatible con `passlib 1.7.4`; se añade comentario explicativo en
+  `requirements.txt`.
+- **L-5 (resuelto)** — Migrados ambos paquetes (panel API y Central Support) de
+  `@app.on_event("startup")` (deprecado) a manejador `lifespan`.
+
+Diferidos con justificación:
+
+- **L-4 (aceptado)** — La devolución de detalle de error se mantiene por
+  utilidad operativa en un panel interno; revisar si se expone externamente.
+- **L-6 (diferido)** — La modularización de `main.py` es un refactor mayor; se
+  planifica aparte para no introducir riesgo.
+
 Verificación: `py_compile` de ambos paquetes OK · prueba de PBKDF2 (correcta /
-incorrecta / formato inválido) OK · `check_api_package_installable.ps1` OK.
+incorrecta / formato inválido) OK · `check_api_package_installable.ps1` OK ·
+`paramiko` sin referencias en el código.
 
 ## Próximos pasos recomendados
 
