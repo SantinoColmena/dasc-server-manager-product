@@ -56,6 +56,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code - configuracion local personal (no versionar)
+.claude/settings.local.json
+
 # Docker local
 docker-compose.override.yml
 
