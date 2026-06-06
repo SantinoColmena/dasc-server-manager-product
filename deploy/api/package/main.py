@@ -845,7 +845,13 @@ def get_alert_stats() -> dict[str, Any]:
 def ssh_run(host: str, script: str, args: list[str]) -> dict[str, Any]:
     try:
         validate_ssh_run(host, script, args)
-        cmd = build_ssh_base_command(host) + [script] + args
+        # Seguridad (H-1): OpenSSH reconcatena los operandos con espacios y los
+        # entrega al shell del host remoto, que sí interpreta metacaracteres.
+        # Para evitar inyección de comandos a través de argumentos (p. ej. ';',
+        # '$()', backticks o espacios) se construye un único comando remoto con
+        # cada token escapado mediante shlex.quote.
+        remote_command = " ".join(shlex.quote(part) for part in [script, *args])
+        cmd = build_ssh_base_command(host) + [remote_command]
 
         res = subprocess.run(
             cmd,
@@ -1022,6 +1028,15 @@ def backup_type_label(tipo: str) -> str:
     if tipo == "differential":
         return "Diferencial"
     return tipo or "-"
+
+
+def es_token_simple(valor: str, extra: str = "._-", max_len: int = 128) -> bool:
+    """Valida que un valor solo contenga caracteres seguros (sin metacaracteres
+    de shell). Defensa en profundidad para argumentos que viajan por SSH."""
+    valor = (valor or "").strip()
+    if not valor or len(valor) > max_len:
+        return False
+    return all(ch.isalnum() or ch in extra for ch in valor)
 
 
 def build_backup_cron_expression(schedule_type: str, schedule_time: str, weekday: str, monthday: str) -> tuple[str, str]:
@@ -2518,6 +2533,21 @@ def accion_servicio(
     if not has_permission(request, "servicios"):
         return permission_redirect()
 
+    action = (action or "").strip().lower()
+    service = (service or "").strip()
+
+    if action not in ("start", "stop", "restart"):
+        return RedirectResponse(
+            url="/servicios?ok=0&msg=Accion+no+valida",
+            status_code=303,
+        )
+
+    if not es_token_simple(service, "@:._-"):
+        return RedirectResponse(
+            url="/servicios?ok=0&msg=Nombre+de+servicio+no+valido",
+            status_code=303,
+        )
+
     result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, [action, service])
     ok = 1 if result["ok"] else 0
 
@@ -3125,6 +3155,48 @@ def backups_run(
     if type not in ["full", "incremental", "differential"]:
         return RedirectResponse(
             url="/backups?ok=0&msg=Tipo+de+backup+no+valido",
+            status_code=303,
+        )
+
+    db = (db or "").strip()
+    dest = (dest or "/home/dasc/backups").strip()
+    name = (name or "").strip()
+    base_ref = (base_ref or "").strip()
+    notes = (notes or "").strip()
+
+    if not es_token_simple(db):
+        return RedirectResponse(
+            url="/backups?ok=0&msg=Nombre+de+base+de+datos+no+valido",
+            status_code=303,
+        )
+
+    if not es_token_simple(name):
+        return RedirectResponse(
+            url="/backups?ok=0&msg=Nombre+de+copia+no+valido",
+            status_code=303,
+        )
+
+    if not dest.startswith("/home/dasc/backups"):
+        return RedirectResponse(
+            url="/backups?ok=0&msg=La+ruta+destino+debe+estar+dentro+de+/home/dasc/backups",
+            status_code=303,
+        )
+
+    if compress not in ["gzip", "none"]:
+        return RedirectResponse(
+            url="/backups?ok=0&msg=Compresion+no+valida",
+            status_code=303,
+        )
+
+    if retention < 0 or retention > 365:
+        return RedirectResponse(
+            url="/backups?ok=0&msg=Retencion+no+valida",
+            status_code=303,
+        )
+
+    if base_ref and not es_token_simple(base_ref):
+        return RedirectResponse(
+            url="/backups?ok=0&msg=Referencia+base+no+valida",
             status_code=303,
         )
 
