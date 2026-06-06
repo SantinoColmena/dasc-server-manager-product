@@ -45,11 +45,11 @@ No cubierto en esta pasada (pendiente):
 | ID | Severidad | Hallazgo | Estado |
 |---|---|---|---|
 | H-1 | 🔴 Alta | Inyección de comandos remota vía SSH en `/backups/run` y `/servicios/accion` | ✅ Resuelto |
-| M-1 | 🟠 Media | CORS `*` con `allow_credentials=True` y sin protección CSRF | Pendiente |
-| M-2 | 🟠 Media | Cookie de sesión sin `https_only`, sin caducidad ni timeout | Pendiente |
-| M-3 | 🟠 Media | Sin protección anti fuerza bruta en `/login` | Pendiente |
-| M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | Pendiente |
-| M-5 | 🟠 Media | Token de cliente comparado sin tiempo constante | Pendiente |
+| M-1 | 🟠 Media | CORS `*` con `allow_credentials=True` y sin protección CSRF | 🟡 Parcial (CORS resuelto; CSRF pendiente) |
+| M-2 | 🟠 Media | Cookie de sesión sin `https_only`, sin caducidad ni timeout | ✅ Resuelto |
+| M-3 | 🟠 Media | Sin protección anti fuerza bruta en `/login` | ✅ Resuelto |
+| M-4 | 🟠 Media | Contraseñas en texto plano en Central Support | 🟡 Mitigado (hash PBKDF2 opcional, retrocompatible) |
+| M-5 | 🟠 Media | Token de cliente comparado sin tiempo constante | ✅ Resuelto |
 | L-1 | 🟡 Baja | Permiso `terminal` = ejecución remota de comandos por diseño | Documentar |
 | L-2 | 🟡 Baja | `paramiko` en `requirements.txt` aparentemente sin uso | Pendiente |
 | L-3 | 🟡 Baja | Incompatibilidad conocida `passlib 1.7.4` + `bcrypt 4.0.1` | Verificar |
@@ -193,11 +193,34 @@ vulnerable a ataque de temporización. El login de panel sí usa `compare_digest
 - SSH con clave dedicada, `BatchMode`, `StrictHostKeyChecking` y `known_hosts`
   propio.
 
+## Actualización aplicada (2026-06-06)
+
+Tras la auditoría se aplicaron las correcciones de severidad media:
+
+- **M-1 (parcial)** — Se elimina la combinación insegura
+  `allow_origins=["*"]` + `allow_credentials=True`. CORS solo se habilita si se
+  configuran orígenes explícitos en `DASC_CORS_ALLOWED_ORIGINS` (por defecto:
+  solo mismo origen). **Pendiente:** tokens anti-CSRF (mitigado por `SameSite=Lax`).
+- **M-2 (resuelto)** — `SessionMiddleware` con `same_site="lax"`,
+  `https_only` configurable (`DASC_SESSION_HTTPS_ONLY`, activar con HTTPS) y
+  `max_age` de 8 h (`DASC_SESSION_MAX_AGE`).
+- **M-3 (resuelto)** — Limitador anti fuerza bruta en `/login` (en memoria, por
+  IP): `DASC_LOGIN_MAX_ATTEMPTS` intentos en `DASC_LOGIN_WINDOW_SECONDS`. Apto
+  para un worker de Uvicorn.
+- **M-4 (mitigado)** — Central Support admite contraseñas hasheadas
+  (PBKDF2-SHA256, sin dependencias nuevas) vía
+  `DASC_CENTRAL_ADMIN_PASSWORD_HASH` / `DASC_CENTRAL_TECH_PASSWORD_HASH`.
+  Retrocompatible: si no se define hash, el comportamiento es el anterior.
+- **M-5 (resuelto)** — `validate_client_token` usa `hmac.compare_digest`.
+
+Verificación: `py_compile` de ambos paquetes OK · prueba de PBKDF2 (correcta /
+incorrecta / formato inválido) OK · `check_api_package_installable.ps1` OK.
+
 ## Próximos pasos recomendados
 
-1. Abordar M-1 a M-5 (endurecimiento de sesión, CORS/CSRF, fuerza bruta,
-   credenciales y comparación de token de Central Support).
-2. Resolver L-2 y L-3 junto con la auditoría de dependencias pendiente en R-052H.
-3. Documentar L-1 (alcance real del permiso `terminal`).
-4. Continuar con R-053 (validación de instalación desde cero) ya con H-1
+1. Completar M-1 con tokens anti-CSRF en los POST que cambian estado.
+2. Para M-4, que el instalador de Central Support genere y use el hash PBKDF2.
+3. Resolver L-2 y L-3 junto con la auditoría de dependencias pendiente en R-052H.
+4. Documentar L-1 (alcance real del permiso `terminal`).
+5. Continuar con R-053 (validación de instalación desde cero) ya con H-1
    corregido.

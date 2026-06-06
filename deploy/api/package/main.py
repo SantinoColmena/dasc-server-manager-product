@@ -380,6 +380,41 @@ def get_auth_user(username: str, password: str) -> dict[str, Any] | None:
     return None
 
 
+# =====================
+# PROTECCIÓN FUERZA BRUTA LOGIN (M-3)
+# =====================
+# Limitador en memoria por IP. Apropiado para el despliegue de un solo worker
+# de Uvicorn. Si se escalan los workers, conviene un almacén compartido.
+LOGIN_MAX_ATTEMPTS = int(os.getenv("DASC_LOGIN_MAX_ATTEMPTS", "5"))
+LOGIN_WINDOW_SECONDS = int(os.getenv("DASC_LOGIN_WINDOW_SECONDS", "900"))
+_login_failures: dict[str, list[float]] = {}
+
+
+def _login_prune(ip: str, now: float) -> list[float]:
+    recientes = [t for t in _login_failures.get(ip, []) if now - t < LOGIN_WINDOW_SECONDS]
+    if recientes:
+        _login_failures[ip] = recientes
+    else:
+        _login_failures.pop(ip, None)
+    return recientes
+
+
+def login_is_blocked(ip: str) -> bool:
+    now = datetime.now().timestamp()
+    return len(_login_prune(ip, now)) >= LOGIN_MAX_ATTEMPTS
+
+
+def register_login_failure(ip: str) -> None:
+    now = datetime.now().timestamp()
+    intentos = _login_prune(ip, now)
+    intentos.append(now)
+    _login_failures[ip] = intentos
+
+
+def reset_login_failures(ip: str) -> None:
+    _login_failures.pop(ip, None)
+
+
 def is_authenticated(request: Request) -> bool:
     return request.session.get("user") is not None
 
@@ -1611,15 +1646,38 @@ class AuthAndLogMiddleware(BaseHTTPMiddleware):
         return response
 
 
+# =====================
+# CONFIG SEGURIDAD WEB (M-1 CORS, M-2 sesión)
+# =====================
+# CORS: por defecto sin orígenes cross-site (el panel se sirve a sí mismo y
+# usa fetch del mismo origen). Si se necesita un frontend externo, indicar
+# orígenes separados por comas en DASC_CORS_ALLOWED_ORIGINS.
+_cors_origins_raw = os.getenv("DASC_CORS_ALLOWED_ORIGINS", "").strip()
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+
+# Sesión: https_only configurable (activar cuando el proxy sirva HTTPS real).
+SESSION_HTTPS_ONLY = os.getenv("DASC_SESSION_HTTPS_ONLY", "false").strip().lower() in ("1", "true", "yes", "on")
+SESSION_MAX_AGE = int(os.getenv("DASC_SESSION_MAX_AGE", "28800"))  # 8 horas
+
 app.add_middleware(AuthAndLogMiddleware)
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    same_site="lax",
+    https_only=SESSION_HTTPS_ONLY,
+    max_age=SESSION_MAX_AGE,
 )
+
+# Solo se habilita CORS si hay orígenes configurados explícitamente.
+# Evita la combinación insegura allow_origins=["*"] + allow_credentials=True.
+if CORS_ALLOWED_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # =====================
 # LOGIN / LOGOUT
@@ -1641,8 +1699,22 @@ def login_page(request: Request):
 
 @app.post("/login")
 def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    ip = request.client.host if request.client else "desconocida"
+
+    if login_is_blocked(ip):
+        register_auth_log(
+            request=request,
+            accion="LOGIN",
+            usuario=(username or "anon").strip() or "anon",
+            resultado="BLOQUEADO",
+            rol="No autenticado",
+            detalle="Demasiados intentos fallidos; acceso temporalmente bloqueado",
+        )
+        return RedirectResponse(url="/login?error=2", status_code=303)
+
     auth_user = get_auth_user(username, password)
     if auth_user:
+        reset_login_failures(ip)
         request.session["user"] = auth_user["username"]
         request.session["is_admin"] = auth_user["is_admin"]
         request.session["permissions"] = auth_user["permissions"]
@@ -1666,6 +1738,7 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
         )
         return RedirectResponse(url="/", status_code=303)
 
+    register_login_failure(ip)
     attempted_user = (username or "anon").strip() or "anon"
     register_auth_log(
         request=request,

@@ -1,5 +1,6 @@
 import os
 import hmac
+import hashlib
 import secrets
 import sqlite3
 from datetime import datetime
@@ -58,6 +59,35 @@ CENTRAL_TECH_PASSWORD = os.getenv(
     "DASC_CENTRAL_TECH_PASSWORD",
     DEFAULT_LAB_TECH_PASSWORD if CENTRAL_LAB_MODE else "",
 )
+
+# M-4: soporte opcional de contraseñas hasheadas (PBKDF2-SHA256, sin
+# dependencias externas). Si se define el hash, tiene prioridad sobre la
+# contraseña en texto plano. Retrocompatible: si no se define, el
+# comportamiento es idéntico al anterior.
+CENTRAL_ADMIN_PASSWORD_HASH = os.getenv("DASC_CENTRAL_ADMIN_PASSWORD_HASH", "").strip()
+CENTRAL_TECH_PASSWORD_HASH = os.getenv("DASC_CENTRAL_TECH_PASSWORD_HASH", "").strip()
+
+
+def verify_pbkdf2(plain, stored):
+    """Verifica una contraseña contra un hash PBKDF2-SHA256.
+
+    Formato: pbkdf2_sha256$<iteraciones>$<salt_hex>$<hash_hex>
+    Generar uno:
+      python -c "import hashlib,os; s=os.urandom(16); dk=hashlib.pbkdf2_hmac('sha256', b'TU_PASS', s, 200000); print('pbkdf2_sha256$200000$'+s.hex()+'$'+dk.hex())"
+    """
+    try:
+        algo, iter_s, salt_hex, dk_hex = (stored or "").split("$")
+        if algo != "pbkdf2_sha256":
+            return False
+        dk = hashlib.pbkdf2_hmac(
+            "sha256",
+            (plain or "").encode("utf-8"),
+            bytes.fromhex(salt_hex),
+            int(iter_s),
+        )
+        return hmac.compare_digest(dk, bytes.fromhex(dk_hex))
+    except Exception:
+        return False
 
 
 def is_default_lab_credential(username, password):
@@ -204,7 +234,8 @@ def validate_client_token(cliente_id, token):
     if int(row["activo"]) != 1:
         return False
 
-    return str(row["token"]) == str(token)
+    # M-5: comparación en tiempo constante para evitar ataques de temporización.
+    return hmac.compare_digest(str(row["token"]), str(token))
 
 
 def next_central_ticket_id():
@@ -405,18 +436,21 @@ def api_get_support_ticket_status(
 def get_central_users():
     users = {}
 
-    def add_user(username, password, role, label):
+    def add_user(username, password, password_hash, role, label):
         username = (username or "").strip()
         password = password or ""
+        password_hash = (password_hash or "").strip()
 
-        if not username or not password:
+        if not username or (not password and not password_hash):
             return
 
-        if not CENTRAL_LAB_MODE and is_default_lab_credential(username, password):
+        # No activar credenciales de laboratorio por defecto fuera de modo lab.
+        if not CENTRAL_LAB_MODE and not password_hash and is_default_lab_credential(username, password):
             return
 
         users[username] = {
             "password": password,
+            "password_hash": password_hash,
             "role": role,
             "label": label,
         }
@@ -424,6 +458,7 @@ def get_central_users():
     add_user(
         CENTRAL_ADMIN_USER,
         CENTRAL_ADMIN_PASSWORD,
+        CENTRAL_ADMIN_PASSWORD_HASH,
         "admin",
         "Administrador central",
     )
@@ -431,6 +466,7 @@ def get_central_users():
     add_user(
         CENTRAL_TECH_USER,
         CENTRAL_TECH_PASSWORD,
+        CENTRAL_TECH_PASSWORD_HASH,
         "tecnico",
         "Tecnico DASC",
     )
@@ -448,9 +484,17 @@ def validate_central_login(username, password):
     if not user:
         return None
 
-    expected = user.get("password", "")
+    stored_hash = user.get("password_hash", "")
+    stored_plain = user.get("password", "")
 
-    if not hmac.compare_digest(password, expected):
+    if stored_hash:
+        ok = verify_pbkdf2(password, stored_hash)
+    elif stored_plain:
+        ok = hmac.compare_digest(password, stored_plain)
+    else:
+        ok = False
+
+    if not ok:
         return None
 
     return {

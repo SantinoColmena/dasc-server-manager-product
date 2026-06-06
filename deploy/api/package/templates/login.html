@@ -107,7 +107,9 @@
 
         <div class="hint">El acceso y los permisos se gestionan desde la propia vista de administración.</div>
 
-        {% if error %}
+        {% if error == "2" %}
+            <div class="error">Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.</div>
+        {% elif error %}
             <div class="error">Usuario o contraseña incorrectos.</div>
         {% endif %}
     </div>
