@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Root = ".",
     [string]$Output = "docs\auditoria\auditoria_ips_perfiles.md"
 )
