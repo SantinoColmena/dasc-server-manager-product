@@ -659,6 +659,36 @@ body {
     gap: 8px;
 }
 
+/* === HAMBURGER / SIDEBAR TOGGLE (Ruta 7.3) === */
+.sidebar-toggle {
+    display: none;          /* oculto en desktop */
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background .12s, border-color .12s;
+    flex-shrink: 0;
+}
+.sidebar-toggle:hover { background: #f1f5f9; border-color: #c7d2fe; }
+
+/* === OVERLAY PARA DRAWER MOBILE === */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+    z-index: 199;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.overlay-open { display: block; }
+
 /* === RESPONSIVE === */
 @media (max-width: 980px) {
     .sidebar {
@@ -687,18 +717,50 @@ body {
         width: 100%;
         order: 3;
     }
-
-    .kpi-grid {
-        flex-direction: column;
-    }
 }
 
 @media (max-width: 640px) {
+    /* Hamburger visible */
+    .sidebar-toggle { display: flex; }
+
+    /* Sidebar como drawer deslizable */
     .sidebar {
-        display: none;
+        position: fixed !important;
+        left: -270px;
+        top: var(--header-h);
+        height: calc(100vh - var(--header-h));
+        width: 260px;
+        z-index: 200;
+        overflow-y: auto;
+        transition: left .26s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar.sidebar-open { left: 0; }
+
+    /* Main a pantalla completa */
+    .main { padding: 18px 16px 36px; }
+
+    /* KPI grid: 2 columnas en vez de 1 */
+    .kpi-grid {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .kpi-card {
+        min-width: calc(50% - 5px);
+        flex: 1 1 calc(50% - 5px);
     }
 
-    .main {
-        padding: 18px 16px 32px;
-    }
+    /* search-input: no desborda */
+    .search-input { min-width: 0; width: 100%; }
+
+    /* Títulos de página más compactos */
+    .page-title { font-size: 18px; }
+    .page-subtitle { font-size: 13px; }
+
+    /* Topbar: actions en ancho completo */
+    .topbar { margin-bottom: 14px; }
+    .topbar-actions { width: 100%; }
+
+    /* Status row del dashboard: 2 columnas en móvil */
+    .status-row { grid-template-columns: 1fr 1fr !important; }
 }

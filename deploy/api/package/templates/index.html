@@ -3,7 +3,7 @@
 
 {% block extra_head %}
 <style>
-    /* ── Dashboard de estado (Ruta 7.2) ──────────────────────────── */
+    /* ── Dashboard de estado (Ruta 7.2) — prefijo dstat para no colisionar con estilo.css ── */
     .status-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -11,9 +11,9 @@
         margin-bottom: 24px;
     }
     @media (max-width: 1000px) { .status-row { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 500px)  { .status-row { grid-template-columns: 1fr 1fr; gap: 10px; } }
+    @media (max-width: 500px)  { .status-row { gap: 10px; } }
 
-    .stat-card {
+    .dstat-card {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 16px;
@@ -25,52 +25,52 @@
         overflow: hidden;
         transition: box-shadow .15s;
     }
-    .stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+    .dstat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
 
-    .stat-card-top {
+    .dstat-card-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 4px;
     }
-    .stat-icon {
+    .dstat-icon {
         width: 38px; height: 38px;
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 15px; flex-shrink: 0;
     }
-    .stat-icon.green  { background: #dcfce7; color: #16a34a; }
-    .stat-icon.amber  { background: #fef3c7; color: #d97706; }
-    .stat-icon.red    { background: #fee2e2; color: #dc2626; }
-    .stat-icon.blue   { background: #dbeafe; color: #2563eb; }
-    .stat-icon.teal   { background: #ccfbf1; color: #0d9488; }
-    .stat-icon.slate  { background: #f1f5f9; color: #475569; }
+    .dstat-icon.green  { background: #dcfce7; color: #16a34a; }
+    .dstat-icon.amber  { background: #fef3c7; color: #d97706; }
+    .dstat-icon.red    { background: #fee2e2; color: #dc2626; }
+    .dstat-icon.blue   { background: #dbeafe; color: #2563eb; }
+    .dstat-icon.teal   { background: #ccfbf1; color: #0d9488; }
+    .dstat-icon.slate  { background: #f1f5f9; color: #475569; }
 
-    .stat-badge {
+    .dstat-badge {
         font-size: 11px; font-weight: 700;
         padding: 3px 9px; border-radius: 99px; letter-spacing: .3px;
         white-space: nowrap;
     }
-    .stat-badge.ok    { background: #dcfce7; color: #15803d; }
-    .stat-badge.error { background: #fee2e2; color: #b91c1c; }
-    .stat-badge.warn  { background: #fef3c7; color: #b45309; }
-    .stat-badge.muted { background: #f1f5f9; color: #64748b; }
+    .dstat-badge.ok    { background: #dcfce7; color: #15803d; }
+    .dstat-badge.error { background: #fee2e2; color: #b91c1c; }
+    .dstat-badge.warn  { background: #fef3c7; color: #b45309; }
+    .dstat-badge.muted { background: #f1f5f9; color: #64748b; }
 
-    .stat-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
-    .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
-    .stat-sub   { font-size: 12px; color: var(--muted); }
+    .dstat-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .dstat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+    .dstat-sub   { font-size: 12px; color: var(--muted); }
 
-    .stat-spinner {
+    .dstat-spinner {
         width: 16px; height: 16px;
         border: 2.5px solid var(--border);
         border-top-color: #4f46e5;
         border-radius: 50%;
-        animation: dash-spin .7s linear infinite;
+        animation: dstat-spin .7s linear infinite;
         flex-shrink: 0;
     }
-    @keyframes dash-spin { to { transform: rotate(360deg); } }
+    @keyframes dstat-spin { to { transform: rotate(360deg); } }
 
-    .stat-loading {
+    .dstat-loading {
         display: flex; align-items: center; gap: 8px;
         color: var(--muted); font-size: 13px;
         min-height: 27px;
@@ -109,40 +109,40 @@
 <!-- ── Dashboard de estado (R-058 / Ruta 7.2) ── -->
 <div class="status-row" id="status-row">
 
-    <div class="stat-card" id="stat-backup">
-        <div class="stat-card-top">
-            <div class="stat-icon green"><i class="fa-solid fa-database"></i></div>
-            <span class="stat-badge muted">—</span>
+    <div class="dstat-card" id="stat-backup">
+        <div class="dstat-card-top">
+            <div class="dstat-icon green"><i class="fa-solid fa-database"></i></div>
+            <span class="dstat-badge muted">—</span>
         </div>
-        <div class="stat-loading"><div class="stat-spinner"></div> Comprobando…</div>
-        <div class="stat-label">Última copia</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
+        <div class="dstat-label">Última copia</div>
     </div>
 
-    <div class="stat-card" id="stat-services">
-        <div class="stat-card-top">
-            <div class="stat-icon teal"><i class="fa-solid fa-server"></i></div>
-            <span class="stat-badge muted">—</span>
+    <div class="dstat-card" id="stat-services">
+        <div class="dstat-card-top">
+            <div class="dstat-icon teal"><i class="fa-solid fa-server"></i></div>
+            <span class="dstat-badge muted">—</span>
         </div>
-        <div class="stat-loading"><div class="stat-spinner"></div> Comprobando…</div>
-        <div class="stat-label">Servicios</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
+        <div class="dstat-label">Servicios</div>
     </div>
 
-    <div class="stat-card" id="stat-alerts">
-        <div class="stat-card-top">
-            <div class="stat-icon amber"><i class="fa-solid fa-bell"></i></div>
-            <span class="stat-badge muted">—</span>
+    <div class="dstat-card" id="stat-alerts">
+        <div class="dstat-card-top">
+            <div class="dstat-icon amber"><i class="fa-solid fa-bell"></i></div>
+            <span class="dstat-badge muted">—</span>
         </div>
-        <div class="stat-loading"><div class="stat-spinner"></div> Comprobando…</div>
-        <div class="stat-label">Alertas</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
+        <div class="dstat-label">Alertas</div>
     </div>
 
-    <div class="stat-card" id="stat-disk">
-        <div class="stat-card-top">
-            <div class="stat-icon blue"><i class="fa-solid fa-hard-drive"></i></div>
-            <span class="stat-badge muted">—</span>
+    <div class="dstat-card" id="stat-disk">
+        <div class="dstat-card-top">
+            <div class="dstat-icon blue"><i class="fa-solid fa-hard-drive"></i></div>
+            <span class="dstat-badge muted">—</span>
         </div>
-        <div class="stat-loading"><div class="stat-spinner"></div> Comprobando…</div>
-        <div class="stat-label">Disco del servidor</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
+        <div class="dstat-label">Disco del servidor</div>
     </div>
 
 </div>
@@ -284,19 +284,19 @@
 (function () {
     "use strict";
 
-    // Utilidad: reemplaza el spinner por valor + subtítulo y actualiza el badge
+    /* Utilidad: reemplaza el spinner por valor + subtítulo y actualiza el badge */
     function resolveCard(cardId, valueHtml, subHtml, badgeClass, badgeText) {
         var card = document.getElementById(cardId);
         if (!card) return;
-        var loading = card.querySelector('.stat-loading');
+        var loading = card.querySelector('.dstat-loading');
         if (loading) {
             loading.outerHTML =
-                '<div class="stat-value">' + valueHtml + '</div>' +
-                '<div class="stat-sub">' + subHtml + '</div>';
+                '<div class="dstat-value">' + valueHtml + '</div>' +
+                '<div class="dstat-sub">' + subHtml + '</div>';
         }
-        var badge = card.querySelector('.stat-badge');
+        var badge = card.querySelector('.dstat-badge');
         if (badge) {
-            badge.className = 'stat-badge ' + badgeClass;
+            badge.className = 'dstat-badge ' + badgeClass;
             badge.textContent = badgeText;
         }
     }
@@ -310,7 +310,7 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
 
-                // ── Último backup ──────────────────────────────────────────
+                /* ── Último backup ──────────────────────────────────────── */
                 var b = data.backup || {};
                 if (b.available) {
                     var bOk = b.status === 'OK';
@@ -325,7 +325,7 @@
                     ndCard('stat-backup');
                 }
 
-                // ── Servicios ──────────────────────────────────────────────
+                /* ── Servicios ──────────────────────────────────────────── */
                 var sv = data.services || {};
                 if (sv.available) {
                     var allOk = sv.inactive === 0;
@@ -343,7 +343,7 @@
                     ndCard('stat-services');
                 }
 
-                // ── Alertas ────────────────────────────────────────────────
+                /* ── Alertas ────────────────────────────────────────────── */
                 var al = data.alerts || {};
                 if (al.available) {
                     var hasErr = al.error > 0;
@@ -358,7 +358,7 @@
                     ndCard('stat-alerts');
                 }
 
-                // ── Disco ──────────────────────────────────────────────────
+                /* ── Disco ──────────────────────────────────────────────── */
                 var dk = data.disk || {};
                 if (dk.available) {
                     var pct    = dk.percent || 0;
@@ -367,8 +367,8 @@
                     var icolor = pct >= 90 ? 'red'    : pct >= 75 ? 'amber'   : 'blue';
                     var card   = document.getElementById('stat-disk');
                     if (card) {
-                        var ico = card.querySelector('.stat-icon');
-                        if (ico) ico.className = 'stat-icon ' + icolor;
+                        var ico = card.querySelector('.dstat-icon');
+                        if (ico) ico.className = 'dstat-icon ' + icolor;
                     }
                     resolveCard(
                         'stat-disk',
