@@ -55,10 +55,10 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | 8 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
 | 9 | Evolución (IA, Windows, refactor) | (se numera al planificar) | 📦 Backlog | Después |
 
-**Próximos 4 objetivos concretos** (lo que dicta el propio repo, en orden):
+**Próximos objetivos concretos** (lo que dicta el propio repo, en orden):
 
-1. **R-053** — Validación de instalación desde cero por perfil (VM limpia).
-2. **R-054** — Cierre del endurecimiento de infraestructura: UFW, HTTPS/certbot, fail2ban, `pip-audit`.
+1. ~~**R-053** — Validación de instalación desde cero por perfil (VM limpia).~~ ✅ Cerrado 2026-06-07.
+2. ~~**R-054** — Cierre del endurecimiento de infraestructura: UFW, HTTPS/certbot, fail2ban, `pip-audit`.~~ ✅ Cerrado 2026-06-07.
 3. **R-055 / R-056** — Guía de uso desde Windows + limpieza final del repo y la documentación.
 4. **R-057** — Release interna estable (freeze) → y recién entonces retomar **R-048** (primer cliente de pago).
 
@@ -169,14 +169,14 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
   - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
     (creado: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`).
 
-#### Ruta 6.8 — Cierre de endurecimiento de infraestructura · 🗓️ Planificada
+#### Ruta 6.8 — Cierre de endurecimiento de infraestructura · ✅ Cerrada
 > Pendientes explícitamente listados en `R-052H` y en la auditoría de código.
-- **R-054** — Activar y documentar el endurecimiento de infraestructura. Al
-  activar HTTPS, poner `DASC_SESSION_HTTPS_ONLY=true`.
-  - `R-054A` 🗓️ — **UFW** (firewall) por host.
-  - `R-054B` 🗓️ — **HTTPS real / certbot** + sesión `https_only`.
-  - `R-054C` 🗓️ — **fail2ban** sobre el log de login.
-  - `R-054D` 🗓️ — **`pip-audit`** (auditoría de dependencias) en ambos paquetes.
+- **R-054** ✅ — Endurecimiento de infraestructura completado. **CERRADO 2026-06-07**.
+  Evidencia: `docs/validaciones/R-054_validacion_endurecimiento.md`.
+  - `R-054A` ✅ — **UFW** por host: `harden_ufw_api.sh`, `harden_ufw_db.sh`, `harden_ufw_backup.sh`.
+  - `R-054B` ✅ — **HTTPS** (autofirmado) + certbot (opcional) + `DASC_SESSION_HTTPS_ONLY=true` activado.
+  - `R-054C` ✅ — **fail2ban**: jaulas `sshd` + `dasc-auth`; filtro DASC validado con `fail2ban-regex`.
+  - `R-054D` ✅ — **`pip-audit`**: `starlette→1.0.1`, `python-multipart→0.0.27`; ambos paquetes limpios.
 
 #### Ruta 6.9 — Experiencia Windows y limpieza final · 🗓️ Planificada
 > Bloques 1 y 2 del plan de reordenación de Fase 6.
@@ -200,8 +200,8 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 
 ### 🚪 Gate de salida de Fase 6 — `F6-GATE-06` "Producto vendible"
 **No se pasa a actividad comercial real hasta cumplir TODO esto:**
-- [ ] Instalación desde cero OK en los 3 perfiles (R-053).
-- [ ] UFW + HTTPS + fail2ban + `pip-audit` aplicados (R-054).
+- [x] Instalación desde cero OK en los 3 perfiles (R-053). ✅ Cerrado 2026-06-07.
+- [x] UFW + HTTPS + fail2ban + `pip-audit` aplicados (R-054). ✅ Cerrado 2026-06-07.
 - [ ] Documentado el uso desde Windows / navegador vs. Linux (R-055).
 - [ ] Repo y docs limpios, sin promesas de funciones inexistentes (R-056).
 - [ ] Release interna estable congelada con changelog (R-057).
