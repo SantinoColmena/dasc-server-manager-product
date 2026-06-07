@@ -5813,3 +5813,175 @@ Revisar el caso, confirmar diagnóstico y actualizar el estado del ticket en DAS
 
 Este resumen se ha generado desde DASC Server Manager para copiarlo en Jira, Zammad u otra herramienta interna de soporte.
 """
+
+
+# =====================
+# R-061 / Ruta 7.6 — Configuración desde el panel
+# =====================
+# Permite editar umbrales y parámetros operativos sin tocar config.env
+# manualmente. Los cambios se aplican en memoria de forma inmediata y se
+# persisten en config.env para sobrevivir reinicios.
+
+# Metadatos de cada parámetro editable (label, tipo, rango, descripción)
+_CONFIG_EDITABLE = {
+    "NOTIF_DISK_THRESHOLD": {
+        "label": "Umbral de disco (%)",
+        "tipo": "int",
+        "min": 50,
+        "max": 99,
+        "desc": "Porcentaje de uso de disco a partir del cual se envía alerta proactiva.",
+        "unidad": "%",
+    },
+    "NOTIF_CHECK_INTERVAL": {
+        "label": "Intervalo entre checks automáticos",
+        "tipo": "int",
+        "min": 60,
+        "max": 86400,
+        "desc": "Frecuencia en segundos con la que el panel comprueba disco, backup y servicios.",
+        "unidad": "seg",
+    },
+    "NOTIF_COOLDOWN": {
+        "label": "Silencio entre alertas iguales",
+        "tipo": "int",
+        "min": 300,
+        "max": 86400,
+        "desc": "Tiempo mínimo en segundos entre dos alertas del mismo tipo para evitar spam.",
+        "unidad": "seg",
+    },
+}
+
+
+def _update_config_env(updates: dict) -> bool:
+    """Actualiza claves específicas en config.env preservando comentarios y orden.
+    Escrita de forma atómica: fichero temporal + rename.
+    Devuelve True si la escritura fue exitosa.
+    """
+    import shutil
+
+    config_path = Path("config.env")
+    if not config_path.exists():
+        return False
+
+    try:
+        lines = config_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        pendientes = set(updates.keys())
+        nuevas_lineas = []
+
+        for linea in lines:
+            stripped = linea.strip()
+            reemplazada = False
+            for key in list(pendientes):
+                # Coincide si la línea empieza exactamente con KEY= (sin espacios intermedios)
+                if stripped.startswith(f"{key}=") or stripped == key:
+                    nuevas_lineas.append(f"{key}={updates[key]}\n")
+                    pendientes.discard(key)
+                    reemplazada = True
+                    break
+            if not reemplazada:
+                nuevas_lineas.append(linea)
+
+        # Claves no encontradas en el fichero: añadir al final
+        for key in pendientes:
+            nuevas_lineas.append(f"{key}={updates[key]}\n")
+
+        # Escritura atómica
+        tmp = config_path.with_suffix(".tmp")
+        tmp.write_text("".join(nuevas_lineas), encoding="utf-8")
+        shutil.move(str(tmp), str(config_path))
+        return True
+    except Exception:
+        return False
+
+
+@app.get("/configuracion")
+def configuracion_panel(request: Request):
+    """Página de configuración operativa del panel (solo admins). R-061"""
+    if not is_admin(request):
+        return permission_redirect("Solo el administrador puede acceder a la configuración del panel.")
+
+    context = get_common_context(request)
+    context["current_path"] = "/configuracion"
+    context["config_actual"] = {
+        "NOTIF_DISK_THRESHOLD": NOTIF_DISK_THRESHOLD,
+        "NOTIF_CHECK_INTERVAL": NOTIF_CHECK_INTERVAL,
+        "NOTIF_COOLDOWN": NOTIF_COOLDOWN,
+    }
+    context["config_meta"] = _CONFIG_EDITABLE
+    context["notif_enabled"] = NOTIF_ENABLED
+    context["smtp_host"] = NOTIF_SMTP_HOST or None
+    context["smtp_user"] = NOTIF_SMTP_USER or None
+    context["telegram_ok"] = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip())
+    context["ssh_key"] = SSH_KEY_PATH
+    context["ssh_timeout"] = SSH_TIMEOUT
+    return templates.TemplateResponse(request, "configuracion.html", context)
+
+
+@app.post("/configuracion")
+async def configuracion_panel_save(request: Request):
+    """Guarda parámetros operativos editables en memoria y en config.env. R-061"""
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Acceso denegado."}, status_code=403)
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Datos no válidos."}, status_code=400)
+
+    global NOTIF_DISK_THRESHOLD, NOTIF_CHECK_INTERVAL, NOTIF_COOLDOWN
+
+    updates: dict[str, str] = {}
+    errores: list[str] = []
+
+    for key, meta in _CONFIG_EDITABLE.items():
+        if key not in data:
+            continue
+        try:
+            val = int(data[key])
+        except (ValueError, TypeError):
+            errores.append(f"'{meta['label']}': valor no es un número entero")
+            continue
+
+        if val < meta["min"] or val > meta["max"]:
+            errores.append(
+                f"'{meta['label']}': debe estar entre {meta['min']} y {meta['max']} {meta['unidad']}"
+            )
+            continue
+
+        updates[key] = str(val)
+
+    if errores:
+        return JSONResponse(
+            {"ok": False, "msg": "Errores de validación: " + "; ".join(errores)},
+            status_code=400,
+        )
+
+    if not updates:
+        return JSONResponse({"ok": False, "msg": "No se recibieron cambios."}, status_code=400)
+
+    # Aplicar en memoria (efecto inmediato, sin reinicio)
+    if "NOTIF_DISK_THRESHOLD" in updates:
+        NOTIF_DISK_THRESHOLD = int(updates["NOTIF_DISK_THRESHOLD"])
+    if "NOTIF_CHECK_INTERVAL" in updates:
+        NOTIF_CHECK_INTERVAL = int(updates["NOTIF_CHECK_INTERVAL"])
+    if "NOTIF_COOLDOWN" in updates:
+        NOTIF_COOLDOWN = int(updates["NOTIF_COOLDOWN"])
+
+    # Persistir en config.env para sobrevivir reinicios
+    written = _update_config_env(updates)
+
+    usuario = request.session.get("user", "anon")
+    log_event(
+        tipo="configuracion",
+        resultado="OK",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /configuracion",
+        detalle=f"Claves actualizadas: {', '.join(updates.keys())}",
+    )
+
+    if written:
+        msg = "Configuración guardada y activa. Los nuevos valores ya están en efecto."
+    else:
+        msg = "Valores aplicados en memoria. No se pudo escribir config.env (los cambios se perderán al reiniciar)."
+
+    return JSONResponse({"ok": True, "msg": msg})
