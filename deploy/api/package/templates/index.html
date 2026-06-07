@@ -13,7 +13,7 @@
 <div class="topbar">
     <div>
         <h2 class="page-title">¡Hola, {{ user }}!</h2>
-        <p class="page-subtitle">{{ role_label }} · Panel de control centralizado</p>
+        <p class="page-subtitle">{{ role_label }} · Todo bajo control.</p>
     </div>
     <div class="topbar-actions">
         <div class="status-pill">
@@ -37,14 +37,14 @@
             <div class="card-icon green"><i class="fa-solid fa-database"></i></div>
             <div class="card-title">
                 <h3>Copias de seguridad</h3>
-                <p>Lanza backups completos, incrementales y diferenciales. Descarga, restaura y gestiona el historial.</p>
+                <p>Protege tus datos con un clic. Programa copias automáticas y recupéralas cuando lo necesites.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/backups"><i class="fa-solid fa-box"></i> Abrir copias</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-shield-halved"></i> SHA256 validado en cada copia</span>
+            <span class="meta"><i class="fa-solid fa-shield-halved"></i> Cada copia verificada automáticamente</span>
         </div>
     </article>
     {% endif %}
@@ -55,14 +55,14 @@
             <div class="card-icon blue"><i class="fa-solid fa-file-lines"></i></div>
             <div class="card-title">
                 <h3>Logs y auditoría</h3>
-                <p>Consulta eventos de auditoría del panel y accede a Cacti para monitorización externa.</p>
+                <p>¿Algo fue raro? Aquí están todos los eventos del sistema, ordenados y fáciles de revisar.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/logs"><i class="fa-solid fa-chart-line"></i> Ver logs</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-clipboard-list"></i> Historial en MariaDB</span>
+            <span class="meta"><i class="fa-solid fa-clipboard-list"></i> Registros guardados de forma segura</span>
         </div>
     </article>
     {% endif %}
@@ -73,14 +73,14 @@
             <div class="card-icon teal"><i class="fa-solid fa-server"></i></div>
             <div class="card-title">
                 <h3>Servicios del sistema</h3>
-                <p>Inicia, detén o reinicia servicios de forma remota. Consulta el estado de cada servicio en tiempo real.</p>
+                <p>Arranca, para o reinicia servicios del servidor sin tocar ningún cable. Todo desde aquí.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/servicios"><i class="fa-solid fa-gear"></i> Gestionar servicios</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-bolt"></i> Control por SSH hardened</span>
+            <span class="meta"><i class="fa-solid fa-bolt"></i> Conexión cifrada al servidor</span>
         </div>
     </article>
     {% endif %}
@@ -91,14 +91,14 @@
             <div class="card-icon violet"><i class="fa-solid fa-terminal"></i></div>
             <div class="card-title">
                 <h3>Terminal remota</h3>
-                <p>Ejecuta comandos en las máquinas Main, Backup o Database directamente desde el panel.</p>
+                <p>Acceso directo al servidor cuando lo necesitas. Rápido, seguro y sin salir del panel.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/terminal"><i class="fa-solid fa-play"></i> Abrir terminal</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-lock"></i> Comandos permitidos por lista blanca</span>
+            <span class="meta"><i class="fa-solid fa-lock"></i> Solo comandos autorizados</span>
         </div>
     </article>
     {% endif %}
@@ -109,14 +109,14 @@
             <div class="card-icon amber"><i class="fa-solid fa-bell"></i></div>
             <div class="card-title">
                 <h3>Alertas</h3>
-                <p>Configura destinatarios Telegram, define reglas y revisa el historial de entregas de alertas.</p>
+                <p>Define quién recibe aviso y cuándo. El sistema te alerta por Telegram cuando algo necesita tu atención.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/alertas"><i class="fa-solid fa-paper-plane"></i> Gestionar alertas</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-brands fa-telegram"></i> Notificaciones vía Telegram</span>
+            <span class="meta"><i class="fa-brands fa-telegram"></i> Avisos al instante por Telegram</span>
         </div>
     </article>
     {% endif %}
@@ -126,14 +126,14 @@
             <div class="card-icon"><i class="fa-solid fa-headset"></i></div>
             <div class="card-title">
                 <h3>Soporte DASC</h3>
-                <p>Registra solicitudes de soporte. El equipo DASC gestiona cada ticket y te informa del estado.</p>
+                <p>¿Algo no funciona como esperas? Abre un ticket y el equipo DASC se encarga de solucionarlo.</p>
             </div>
         </div>
         <div class="actions">
             <a class="btn primary" href="/soporte"><i class="fa-solid fa-ticket"></i> Abrir soporte</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-rotate"></i> Sincronización con DASC Central</span>
+            <span class="meta"><i class="fa-solid fa-rotate"></i> Conectado a DASC Central</span>
         </div>
     </article>
 
@@ -143,7 +143,7 @@
             <div class="card-icon red"><i class="fa-solid fa-user-shield"></i></div>
             <div class="card-title">
                 <h3>Administración</h3>
-                <p>Crea y gestiona usuarios del panel. Asigna permisos por módulo a cada cuenta.</p>
+                <p>Dale acceso a tu equipo y decide exactamente qué puede ver o tocar cada persona.</p>
             </div>
         </div>
         <div class="actions">

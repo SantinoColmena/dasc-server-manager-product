@@ -18,8 +18,8 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Auditoría del sistema</h2>
-        <p class="page-subtitle">Historial de eventos almacenados en base de datos.</p>
+        <h2 class="page-title">Registro de actividad</h2>
+        <p class="page-subtitle">Todo lo que pasa en el sistema, registrado y listo para revisar cuando lo necesites.</p>
     </div>
 </div>
 
@@ -29,11 +29,11 @@
         <i class="fa-solid fa-clipboard-list"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Resultado OK</div><div class="kpi-value ok">{{ logs_ok }}</div></div>
+        <div><div class="kpi-label">Sin errores</div><div class="kpi-value ok">{{ logs_ok }}</div></div>
         <i class="fa-solid fa-circle-check"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Resultado ERROR</div><div class="kpi-value error">{{ logs_error }}</div></div>
+        <div><div class="kpi-label">Con errores</div><div class="kpi-value error">{{ logs_error }}</div></div>
         <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
 </div>

@@ -9,9 +9,9 @@
 {% block sidebar_info %}
 <div class="history">
     <h3>Estado del módulo</h3>
-    <p><span class="dot ok"></span> Formularios conectados con <code>/backups/run</code></p>
-    <p><span class="dot ok"></span> Incremental y diferencial activos con binlogs</p>
-    <p><span class="dot ok"></span> Acceso según permisos del usuario</p>
+    <p><span class="dot ok"></span> Listo para crear copias</p>
+    <p><span class="dot ok"></span> Copias incrementales disponibles</p>
+    <p><span class="dot ok"></span> Acceso controlado</p>
 </div>
 {% endblock %}
 
@@ -25,8 +25,8 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Gestión de copias</h2>
-        <p class="page-subtitle">Backups completos, incrementales y diferenciales con validación SHA256.</p>
+        <h2 class="page-title">Copias de seguridad</h2>
+        <p class="page-subtitle">Elige el tipo de copia que necesitas y ponla en marcha en segundos.</p>
     </div>
     <div class="topbar-actions">
         <div class="status-pill"><i class="fa-solid fa-shield-halved"></i> {{ role_label }}</div>

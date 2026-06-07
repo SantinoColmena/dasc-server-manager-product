@@ -40,7 +40,7 @@
     {% if selected_machine %}
     <p><span class="dot ok"></span> Máquina: {{ selected_machine.label }}</p>
     {% else %}
-    <p><span class="dot warn"></span> Selecciona una máquina</p>
+    <p><span class="dot warn"></span> Elige una máquina para empezar</p>
     {% endif %}
 </div>
 {% endblock %}
@@ -50,7 +50,7 @@
 <div class="topbar">
     <div>
         <h2 class="page-title">Terminal remota</h2>
-        <p class="page-subtitle">Escoge una máquina y ejecuta comandos directamente desde el panel.</p>
+        <p class="page-subtitle">Elige la máquina y ejecuta lo que necesites, directamente desde el navegador.</p>
     </div>
 </div>
 
@@ -102,7 +102,7 @@ Escribe un comando y pulsa Enter.
 
         <div class="terminal-warning">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            Esta terminal ejecuta comandos reales. Los comandos largos o interactivos pueden cortarse al superar el timeout configurado.
+            Recuerda: estos comandos son reales y se ejecutan en el servidor. Los que tarden más del tiempo límite se cortarán automáticamente.
         </div>
     </div>
 </section>
