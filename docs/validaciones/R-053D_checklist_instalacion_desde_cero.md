@@ -4,7 +4,7 @@
 > **sin pasos manuales ocultos**, y dejar evidencia consolidada por perfil.
 > Este documento es el guion que se ejecuta y la plantilla de informe.
 >
-> Estado: 🔵 en curso · Perfil en validación: **Lite/single (R-053A)**.
+> Estado: 🔵 en curso · Perfiles validados: **Lite ✅ (R-053A) · Standard ✅ (R-053B)** · Pro pendiente (R-053C).
 
 ---
 
@@ -23,6 +23,13 @@ sean "pasos ocultos"):
 | F5 | La **copia externa es obligatoria** en Lite (`EXTERNAL_BACKUP_REQUIRED=yes`) pero el instalador la deja **deshabilitada** (`ENABLED=no`, `TYPE=none`). | Media | R-053A debe validar habilitar y probar la copia externa. |
 | F6 | **Mojibake** en mensajes de `install_dasc_api.sh` y `install_backup_services.sh` (p. ej. `ejecuciÃ³n`, `contraseÃ±a`). Cosmético pero visible al cliente durante la instalación. | Baja | Anotado para limpieza (no bloquea R-053A). |
 | F7 | `install_backup_services.sh` línea ~169: `is_empty_or_placeholder "$DB_NAME" && DB_NAME="$DB_NAME"` es un no-op (se asigna a sí mismo). | Baja | Anotado; inofensivo. |
+
+### Hallazgos adicionales — R-053B Standard (2026-06-07)
+
+| ID | Hallazgo | Severidad | Acción |
+|---|---|---|---|
+| **B4** | `install_backup_services.sh` abortaba por `mysqlbinlog` ausente en el host de backup Standard/Pro (no tiene `mariadb-server-10.6` local) | 🟠 Bloqueante en Standard/Pro | Eliminado de la lista `required_cmd`; convertido en AVISO. **Fix aplicado.** |
+| **B5** | `install_dasc_api.sh` terminaba silenciosamente en el segundo host SSH: `unset DASC_PASS` dentro del bucle borraba la contraseña; `read` desde `stdin=/dev/null` devuelve exit 1, que `set -euo pipefail` convierte en salida silenciosa | 🔴 Bloqueante en Standard/Pro | `unset DASC_PASS` movido fuera del bucle. **Fix aplicado.** |
 
 > Las plantillas de `config/perfiles/` y `scripts/generar_config_perfil.sh` generan
 > un `config.env` de referencia, pero **los instaladores se gobiernan por
@@ -114,13 +121,70 @@ sudo -E DASC_PROFILE=lite ADMIN_PASSWORD_INPUT='<password-admin-panel>' \
 
 ---
 
-## Informe consolidado por perfil (rellenar tras la corrida)
+## 6. Instalación Standard — orden obligatorio (2 VMs)
 
-| Perfil | Tag/commit | VM (SO/recursos) | Resultado | Incidencias | Evidencia |
+> **VMs requeridas:** `dasc-std-db` (MariaDB) + `dasc-std-api` (Panel + backup-services).
+> Preparar ambas con `multipass launch 22.04 --name <nombre> --cpus 2 --memory 4G --disk 20G`
+> y transferir el repo a cada una.
+
+### 6.1 En dasc-std-db — Base de datos
+
+```bash
+export DB_HOST_IP=<IP_dasc-std-db>   # p. ej. 172.19.222.6
+export API_HOST_IP=<IP_dasc-std-api>  # p. ej. 172.19.211.191
+# En dasc-std-db:
+cd ~/dasc/deploy/db
+sudo -E DASC_PROFILE=standard APP_PASSWORD=<pass-dasc-db> \
+    BACKUP_ALLOWED_HOST="$API_HOST_IP" LOGS_ALLOWED_HOST="$API_HOST_IP" \
+    bash install_db.sh
+```
+- [ ] MariaDB activo, usuario `dasc` creado, secretos en `/root/dasc-db-install-secrets.env`.
+
+### 6.2 En dasc-std-api — Backup-services
+
+```bash
+# En dasc-std-api (leer secretos de dasc-std-db previamente copiados):
+cd ~/dasc/deploy/backup-services
+sudo -E DASC_PROFILE=standard APP_PASSWORD=<pass-dasc-api> \
+    DB_HOST=<IP_dasc-std-db> DB_PORT=3306 \
+    DB_BACKUP_USER=dasc_backup DB_BACKUP_PASS=<pass-backup> \
+    DB_RESTORE_USER=dasc_restore DB_RESTORE_PASS=<pass-restore> \
+    DB_NAME=employees LOGS_DB_NAME=dasc_logs \
+    LOGS_DB_USER=dasc_logs LOGS_DB_PASS=<pass-logs> \
+    bash install_backup_services.sh
+```
+- [ ] Scripts `backups_api.sh`, `restore_api.sh`, `servicios_api.sh` en `/usr/local/bin`.
+- [ ] `.my.cnf` de dasc apunta a `host=<IP_dasc-std-db>`.
+- [ ] AVISO: `mysqlbinlog no disponible` esperado en Standard/Pro (B4). ✅
+
+### 6.3 En dasc-std-api — Panel API
+
+```bash
+cd ~/dasc/deploy/api
+sudo -E DASC_PROFILE=standard \
+    BACKUPS_HOST=127.0.0.1 SERVICIOS_HOST=127.0.0.1 \
+    LOGS_DB_HOST=<IP_dasc-std-db> TERMINAL_DATABASE_HOST=<IP_dasc-std-db> \
+    LOGS_DB_NAME=dasc_logs LOGS_DB_USER=dasc_logs LOGS_DB_PASS=<pass-logs> \
+    ADMIN_USERNAME=admin ADMIN_PASSWORD_INPUT=<pass-admin> \
+    DASC_PASS=<pass-dasc-api> \
+    bash install_dasc_api.sh </dev/null
+```
+- [ ] `dasc-api` activo; `curl -I http://127.0.0.1:8000` responde HTTP 200 en `/login`.
+- [ ] SSH sin contraseña `ubuntu@dasc-std-api → dasc@dasc-std-db` verificado.
+- [ ] `DASC_SSH_ALLOWED_HOSTS` incluye `127.0.0.1,localhost,<IP_dasc-std-db>`.
+
+> **Nota:** `DASC_PASS` debe coincidir con el password del usuario `dasc` en el host destino.
+> `exec 0</dev/null` (o redirigir `stdin`) es necesario para ejecución no interactiva (B5).
+
+---
+
+## Informe consolidado por perfil
+
+| Perfil | Commit | VMs (SO/recursos) | Resultado | Incidencias | Evidencia |
 |---|---|---|---|---|---|
-| Lite (R-053A) | | Ubuntu 22.04 | ⬜ | | |
-| Standard (R-053B) | | | ⬜ | | |
-| Pro (R-053C) | | | ⬜ | | |
+| Lite (R-053A) | `9317e57` | Ubuntu 22.04, 1 VM, 2 vCPU/4 GiB | ✅ Cerrado 2026-06-07 | B1, B2, F8, B3 | [`R-053A`](R-053A_validacion_lite.md) |
+| Standard (R-053B) | `092e37d` | Ubuntu 22.04, 2 VMs, 2 vCPU/4 GiB c/u | ✅ Cerrado 2026-06-07 | B4, B5 | [`R-053B`](R-053B_validacion_standard.md) |
+| Pro (R-053C) | — | 3 VMs | ⬜ Pendiente | — | — |
 
 **Criterio de cierre R-053:** los 3 perfiles instalan desde cero sin pasos manuales
 no documentados, con panel operativo y backup+restauración verificados.
