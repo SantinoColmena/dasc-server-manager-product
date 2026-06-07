@@ -1,8 +1,7 @@
 # R-053A — Validación de instalación desde cero · Perfil Lite/single
 
-> **Resultado:** ✅ La instalación Lite desde cero en VM limpia **funciona**, tras
-> corregir **4 defectos** que la bloqueaban o la dejaban no funcional. Pendiente
-> únicamente validar la **copia externa** obligatoria (F5) para el cierre formal.
+> **Resultado:** ✅ La instalación Lite desde cero en VM limpia **funciona** y la
+> copia externa obligatoria (F5) está validada. R-053A **CERRADO** (2026-06-07).
 >
 > Relacionado: [`R-053D_checklist_instalacion_desde_cero.md`](R-053D_checklist_instalacion_desde_cero.md).
 
@@ -45,14 +44,19 @@
 | Panel HTTP | ✅ `GET / → 303`, `GET /login → 200` |
 | Servicios systemd | ✅ `dasc-api`, `mariadb`, `ssh`, `cron` activos |
 
-## 4. Pendiente para el cierre formal de R-053A
+## 4. Validación F5 — Copia externa obligatoria
 
-- [ ] **F5 — Copia externa obligatoria.** El perfil Lite exige copia externa
-      (`EXTERNAL_BACKUP_REQUIRED=yes`) pero el instalador la deja deshabilitada.
-      Falta validar `sync_external_backup.sh` contra un destino externo (p. ej.
-      `/mnt/dasc-external` montado en la VM).
-- [ ] Commitear los 4 fixes en la rama y dejar `check_api_package_installable.ps1`
-      en verde.
+- [x] **F5 — Copia externa validada (2026-06-07).** `sync_external_backup.sh`
+      ejecutado como usuario `dasc` con `EXTERNAL_BACKUP_TYPE=local` y destino
+      `/mnt/dasc-external` (simulación de disco/NAS externo montado en la VM).
+      - Exit 0, mensaje `OK: sincronización externa completada correctamente`.
+      - Ambos ficheros (`verify_employees.sql.gz`, `test_dasc_owned.txt`) llegaron
+        al destino con propietario `dasc:dasc`.
+      - Comportamiento con `EXTERNAL_BACKUP_ENABLED=no`: exit 0 con mensaje de
+        desactivado (correcto).
+- [x] Fixes B1, B2, F8, B3 commiteados en rama `docs/roadmap-canonico` (`9317e57`).
+
+## 5. Conclusión
 
 ## 5. Conclusión
 

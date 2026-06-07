@@ -142,14 +142,14 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 #### Ruta 6.7 — Validación de instalación desde cero · 🔵 En curso
 - **R-053** — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
   ocultos, partiendo del repo/tag. *Depende de:* H-1 y M/L de la auditoría (✅).
-  - `R-053A` 🔵 — Validación perfil **Lite** (1 servidor + copia externa).
+  - `R-053A` ✅ — Validación perfil **Lite** (1 servidor + copia externa).
     Instalación desde cero **funcional** en VM limpia (multipass/Ubuntu 22.04)
     tras corregir 4 defectos: **B1** (backup-services desinstalaba MariaDB en
     single-host), **B2** (hosts quedaban como placeholder en todos los perfiles),
     **F8** (credenciales de logs sin importar) y **B3** (drop-in SSH de imágenes
-    cloud bloqueaba el bootstrap de clave del panel). Evidencia:
-    `docs/validaciones/R-053A_validacion_lite.md`. Pendiente F5 (copia externa)
-    para el cierre formal.
+    cloud bloqueaba el bootstrap de clave del panel). F5 (copia externa): validada
+    con `sync_external_backup.sh` tipo `local`, exit 0. **Cerrada 2026-06-07.**
+    Evidencia: `docs/validaciones/R-053A_validacion_lite.md`.
   - `R-053B` 🗓️ — Validación perfil **Standard** (2 servidores).
   - `R-053C` 🗓️ — Validación perfil **Pro** (3 servidores).
   - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
