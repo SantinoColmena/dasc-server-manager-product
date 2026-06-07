@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio DASC
 
-Fecha: 2026-06-07 12:13:39
+Fecha: 2026-06-07 13:38:40
 
 Ruta revisada:
 
@@ -13,15 +13,7 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - AVISO: hay cambios pendientes.
 
 ~~~text
- M deploy/api/package/requirements.txt
- M deploy/proxy/install_reverse_proxy.sh
- M docs/ROADMAP.md
- M docs/validaciones/validacion_paquete_api_instalable.md
-?? deploy/api/harden_fail2ban_api.sh
-?? deploy/api/harden_ufw_api.sh
-?? deploy/backup-services/harden_ufw_backup.sh
-?? deploy/db/harden_ufw_db.sh
-?? docs/validaciones/R-054_validacion_endurecimiento.md
+ M README.md
 ~~~
 
 ## 2. Estructura mínima obligatoria
@@ -120,7 +112,7 @@ C:\Users\colme\Documents\dasc-server-manager-product
 ## 6. README
 
 - OK: README contiene referencias al estado actual del producto.
-- OK: README incluye aviso de límites.
+- REVISAR: README debería incluir límites de uso antes de producción.
 
 ## 7. Instaladores
 

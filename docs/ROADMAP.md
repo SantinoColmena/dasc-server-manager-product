@@ -187,11 +187,11 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
     Evidencia: `docs/guias/R-055B_despliegue_desde_windows.md`.
   - `R-055C` ✅ — Decisión sobre script auxiliar: se descarta wrapper PS; SSH nativo es suficiente.
     Evidencia: `docs/guias/R-055C_decision_script_auxiliar.md`.
-- **R-056** — Limpieza final del repo y la documentación.
-  - `R-056A` 🗓️ — Revisión de estructura de carpetas y README.
-  - `R-056B` 🗓️ — Revisión de docs duplicadas / demasiado comerciales.
-  - `R-056C` 🗓️ — Verificar que **nada promete funciones no implementadas**.
-  - `R-056D` 🗓️ — Barrido final de secretos / ejemplos / `config`.
+- **R-056** ✅ — Limpieza final del repo y la documentación. **CERRADO 2026-06-07**.
+  - `R-056A` ✅ — README reescrito: estado real, módulos correctos, IPs de lab eliminadas, estructura del repo documentada.
+  - `R-056B` ✅ — Revisión de docs: sin duplicados bloqueantes; docs comerciales/históricas marcadas como internas.
+  - `R-056C` ✅ — "Monitorización" corregida a "enlace externo Cacti configurable"; SHA256 y alertas confirmados implementados.
+  - `R-056D` ✅ — `check_repo_clean.ps1` y `check_api_package_installable.ps1` en verde. Sin secretos en repo.
 
 #### Ruta 6.10 — Release interna estable · 🗓️ Planificada
 - **R-057** — Congelar release interna estable consolidada. Corte antes de lo
@@ -206,7 +206,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 - [x] Instalación desde cero OK en los 3 perfiles (R-053). ✅ Cerrado 2026-06-07.
 - [x] UFW + HTTPS + fail2ban + `pip-audit` aplicados (R-054). ✅ Cerrado 2026-06-07.
 - [x] Documentado el uso desde Windows / navegador vs. Linux (R-055). ✅ Cerrado 2026-06-07.
-- [ ] Repo y docs limpios, sin promesas de funciones inexistentes (R-056).
+- [x] Repo y docs limpios, sin promesas de funciones inexistentes (R-056). ✅ Cerrado 2026-06-07.
 - [ ] Release interna estable congelada con changelog (R-057).
 - [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
 
