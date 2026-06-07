@@ -43,6 +43,9 @@ async def lifespan(app: FastAPI):
     if NOTIF_ENABLED:
         t = threading.Thread(target=_proactivo_worker, daemon=True, name="dasc-notif")
         t.start()
+    # R-062: hilo de informes periódicos (siempre activo; comprueba config al despertar)
+    tr = threading.Thread(target=_reports_worker, daemon=True, name="dasc-reports")
+    tr.start()
     yield
 
 
@@ -5985,3 +5988,396 @@ async def configuracion_panel_save(request: Request):
         msg = "Valores aplicados en memoria. No se pudo escribir config.env (los cambios se perderán al reiniciar)."
 
     return JSONResponse({"ok": True, "msg": msg})
+
+
+# =====================
+# R-062 / Ruta 7.7 — Informes periódicos configurables
+# =====================
+# Genera y envía informes de estado (disco, backups, servicios, alertas)
+# por email y/o Telegram, con frecuencia configurable desde el panel.
+
+_REPORTS_CONFIG_PATH = Path("data/reports_config.json")
+_REPORTS_LOCK        = threading.Lock()
+_REPORTS_HIST_MAX    = 20
+
+_FRECUENCIAS_SEG: dict[str, int] = {
+    "diario":  86400,
+    "semanal": 604800,
+    "mensual": 2592000,
+}
+
+_SECCIONES_VALIDAS = {"backups", "disco", "servicios", "alertas"}
+
+_REPORTS_CONFIG_DEFAULT: dict[str, Any] = {
+    "enabled":      False,
+    "frecuencia":   "semanal",
+    "canal":        "email",
+    "secciones":    ["backups", "disco", "servicios", "alertas"],
+    "ultimo_envio": None,
+    "historial":    [],
+}
+
+
+def _load_reports_config() -> dict[str, Any]:
+    """Carga la configuración de informes desde JSON; devuelve defaults si no existe."""
+    with _REPORTS_LOCK:
+        if _REPORTS_CONFIG_PATH.exists():
+            try:
+                data = json.loads(_REPORTS_CONFIG_PATH.read_text(encoding="utf-8"))
+                cfg = dict(_REPORTS_CONFIG_DEFAULT)
+                cfg.update(data)
+                return cfg
+            except Exception:
+                pass
+        return dict(_REPORTS_CONFIG_DEFAULT)
+
+
+def _save_reports_config(cfg: dict[str, Any]) -> None:
+    """Persiste la configuración de informes en JSON."""
+    with _REPORTS_LOCK:
+        _REPORTS_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _REPORTS_CONFIG_PATH.write_text(
+            json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+
+def _recopilar_datos_informe(secciones: list[str]) -> dict[str, Any]:
+    """Recopila datos de cada sección activa para el informe."""
+    datos: dict[str, Any] = {
+        "fecha":              datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "servidor_backups":   SERVIDOR_BACKUPS,
+        "servidor_servicios": SERVIDOR_SERVICIOS,
+    }
+
+    if "disco" in secciones:
+        try:
+            r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+            info = _parse_df_output(r["stdout"]) if r.get("ok") else {}
+            datos["disco"] = info if info.get("available") else None
+        except Exception:
+            datos["disco"] = None
+
+    if "backups" in secciones:
+        try:
+            datos["backups"] = cargar_historial_backups(limit=5) or []
+        except Exception:
+            datos["backups"] = []
+
+    if "servicios" in secciones:
+        try:
+            result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+            lista: list[dict[str, str]] = []
+            for linea in result.get("text", "").split("\n"):
+                if "|" in linea:
+                    nombre, estado = linea.split("|", 1)
+                    lista.append({"nombre": nombre.strip(), "estado": estado.strip()})
+            datos["servicios"] = lista
+        except Exception:
+            datos["servicios"] = []
+
+    if "alertas" in secciones:
+        datos["alertas"] = list(_proactivo_estado.get("alert_log", []))[-10:]
+
+    return datos
+
+
+def _informe_html(datos: dict[str, Any]) -> str:
+    """Genera el HTML del informe periódico."""
+    bloques = ""
+
+    # Disco
+    if "disco" in datos:
+        disco = datos["disco"]
+        if disco:
+            pct   = disco.get("percent", 0)
+            color = "#b91c1c" if pct >= NOTIF_DISK_THRESHOLD else "#065f46"
+            bloques += (
+                f"<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>💾 Disco</h2>"
+                f"<p style='color:#374151;font-size:14px;margin:0;'>"
+                f"Uso: <strong style='color:{color};'>{pct}%</strong>"
+                f" ({disco.get('used','?')} de {disco.get('total','?')})"
+                f" — Disponible: {disco.get('available','?')}</p>"
+            )
+        else:
+            bloques += "<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>💾 Disco</h2><p style='color:#9ca3af;font-size:14px;'>Sin datos (servidor no accesible).</p>"
+
+    # Backups
+    if "backups" in datos:
+        backups = datos["backups"]
+        if backups:
+            filas = ""
+            for b in backups[:5]:
+                s     = (b.get("status") or b.get("result") or "OK").upper()
+                color = "#b91c1c" if s not in ("OK", "SUCCESS", "0", "") else "#065f46"
+                filas += (
+                    f"<tr><td style='padding:4px 8px;font-size:13px;'>{(b.get('date',''))[:16]}</td>"
+                    f"<td style='padding:4px 8px;font-size:13px;'>{b.get('tipo_label') or b.get('type','—')}</td>"
+                    f"<td style='padding:4px 8px;font-size:13px;color:{color};font-weight:700;'>{s}</td></tr>"
+                )
+            bloques += (
+                f"<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>📦 Últimas copias de seguridad</h2>"
+                f"<table style='border-collapse:collapse;width:100%;'>"
+                f"<tr style='background:#f3f4f6;'>"
+                f"<th style='padding:4px 8px;font-size:12px;text-align:left;'>Fecha</th>"
+                f"<th style='padding:4px 8px;font-size:12px;text-align:left;'>Tipo</th>"
+                f"<th style='padding:4px 8px;font-size:12px;text-align:left;'>Estado</th></tr>"
+                f"{filas}</table>"
+            )
+        else:
+            bloques += "<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>📦 Copias de seguridad</h2><p style='color:#9ca3af;font-size:14px;'>Sin historial disponible.</p>"
+
+    # Servicios
+    if "servicios" in datos:
+        servicios = datos["servicios"]
+        total   = len(servicios)
+        activos = sum(1 for s in servicios if s["estado"] == "active")
+        color   = "#b91c1c" if activos < total and total > 0 else "#065f46"
+        bloques += (
+            f"<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>⚙️ Servicios</h2>"
+            f"<p style='color:{color};font-size:14px;font-weight:700;margin:0 0 4px;'>"
+            f"{activos}/{total} activos</p>"
+        )
+        if total > 0 and activos < total:
+            inact = ", ".join(s["nombre"] for s in servicios if s["estado"] != "active")
+            bloques += f"<p style='color:#b91c1c;font-size:13px;margin:0;'>Inactivos: {inact}</p>"
+        elif total == 0:
+            bloques += "<p style='color:#9ca3af;font-size:14px;'>Sin datos (servidor no accesible).</p>"
+
+    # Alertas
+    if "alertas" in datos:
+        alertas = datos["alertas"]
+        if alertas:
+            filas = "".join(
+                f"<tr><td style='padding:4px 8px;font-size:13px;'>{a.get('ts','')}</td>"
+                f"<td style='padding:4px 8px;font-size:13px;'>{a.get('tipo','—')}</td></tr>"
+                for a in reversed(alertas[-5:])
+            )
+            bloques += (
+                f"<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>🔔 Últimas alertas enviadas</h2>"
+                f"<table style='border-collapse:collapse;width:100%;'>"
+                f"<tr style='background:#f3f4f6;'>"
+                f"<th style='padding:4px 8px;font-size:12px;text-align:left;'>Fecha</th>"
+                f"<th style='padding:4px 8px;font-size:12px;text-align:left;'>Tipo</th></tr>"
+                f"{filas}</table>"
+            )
+        else:
+            bloques += "<h2 style='color:#1e1b4b;font-size:15px;margin:20px 0 6px;'>🔔 Alertas</h2><p style='color:#9ca3af;font-size:14px;'>Sin alertas registradas en este período.</p>"
+
+    return f"""<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<style>
+  body{{font-family:-apple-system,sans-serif;background:#f3f4f6;margin:0;padding:24px;}}
+  .card{{background:#fff;border-radius:14px;padding:28px 32px;max-width:600px;margin:0 auto;}}
+  .hdr{{border-bottom:2px solid #4f46e5;padding-bottom:12px;margin-bottom:4px;}}
+  h1{{color:#1e1b4b;font-size:20px;margin:0 0 4px;}}
+  .sub{{color:#6b7280;font-size:13px;}}
+  .ftr{{color:#9ca3af;font-size:11px;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:12px;}}
+</style></head>
+<body><div class="card">
+  <div class="hdr">
+    <h1>📊 Informe de estado DASC</h1>
+    <span class="sub">Generado: {datos['fecha']} — Servidor: {datos['servidor_backups']}</span>
+  </div>
+  {bloques}
+  <div class="ftr">DASC Server Manager · Informe periódico automático · No responder a este correo.</div>
+</div></body></html>"""
+
+
+def _informe_telegram_texto(datos: dict[str, Any]) -> str:
+    """Genera el texto del informe para Telegram."""
+    lineas = [f"📊 <b>Informe DASC — {datos['fecha']}</b>\n"]
+
+    if "disco" in datos:
+        disco = datos["disco"]
+        if disco:
+            pct   = disco.get("percent", 0)
+            emoji = "🔴" if pct >= NOTIF_DISK_THRESHOLD else "🟢"
+            lineas.append(f"{emoji} <b>Disco:</b> {pct}% ({disco.get('used','?')} / {disco.get('total','?')})")
+        else:
+            lineas.append("⚪ <b>Disco:</b> sin datos")
+
+    if "backups" in datos:
+        backups = datos["backups"]
+        if backups:
+            last  = backups[0]
+            s     = (last.get("status") or "OK").upper()
+            emoji = "🟢" if s in ("OK", "SUCCESS", "0", "") else "🔴"
+            lineas.append(f"{emoji} <b>Último backup:</b> {s} · {(last.get('date',''))[:16]}")
+        else:
+            lineas.append("⚪ <b>Backups:</b> sin historial")
+
+    if "servicios" in datos:
+        servicios = datos["servicios"]
+        total   = len(servicios)
+        activos = sum(1 for s in servicios if s["estado"] == "active")
+        emoji   = "🟢" if activos == total and total > 0 else ("⚪" if total == 0 else "🔴")
+        lineas.append(f"{emoji} <b>Servicios:</b> {activos}/{total} activos")
+
+    if "alertas" in datos:
+        lineas.append(f"🔔 <b>Alertas recientes:</b> {len(datos['alertas'])}")
+
+    return "\n".join(lineas)
+
+
+def _enviar_informe(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Genera y envía el informe por el canal configurado. Actualiza historial."""
+    if cfg is None:
+        cfg = _load_reports_config()
+
+    secciones = cfg.get("secciones") or list(_SECCIONES_VALIDAS)
+    canal     = cfg.get("canal", "email")
+
+    datos    = _recopilar_datos_informe(secciones)
+    html_str = _informe_html(datos)
+    tg_text  = _informe_telegram_texto(datos)
+
+    ok_email = False
+    ok_tg    = False
+
+    if canal in ("email", "ambos"):
+        ok_email = _send_email_alert("Informe de estado del servidor", html_str)
+
+    if canal in ("telegram", "ambos"):
+        default = get_default_recipient("telegram")
+        if default:
+            r    = send_telegram_message(tg_text, default["destination"])
+            ok_tg = bool(r.get("ok"))
+
+    ok          = ok_email or ok_tg
+    canales_ok  = (["email"] if ok_email else []) + (["telegram"] if ok_tg else [])
+    ts_ahora    = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cfg["ultimo_envio"] = ts_ahora
+    historial = list(cfg.get("historial") or [])
+    historial.append({"ts": ts_ahora, "ok": ok, "canal": ", ".join(canales_ok) or canal})
+    cfg["historial"] = historial[-_REPORTS_HIST_MAX:]
+    _save_reports_config(cfg)
+
+    return {
+        "ok":    ok,
+        "msg":   f"Enviado por {', '.join(canales_ok)}" if ok
+                 else "No se pudo enviar (verifica configuración de email/Telegram)",
+        "canal": canales_ok,
+    }
+
+
+def _reports_worker() -> None:
+    """Hilo daemon que comprueba si corresponde enviar un informe periódico."""
+    _time_mod.sleep(120)   # espera inicial al arranque
+    while True:
+        try:
+            cfg = _load_reports_config()
+            if cfg.get("enabled"):
+                frecuencia = cfg.get("frecuencia", "semanal")
+                intervalo  = _FRECUENCIAS_SEG.get(frecuencia, 604800)
+                ultimo     = cfg.get("ultimo_envio")
+                if ultimo:
+                    try:
+                        ultimo_ts = datetime.strptime(ultimo, "%Y-%m-%d %H:%M:%S").timestamp()
+                    except Exception:
+                        ultimo_ts = 0.0
+                    elapsed = _time_mod.time() - ultimo_ts
+                else:
+                    elapsed = float("inf")
+
+                if elapsed >= intervalo:
+                    _enviar_informe(cfg)
+        except Exception:
+            pass
+        _time_mod.sleep(1800)   # comprueba cada 30 min
+
+
+@app.get("/informes")
+def informes_page(request: Request):
+    """Página de informes periódicos configurables (solo admins). R-062"""
+    if not is_admin(request):
+        return permission_redirect("Solo el administrador puede acceder a los informes periódicos.")
+
+    cfg = _load_reports_config()
+    ctx = get_common_context(request)
+    ctx["current_path"]      = "/informes"
+    ctx["cfg"]               = cfg
+    ctx["telegram_ok"]       = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip())
+    ctx["email_ok"]          = bool(NOTIF_EMAIL_TO and NOTIF_SMTP_HOST)
+    ctx["secciones_validas"] = sorted(_SECCIONES_VALIDAS)
+
+    # Calcular tiempo hasta el próximo envío
+    proximo_en = "—"
+    if cfg.get("enabled") and cfg.get("ultimo_envio"):
+        try:
+            intervalo  = _FRECUENCIAS_SEG.get(cfg.get("frecuencia", "semanal"), 604800)
+            ultimo_ts  = datetime.strptime(cfg["ultimo_envio"], "%Y-%m-%d %H:%M:%S").timestamp()
+            restante   = max(0, intervalo - (_time_mod.time() - ultimo_ts))
+            if restante > 3600:
+                proximo_en = f"{int(restante // 3600)} h"
+            elif restante > 60:
+                proximo_en = f"{int(restante // 60)} min"
+            else:
+                proximo_en = "menos de 1 min"
+        except Exception:
+            pass
+    ctx["proximo_en"] = proximo_en
+
+    return templates.TemplateResponse(request, "informes.html", ctx)
+
+
+@app.post("/informes/config")
+async def informes_config_save(request: Request):
+    """Guarda la configuración de informes periódicos. R-062"""
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Acceso denegado."}, status_code=403)
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Datos no válidos."}, status_code=400)
+
+    cfg = _load_reports_config()
+    cfg["enabled"] = bool(data.get("enabled", False))
+
+    frecuencia = str(data.get("frecuencia", "semanal"))
+    if frecuencia not in _FRECUENCIAS_SEG:
+        return JSONResponse({"ok": False, "msg": "Frecuencia no válida."}, status_code=400)
+    cfg["frecuencia"] = frecuencia
+
+    canal = str(data.get("canal", "email"))
+    if canal not in ("email", "telegram", "ambos"):
+        return JSONResponse({"ok": False, "msg": "Canal no válido."}, status_code=400)
+    cfg["canal"] = canal
+
+    secciones = [s for s in (data.get("secciones") or []) if s in _SECCIONES_VALIDAS]
+    cfg["secciones"] = secciones if secciones else list(_SECCIONES_VALIDAS)
+
+    _save_reports_config(cfg)
+
+    usuario = request.session.get("user", "anon")
+    log_event(
+        tipo="informes",
+        resultado="OK",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /informes/config",
+        detalle=f"enabled={cfg['enabled']} freq={frecuencia} canal={canal}",
+    )
+    return JSONResponse({"ok": True, "msg": "Configuración de informes guardada."})
+
+
+@app.post("/informes/enviar")
+def informes_enviar(request: Request):
+    """Lanza un envío de informe manual inmediato (solo admins). R-062"""
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Acceso denegado."}, status_code=403)
+    try:
+        result = _enviar_informe()
+        usuario = request.session.get("user", "anon")
+        log_event(
+            tipo="informes",
+            resultado="OK" if result["ok"] else "ERROR",
+            usuario=usuario,
+            ip_origen=request.client.host if request.client else None,
+            recurso="POST /informes/enviar",
+            detalle=result["msg"],
+        )
+        return JSONResponse(result)
+    except Exception as e:
+        return JSONResponse({"ok": False, "msg": str(e)}, status_code=500)
