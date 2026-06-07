@@ -2,9 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ ticket.id }} - Estado de solicitud DASC</title>
-    <link rel="stylesheet" href="/static/css/estilo.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f6f8fa;
+            color: #24292f;
+            margin: 0;
+            padding: 0;
+        }
+
         .client-wrapper {
             max-width: 980px;
             margin: 30px auto;
@@ -22,13 +34,15 @@
         .client-button {
             border: 0;
             border-radius: 10px;
-            padding: 10px 14px;
+            padding: 10px 16px;
             cursor: pointer;
             font-weight: 700;
-            background: #1f6feb;
+            font-family: inherit;
+            background: #4f46e5;
             color: white;
             text-decoration: none;
             display: inline-block;
+            font-size: 14px;
         }
 
         .client-button.secondary {
@@ -40,17 +54,20 @@
             border-radius: 16px;
             padding: 22px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #d0d7de;
             margin-bottom: 16px;
         }
 
         .hero {
-            background: linear-gradient(135deg, #f8fafc 0%, #eef6ff 100%);
-            border: 1px solid #dbeafe;
+            background: linear-gradient(135deg, #f0f0ff 0%, #ede9fe 100%);
+            border: 1px solid #c7d2fe;
         }
 
         .hero h1 {
             margin: 0 0 8px 0;
             font-size: 34px;
+            font-weight: 800;
+            color: #312e81;
         }
 
         .muted {
@@ -71,8 +88,8 @@
             border-radius: 999px;
             font-size: 13px;
             font-weight: 800;
-            background: #ddf4ff;
-            color: #0969da;
+            background: #ede9fe;
+            color: #4f46e5;
         }
 
         .badge.priority {
@@ -81,8 +98,8 @@
         }
 
         .badge.state {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #ede9fe;
+            color: #4f46e5;
         }
 
         .progress-wrap {
@@ -93,7 +110,7 @@
             width: 100%;
             height: 14px;
             border-radius: 999px;
-            background: #eaeef2;
+            background: #e5e7eb;
             overflow: hidden;
             margin-top: 8px;
         }
@@ -101,7 +118,7 @@
         .progress-fill {
             height: 100%;
             width: {{ progress.percent }}%;
-            background: #1f6feb;
+            background: #4f46e5;
             border-radius: 999px;
         }
 
@@ -133,7 +150,12 @@
             border-radius: 12px;
             padding: 14px;
             font-family: inherit;
+            font-size: 14px;
+            margin: 0;
         }
+
+        h2 { margin: 0 0 14px; font-size: 18px; font-weight: 700; }
+        h2 + pre { margin-top: 10px; }
 
         .timeline {
             display: grid;
@@ -141,7 +163,7 @@
         }
 
         .timeline-item {
-            border-left: 4px solid #1f6feb;
+            border-left: 4px solid #4f46e5;
             padding: 10px 12px;
             background: #f6f8fa;
             border-radius: 10px;
@@ -157,13 +179,9 @@
         }
 
         @media (max-width: 760px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero h1 {
-                font-size: 26px;
-            }
+            .info-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 26px; }
+            .client-wrapper { padding: 16px; }
         }
     </style>
 </head>
@@ -201,27 +219,22 @@
                     <span>Empresa</span>
                     <strong>{{ ticket.cliente }}</strong>
                 </div>
-
                 <div class="field">
                     <span>Persona de contacto</span>
                     <strong>{{ ticket.contacto }}</strong>
                 </div>
-
                 <div class="field">
                     <span>Email</span>
                     <strong>{{ ticket.email }}</strong>
                 </div>
-
                 <div class="field">
                     <span>Teléfono</span>
                     <strong>{{ ticket.telefono or "-" }}</strong>
                 </div>
-
                 <div class="field">
                     <span>Servicio afectado</span>
                     <strong>{{ ticket.servicio }}</strong>
                 </div>
-
                 <div class="field">
                     <span>Fecha de apertura</span>
                     <strong>{{ ticket.fecha_apertura }}</strong>
@@ -233,7 +246,7 @@
             <h2>Descripción enviada</h2>
             <pre>{{ ticket.descripcion }}</pre>
 
-            <h2>Evidencia aportada</h2>
+            <h2 style="margin-top:18px;">Evidencia aportada</h2>
             <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
         </section>
 
@@ -246,7 +259,6 @@
                     <div class="muted">{{ ticket.fecha_apertura }}</div>
                     <div>El equipo DASC ha recibido la solicitud.</div>
                 </div>
-
                 <div class="timeline-item">
                     <strong>Estado actual: {{ ticket.estado }}</strong>
                     <div class="muted">{{ ticket.fecha_actualizacion }}</div>
@@ -256,11 +268,11 @@
         </section>
 
         {% if ticket.estado == "Pendiente cliente" %}
-            <section class="client-card">
-                <div class="notice">
-                    El equipo DASC necesita información adicional para continuar con la solicitud.
-                </div>
-            </section>
+        <section class="client-card">
+            <div class="notice">
+                El equipo DASC necesita información adicional para continuar con la solicitud.
+            </div>
+        </section>
         {% endif %}
 
         <section class="client-card">

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DASC Server Manager{% endblock %}</title>
+
+    <!-- Fuente Inter (Fase 7.1) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Iconos Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Estilos base -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
+
+    <!-- Bloque para CSS y meta-tags adicionales por plantilla -->
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== CABECERA ===== -->
+<header class="header">
+    <a href="/" class="brand">
+        <img src="{{ url_for('static', path='img/logo-dasc.png') }}" class="logo" alt="DASC">
+        <div class="brand-text">
+            <span class="brand-title">DASC</span>
+            <span class="brand-subtitle">Server Manager</span>
+        </div>
+    </a>
+    {% block header_center %}{% endblock %}
+</header>
+
+{% set current_path = request.url.path %}
+
+<!-- ===== LAYOUT: SIDEBAR + MAIN ===== -->
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <h2>Navegación</h2>
+
+        <nav class="menu">
+            <a href="/" class="{{ 'active' if current_path == '/' else '' }}">
+                <i class="fa-solid fa-house"></i> Panel
+            </a>
+
+            {% if can_backups %}
+            <a href="/backups" class="{{ 'active' if current_path.startswith('/backups') else '' }}">
+                <i class="fa-solid fa-database"></i> Copias
+            </a>
+            {% endif %}
+
+            {% if can_logs %}
+            <a href="/logs" class="{{ 'active' if current_path.startswith('/logs') else '' }}">
+                <i class="fa-solid fa-file-lines"></i> Logs
+            </a>
+            {% endif %}
+
+            {% if can_servicios %}
+            <a href="/servicios" class="{{ 'active' if current_path.startswith('/servicios') else '' }}">
+                <i class="fa-solid fa-server"></i> Servicios
+            </a>
+            {% endif %}
+
+            {% if can_terminal %}
+            <a href="/terminal" class="{{ 'active' if current_path.startswith('/terminal') else '' }}">
+                <i class="fa-solid fa-terminal"></i> Terminal
+            </a>
+            {% endif %}
+
+            {% if can_alertas %}
+            <a href="/alertas" class="{{ 'active' if current_path.startswith('/alertas') else '' }}">
+                <i class="fa-solid fa-bell"></i> Alertas
+            </a>
+            {% endif %}
+
+            <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') else '' }}">
+                <i class="fa-solid fa-headset"></i> Soporte
+            </a>
+
+            {% if is_admin %}
+            <div class="menu-section">Admin</div>
+            <a href="/admin/usuarios" class="{{ 'active' if current_path == '/admin/usuarios' else '' }}">
+                <i class="fa-solid fa-user-shield"></i> Usuarios
+            </a>
+            <a href="/admin/login-logs" class="{{ 'active' if current_path.startswith('/admin/login-logs') else '' }}">
+                <i class="fa-solid fa-right-to-bracket"></i> Accesos
+            </a>
+            {% endif %}
+        </nav>
+
+        <!-- Zona central: información contextual por módulo (opcional) -->
+        <div class="sidebar-grow">
+            {% block sidebar_info %}{% endblock %}
+        </div>
+
+        <!-- Footer de sidebar: usuario + botón de logout -->
+        <div class="sidebar-footer">
+            <div class="user-pill">
+                <div class="user-avatar">{{ (user or 'U')[0] | upper }}</div>
+                <div class="user-info">
+                    <span class="user-name">{{ user or 'Usuario' }}</span>
+                    <span class="user-role">{{ role_label or 'Usuario' }}</span>
+                </div>
+            </div>
+            <form method="post" action="/logout" class="logout-form">
+                <button type="submit" class="btn-logout" title="Cerrar sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </form>
+        </div>
+
+    </aside>
+    <!-- /SIDEBAR -->
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+<!-- /LAYOUT -->
+
+<!-- Bloque para JS adicional por plantilla -->
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

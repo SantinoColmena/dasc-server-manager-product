@@ -1,708 +1,552 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DASC · Copias</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', path='css/backups.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body>
-<header class="header">
-    <a href="/" class="brand">
-        <img src="{{ url_for('static', path='img/logo-dasc.png') }}" class="logo" alt="DASC">
-        <div class="brand-text">
-            <span class="brand-title">DASC Service</span>
-            <span class="brand-subtitle">Server Manager</span>
-        </div>
-    </a>
+{% extends "base.html" %}
+{% block title %}Copias de seguridad — DASC{% endblock %}
 
-    <h1>Copias de seguridad</h1>
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/backups.css') }}">
+{% endblock %}
 
-    <a href="https://agora.xtec.cat/iesmvm/" class="brand-right">
-        <img src="{{ url_for('static', path='img/logo-instituto.png') }}" class="logo" alt="MVM">
-    </a>
-</header>
+{% block sidebar_info %}
+<div class="history">
+    <h3>Estado del módulo</h3>
+    <p><span class="dot ok"></span> Formularios conectados con <code>/backups/run</code></p>
+    <p><span class="dot ok"></span> Incremental y diferencial activos con binlogs</p>
+    <p><span class="dot ok"></span> Acceso según permisos del usuario</p>
+</div>
+{% endblock %}
 
-<div class="layout">
-  <aside class="sidebar">
-    <h2>Menú</h2>
-    <nav class="menu">
-            <a href="/"><i class="fa-solid fa-house"></i> Panel</a>
-            {% if can_backups %}<a href="/backups" class="active"><i class="fa-solid fa-database"></i> Copias</a>{% endif %}
-            {% if can_logs %}<a href="/logs"><i class="fa-solid fa-file-lines"></i> Logs</a>{% endif %}
-            {% if can_servicios %}<a href="/servicios"><i class="fa-solid fa-server"></i> Servicios</a>{% endif %}
-            {% if can_terminal %}<a href="/terminal"><i class="fa-solid fa-terminal"></i> Terminal</a>{% endif %}
-            {% if can_alertas %}<a href="/alertas"><i class="fa-solid fa-bell"></i> Alertas</a>{% endif %}
-            {% if is_admin %}<a href="/admin/usuarios"><i class="fa-solid fa-user-shield"></i> Administración</a>{% endif %}
-            {% if is_admin %}<a href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> Logs de inicio de sesión</a>{% endif %}
-        </nav>
+{% block content %}
 
-    <div class="history">
-      <h3>Estado del módulo</h3>
-      <p><span class="dot ok"></span> Formularios conectados con <code>/backups/run</code></p>
-      <p><span class="dot ok"></span> Incremental y diferencial activos con binlogs</p>
-      <p><span class="dot ok"></span> Acceso según permisos del usuario</p>
-    </div>
-  </aside>
+{% if ok == "1" %}
+<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ msg or "Backup ejecutado correctamente." }}</div></div>
+{% elif ok == "0" %}
+<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>{{ msg or "Error al ejecutar el backup." }}</div></div>
+{% endif %}
 
-  <main class="main">
-    {% if ok == "1" %}
-      <div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ msg or "Backup ejecutado correctamente." }}</div></div>
-    {% elif ok == "0" %}
-      <div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>{{ msg or "Error al ejecutar el backup." }}</div></div>
-    {% endif %}
-
-    <div class="topbar">
-      <div>
+<div class="topbar">
+    <div>
         <h2 class="page-title">Gestión de copias</h2>
-      </div>
-      <div class="topbar-actions">
-        <div class="status-pill"><i class="fa-solid fa-user"></i> {{ user }}</div>
+        <p class="page-subtitle">Backups completos, incrementales y diferenciales con validación SHA256.</p>
+    </div>
+    <div class="topbar-actions">
         <div class="status-pill"><i class="fa-solid fa-shield-halved"></i> {{ role_label }}</div>
-        <form method="post" action="/logout" class="logout-form">
-          <button type="submit" class="btn"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
-        </form>
-      </div>
+    </div>
+</div>
+
+<section class="grid">
+    <article class="card">
+        <div class="card-head">
+            <div class="card-icon green"><i class="fa-solid fa-database"></i></div>
+            <div class="card-title">
+                <h3>Crear copia</h3>
+                <p>Elige el tipo de backup y abre su formulario.</p>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a class="btn primary" href="#modal-completo"><i class="fa-solid fa-box"></i> Backup completo</a>
+            <a class="btn" href="#modal-incremental"><i class="fa-solid fa-rotate"></i> Backup incremental</a>
+            <a class="btn" href="#modal-diferencial"><i class="fa-solid fa-layer-group"></i> Backup diferencial</a>
+        </div>
+    </article>
+
+    <article class="card">
+        <div class="card-head">
+            <div class="card-icon blue"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="card-title">
+                <h3>Notas del producto</h3>
+                <p>Ayudas y explicaciones intuitivas para el usuario.</p>
+            </div>
+        </div>
+
+        <div class="help-grid">
+            <div class="help-box">
+                <h4><i class="fa-solid fa-check"></i> Completo</h4>
+                <p>
+                    Crea una copia íntegra de la base de datos seleccionada. Es la opción más recomendable
+                    para copias iniciales, pruebas de restauración y puntos de seguridad claros antes de
+                    realizar cambios importantes.
+                </p>
+            </div>
+
+            <div class="help-box">
+                <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Incremental</h4>
+                <p>
+                    Guarda los cambios realizados desde el último backup registrado usando binary logs. Reduce espacio y permite mantener una cadena de copias incremental.
+                </p>
+            </div>
+
+            <div class="help-box">
+                <h4><i class="fa-solid fa-list-check"></i> Diferencial</h4>
+                <p>
+                    Genera una copia con los cambios acumulados desde la última copia completa. Es útil
+                    cuando se quiere un equilibrio entre rapidez de restauración y menor volumen de
+                    almacenamiento.
+                </p>
+            </div>
+        </div>
+    </article>
+
+    <article class="card card-mini">
+        <div class="card-head">
+            <div class="card-icon violet"><i class="fa-solid fa-book-open"></i></div>
+            <div class="card-title">
+                <h3>Funciones relacionadas</h3>
+                <p>Más información para entender la evolución del módulo de copias.</p>
+            </div>
+        </div>
+
+        <div class="help-grid">
+            <div class="help-box">
+                <h4><i class="fa-regular fa-clock"></i> Copias automáticas y programadas</h4>
+                <p>
+                    Permite definir copias periódicas para no depender de ejecuciones manuales. La idea es
+                    que el sistema pueda mantener una rutina estable de protección según la frecuencia
+                    configurada por el usuario.
+                </p>
+            </div>
+
+            <div class="help-box">
+                <h4><i class="fa-solid fa-rotate-left"></i> Restauración</h4>
+                <p>
+                    Será la función encargada de recuperar un punto anterior de la base de datos a partir de
+                    una copia disponible. Está pensada para resolver errores, pérdidas de información o
+                    volver a un estado conocido del sistema.
+                </p>
+            </div>
+
+            <div class="help-box">
+                <h4><i class="fa-solid fa-folder-open"></i> Historial de copias</h4>
+                <p>
+                    Mostrará el registro de copias realizadas con su fecha, tipo, resultado y ubicación. De
+                    esta manera el usuario podrá revisar rápidamente qué se ha ejecutado y qué punto de
+                    respaldo tiene disponible.
+                </p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="card card-mini" style="margin-top: 18px;">
+    <div class="card-head">
+        <div class="card-icon amber"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="card-title">
+            <h3>Automatización con CRON</h3>
+            <p>Programa copias automáticas en el servidor de backups sin perder el control de dependencias.</p>
+        </div>
     </div>
 
-    <section class="grid">
-      <article class="card">
-        <div class="card-head">
-          <div class="card-icon"><i class="fa-solid fa-database"></i></div>
-          <div class="card-title">
-            <h3>Crear copia</h3>
-            <p>Elige el tipo de backup y abre su formulario.</p>
-          </div>
-        </div>
-    
-        <div class="actions">
-          <a class="btn primary" href="#modal-completo"><i class="fa-solid fa-box"></i> Backup completo</a>
-          <a class="btn" href="#modal-incremental"><i class="fa-solid fa-rotate"></i> Backup incremental</a>
-          <a class="btn" href="#modal-diferencial"><i class="fa-solid fa-layer-group"></i> Backup diferencial</a>
-        </div>
-      </article>
-    
-      <article class="card">
-        <div class="card-head">
-          <div class="card-icon"><i class="fa-solid fa-circle-info"></i></div>
-          <div class="card-title">
-            <h3>Notas del producto</h3>
-            <p>Ayudas y explicaciones intuitivas para el usuario.</p>
-          </div>
-        </div>
-    
-        <div class="help-grid">
-          <div class="help-box">
-            <h4><i class="fa-solid fa-check"></i> Completo</h4>
-            <p>
-              Crea una copia íntegra de la base de datos seleccionada. Es la opción más recomendable
-              para copias iniciales, pruebas de restauración y puntos de seguridad claros antes de
-              realizar cambios importantes.
-            </p>
-          </div>
-    
-          <div class="help-box">
-            <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Incremental</h4>
-            <p>
-              Guarda los cambios realizados desde el último backup registrado usando binary logs. Reduce espacio y permite mantener una cadena de copias incremental.
-            </p>
-          </div>
-    
-          <div class="help-box">
-            <h4><i class="fa-solid fa-list-check"></i> Diferencial</h4>
-            <p>
-              Genera una copia con los cambios acumulados desde la última copia completa. Es útil
-              cuando se quiere un equilibrio entre rapidez de restauración y menor volumen de
-              almacenamiento.
-            </p>
-          </div>
-        </div>
-      </article>
-    
-      <article class="card card-mini">
-        <div class="card-head">
-          <div class="card-icon"><i class="fa-solid fa-book-open"></i></div>
-          <div class="card-title">
-            <h3>Funciones relacionadas</h3>
-            <p>Más información para entender la evolución del módulo de copias.</p>
-          </div>
-        </div>
-    
-        <div class="help-grid">
-          <div class="help-box">
-            <h4><i class="fa-regular fa-clock"></i> Copias automáticas y programadas</h4>
-            <p>
-              Permite definir copias periódicas para no depender de ejecuciones manuales. La idea es
-              que el sistema pueda mantener una rutina estable de protección según la frecuencia
-              configurada por el usuario.
-            </p>
-          </div>
-    
-          <div class="help-box">
-            <h4><i class="fa-solid fa-rotate-left"></i> Restauración</h4>
-            <p>
-              Será la función encargada de recuperar un punto anterior de la base de datos a partir de
-              una copia disponible. Está pensada para resolver errores, pérdidas de información o
-              volver a un estado conocido del sistema.
-            </p>
-          </div>
-    
-          <div class="help-box">
-            <h4><i class="fa-solid fa-folder-open"></i> Historial de copias</h4>
-            <p>
-              Mostrará el registro de copias realizadas con su fecha, tipo, resultado y ubicación. De
-              esta manera el usuario podrá revisar rápidamente qué se ha ejecutado y qué punto de
-              respaldo tiene disponible.
-            </p>
-          </div>
-        </div>
-      </article>
-    </section>
-
-
-    <section class="card card-mini" style="margin-top: 18px;">
-      <div class="card-head">
-        <div class="card-icon"><i class="fa-solid fa-calendar-days"></i></div>
-        <div class="card-title">
-          <h3>Automatización con CRON</h3>
-          <p>Programa copias automáticas en el servidor de backups sin perder el control de dependencias.</p>
-        </div>
-      </div>
-
-      <div class="automation-layout">
+    <div class="automation-layout">
         <form class="bkp-form automation-form" method="POST" action="/backups/automation/create">
             {{ csrf_input(request) }}
-          <div class="callout cron-callout">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <div>
-              <strong>Control de dependencias:</strong>
-              las copias incrementales solo se pueden automatizar si ya existe una copia base de esa base de datos.
-              Las diferenciales solo se pueden automatizar si ya existe una copia completa.
+            <div class="callout cron-callout">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Control de dependencias:</strong>
+                    las copias incrementales solo se pueden automatizar si ya existe una copia base de esa base de datos.
+                    Las diferenciales solo se pueden automatizar si ya existe una copia completa.
+                </div>
             </div>
-          </div>
 
-          <div class="form-grid">
-            <label class="field">
-              <span>Tipo de copia</span>
-              <select name="type" required>
-                <option value="full" selected>Completa</option>
-                <option value="incremental">Incremental</option>
-                <option value="differential">Diferencial</option>
-              </select>
-            </label>
+            <div class="form-grid">
+                <label class="field">
+                    <span>Tipo de copia</span>
+                    <select name="type" required>
+                        <option value="full" selected>Completa</option>
+                        <option value="incremental">Incremental</option>
+                        <option value="differential">Diferencial</option>
+                    </select>
+                </label>
 
-            <label class="field">
-              <span>Base de datos</span>
-              <input name="db" value="employees" required>
-            </label>
+                <label class="field">
+                    <span>Base de datos</span>
+                    <input name="db" value="employees" required>
+                </label>
 
-            <label class="field">
-              <span>Carpeta destino</span>
-              <input name="dest" value="/home/dasc/backups" required>
-            </label>
+                <label class="field">
+                    <span>Carpeta destino</span>
+                    <input name="dest" value="/home/dasc/backups" required>
+                </label>
 
-            <label class="field">
-              <span>Compresión</span>
-              <select name="compress">
-                <option value="gzip" selected>GZIP (.gz)</option>
-                <option value="none">Sin compresión</option>
-              </select>
-            </label>
+                <label class="field">
+                    <span>Compresión</span>
+                    <select name="compress">
+                        <option value="gzip" selected>GZIP (.gz)</option>
+                        <option value="none">Sin compresión</option>
+                    </select>
+                </label>
 
-            <label class="field">
-              <span>Retención</span>
-              <select name="retention">
-                <option value="7" selected>7 días</option>
-                <option value="14">14 días</option>
-                <option value="30">30 días</option>
-                <option value="0">No borrar</option>
-              </select>
-            </label>
+                <label class="field">
+                    <span>Retención</span>
+                    <select name="retention">
+                        <option value="7" selected>7 días</option>
+                        <option value="14">14 días</option>
+                        <option value="30">30 días</option>
+                        <option value="0">No borrar</option>
+                    </select>
+                </label>
 
-            <label class="field">
-              <span>Frecuencia</span>
-              <select name="schedule_type">
-                <option value="daily" selected>Diaria</option>
-                <option value="weekly">Semanal</option>
-                <option value="monthly">Mensual</option>
-                <option value="hourly">Cada hora</option>
-              </select>
-            </label>
+                <label class="field">
+                    <span>Frecuencia</span>
+                    <select name="schedule_type">
+                        <option value="daily" selected>Diaria</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensual</option>
+                        <option value="hourly">Cada hora</option>
+                    </select>
+                </label>
 
-            <label class="field">
-              <span>Hora</span>
-              <input type="time" name="schedule_time" value="02:00" required>
-            </label>
+                <label class="field">
+                    <span>Hora</span>
+                    <input type="time" name="schedule_time" value="02:00" required>
+                </label>
 
-            <label class="field">
-              <span>Día semanal</span>
-              <select name="weekday">
-                <option value="1" selected>Lunes</option>
-                <option value="2">Martes</option>
-                <option value="3">Miércoles</option>
-                <option value="4">Jueves</option>
-                <option value="5">Viernes</option>
-                <option value="6">Sábado</option>
-                <option value="0">Domingo</option>
-              </select>
-            </label>
+                <label class="field">
+                    <span>Día semanal</span>
+                    <select name="weekday">
+                        <option value="1" selected>Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </label>
 
-            <label class="field">
-              <span>Día mensual</span>
-              <select name="monthday">
-                {% for day in range(1, 29) %}
-                  <option value="{{ day }}" {% if day == 1 %}selected{% endif %}>Día {{ day }}</option>
-                {% endfor %}
-              </select>
-            </label>
+                <label class="field">
+                    <span>Día mensual</span>
+                    <select name="monthday">
+                        {% for day in range(1, 29) %}
+                        <option value="{{ day }}" {% if day == 1 %}selected{% endif %}>Día {{ day }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
 
-            <label class="field field--full">
-              <span>Notas</span>
-              <input name="notes" placeholder="Ej: copia automática nocturna">
-            </label>
-          </div>
+                <label class="field field--full">
+                    <span>Notas</span>
+                    <input name="notes" placeholder="Ej: copia automática nocturna">
+                </label>
+            </div>
 
-          <div class="automation-foot">
-            <button class="btn primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Crear automatización</button>
-          </div>
+            <div class="automation-foot">
+                <button class="btn primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Crear automatización</button>
+            </div>
         </form>
 
         <div class="automation-side">
-          <div class="help-box automation-help">
-            <h4><i class="fa-solid fa-circle-check"></i> Reglas aplicadas</h4>
-            <p><strong>Completa:</strong> se puede programar siempre.</p>
-            <p><strong>Incremental:</strong> necesita una copia anterior válida de la misma BD.</p>
-            <p><strong>Diferencial:</strong> necesita una copia completa previa de la misma BD.</p>
-          </div>
+            <div class="help-box automation-help">
+                <h4><i class="fa-solid fa-circle-check"></i> Reglas aplicadas</h4>
+                <p><strong>Completa:</strong> se puede programar siempre.</p>
+                <p><strong>Incremental:</strong> necesita una copia anterior válida de la misma BD.</p>
+                <p><strong>Diferencial:</strong> necesita una copia completa previa de la misma BD.</p>
+            </div>
 
-          <div class="help-box automation-help">
-            <h4><i class="fa-solid fa-file-lines"></i> Log de CRON</h4>
-            <p>Las ejecuciones automáticas escriben su salida en:</p>
-            <code>/home/dasc/backups/.dasc/cron.log</code>
-          </div>
+            <div class="help-box automation-help">
+                <h4><i class="fa-solid fa-file-lines"></i> Log de CRON</h4>
+                <p>Las ejecuciones automáticas escriben su salida en:</p>
+                <code>/home/dasc/backups/.dasc/cron.log</code>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <div class="automation-table-block">
+    <div class="automation-table-block">
         <h4 class="section-subtitle"><i class="fa-solid fa-list-check"></i> Automatizaciones activas</h4>
         <div class="bkp-table-wrap">
-          <table class="bkp-table">
+            <table class="bkp-table">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Tipo</th><th>BD</th><th>Frecuencia</th><th>Destino</th><th>Creada por</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for auto in backup_automations %}
+                    <tr>
+                        <td>{{ auto.id }}</td>
+                        <td>
+                            {% if auto.type == "full" %}<span class="tag tag-full">Completa</span>
+                            {% elif auto.type == "incremental" %}<span class="tag tag-inc">Incremental</span>
+                            {% elif auto.type == "differential" %}<span class="tag tag-diff">Diferencial</span>
+                            {% else %}{{ auto.tipo_label }}{% endif %}
+                        </td>
+                        <td>{{ auto.db }}</td>
+                        <td><strong>{{ auto.schedule_label }}</strong><br><span class="muted-small">{{ auto.cron_expression }}</span></td>
+                        <td>{{ auto.dest }}</td>
+                        <td>{{ auto.created_by or "-" }}</td>
+                        <td>
+                            <form method="post" action="/backups/automation/delete" style="display:inline;">
+                                {{ csrf_input(request) }}
+                                <input type="hidden" name="automation_id" value="{{ auto.id }}">
+                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not backup_automations %}
+                    <tr><td colspan="7" style="text-align:center;">No hay automatizaciones CRON creadas todavía.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="card card-mini" style="margin-top: 18px;">
+    <div class="card-head">
+        <div class="card-icon slate"><i class="fa-solid fa-clipboard-list"></i></div>
+        <div class="card-title">
+            <h3>Historial de copias</h3>
+            <p>Últimas copias completas, incrementales y diferenciales registradas</p>
+        </div>
+    </div>
+
+    <div class="bkp-table-wrap">
+        <table class="bkp-table">
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>BD</th>
-                <th>Frecuencia</th>
-                <th>Destino</th>
-                <th>Creada por</th>
-                <th>Acciones</th>
-              </tr>
+                <tr>
+                    <th>ID</th><th>Fecha</th><th>Tipo</th><th>Base de datos</th><th>Archivo</th><th>Base</th><th>Rango binlog</th><th>Notas</th><th>Acciones</th>
+                </tr>
             </thead>
             <tbody>
-              {% for auto in backup_automations %}
-              <tr>
-                <td>{{ auto.id }}</td>
-                <td>
-                  {% if auto.type == "full" %}
-                    <span class="tag tag-full">Completa</span>
-                  {% elif auto.type == "incremental" %}
-                    <span class="tag tag-inc">Incremental</span>
-                  {% elif auto.type == "differential" %}
-                    <span class="tag tag-diff">Diferencial</span>
-                  {% else %}
-                    {{ auto.tipo_label }}
-                  {% endif %}
-                </td>
-                <td>{{ auto.db }}</td>
-                <td>
-                  <strong>{{ auto.schedule_label }}</strong><br>
-                  <span class="muted-small">{{ auto.cron_expression }}</span>
-                </td>
-                <td>{{ auto.dest }}</td>
-                <td>{{ auto.created_by or "-" }}</td>
-                <td>
-                  <form method="post" action="/backups/automation/delete" style="display:inline;">
-                      {{ csrf_input(request) }}
-                    <input type="hidden" name="automation_id" value="{{ auto.id }}">
-                    <button type="submit" class="btn small danger">
-                      <i class="fa-solid fa-trash"></i> Eliminar
-                    </button>
-                  </form>
-                </td>
-              </tr>
-              {% endfor %}
-
-              {% if not backup_automations %}
-              <tr>
-                <td colspan="7" style="text-align:center;">No hay automatizaciones CRON creadas todavía.</td>
-              </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    
-    <section class="card card-mini" style="margin-top: 18px;">
-      <div class="card-head">
-        <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
-        <div class="card-title">
-          <h3>Historial de copias</h3>
-          <p>Últimas copias completas, incrementales y diferenciales registradas</p>
-        </div>
-      </div>
-
-      <div class="bkp-table-wrap">
-        <table class="bkp-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Tipo</th>
-              <th>Base de datos</th>
-              <th>Archivo</th>
-              <th>Base</th>
-              <th>Rango binlog</th>
-              <th>Notas</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for b in backup_history %}
-            <tr>
-              <td>{{ b.id }}</td>
-              <td>{{ b.created_at }}</td>
-              <td>
-                {% if b.type == "full" %}
-                  <span class="tag tag-full">Completo</span>
-                {% elif b.type == "incremental" %}
-                  <span class="tag tag-inc">Incremental</span>
-                {% elif b.type == "differential" %}
-                  <span class="tag tag-diff">Diferencial</span>
-                {% else %}
-                  {{ b.tipo_label }}
+                {% for b in backup_history %}
+                <tr>
+                    <td>{{ b.id }}</td>
+                    <td>{{ b.created_at }}</td>
+                    <td>
+                        {% if b.type == "full" %}<span class="tag tag-full">Completo</span>
+                        {% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>
+                        {% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>
+                        {% else %}{{ b.tipo_label }}{% endif %}
+                    </td>
+                    <td>{{ b.db }}</td>
+                    <td>{{ b.filename }}</td>
+                    <td>{{ b.base_id or "-" }}</td>
+                    <td>{{ b.rango }}</td>
+                    <td>{{ b.notes or "-" }}</td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="btn small download" href="/backups/download/{{ b.id }}"><i class="fa-solid fa-download"></i> Descargar</a>
+                            <form method="post" action="/backups/restore/preview" style="display:inline;">
+                                {{ csrf_input(request) }}
+                                <input type="hidden" name="backup_id" value="{{ b.id }}">
+                                <button type="submit" class="btn small restore"><i class="fa-solid fa-rotate-left"></i> Restaurar</button>
+                            </form>
+                            <form method="post" action="/backups/delete/preview" style="display:inline;">
+                                {{ csrf_input(request) }}
+                                <input type="hidden" name="backup_id" value="{{ b.id }}">
+                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not backup_history %}
+                <tr><td colspan="9" style="text-align:center;">No hay copias registradas todavía.</td></tr>
                 {% endif %}
-              </td>
-              <td>{{ b.db }}</td>
-              <td>{{ b.filename }}</td>
-              <td>{{ b.base_id or "-" }}</td>
-              <td>{{ b.rango }}</td>
-              <td>{{ b.notes or "-" }}</td>
-              <td>
-                <div class="row-actions">
-                  <a class="btn small download" href="/backups/download/{{ b.id }}">
-                    <i class="fa-solid fa-download"></i> Descargar
-                  </a>
-
-                  <form method="post" action="/backups/restore/preview" style="display:inline;">
-                      {{ csrf_input(request) }}
-                    <input type="hidden" name="backup_id" value="{{ b.id }}">
-                    <button type="submit" class="btn small restore">
-                      <i class="fa-solid fa-rotate-left"></i> Restaurar
-                    </button>
-                  </form>
-
-                  <form method="post" action="/backups/delete/preview" style="display:inline;">
-                      {{ csrf_input(request) }}
-                    <input type="hidden" name="backup_id" value="{{ b.id }}">
-                    <button type="submit" class="btn small danger">
-                      <i class="fa-solid fa-trash"></i> Eliminar
-                    </button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-
-            {% if not backup_history %}
-            <tr>
-              <td colspan="9" style="text-align:center;">No hay copias registradas todavía.</td>
-            </tr>
-            {% endif %}
-          </tbody>
+            </tbody>
         </table>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<section id="modal-completo" class="modal">
-  <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup completo">
-    <div class="modal__head">
-      <div class="modal__title">
-        <h3><i class="fa-solid fa-box"></i> Backup completo</h3>
-        <p>Recomendado como copia base del sistema</p>
-      </div>
-      <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
     </div>
-    <form class="bkp-form" method="POST" action="/backups/run">
-        {{ csrf_input(request) }}
-      <input type="hidden" name="type" value="full">
-      <div class="form-grid">
-        <label class="field"><span>Base de datos</span><input name="db" placeholder="Ej: employees" required></label>
-        <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
-        <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-completo-YYYYMMDD-HHMM.sql" required></label>
-        <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-        <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14">14 días</option><option value="30" selected>30 días</option><option value="0">No borrar</option></select></label>
-        <label class="field field--full"><span>Notas (opcional)</span><input name="notes" placeholder="Ej: antes de actualizar el sistema"></label>
-      </div>
-      <div class="modal__foot">
-        <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-        <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
-      </div>
-    </form>
-  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Modales de backup (fuera del flujo del documento) -->
+<section id="modal-completo" class="modal">
+    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup completo">
+        <div class="modal__head">
+            <div class="modal__title">
+                <h3><i class="fa-solid fa-box"></i> Backup completo</h3>
+                <p>Recomendado como copia base del sistema</p>
+            </div>
+            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        </div>
+        <form class="bkp-form" method="POST" action="/backups/run">
+            {{ csrf_input(request) }}
+            <input type="hidden" name="type" value="full">
+            <div class="form-grid">
+                <label class="field"><span>Base de datos</span><input name="db" placeholder="Ej: employees" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-completo-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
+                <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14">14 días</option><option value="30" selected>30 días</option><option value="0">No borrar</option></select></label>
+                <label class="field field--full"><span>Notas (opcional)</span><input name="notes" placeholder="Ej: antes de actualizar el sistema"></label>
+            </div>
+            <div class="modal__foot">
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+            </div>
+        </form>
+    </div>
 </section>
 
 <section id="modal-incremental" class="modal">
-  <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup incremental">
-    <div class="modal__head">
-      <div class="modal__title">
-        <h3><i class="fa-solid fa-rotate"></i> Backup incremental</h3>
-        <p>Ejecuta cambios desde el último backup registrado</p>
-      </div>
-      <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup incremental">
+        <div class="modal__head">
+            <div class="modal__title">
+                <h3><i class="fa-solid fa-rotate"></i> Backup incremental</h3>
+                <p>Ejecuta cambios desde el último backup registrado</p>
+            </div>
+            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        </div>
+        <form class="bkp-form" method="POST" action="/backups/run">
+            {{ csrf_input(request) }}
+            <input type="hidden" name="type" value="incremental">
+            <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>Incremental real:</strong> se genera a partir de los binary logs desde el último backup registrado.</div></div>
+            <div class="form-grid">
+                <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Base de referencia</span><select name="base_ref"><option value="latest" selected>Último backup disponible</option><option value="manual">Manual</option></select></label>
+                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-inc-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
+                <label class="field"><span>Retención</span><select name="retention"><option value="7" selected>7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
+            </div>
+            <div class="modal__foot">
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+            </div>
+        </form>
     </div>
-    <form class="bkp-form" method="POST" action="/backups/run">
-        {{ csrf_input(request) }}
-      <input type="hidden" name="type" value="incremental">
-      <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>Incremental real:</strong> se genera a partir de los binary logs desde el último backup registrado.</div></div>
-      <div class="form-grid">
-        <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-        <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
-        <label class="field"><span>Base de referencia</span><select name="base_ref"><option value="latest" selected>Último backup disponible</option><option value="manual">Manual</option></select></label>
-        <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-inc-YYYYMMDD-HHMM.sql" required></label>
-        <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-        <label class="field"><span>Retención</span><select name="retention"><option value="7" selected>7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
-      </div>
-      <div class="modal__foot">
-        <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-        <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
-      </div>
-    </form>
-  </div>
 </section>
 
 <section id="modal-diferencial" class="modal">
-  <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup diferencial">
-    <div class="modal__head">
-      <div class="modal__title">
-        <h3><i class="fa-solid fa-layer-group"></i> Backup diferencial</h3>
-        <p>Ejecuta cambios desde el último backup completo</p>
-      </div>
-      <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup diferencial">
+        <div class="modal__head">
+            <div class="modal__title">
+                <h3><i class="fa-solid fa-layer-group"></i> Backup diferencial</h3>
+                <p>Ejecuta cambios desde el último backup completo</p>
+            </div>
+            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        </div>
+        <form class="bkp-form" method="POST" action="/backups/run">
+            {{ csrf_input(request) }}
+            <input type="hidden" name="type" value="differential">
+            <div class="form-grid">
+                <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Referencia</span><select name="base_ref"><option value="last_full" selected>Último backup completo</option><option value="manual">Manual</option></select></label>
+                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-diff-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
+                <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14" selected>14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
+            </div>
+            <div class="modal__foot">
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+            </div>
+        </form>
     </div>
-    <form class="bkp-form" method="POST" action="/backups/run">
-        {{ csrf_input(request) }}
-      <input type="hidden" name="type" value="differential">
-      <div class="form-grid">
-        <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-        <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
-        <label class="field"><span>Referencia</span><select name="base_ref"><option value="last_full" selected>Último backup completo</option><option value="manual">Manual</option></select></label>
-        <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-diff-YYYYMMDD-HHMM.sql" required></label>
-        <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-        <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14" selected>14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
-      </div>
-      <div class="modal__foot">
-        <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-        <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
-      </div>
-    </form>
-  </div>
 </section>
-
 
 {% if restore_plan %}
 <section class="modal is-open" id="modal-restaurar-backup">
-  <a href="/backups" class="modal__overlay" aria-label="Cancelar restauración"></a>
-
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar restauración de backup">
-    <div class="modal__head">
-      <div class="modal__title">
-        <h3><i class="fa-solid fa-rotate-left"></i> Confirmar restauración</h3>
-        <p>La base de datos será restaurada al punto seleccionado.</p>
-      </div>
-      <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+    <a href="/backups" class="modal__overlay" aria-label="Cancelar restauración"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar restauración de backup">
+        <div class="modal__head">
+            <div class="modal__title">
+                <h3><i class="fa-solid fa-rotate-left"></i> Confirmar restauración</h3>
+                <p>La base de datos será restaurada al punto seleccionado.</p>
+            </div>
+            <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        </div>
+        <div class="delete-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+                <strong>Atención:</strong>
+                esta operación modificará la base de datos <strong>{{ restore_plan.db }}</strong>.
+                Antes de restaurar, el sistema creará una copia preventiva automática del estado actual.
+            </div>
+        </div>
+        {% if restore_plan.has_chain %}
+        <div class="delete-warning soft">
+            <i class="fa-solid fa-link"></i>
+            <div>Para restaurar la copia ID {{ restore_plan.target.id }}, se aplicará esta cadena: <strong>{{ restore_plan.ids_csv }}</strong>.</div>
+        </div>
+        {% else %}
+        <div class="delete-warning soft">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>Esta restauración solo necesita aplicar la copia completa seleccionada.</div>
+        </div>
+        {% endif %}
+        <div class="bkp-table-wrap delete-table">
+            <table class="bkp-table">
+                <thead><tr><th>Orden</th><th>ID</th><th>Tipo</th><th>Archivo</th><th>Base</th><th>Rango binlog</th></tr></thead>
+                <tbody>
+                    {% for b in restore_plan["items"] %}
+                    <tr>
+                        <td>{{ loop.index }}</td><td>{{ b.id }}</td>
+                        <td>{% if b.type == "full" %}<span class="tag tag-full">Completo</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>{% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
+                        <td>{{ b.filename }}</td><td>{{ b.base_id or "-" }}</td><td>{{ b.rango }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form method="post" action="/backups/restore/confirm">
+            {{ csrf_input(request) }}
+            <input type="hidden" name="backup_id" value="{{ restore_plan.target.id }}">
+            <input type="hidden" name="confirm_restore" value="SI">
+            <div class="modal__foot">
+                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <button class="btn restore strong" type="submit"><i class="fa-solid fa-rotate-left"></i> Restaurar backup</button>
+            </div>
+        </form>
     </div>
-
-    <div class="delete-warning">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <div>
-        <strong>Atención:</strong>
-        esta operación modificará la base de datos <strong>{{ restore_plan.db }}</strong>.
-        Antes de restaurar, el sistema creará una copia preventiva automática del estado actual.
-      </div>
-    </div>
-
-    {% if restore_plan.has_chain %}
-    <div class="delete-warning soft">
-      <i class="fa-solid fa-link"></i>
-      <div>
-        Para restaurar la copia ID {{ restore_plan.target.id }}, se aplicará esta cadena:
-        <strong>{{ restore_plan.ids_csv }}</strong>.
-      </div>
-    </div>
-    {% else %}
-    <div class="delete-warning soft">
-      <i class="fa-solid fa-circle-info"></i>
-      <div>
-        Esta restauración solo necesita aplicar la copia completa seleccionada.
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="bkp-table-wrap delete-table">
-      <table class="bkp-table">
-        <thead>
-          <tr>
-            <th>Orden</th>
-            <th>ID</th>
-            <th>Tipo</th>
-            <th>Archivo</th>
-            <th>Base</th>
-            <th>Rango binlog</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for b in restore_plan["items"] %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ b.id }}</td>
-            <td>
-              {% if b.type == "full" %}
-                <span class="tag tag-full">Completo</span>
-              {% elif b.type == "incremental" %}
-                <span class="tag tag-inc">Incremental</span>
-              {% elif b.type == "differential" %}
-                <span class="tag tag-diff">Diferencial</span>
-              {% else %}
-                {{ b.tipo_label }}
-              {% endif %}
-            </td>
-            <td>{{ b.filename }}</td>
-            <td>{{ b.base_id or "-" }}</td>
-            <td>{{ b.rango }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <form method="post" action="/backups/restore/confirm">
-        {{ csrf_input(request) }}
-      <input type="hidden" name="backup_id" value="{{ restore_plan.target.id }}">
-      <input type="hidden" name="confirm_restore" value="SI">
-
-      <div class="modal__foot">
-        <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
-        <button class="btn restore strong" type="submit">
-          <i class="fa-solid fa-rotate-left"></i>
-          Restaurar backup
-        </button>
-      </div>
-    </form>
-  </div>
 </section>
 {% endif %}
 
 {% if delete_plan %}
 <section class="modal is-open" id="modal-eliminar-backup">
-  <a href="/backups" class="modal__overlay" aria-label="Cancelar eliminación"></a>
-
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar eliminación de backup">
-    <div class="modal__head">
-      <div class="modal__title">
-        <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar eliminación</h3>
+    <a href="/backups" class="modal__overlay" aria-label="Cancelar eliminación"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar eliminación de backup">
+        <div class="modal__head">
+            <div class="modal__title">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar eliminación</h3>
+                {% if delete_plan.has_dependents %}<p>Esta copia tiene dependencias. Se eliminará la cadena completa.</p>
+                {% else %}<p>Esta copia no tiene dependencias y se puede eliminar de forma individual.</p>{% endif %}
+            </div>
+            <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        </div>
         {% if delete_plan.has_dependents %}
-          <p>Esta copia tiene dependencias. Se eliminará la cadena completa.</p>
+        <div class="delete-warning">
+            <i class="fa-solid fa-link-slash"></i>
+            <div><strong>Atención:</strong> si eliminas la copia ID {{ delete_plan.target.id }}, también se eliminarán {{ delete_plan.dependents_count }} copia(s) dependiente(s). Esta acción no se puede deshacer.</div>
+        </div>
         {% else %}
-          <p>Esta copia no tiene dependencias y se puede eliminar de forma individual.</p>
+        <div class="delete-warning soft">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>Se eliminará únicamente la copia seleccionada y su archivo físico del servidor de backups.</div>
+        </div>
         {% endif %}
-      </div>
-      <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+        <div class="bkp-table-wrap delete-table">
+            <table class="bkp-table">
+                <thead><tr><th>ID</th><th>Tipo</th><th>Archivo</th><th>Base</th><th>Rango binlog</th></tr></thead>
+                <tbody>
+                    {% for b in delete_plan["items"] %}
+                    <tr>
+                        <td>{{ b.id }}</td>
+                        <td>{% if b.type == "full" %}<span class="tag tag-full">Completo</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>{% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
+                        <td>{{ b.filename }}</td><td>{{ b.base_id or "-" }}</td><td>{{ b.rango }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form method="post" action="/backups/delete/confirm">
+            {{ csrf_input(request) }}
+            <input type="hidden" name="backup_id" value="{{ delete_plan.target.id }}">
+            <input type="hidden" name="confirm_delete" value="SI">
+            <div class="modal__foot">
+                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <button class="btn danger" type="submit">
+                    <i class="fa-solid fa-trash"></i>
+                    {% if delete_plan.has_dependents %}Eliminar cadena completa{% else %}Eliminar copia{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
-
-    {% if delete_plan.has_dependents %}
-    <div class="delete-warning">
-      <i class="fa-solid fa-link-slash"></i>
-      <div>
-        <strong>Atención:</strong>
-        si eliminas la copia ID {{ delete_plan.target.id }}, también se eliminarán
-        {{ delete_plan.dependents_count }} copia(s) dependiente(s). Esta acción no se puede deshacer.
-      </div>
-    </div>
-    {% else %}
-    <div class="delete-warning soft">
-      <i class="fa-solid fa-circle-info"></i>
-      <div>
-        Se eliminará únicamente la copia seleccionada y su archivo físico del servidor de backups.
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="bkp-table-wrap delete-table">
-      <table class="bkp-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tipo</th>
-            <th>Archivo</th>
-            <th>Base</th>
-            <th>Rango binlog</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for b in delete_plan["items"] %}
-          <tr>
-            <td>{{ b.id }}</td>
-            <td>
-              {% if b.type == "full" %}
-                <span class="tag tag-full">Completo</span>
-              {% elif b.type == "incremental" %}
-                <span class="tag tag-inc">Incremental</span>
-              {% elif b.type == "differential" %}
-                <span class="tag tag-diff">Diferencial</span>
-              {% else %}
-                {{ b.tipo_label }}
-              {% endif %}
-            </td>
-            <td>{{ b.filename }}</td>
-            <td>{{ b.base_id or "-" }}</td>
-            <td>{{ b.rango }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <form method="post" action="/backups/delete/confirm">
-        {{ csrf_input(request) }}
-      <input type="hidden" name="backup_id" value="{{ delete_plan.target.id }}">
-      <input type="hidden" name="confirm_delete" value="SI">
-
-      <div class="modal__foot">
-        <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
-        <button class="btn danger" type="submit">
-          <i class="fa-solid fa-trash"></i>
-          {% if delete_plan.has_dependents %}
-            Eliminar cadena completa
-          {% else %}
-            Eliminar copia
-          {% endif %}
-        </button>
-      </div>
-    </form>
-  </div>
 </section>
 {% endif %}
-
-</body>
-</html>
+{% endblock %}

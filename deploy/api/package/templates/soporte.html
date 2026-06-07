@@ -1,228 +1,145 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Soporte - DASC Server Manager</title>
-    <link rel="stylesheet" href="/static/css/estilo.css">
-    <style>
-        .support-wrapper {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+{% extends "base.html" %}
+{% block title %}Soporte — DASC Server Manager{% endblock %}
 
-        .support-header {
-            margin-bottom: 20px;
-        }
+{% block extra_head %}
+<style>
+    .support-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 24px;
+        margin-top: 18px;
+    }
+    .support-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+    }
+    .support-card h2 { margin: 0 0 14px; font-size: 18px; }
+    .support-form label { display:block; font-weight:600; margin-top:14px; margin-bottom:6px; }
+    .support-form input,
+    .support-form select,
+    .support-form textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #d0d7de; border-radius:10px; font-size:14px; font-family:inherit; }
+    .support-form textarea { min-height:120px; resize:vertical; }
+    .support-actions { margin-top:18px; display:flex; gap:12px; align-items:center; }
+    .ticket-list { display:grid; gap:12px; margin-top:12px; }
+    .ticket-item { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; }
+    .ticket-item strong { display:block; margin-bottom:4px; }
+    .ticket-meta { font-size:13px; color:#57606a; }
+    .ticket-item a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .ticket-item a:hover { text-decoration: underline; }
+    @media (max-width:850px) { .support-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
 
-        .support-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 24px;
-        }
+{% block content %}
 
-        .support-card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-
-        .support-card h2 {
-            margin-top: 0;
-        }
-
-        .support-form label {
-            display: block;
-            font-weight: 600;
-            margin-top: 14px;
-            margin-bottom: 6px;
-        }
-
-        .support-form input,
-        .support-form select,
-        .support-form textarea {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 12px;
-            border: 1px solid #d0d7de;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .support-form textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .support-actions {
-            margin-top: 18px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .support-button {
-            border: 0;
-            border-radius: 10px;
-            padding: 11px 18px;
-            cursor: pointer;
-            font-weight: 700;
-            background: #1f6feb;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .support-button.secondary {
-            background: #57606a;
-        }
-
-        .support-alert {
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-
-        .support-alert.ok {
-            background: #dafbe1;
-            color: #116329;
-        }
-
-        .support-alert.error {
-            background: #ffebe9;
-            color: #82071e;
-        }
-
-        .ticket-list {
-            display: grid;
-            gap: 12px;
-        }
-
-        .ticket-item {
-            border: 1px solid #d0d7de;
-            border-radius: 12px;
-            padding: 12px;
-            background: #f6f8fa;
-        }
-
-        .ticket-item strong {
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .ticket-meta {
-            font-size: 13px;
-            color: #57606a;
-        }
-
-        @media (max-width: 850px) {
-            .support-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="support-wrapper">
-        <div class="support-header">
-            <h1>Soporte DASC</h1>
-            <p>Formulario para registrar solicitudes de soporte hacia el equipo DASC.</p>
-            <p>
-                <a href="/" class="support-button secondary">Volver al panel</a>{% if local_internal_support_enabled %} <a href="/soporte/tickets" class="support-button">Gestionar tickets</a>{% endif %}
-            </p>
-        </div>
-
-        {% if ok == "1" %}
-            <div class="support-alert ok">
-                Solicitud registrada correctamente.
-                {% if ticket_id %}
-                    Referencia interna: {{ ticket_id }}.
-                    <a href="/soporte/estado/{{ ticket_id }}">Ver estado</a>
-                {% endif %}
-            </div>
-        {% elif ok == "0" %}
-            <div class="support-alert error">
-                {{ msg or "No se pudo registrar la solicitud." }}
-            </div>
-        {% endif %}
-
-        <div class="support-grid">
-            <div class="support-card">
-                <h2>Nueva solicitud</h2>
-
-                <form class="support-form" method="post" action="/soporte">
-                    {{ csrf_input(request) }}
-                    <label>Empresa *</label>
-                    <input type="text" name="empresa" required>
-
-                    <label>Persona de contacto *</label>
-                    <input type="text" name="contacto" required>
-
-                    <label>Email *</label>
-                    <input type="email" name="email" required>
-
-                    <label>Teléfono</label>
-                    <input type="text" name="telefono">
-
-                    <label>Tipo de solicitud</label>
-                    <select name="tipo">
-                        {% for item in support_types %}
-                            <option value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label>Prioridad percibida</label>
-                    <select name="prioridad">
-                        {% for item in support_priorities %}
-                            <option value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label>Servicio afectado</label>
-                    <select name="servicio">
-                        {% for item in support_services %}
-                            <option value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label>Descripción *</label>
-                    <textarea name="descripcion" required placeholder="Explica qué ocurre, desde cuándo y qué impacto tiene."></textarea>
-
-                    <label>Evidencia opcional</label>
-                    <textarea name="evidencia" placeholder="Pega aquí texto de error, enlaces internos o notas de captura."></textarea>
-
-                    <div class="support-actions">
-                        <button class="support-button" type="submit">Crear ticket</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="support-card">
-                <h2>Últimas solicitudes</h2>
-                <p class="ticket-meta">Seguimiento básico de solicitudes registradas en este panel.</p>
-
-                {% if tickets %}
-                    <div class="ticket-list">
-                        {% for ticket in tickets %}
-                            <div class="ticket-item">
-                                <strong>{{ ticket.id }} - {{ ticket.estado }}</strong>
-                                <div class="ticket-meta">
-                                    {{ ticket.fecha_apertura }} · {{ ticket.prioridad }} · {{ ticket.servicio }}
-                                </div>
-                                <div>{{ ticket.cliente }} - {{ ticket.tipo }}</div>
-                                <div style="margin-top:8px;">
-                                    <a href="/soporte/estado/{{ ticket.id }}">Ver estado</a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p>No hay tickets registrados todavía.</p>
-                {% endif %}
-            </div>
-        </div>
+<div class="topbar">
+    <div>
+        <h2 class="page-title">Soporte DASC</h2>
+        <p class="page-subtitle">Registra solicitudes de soporte para el equipo DASC.</p>
     </div>
-</body>
-</html>
+    <div class="topbar-actions">
+        {% if local_internal_support_enabled %}
+        <a href="/soporte/tickets" class="btn primary"><i class="fa-solid fa-list"></i> Gestionar tickets</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if ok == "1" %}
+<div class="notice success">
+    <i class="fa-solid fa-circle-check"></i>
+    <div>
+        Solicitud registrada correctamente.
+        {% if ticket_id %}
+            Referencia interna: <strong>{{ ticket_id }}</strong>.
+            <a href="/soporte/estado/{{ ticket_id }}" style="color:var(--successText);font-weight:700;">Ver estado</a>
+        {% endif %}
+    </div>
+</div>
+{% elif ok == "0" %}
+<div class="notice error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div>{{ msg or "No se pudo registrar la solicitud." }}</div>
+</div>
+{% endif %}
+
+<div class="support-grid">
+    <div class="support-card">
+        <h2>Nueva solicitud</h2>
+
+        <form class="support-form" method="post" action="/soporte">
+            {{ csrf_input(request) }}
+
+            <label>Empresa *</label>
+            <input type="text" name="empresa" required>
+
+            <label>Persona de contacto *</label>
+            <input type="text" name="contacto" required>
+
+            <label>Email *</label>
+            <input type="email" name="email" required>
+
+            <label>Teléfono</label>
+            <input type="text" name="telefono">
+
+            <label>Tipo de solicitud</label>
+            <select name="tipo">
+                {% for item in support_types %}
+                <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Prioridad percibida</label>
+            <select name="prioridad">
+                {% for item in support_priorities %}
+                <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Servicio afectado</label>
+            <select name="servicio">
+                {% for item in support_services %}
+                <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Descripción *</label>
+            <textarea name="descripcion" required placeholder="Explica qué ocurre, desde cuándo y qué impacto tiene."></textarea>
+
+            <label>Evidencia opcional</label>
+            <textarea name="evidencia" placeholder="Pega aquí texto de error, enlaces internos o notas de captura."></textarea>
+
+            <div class="support-actions">
+                <button class="btn primary" type="submit"><i class="fa-solid fa-ticket"></i> Crear ticket</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="support-card">
+        <h2>Últimas solicitudes</h2>
+        <p class="ticket-meta">Seguimiento básico de solicitudes registradas en este panel.</p>
+
+        {% if tickets %}
+        <div class="ticket-list">
+            {% for ticket in tickets %}
+            <div class="ticket-item">
+                <strong>{{ ticket.id }} — {{ ticket.estado }}</strong>
+                <div class="ticket-meta">
+                    {{ ticket.fecha_apertura }} · {{ ticket.prioridad }} · {{ ticket.servicio }}
+                </div>
+                <div>{{ ticket.cliente }} - {{ ticket.tipo }}</div>
+                <div style="margin-top:8px;">
+                    <a href="/soporte/estado/{{ ticket.id }}">Ver estado</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="margin-top:12px;color:var(--muted);">No hay tickets registrados todavía.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

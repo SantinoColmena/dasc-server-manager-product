@@ -1,307 +1,125 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Sincronización soporte - DASC Server Manager</title>
-    <link rel="stylesheet" href="/static/css/estilo.css">
-    <style>
-        .sync-wrapper {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+{% extends "base.html" %}
+{% block title %}Sincronización soporte — DASC{% endblock %}
 
-        .sync-header {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: flex-start;
-            margin-bottom: 18px;
-        }
+{% block extra_head %}
+<style>
+    .sync-kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:18px; }
+    .sync-kpi-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
+    .sync-kpi-card span { display:block; font-size:13px; color:#57606a; margin-bottom:8px; }
+    .sync-kpi-card strong { display:block; font-size:30px; font-weight:800; color:var(--text); }
+    .filter-card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
+    .filter-links { display:flex; flex-wrap:wrap; gap:10px; }
+    .filter-links a { border-radius:999px; padding:8px 12px; text-decoration:none; background:#f6f8fa; color:#24292f; border:1px solid #d0d7de; font-weight:700; font-size:13px; }
+    .filter-links a.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .table-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
+    .sync-table { width:100%; border-collapse:collapse; }
+    .sync-table th, .sync-table td { padding:12px; border-bottom:1px solid #d8dee4; text-align:left; vertical-align:top; }
+    .sync-table th { font-size:13px; color:#57606a; text-transform:uppercase; }
+    .muted { color:#57606a; font-size:13px; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; background:#ddf4ff; color:#0969da; }
+    .badge.sent { background:#dafbe1; color:#116329; }
+    .badge.error { background:#ffebe9; color:#82071e; }
+    .badge.disabled { background:#fff8c5; color:#7d4e00; }
+    .badge.no_central { background:#f6f8fa; color:#57606a; border:1px solid #d0d7de; }
+    .detail-box { max-width:360px; word-break:break-word; }
+    @media (max-width:900px) { .sync-kpi-grid { grid-template-columns:1fr 1fr; } .sync-table { font-size:13px; } }
+</style>
+{% endblock %}
 
-        .sync-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+{% block sidebar_info %}
+<div class="history">
+    <h3>Sincronización</h3>
+    <p><span class="dot ok"></span> Total: {{ sync_summary.total }}</p>
+    <p><span class="dot ok"></span> Enviados: {{ sync_summary.sent }}</p>
+    <p><span class="dot warn"></span> Pendientes: {{ sync_summary.error }}</p>
+    <p><span class="dot off"></span> Desactivados: {{ sync_summary.disabled }}</p>
+</div>
+{% endblock %}
 
-        .sync-button {
-            border: 0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-weight: 700;
-            background: #1f6feb;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
+{% block content %}
 
-        .sync-button.secondary {
-            background: #57606a;
-        }
-
-        .sync-button.warning {
-            background: #b54708;
-        }
-
-        .sync-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .sync-card,
-        .filter-card,
-        .table-card,
-        .alert-card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 18px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-
-        .sync-card span {
-            display: block;
-            font-size: 13px;
-            color: #57606a;
-            margin-bottom: 8px;
-        }
-
-        .sync-card strong {
-            display: block;
-            font-size: 30px;
-        }
-
-        .filter-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .filter-links a {
-            border-radius: 999px;
-            padding: 8px 12px;
-            text-decoration: none;
-            background: #f6f8fa;
-            color: #24292f;
-            border: 1px solid #d0d7de;
-            font-weight: 700;
-            font-size: 13px;
-        }
-
-        .filter-links a.active {
-            background: #1f6feb;
-            color: white;
-            border-color: #1f6feb;
-        }
-
-        .sync-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .sync-table th,
-        .sync-table td {
-            padding: 12px;
-            border-bottom: 1px solid #d8dee4;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        .sync-table th {
-            font-size: 13px;
-            color: #57606a;
-            text-transform: uppercase;
-        }
-
-        .muted {
-            color: #57606a;
-            font-size: 13px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 800;
-            background: #ddf4ff;
-            color: #0969da;
-        }
-
-        .badge.sent {
-            background: #dafbe1;
-            color: #116329;
-        }
-
-        .badge.error {
-            background: #ffebe9;
-            color: #82071e;
-        }
-
-        .badge.disabled {
-            background: #fff8c5;
-            color: #7d4e00;
-        }
-
-        .badge.no_central {
-            background: #f6f8fa;
-            color: #57606a;
-        }
-
-        .detail-box {
-            max-width: 360px;
-            word-break: break-word;
-        }
-
-        @media (max-width: 900px) {
-            .sync-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .sync-header {
-                flex-direction: column;
-            }
-
-            .sync-table {
-                font-size: 13px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="sync-wrapper">
-        <div class="sync-header">
-            <div>
-                <h1>Sincronización local-central</h1>
-                <p>Vista técnica interna para revisar la cola de tickets enviados al panel central DASC.</p>
-            </div>
-
-            <div class="sync-actions">
-                <a href="/soporte/tickets" class="sync-button secondary">Volver a tickets</a>
-                <a href="/soporte" class="sync-button secondary">Nueva solicitud</a>
-
-                {% if sync_summary.pending and sync_summary.pending > 0 %}
-                    <form method="post" action="/soporte/sincronizacion/reintentar-central" style="display:inline;">
-                        {{ csrf_input(request) }}
-                        <button class="sync-button warning" type="submit">
-                            Reintentar pendientes ({{ sync_summary.pending }})
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
-        </div>
-
-        {% if msg %}
-            <div class="alert-card" style="margin-bottom:18px;background:#dafbe1;color:#116329;font-weight:700;">
-                {{ msg }}
-            </div>
-        {% endif %}
-
-        <div class="sync-grid">
-            <div class="sync-card">
-                <span>Total local</span>
-                <strong>{{ sync_summary.total }}</strong>
-            </div>
-
-            <div class="sync-card">
-                <span>Enviados</span>
-                <strong>{{ sync_summary.sent }}</strong>
-            </div>
-
-            <div class="sync-card">
-                <span>Pendientes / error</span>
-                <strong>{{ sync_summary.error }}</strong>
-            </div>
-
-            <div class="sync-card">
-                <span>Desactivados</span>
-                <strong>{{ sync_summary.disabled }}</strong>
-            </div>
-
-            <div class="sync-card">
-                <span>Sin central</span>
-                <strong>{{ sync_summary.no_central }}</strong>
-            </div>
-        </div>
-
-        <div class="filter-card">
-            <div class="filter-links">
-                {% for item in sync_filters %}
-                    <a href="/soporte/sincronizacion?sync={{ item.key }}" class="{% if sync_filter == item.key or (sync_filter == '' and item.key == 'all') %}active{% endif %}">
-                        {{ item.label }}
-                    </a>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="table-card" style="margin-top:18px;">
-            {% if tickets %}
-                <table class="sync-table">
-                    <thead>
-                        <tr>
-                            <th>Ticket local</th>
-                            <th>Cliente</th>
-                            <th>Estado central</th>
-                            <th>Ticket central</th>
-                            <th>Última sync</th>
-                            <th>Detalle</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for ticket in tickets %}
-                            {% set state = "sent" if ticket.central_ticket_id else ("error" if ticket.central_sync_status == "error" else ("disabled" if ticket.central_sync_status == "disabled" else "no_central")) %}
-                            <tr>
-                                <td>
-                                    <strong>{{ ticket.id }}</strong>
-                                    <div class="muted">{{ ticket.estado }} · {{ ticket.prioridad }}</div>
-                                </td>
-
-                                <td>
-                                    {{ ticket.cliente }}
-                                    <div class="muted">{{ ticket.contacto }} · {{ ticket.email }}</div>
-                                </td>
-
-                                <td>
-                                    {% if state == "sent" %}
-                                        <span class="badge sent">Enviado</span>
-                                    {% elif state == "error" %}
-                                        <span class="badge error">Pendiente / error</span>
-                                    {% elif state == "disabled" %}
-                                        <span class="badge disabled">Desactivado</span>
-                                    {% else %}
-                                        <span class="badge no_central">Sin central</span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {{ ticket.central_ticket_id or "-" }}
-                                    <div class="muted">{{ ticket.central_sync_status or "-" }}</div>
-                                </td>
-
-                                <td>{{ ticket.central_sync_at or "-" }}</td>
-
-                                <td>
-                                    <div class="detail-box">
-                                        {{ ticket.central_sync_detail or "-" }}
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <a href="/soporte/tickets/{{ ticket.id }}">Ver</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>No hay tickets para el filtro seleccionado.</p>
-            {% endif %}
-        </div>
+<div class="topbar">
+    <div>
+        <h2 class="page-title">Sincronización local-central</h2>
+        <p class="page-subtitle">Cola de tickets enviados al panel central DASC.</p>
     </div>
-</body>
-</html>
+    <div class="topbar-actions">
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-list"></i> Tickets</a>
+        {% if sync_summary.pending and sync_summary.pending > 0 %}
+        <form method="post" action="/soporte/sincronizacion/reintentar-central" style="display:inline;">
+            {{ csrf_input(request) }}
+            <button class="btn" type="submit" style="background:#b54708;color:#fff;border-color:#b54708;">
+                <i class="fa-solid fa-rotate"></i> Reintentar pendientes ({{ sync_summary.pending }})
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if msg %}
+<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ msg }}</div></div>
+{% endif %}
+
+<div class="sync-kpi-grid">
+    <div class="sync-kpi-card"><span>Total local</span><strong>{{ sync_summary.total }}</strong></div>
+    <div class="sync-kpi-card"><span>Enviados</span><strong>{{ sync_summary.sent }}</strong></div>
+    <div class="sync-kpi-card"><span>Pendientes / error</span><strong>{{ sync_summary.error }}</strong></div>
+    <div class="sync-kpi-card"><span>Desactivados</span><strong>{{ sync_summary.disabled }}</strong></div>
+    <div class="sync-kpi-card"><span>Sin central</span><strong>{{ sync_summary.no_central }}</strong></div>
+</div>
+
+<div class="filter-card">
+    <div class="filter-links">
+        {% for item in sync_filters %}
+        <a href="/soporte/sincronizacion?sync={{ item.key }}" class="{% if sync_filter == item.key or (sync_filter == '' and item.key == 'all') %}active{% endif %}">
+            {{ item.label }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="table-card">
+    {% if tickets %}
+    <table class="sync-table">
+        <thead>
+            <tr>
+                <th>Ticket local</th><th>Cliente</th><th>Estado central</th>
+                <th>Ticket central</th><th>Última sync</th><th>Detalle</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            {% set state = "sent" if ticket.central_ticket_id else ("error" if ticket.central_sync_status == "error" else ("disabled" if ticket.central_sync_status == "disabled" else "no_central")) %}
+            <tr>
+                <td>
+                    <strong>{{ ticket.id }}</strong>
+                    <div class="muted">{{ ticket.estado }} · {{ ticket.prioridad }}</div>
+                </td>
+                <td>
+                    {{ ticket.cliente }}
+                    <div class="muted">{{ ticket.contacto }} · {{ ticket.email }}</div>
+                </td>
+                <td>
+                    {% if state == "sent" %}<span class="badge sent">Enviado</span>
+                    {% elif state == "error" %}<span class="badge error">Pendiente / error</span>
+                    {% elif state == "disabled" %}<span class="badge disabled">Desactivado</span>
+                    {% else %}<span class="badge no_central">Sin central</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ ticket.central_ticket_id or "-" }}
+                    <div class="muted">{{ ticket.central_sync_status or "-" }}</div>
+                </td>
+                <td>{{ ticket.central_sync_at or "-" }}</td>
+                <td><div class="detail-box">{{ ticket.central_sync_detail or "-" }}</div></td>
+                <td><a href="/soporte/tickets/{{ ticket.id }}" class="btn small"><i class="fa-solid fa-eye"></i> Ver</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><p>No hay tickets para el filtro seleccionado.</p></div>
+    {% endif %}
+</div>
+
+{% endblock %}

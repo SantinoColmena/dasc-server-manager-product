@@ -1,298 +1,168 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ ticket.id }} - Soporte DASC</title>
-    <link rel="stylesheet" href="/static/css/estilo.css">
-    <style>
-        .detail-wrapper {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+{% extends "base.html" %}
+{% block title %}{{ ticket.id }} — Soporte DASC{% endblock %}
 
-        .detail-card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            margin-bottom: 18px;
-        }
+{% block extra_head %}
+<style>
+    .detail-card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; }
+    .field span { display:block; color:#57606a; font-size:13px; margin-bottom:4px; }
+    .field select { width:100%; padding:10px; border-radius:10px; border:1px solid #d0d7de; font-family:inherit; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#f6f8fa; border:1px solid #d0d7de; border-radius:12px; padding:14px; font-family:inherit; margin:0; }
+    .history-item { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; margin-bottom:10px; }
+    .history-item span { display:block; color:#57606a; font-size:13px; margin-bottom:4px; }
+    .sync-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    textarea.externo { width:100%; min-height:360px; padding:12px; border-radius:12px; border:1px solid #d0d7de; box-sizing:border-box; font-family:inherit; font-size:13px; }
+    textarea.respuesta { width:100%; min-height:260px; padding:12px; border-radius:12px; border:1px solid #d0d7de; box-sizing:border-box; font-family:inherit; font-size:13px; }
+    @media (max-width:800px) { .detail-grid, .sync-grid-2 { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
 
-        .detail-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
+{% block content %}
 
-        .detail-button {
-            border: 0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-weight: 700;
-            background: #1f6feb;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .detail-button.secondary {
-            background: #57606a;
-        }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .field {
-            border: 1px solid #d0d7de;
-            border-radius: 12px;
-            padding: 12px;
-            background: #f6f8fa;
-        }
-
-        .field span {
-            display: block;
-            color: #57606a;
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
-
-        pre {
-            white-space: pre-wrap;
-            word-break: break-word;
-            background: #f6f8fa;
-            border: 1px solid #d0d7de;
-            border-radius: 12px;
-            padding: 14px;
-            font-family: inherit;
-        }
-
-        @media (max-width: 800px) {
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="detail-wrapper">
-        <div class="detail-actions">
-            <a href="/soporte/tickets" class="detail-button secondary">Volver a tickets</a>
-            <a href="/soporte" class="detail-button">Nuevo ticket</a>
-        </div>
-
-        <div class="detail-card">
-            <h1>{{ ticket.id }}</h1>
-            <p>{{ ticket.tipo }} · {{ ticket.prioridad }} · {{ ticket.estado }}</p>
-
-            <div class="detail-grid">
-                <div class="field">
-                    <span>Cliente</span>
-                    {{ ticket.cliente }}
-                </div>
-
-                <div class="field">
-                    <span>Contacto</span>
-                    {{ ticket.contacto }}
-                </div>
-
-                <div class="field">
-                    <span>Email</span>
-                    {{ ticket.email }}
-                </div>
-
-                <div class="field">
-                    <span>Teléfono</span>
-                    {{ ticket.telefono or "-" }}
-                </div>
-
-                <div class="field">
-                    <span>Servicio</span>
-                    {{ ticket.servicio }}
-                </div>
-
-                <div class="field">
-                    <span>Canal</span>
-                    {{ ticket.canal }}
-                </div>
-
-                <div class="field">
-                    <span>Fecha apertura</span>
-                    {{ ticket.fecha_apertura }}
-                </div>
-
-                <div class="field">
-                    <span>Creado por</span>
-                    {{ ticket.creado_por }}
-                </div>
-            </div>
-        </div>
-
-        
-        {% if ok == "1" %}
-            <div class="detail-card" style="background:#dafbe1;color:#116329;font-weight:700;">
-                Ticket actualizado correctamente.
-            </div>
-        {% elif ok == "0" %}
-            <div class="detail-card" style="background:#ffebe9;color:#82071e;font-weight:700;">
-                No se pudo actualizar el ticket.
-            </div>
-        {% endif %}
-
-        <div class="detail-card">
-            <h2>Actualizar estado y prioridad</h2>
-
-            <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado">
-                {{ csrf_input(request) }}
-                <div class="detail-grid">
-                    <div class="field">
-                        <span>Estado</span>
-                        <select name="estado" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
-                            {% for item in support_statuses %}
-                                <option value="{{ item }}" {% if ticket.estado == item %}selected{% endif %}>{{ item }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <span>Prioridad</span>
-                        <select name="prioridad" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
-                            {% for item in support_priorities %}
-                                <option value="{{ item }}" {% if ticket.prioridad == item %}selected{% endif %}>{{ item }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div style="margin-top:16px;">
-                    <button class="detail-button" type="submit">Guardar cambios</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="detail-card">
-            <h2>Descripción</h2>
-            <pre>{{ ticket.descripcion }}</pre>
-
-            <h2>Evidencia</h2>
-            <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
-        </div>
-    
-        
-        
-        <div class="detail-card">
-            <h2>Resumen para Jira/Zammad</h2>
-            <p>Resumen técnico preparado para copiarlo en una herramienta externa de ticketing.</p>
-
-            <textarea id="resumen-externo" readonly style="width:100%;min-height:360px;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box;">{{ external_summary_text }}</textarea>
-
-            <div style="margin-top:12px;">
-                <button class="detail-button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('resumen-externo').value)">Copiar resumen</button>
-            </div>
-        </div>
-
-        <div class="detail-card">
-            <h2>Plantillas de respuesta</h2>
-            <p>Selecciona una respuesta tipo para copiarla y enviarla al cliente por email, WhatsApp o sistema de tickets.</p>
-
-            <form method="get" action="/soporte/tickets/{{ ticket.id }}">
-                <div class="detail-grid">
-                    <div class="field">
-                        <span>Plantilla</span>
-                        <select name="plantilla" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
-                            <option value="">Seleccionar plantilla</option>
-                            {% for item in response_templates %}
-                                <option value="{{ item.key }}" {% if selected_template_key == item.key %}selected{% endif %}>{{ item.titulo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <span>Uso recomendado</span>
-                        {% if selected_template %}
-                            {{ selected_template.uso }}
-                        {% else %}
-                            Selecciona una plantilla para ver su uso recomendado.
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div style="margin-top:16px;">
-                    <button class="detail-button" type="submit">Generar respuesta</button>
-                </div>
-            </form>
-
-            {% if selected_response_text %}
-                <h3>Respuesta generada</h3>
-                <textarea id="respuesta-generada" readonly style="width:100%;min-height:260px;padding:12px;border-radius:12px;border:1px solid #d0d7de;box-sizing:border-box;">{{ selected_response_text }}</textarea>
-
-                <div style="margin-top:12px;">
-                    <button class="detail-button" type="button" onclick="navigator.clipboard.writeText(document.getElementById('respuesta-generada').value)">Copiar respuesta</button>
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="detail-card">
-            <h2>Historial interno</h2>
-
-            {% if history %}
-                {% for item in history %}
-                    <div class="field" style="margin-bottom:10px;">
-                        <span>{{ item.fecha }} · {{ item.usuario }} · {{ item.accion }}</span>
-                        {{ item.valor_anterior or "-" }} → {{ item.valor_nuevo or "-" }}
-                        {% if item.detalle %}
-                            <div style="margin-top:4px;">{{ item.detalle }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No hay cambios registrados todavía.</p>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h2>Sincronización central</h2>
-            {% if ticket.central_ticket_id %}
-                <form method="post" action="/soporte/tickets/{{ ticket.id }}/sync-central" style="margin: 8px 0 14px;">
-                    {{ csrf_input(request) }}
-                    <button class="btn" type="submit">
-                        Sincronizar estado desde central
-                    </button>
-                </form>
-            {% endif %}
-
-
-            <div class="grid">
-                <div class="field">
-                    <span>Ticket central</span>
-                    {% if ticket.central_ticket_id %}
-                        {{ ticket.central_ticket_id }}
-                    {% else %}
-                        Sin referencia central
-                    {% endif %}
-                </div>
-
-                <div class="field">
-                    <span>Estado sincronización</span>
-                    {{ ticket.central_sync_status or "No sincronizado" }}
-                </div>
-
-                <div class="field">
-                    <span>Última sincronización</span>
-                    {{ ticket.central_sync_at or "-" }}
-                </div>
-
-                <div class="field">
-                    <span>Detalle sincronización</span>
-                    {{ ticket.central_sync_detail or "-" }}
-                </div>
-            </div>
-        </div>
+<div class="topbar">
+    <div>
+        <h2 class="page-title">{{ ticket.id }}</h2>
+        <p class="page-subtitle">{{ ticket.tipo }} · {{ ticket.prioridad }} · {{ ticket.estado }}</p>
     </div>
-</body>
-</html>
+    <div class="topbar-actions">
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-arrow-left"></i> Volver a tickets</a>
+        <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> Nuevo ticket</a>
+    </div>
+</div>
+
+{% if ok == "1" %}
+<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>Ticket actualizado correctamente.</div></div>
+{% elif ok == "0" %}
+<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>No se pudo actualizar el ticket.</div></div>
+{% endif %}
+
+<div class="detail-card">
+    <h2 style="margin:0 0 14px;">Información del ticket</h2>
+    <div class="detail-grid">
+        <div class="field"><span>Cliente</span>{{ ticket.cliente }}</div>
+        <div class="field"><span>Contacto</span>{{ ticket.contacto }}</div>
+        <div class="field"><span>Email</span>{{ ticket.email }}</div>
+        <div class="field"><span>Teléfono</span>{{ ticket.telefono or "-" }}</div>
+        <div class="field"><span>Servicio</span>{{ ticket.servicio }}</div>
+        <div class="field"><span>Canal</span>{{ ticket.canal }}</div>
+        <div class="field"><span>Fecha apertura</span>{{ ticket.fecha_apertura }}</div>
+        <div class="field"><span>Creado por</span>{{ ticket.creado_por }}</div>
+    </div>
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 14px;">Actualizar estado y prioridad</h2>
+    <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado">
+        {{ csrf_input(request) }}
+        <div class="detail-grid">
+            <div class="field">
+                <span>Estado</span>
+                <select name="estado">
+                    {% for item in support_statuses %}
+                    <option value="{{ item }}" {% if ticket.estado == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <span>Prioridad</span>
+                <select name="prioridad">
+                    {% for item in support_priorities %}
+                    <option value="{{ item }}" {% if ticket.prioridad == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 14px;">Descripción</h2>
+    <pre>{{ ticket.descripcion }}</pre>
+    <h2 style="margin:14px 0 10px;">Evidencia</h2>
+    <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 10px;">Resumen para Jira/Zammad</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">Resumen técnico preparado para copiarlo en una herramienta externa de ticketing.</p>
+    <textarea class="externo" id="resumen-externo" readonly>{{ external_summary_text }}</textarea>
+    <div style="margin-top:12px;">
+        <button class="btn primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('resumen-externo').value)">
+            <i class="fa-solid fa-copy"></i> Copiar resumen
+        </button>
+    </div>
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 10px;">Plantillas de respuesta</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">Selecciona una respuesta tipo para copiarla y enviarla al cliente.</p>
+    <form method="get" action="/soporte/tickets/{{ ticket.id }}">
+        <div class="detail-grid">
+            <div class="field">
+                <span>Plantilla</span>
+                <select name="plantilla" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
+                    <option value="">Seleccionar plantilla</option>
+                    {% for item in response_templates %}
+                    <option value="{{ item.key }}" {% if selected_template_key == item.key %}selected{% endif %}>{{ item.titulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <span>Uso recomendado</span>
+                {% if selected_template %}{{ selected_template.uso }}{% else %}Selecciona una plantilla para ver su uso.{% endif %}
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <button class="btn" type="submit"><i class="fa-solid fa-bolt"></i> Generar respuesta</button>
+        </div>
+    </form>
+    {% if selected_response_text %}
+    <h3 style="margin:18px 0 10px;">Respuesta generada</h3>
+    <textarea class="respuesta" id="respuesta-generada" readonly>{{ selected_response_text }}</textarea>
+    <div style="margin-top:12px;">
+        <button class="btn primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('respuesta-generada').value)">
+            <i class="fa-solid fa-copy"></i> Copiar respuesta
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 14px;">Historial interno</h2>
+    {% if history %}
+    {% for item in history %}
+    <div class="history-item">
+        <span>{{ item.fecha }} · {{ item.usuario }} · {{ item.accion }}</span>
+        {{ item.valor_anterior or "-" }} → {{ item.valor_nuevo or "-" }}
+        {% if item.detalle %}<div style="margin-top:4px;">{{ item.detalle }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color:var(--muted);">No hay cambios registrados todavía.</p>
+    {% endif %}
+</div>
+
+<div class="detail-card">
+    <h2 style="margin:0 0 14px;">Sincronización central</h2>
+    {% if ticket.central_ticket_id %}
+    <form method="post" action="/soporte/tickets/{{ ticket.id }}/sync-central" style="margin-bottom:14px;">
+        {{ csrf_input(request) }}
+        <button class="btn" type="submit"><i class="fa-solid fa-rotate"></i> Sincronizar estado desde central</button>
+    </form>
+    {% endif %}
+    <div class="sync-grid-2">
+        <div class="field">
+            <span>Ticket central</span>
+            {% if ticket.central_ticket_id %}{{ ticket.central_ticket_id }}{% else %}Sin referencia central{% endif %}
+        </div>
+        <div class="field"><span>Estado sincronización</span>{{ ticket.central_sync_status or "No sincronizado" }}</div>
+        <div class="field"><span>Última sincronización</span>{{ ticket.central_sync_at or "-" }}</div>
+        <div class="field"><span>Detalle sincronización</span>{{ ticket.central_sync_detail or "-" }}</div>
+    </div>
+</div>
+
+{% endblock %}
