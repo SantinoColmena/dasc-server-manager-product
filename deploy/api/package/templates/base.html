@@ -55,6 +55,10 @@
                 <i class="fa-solid fa-house"></i> Panel
             </a>
 
+            <a href="/monitoreo" class="{{ 'active' if current_path.startswith('/monitoreo') else '' }}">
+                <i class="fa-solid fa-chart-area"></i> Monitoreo
+            </a>
+
             {% if can_backups %}
             <a href="/backups" class="{{ 'active' if current_path.startswith('/backups') else '' }}">
                 <i class="fa-solid fa-database"></i> Copias

@@ -162,8 +162,15 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
     if any(len(str(arg)) > 1000 for arg in args):
         raise ValueError("Argumento SSH demasiado largo")
 
-    if script == "cat" and args != ["/home/dasc/backups/.dasc/history.tsv"]:
-        raise ValueError("Uso de cat no permitido")
+    # R-059 monitoreo 7.4: cat permitido solo para estos ficheros exactos
+    _CAT_ALLOWED = {
+        "/home/dasc/backups/.dasc/history.tsv",  # historial de backups
+        "/proc/loadavg",   # carga del sistema
+        "/proc/meminfo",   # información de memoria RAM
+        "/proc/uptime",    # tiempo activo del sistema
+    }
+    if script == "cat" and (not args or len(args) != 1 or args[0] not in _CAT_ALLOWED):
+        raise ValueError(f"cat: ruta no permitida. Rutas válidas: {', '.join(sorted(_CAT_ALLOWED))}")
 
     if script == "crontab" and args != ["-l"]:
         raise ValueError("Uso de crontab no permitido")
@@ -2012,6 +2019,137 @@ def dashboard_status(request: Request):
         "services": services_block,
         "disk": disk_block,
         "alerts": alert_block,
+    })
+
+
+# =====================
+# MONITORIZACIÓN (R-059 / Ruta 7.4)
+# =====================
+
+def _parse_loadavg(stdout: str) -> dict[str, Any]:
+    """Parsea /proc/loadavg → load1, load5, load15."""
+    try:
+        parts = stdout.strip().split()
+        return {
+            "available": True,
+            "load1":  float(parts[0]),
+            "load5":  float(parts[1]),
+            "load15": float(parts[2]),
+            "procs":  parts[3] if len(parts) > 3 else "—",
+        }
+    except Exception:
+        return {"available": False}
+
+
+def _parse_meminfo(stdout: str) -> dict[str, Any]:
+    """Parsea /proc/meminfo → total, usada, disponible y porcentaje."""
+    try:
+        data: dict[str, int] = {}
+        for line in stdout.splitlines():
+            if ":" in line:
+                key, val = line.split(":", 1)
+                nums = [int(t) for t in val.split() if t.isdigit()]
+                if nums:
+                    data[key.strip()] = nums[0]  # en kB
+        total = data.get("MemTotal", 0)
+        avail = data.get("MemAvailable", 0)
+        used  = total - avail
+        pct   = round(used * 100 / total) if total else 0
+
+        def _kb_hr(kb: int) -> str:
+            if kb >= 1024 * 1024:
+                return f"{kb / 1024 / 1024:.1f} GB"
+            return f"{kb // 1024} MB"
+
+        return {
+            "available": True,
+            "percent":   pct,
+            "total_hr":  _kb_hr(total),
+            "used_hr":   _kb_hr(used),
+            "avail_hr":  _kb_hr(avail),
+        }
+    except Exception:
+        return {"available": False}
+
+
+def _parse_uptime_secs(stdout: str) -> dict[str, Any]:
+    """Parsea /proc/uptime → etiqueta human-readable."""
+    try:
+        secs = float(stdout.strip().split()[0])
+        days  = int(secs // 86400)
+        hours = int((secs % 86400) // 3600)
+        mins  = int((secs % 3600) // 60)
+        if days > 0:
+            label = f"{days}d {hours}h"
+        elif hours > 0:
+            label = f"{hours}h {mins}m"
+        else:
+            label = f"{mins} min"
+        return {"available": True, "seconds": secs, "label": label}
+    except Exception:
+        return {"available": False}
+
+
+@app.get("/monitoreo")
+def monitoreo_page(request: Request):
+    """Página de monitorización del servidor (Ruta 7.4)."""
+    if not is_authenticated(request):
+        return RedirectResponse("/login")
+    context = get_common_context(request)
+    context["monitor_host"] = SERVIDOR_BACKUPS
+    return templates.TemplateResponse(request, "monitoreo.html", context)
+
+
+@app.get("/api/monitoreo/metrics")
+def monitoreo_metrics(request: Request):
+    """Endpoint JSON de métricas del servidor para la página de monitoreo."""
+    if not is_authenticated(request):
+        return JSONResponse({"error": "no autenticado"}, status_code=401)
+
+    import time as _time
+
+    # ── Carga del sistema (/proc/loadavg) ──────────────────────────────────
+    load_block: dict[str, Any] = {"available": False}
+    try:
+        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/loadavg"])
+        if r.get("ok"):
+            load_block = _parse_loadavg(r["stdout"])
+    except Exception:
+        pass
+
+    # ── Memoria (/proc/meminfo) ─────────────────────────────────────────────
+    mem_block: dict[str, Any] = {"available": False}
+    try:
+        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/meminfo"])
+        if r.get("ok"):
+            mem_block = _parse_meminfo(r["stdout"])
+    except Exception:
+        pass
+
+    # ── Disco (df -h /, ya allowlisted) ────────────────────────────────────
+    disk_block: dict[str, Any] = {"available": False}
+    try:
+        r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        if r.get("ok"):
+            disk_block = _parse_df_output(r["stdout"])
+    except Exception:
+        pass
+
+    # ── Tiempo activo (/proc/uptime) ────────────────────────────────────────
+    uptime_block: dict[str, Any] = {"available": False}
+    try:
+        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/uptime"])
+        if r.get("ok"):
+            uptime_block = _parse_uptime_secs(r["stdout"])
+    except Exception:
+        pass
+
+    return JSONResponse({
+        "load":   load_block,
+        "mem":    mem_block,
+        "disk":   disk_block,
+        "uptime": uptime_block,
+        "ts":     _time.time(),
     })
 
 

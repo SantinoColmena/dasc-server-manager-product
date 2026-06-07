@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+{% block title %}Monitoreo — DASC Server Manager{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+    /* ── Metric cards (Ruta 7.4) ── */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    @media (max-width: 900px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .metric-grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+    .metric-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        transition: box-shadow .15s;
+    }
+    .metric-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+
+    .metric-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    .metric-icon {
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+    }
+    .metric-icon.indigo { background: #eef2ff; color: #4f46e5; }
+    .metric-icon.blue   { background: #dbeafe; color: #2563eb; }
+    .metric-icon.teal   { background: #ccfbf1; color: #0d9488; }
+    .metric-icon.slate  { background: #f1f5f9; color: #475569; }
+    .metric-icon.amber  { background: #fef3c7; color: #d97706; }
+    .metric-icon.red    { background: #fee2e2; color: #dc2626; }
+    .metric-icon.green  { background: #dcfce7; color: #16a34a; }
+
+    .metric-badge {
+        font-size: 11px; font-weight: 700;
+        padding: 3px 9px; border-radius: 99px;
+        white-space: nowrap;
+    }
+    .metric-badge.ok    { background: #dcfce7; color: #15803d; }
+    .metric-badge.warn  { background: #fef3c7; color: #b45309; }
+    .metric-badge.error { background: #fee2e2; color: #b91c1c; }
+    .metric-badge.muted { background: #f1f5f9; color: #64748b; }
+
+    .metric-value { font-size: 26px; font-weight: 800; line-height: 1.1; color: var(--text); }
+    .metric-sub   { font-size: 12px; color: var(--muted); }
+    .metric-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 3px; }
+
+    .metric-bar {
+        height: 6px; border-radius: 3px;
+        background: #f1f5f9; margin-top: 8px; overflow: hidden;
+    }
+    .metric-bar-fill {
+        height: 100%; border-radius: 3px; transition: width .6s ease;
+    }
+    .metric-bar-fill.ok    { background: #22c55e; }
+    .metric-bar-fill.warn  { background: #f59e0b; }
+    .metric-bar-fill.error { background: #ef4444; }
+
+    .metric-spinner {
+        width: 16px; height: 16px;
+        border: 2.5px solid var(--border);
+        border-top-color: #4f46e5;
+        border-radius: 50%;
+        animation: mspin .7s linear infinite;
+        flex-shrink: 0;
+    }
+    @keyframes mspin { to { transform: rotate(360deg); } }
+    .metric-loading {
+        display: flex; align-items: center; gap: 8px;
+        color: var(--muted); font-size: 13px;
+        min-height: 32px;
+    }
+
+    /* ── Chart ── */
+    .chart-section {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 20px;
+    }
+    .chart-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+    .chart-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .chart-wrap { position: relative; height: 190px; }
+
+    /* ── Load avg detail ── */
+    .load-detail-grid {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 4px 0 6px;
+    }
+    .load-box {
+        flex: 1; min-width: 100px;
+        text-align: center;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .load-box-val {
+        font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1;
+    }
+    .load-box-lbl {
+        font-size: 11px; font-weight: 600; color: var(--muted);
+        text-transform: uppercase; letter-spacing: .4px; margin-top: 5px;
+    }
+
+    /* ── Auto-refresh pill ── */
+    .refresh-pill {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: #eef2ff; border: 1px solid #c7d2fe;
+        color: #4338ca; border-radius: 99px;
+        padding: 7px 13px; font-size: 12px; font-weight: 600;
+    }
+    .refresh-dot {
+        width: 7px; height: 7px; border-radius: 50%; background: #4f46e5;
+        animation: rpulse 2s ease-in-out infinite;
+    }
+    @keyframes rpulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+</style>
+{% endblock %}
+
+{% block sidebar_info %}
+<div class="history">
+    <h3>Monitoreo</h3>
+    <p><span class="dot ok"></span> Auto-refresh: 30 s</p>
+    <p><span class="dot ok"></span> Servidor: {{ monitor_host }}</p>
+    <p><span class="dot warn"></span> <span id="sb-reads">0</span> lecturas</p>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="topbar">
+    <div>
+        <h2 class="page-title">Estado del servidor</h2>
+        <p class="page-subtitle">CPU, memoria, disco y actividad en tiempo real. Sin necesidad de abrir nada más.</p>
+    </div>
+    <div class="topbar-actions">
+        <div class="refresh-pill">
+            <div class="refresh-dot"></div>
+            <span id="refresh-lbl">Cargando…</span>
+        </div>
+        <button class="btn" id="btn-refresh">
+            <i class="fa-solid fa-rotate-right"></i> Actualizar ya
+        </button>
+    </div>
+</div>
+
+<!-- ── Tarjetas de métricas ── -->
+<div class="metric-grid">
+
+    <div class="metric-card" id="metric-load">
+        <div class="metric-top">
+            <div class="metric-icon indigo"><i class="fa-solid fa-microchip"></i></div>
+            <span class="metric-badge muted">—</span>
+        </div>
+        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
+        <div class="metric-label">Carga (1 min)</div>
+    </div>
+
+    <div class="metric-card" id="metric-mem">
+        <div class="metric-top">
+            <div class="metric-icon blue"><i class="fa-solid fa-memory"></i></div>
+            <span class="metric-badge muted">—</span>
+        </div>
+        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
+        <div class="metric-label">Memoria RAM</div>
+    </div>
+
+    <div class="metric-card" id="metric-disk">
+        <div class="metric-top">
+            <div class="metric-icon teal"><i class="fa-solid fa-hard-drive"></i></div>
+            <span class="metric-badge muted">—</span>
+        </div>
+        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
+        <div class="metric-label">Disco principal (/)</div>
+    </div>
+
+    <div class="metric-card" id="metric-uptime">
+        <div class="metric-top">
+            <div class="metric-icon slate"><i class="fa-solid fa-clock"></i></div>
+            <span class="metric-badge ok">Activo</span>
+        </div>
+        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
+        <div class="metric-label">Tiempo activo</div>
+    </div>
+
+</div>
+
+<!-- ── Gráfica de carga ── -->
+<div class="chart-section">
+    <div class="chart-head">
+        <div>
+            <div class="chart-title">
+                <i class="fa-solid fa-chart-area" style="color:#4f46e5; margin-right:7px;"></i>
+                Carga del sistema — historial de esta sesión
+            </div>
+            <div class="chart-subtitle">
+                Una lectura cada 30 segundos. El historial se borra al salir de la página.
+            </div>
+        </div>
+        <span class="metric-badge muted" id="chart-reads-badge">0 lecturas</span>
+    </div>
+    <div class="chart-wrap">
+        <canvas id="loadChart"></canvas>
+    </div>
+</div>
+
+<!-- ── Detalle de promedios de carga ── -->
+<section class="card card-mini" style="margin-bottom:20px;">
+    <div class="card-head">
+        <div class="card-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div class="card-title">
+            <h3>Promedios de carga del procesador</h3>
+            <p>Un valor &lt; 1.0 es ideal. Por encima de los núcleos disponibles el servidor empieza a hacer cola.</p>
+        </div>
+    </div>
+    <div class="load-detail-grid">
+        <div class="load-box">
+            <div class="load-box-val" id="detail-load1">—</div>
+            <div class="load-box-lbl">1 minuto</div>
+        </div>
+        <div class="load-box">
+            <div class="load-box-val" id="detail-load5">—</div>
+            <div class="load-box-lbl">5 minutos</div>
+        </div>
+        <div class="load-box">
+            <div class="load-box-val" id="detail-load15">—</div>
+            <div class="load-box-lbl">15 minutos</div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    "use strict";
+
+    /* ── Constantes ─────────────────────────────────────────────── */
+    var REFRESH_SEC = 30;
+    var MAX_POINTS  = 20;
+
+    /* ── Estado ─────────────────────────────────────────────────── */
+    var chartLabels = [];
+    var chartData1  = [];  /* load 1 min */
+    var chartData5  = [];  /* load 5 min */
+    var chartData15 = [];  /* load 15 min */
+    var totalReads  = 0;
+    var countdown   = 0;
+    var timerHandle = null;
+    var chartInst   = null;
+
+    /* ── Inicializar Chart.js ────────────────────────────────────── */
+    function initChart() {
+        var ctx = document.getElementById('loadChart');
+        if (!ctx || !window.Chart) return;
+        chartInst = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    {
+                        label: '1 min',
+                        data: chartData1,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79,70,229,.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        borderWidth: 2,
+                    },
+                    {
+                        label: '5 min',
+                        data: chartData5,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        borderWidth: 1.5,
+                        borderDash: [4, 3],
+                    },
+                    {
+                        label: '15 min',
+                        data: chartData15,
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        borderWidth: 1.5,
+                        borderDash: [2, 4],
+                    },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { font: { size: 12, family: 'Inter' }, boxWidth: 16 }
+                    },
+                    tooltip: { bodyFont: { family: 'Inter' } }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { size: 11, family: 'Inter' }, maxRotation: 0 }
+                    },
+                    y: {
+                        min: 0,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { size: 11, family: 'Inter' } }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ── Actualizar gráfica ─────────────────────────────────────── */
+    function pushChartPoint(load1, load5, load15) {
+        var now = new Date();
+        var lbl = now.getHours().toString().padStart(2,'0') + ':' +
+                  now.getMinutes().toString().padStart(2,'0') + ':' +
+                  now.getSeconds().toString().padStart(2,'0');
+
+        chartLabels.push(lbl);
+        chartData1.push(load1);
+        chartData5.push(load5);
+        chartData15.push(load15);
+
+        if (chartLabels.length > MAX_POINTS) {
+            chartLabels.shift(); chartData1.shift();
+            chartData5.shift(); chartData15.shift();
+        }
+
+        if (chartInst) chartInst.update('none');
+
+        totalReads++;
+        var badge = document.getElementById('chart-reads-badge');
+        if (badge) badge.textContent = totalReads + ' lectura' + (totalReads !== 1 ? 's' : '');
+        var sbReads = document.getElementById('sb-reads');
+        if (sbReads) sbReads.textContent = totalReads;
+    }
+
+    /* ── Helpers de DOM ─────────────────────────────────────────── */
+    function resolveMetric(cardId, valueHtml, subHtml, barPct, badgeClass, badgeText) {
+        var card = document.getElementById(cardId);
+        if (!card) return;
+        var loading = card.querySelector('.metric-loading');
+        if (loading) {
+            var barHtml = barPct !== null
+                ? '<div class="metric-bar"><div class="metric-bar-fill ' + badgeClass + '" style="width:' + barPct + '%"></div></div>'
+                : '';
+            loading.outerHTML =
+                '<div class="metric-value">' + valueHtml + '</div>' +
+                '<div class="metric-sub">' + subHtml + '</div>' + barHtml;
+        } else {
+            /* actualización en lecturas posteriores */
+            var mv = card.querySelector('.metric-value');
+            if (mv) mv.innerHTML = valueHtml;
+            var ms = card.querySelector('.metric-sub');
+            if (ms) ms.textContent = subHtml;
+            var fill = card.querySelector('.metric-bar-fill');
+            if (fill && barPct !== null) {
+                fill.style.width = barPct + '%';
+                fill.className = 'metric-bar-fill ' + badgeClass;
+            }
+        }
+        var badge = card.querySelector('.metric-badge');
+        if (badge) {
+            badge.className = 'metric-badge ' + badgeClass;
+            badge.textContent = badgeText;
+        }
+    }
+
+    function ndMetric(cardId) {
+        resolveMetric(cardId, '—', 'Sin datos del servidor', null, 'muted', 'N/D');
+    }
+
+    /* ── Fetch de métricas ──────────────────────────────────────── */
+    function fetchMetrics() {
+        fetch('/api/monitoreo/metrics')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+
+                /* Carga del sistema */
+                var ld = data.load || {};
+                if (ld.available) {
+                    var loadColor = ld.load1 >= 2.0 ? 'error' : ld.load1 >= 1.0 ? 'warn' : 'ok';
+                    var loadLabel = ld.load1 >= 2.0 ? 'Alta' : ld.load1 >= 1.0 ? 'Moderada' : 'Normal';
+                    resolveMetric('metric-load',
+                        String(ld.load1.toFixed(2)),
+                        'Promedio del último minuto',
+                        null, loadColor, loadLabel
+                    );
+                    pushChartPoint(ld.load1, ld.load5, ld.load15);
+                    var d1 = document.getElementById('detail-load1');
+                    var d5 = document.getElementById('detail-load5');
+                    var d15 = document.getElementById('detail-load15');
+                    if (d1) d1.textContent = ld.load1.toFixed(2);
+                    if (d5) d5.textContent = ld.load5.toFixed(2);
+                    if (d15) d15.textContent = ld.load15.toFixed(2);
+                } else { ndMetric('metric-load'); }
+
+                /* Memoria */
+                var mem = data.mem || {};
+                if (mem.available) {
+                    var memColor = mem.percent >= 90 ? 'error' : mem.percent >= 75 ? 'warn' : 'ok';
+                    var memLabel = mem.percent >= 90 ? 'Llena' : mem.percent >= 75 ? 'Vigilar' : 'OK';
+                    resolveMetric('metric-mem',
+                        mem.percent + '%',
+                        mem.used_hr + ' de ' + mem.total_hr + ' usada',
+                        mem.percent, memColor, memLabel
+                    );
+                } else { ndMetric('metric-mem'); }
+
+                /* Disco */
+                var dk = data.disk || {};
+                if (dk.available) {
+                    var dkColor = dk.percent >= 90 ? 'error' : dk.percent >= 75 ? 'warn' : 'ok';
+                    var dkLabel = dk.percent >= 90 ? 'Lleno' : dk.percent >= 75 ? 'Vigilar' : 'Libre';
+                    var card = document.getElementById('metric-disk');
+                    if (card) {
+                        var ico = card.querySelector('.metric-icon');
+                        if (ico) ico.className = 'metric-icon ' + (dk.percent >= 90 ? 'red' : dk.percent >= 75 ? 'amber' : 'teal');
+                    }
+                    resolveMetric('metric-disk',
+                        dk.percent + '%',
+                        dk.used + ' de ' + dk.total + ' usado',
+                        dk.percent, dkColor, dkLabel
+                    );
+                } else { ndMetric('metric-disk'); }
+
+                /* Uptime */
+                var up = data.uptime || {};
+                if (up.available) {
+                    resolveMetric('metric-uptime',
+                        up.label || '—',
+                        'Tiempo sin reinicios',
+                        null, 'ok', 'Activo'
+                    );
+                } else { ndMetric('metric-uptime'); }
+
+            })
+            .catch(function () {
+                ['metric-load', 'metric-mem', 'metric-disk', 'metric-uptime']
+                    .forEach(function (id) { ndMetric(id); });
+            })
+            .finally(function () {
+                startCountdown();
+            });
+    }
+
+    /* ── Contador de auto-refresh ───────────────────────────────── */
+    function startCountdown() {
+        if (timerHandle) clearInterval(timerHandle);
+        countdown = REFRESH_SEC;
+        var lbl = document.getElementById('refresh-lbl');
+        if (lbl) lbl.textContent = 'Actualizando en ' + countdown + ' s';
+
+        timerHandle = setInterval(function () {
+            countdown--;
+            if (lbl) lbl.textContent = countdown > 0
+                ? 'Actualizando en ' + countdown + ' s'
+                : 'Actualizando…';
+            if (countdown <= 0) {
+                clearInterval(timerHandle);
+                fetchMetrics();
+            }
+        }, 1000);
+    }
+
+    /* ── Botón manual ────────────────────────────────────────────── */
+    var btnRefresh = document.getElementById('btn-refresh');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', function () {
+            if (timerHandle) clearInterval(timerHandle);
+            var lbl = document.getElementById('refresh-lbl');
+            if (lbl) lbl.textContent = 'Actualizando…';
+            fetchMetrics();
+        });
+    }
+
+    /* ── Init ────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+        initChart();
+        fetchMetrics();
+    });
+
+}());
+</script>
+{% endblock %}
