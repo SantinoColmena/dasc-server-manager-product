@@ -14,8 +14,8 @@ Panel web autohospedado para que una PyME centralice copias de seguridad, logs, 
 | R-053 — Instalación validada en 3 perfiles (Lite, Standard, Pro) | ✅ Cerrado 2026-06-07 |
 | R-054 — Endurecimiento: UFW, HTTPS, fail2ban, pip-audit | ✅ Cerrado 2026-06-07 |
 | R-055 — Guías de uso desde Windows | ✅ Cerrado 2026-06-07 |
-| R-056 — Limpieza repo y documentación | 🟡 En curso |
-| R-057 — Release interna estable (freeze + changelog) | 🗓️ Planificada |
+| R-056 — Limpieza repo y documentación | ✅ Cerrado 2026-06-07 |
+| R-057 — Release freeze: checklist, changelog, smoke test, tag | ✅ Cerrado 2026-06-07 |
 
 Seguimiento completo: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
@@ -133,6 +133,7 @@ Checklist completo por perfil: [`docs/validaciones/R-053D_checklist_instalacion_
 
 | Documento | Descripción |
 |---|---|
+| [`CHANGELOG.md`](CHANGELOG.md) | Historial de cambios por versión |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Estado y progreso de todos los requisitos |
 | [`docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`](docs/validaciones/R-053D_checklist_instalacion_desde_cero.md) | Checklist reproducible de instalación por perfil |
 | [`docs/guias/R-055A_acceso_navegador_windows.md`](docs/guias/R-055A_acceso_navegador_windows.md) | Guía para el usuario final (navegador Windows) |

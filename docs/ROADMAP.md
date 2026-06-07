@@ -7,7 +7,7 @@
 > desincronizarse del código.
 
 - **Versión actual:** `v1.0-rc1`
-- **Fase actual:** Fase 6 — Endurecimiento y producto vendible
+- **Fase actual:** Fase 7 — Central cloud y multi-cliente (Fase 6 cerrada 2026-06-07)
 - **Última actualización:** 2026-06-07
 
 ---
@@ -50,7 +50,7 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | 3 | Despliegues adaptables | R-025 → R-031 | ✅ Cerrada | — |
 | 4 | Demo y validación | R-032 → R-039 | ✅ Cerrada | — |
 | 5 | Pilotos reales y RC | R-040 → R-047 | ✅ Cerrada | — |
-| **6** | **Endurecimiento y producto vendible** | **R-048 → R-057** | 🔵 **En curso** | **Ahora** |
+| **6** | **Endurecimiento y producto vendible** | **R-048 → R-057** | ✅ **Cerrada** | **—** |
 | 7 | Central cloud y multi-cliente | R-058 → R-070 (aprox.) | 🗓️ Planificada | Siguiente |
 | 8 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
 | 9 | Evolución (IA, Windows, refactor) | (se numera al planificar) | 📦 Backlog | Después |
@@ -59,8 +59,9 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 
 1. ~~**R-053** — Validación de instalación desde cero por perfil (VM limpia).~~ ✅ Cerrado 2026-06-07.
 2. ~~**R-054** — Cierre del endurecimiento de infraestructura: UFW, HTTPS/certbot, fail2ban, `pip-audit`.~~ ✅ Cerrado 2026-06-07.
-3. ~~**R-055**~~ ✅ Cerrado 2026-06-07. **R-056** — Limpieza final del repo y la documentación.
-4. **R-057** — Release interna estable (freeze) → y recién entonces retomar **R-048** (primer cliente de pago).
+3. ~~**R-055** — Guías de uso desde Windows.~~ ✅ Cerrado 2026-06-07. ~~**R-056** — Limpieza repo.~~ ✅ Cerrado 2026-06-07.
+4. ~~**R-057** — Release interna estable (freeze).~~ ✅ Cerrado 2026-06-07. **F6-GATE-06 superado.**
+5. **Ahora:** retomar **R-048** (primer cliente de pago) y comenzar **Fase 7** (Central cloud).
 
 ---
 
@@ -193,22 +194,22 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
   - `R-056C` ✅ — "Monitorización" corregida a "enlace externo Cacti configurable"; SHA256 y alertas confirmados implementados.
   - `R-056D` ✅ — `check_repo_clean.ps1` y `check_api_package_installable.ps1` en verde. Sin secretos en repo.
 
-#### Ruta 6.10 — Release interna estable · 🗓️ Planificada
-- **R-057** — Congelar release interna estable consolidada. Corte antes de lo
-  comercial.
-  - `R-057A` 🗓️ — Checklist maestro de regresión.
-  - `R-057B` 🗓️ — Changelog consolidado.
-  - `R-057C` 🗓️ — Smoke tests básicos (script).
-  - `R-057D` 🗓️ — Congelado del tag + validación instalable.
+#### Ruta 6.10 — Release interna estable · ✅ Cerrada
+- **R-057** ✅ — Release interna estable congelada. **CERRADO 2026-06-07**.
+  Evidencia: `docs/validaciones/R-057_release_freeze.md`.
+  - `R-057A` ✅ — Checklist maestro de regresión. `docs/release/checklist_regresion.md`.
+  - `R-057B` ✅ — Changelog consolidado. `CHANGELOG.md` en la raíz del repo.
+  - `R-057C` ✅ — Smoke test script. `tools/windows/smoke_test_release.ps1`.
+  - `R-057D` ✅ — Tag `v1.0-rc1` movido al commit de cierre de Fase 6 y pusheado.
 
-### 🚪 Gate de salida de Fase 6 — `F6-GATE-06` "Producto vendible"
-**No se pasa a actividad comercial real hasta cumplir TODO esto:**
+### 🚪 Gate de salida de Fase 6 — `F6-GATE-06` "Producto vendible" · ✅ SUPERADO
+**Todos los criterios cumplidos (2026-06-07):**
 - [x] Instalación desde cero OK en los 3 perfiles (R-053). ✅ Cerrado 2026-06-07.
 - [x] UFW + HTTPS + fail2ban + `pip-audit` aplicados (R-054). ✅ Cerrado 2026-06-07.
 - [x] Documentado el uso desde Windows / navegador vs. Linux (R-055). ✅ Cerrado 2026-06-07.
 - [x] Repo y docs limpios, sin promesas de funciones inexistentes (R-056). ✅ Cerrado 2026-06-07.
-- [ ] Release interna estable congelada con changelog (R-057).
-- [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
+- [x] Release interna estable congelada con changelog (R-057). ✅ Cerrado 2026-06-07.
+- [x] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde. ✅
 
 ### Cierre comercial de la fase
 - **R-048** — Primer cliente de pago. ⏸️ **Aplazada a propósito** hasta superar
