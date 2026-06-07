@@ -139,9 +139,11 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 > confirman o ajustan al entrar en cada tarea. Así el plan absorbe lo que vaya
 > surgiendo sin romper la numeración ni inflar el roadmap por adelantado.
 
-#### Ruta 6.7 — Validación de instalación desde cero · 🔵 En curso (Lite ✅ Standard ✅)
-- **R-053** — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
+#### Ruta 6.7 — Validación de instalación desde cero · ✅ Cerrada (Lite ✅ Standard ✅ Pro ✅)
+- **R-053** ✅ — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
   ocultos, partiendo del repo/tag. *Depende de:* H-1 y M/L de la auditoría (✅).
+  **Cerrada 2026-06-07** — los 3 perfiles validados en VMs limpias, 5 defectos
+  corregidos (B1-B5). Evidencia en `docs/validaciones/R-053A/B/C/D_*`.
   - `R-053A` ✅ — Validación perfil **Lite** (1 servidor + copia externa).
     Instalación desde cero **funcional** en VM limpia (multipass/Ubuntu 22.04)
     tras corregir 4 defectos: **B1** (backup-services desinstalaba MariaDB en
@@ -158,7 +160,12 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
     `set -euo pipefail`). SSH sin contraseña panel→DB, BD logs, backup real vía red
     y HTTP 200 verificados. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053B_validacion_standard.md`.
-  - `R-053C` 🗓️ — Validación perfil **Pro** (3 servidores).
+  - `R-053C` ✅ — Validación perfil **Pro** (3 servidores).
+    Instalación desde cero en 3 VMs limpias (dasc-pro-db + dasc-pro-backup +
+    dasc-pro-api) completamente funcional sin defectos nuevos. Los fixes B4 y B5
+    de R-053B cubren también el perfil Pro. SSH sin contraseña a 2 hosts remotos,
+    backup real vía SSH panel→backup→db y HTTP 200 verificados. **Cerrada 2026-06-07.**
+    Evidencia: `docs/validaciones/R-053C_validacion_pro.md`.
   - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
     (creado: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`).
 

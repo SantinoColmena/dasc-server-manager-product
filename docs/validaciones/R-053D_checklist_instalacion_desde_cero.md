@@ -4,7 +4,7 @@
 > **sin pasos manuales ocultos**, y dejar evidencia consolidada por perfil.
 > Este documento es el guion que se ejecuta y la plantilla de informe.
 >
-> Estado: 🔵 en curso · Perfiles validados: **Lite ✅ (R-053A) · Standard ✅ (R-053B)** · Pro pendiente (R-053C).
+> Estado: ✅ **CERRADO 2026-06-07** · Los 3 perfiles validados: **Lite ✅ (R-053A) · Standard ✅ (R-053B) · Pro ✅ (R-053C)**.
 
 ---
 
@@ -184,7 +184,7 @@ sudo -E DASC_PROFILE=standard \
 |---|---|---|---|---|---|
 | Lite (R-053A) | `9317e57` | Ubuntu 22.04, 1 VM, 2 vCPU/4 GiB | ✅ Cerrado 2026-06-07 | B1, B2, F8, B3 | [`R-053A`](R-053A_validacion_lite.md) |
 | Standard (R-053B) | `092e37d` | Ubuntu 22.04, 2 VMs, 2 vCPU/4 GiB c/u | ✅ Cerrado 2026-06-07 | B4, B5 | [`R-053B`](R-053B_validacion_standard.md) |
-| Pro (R-053C) | — | 3 VMs | ⬜ Pendiente | — | — |
+| Pro (R-053C) | `ca049d1` | Ubuntu 22.04, 3 VMs (2+4+4 GiB) | ✅ Cerrado 2026-06-07 | ninguno nuevo | [`R-053C`](R-053C_validacion_pro.md) |
 
 **Criterio de cierre R-053:** los 3 perfiles instalan desde cero sin pasos manuales
 no documentados, con panel operativo y backup+restauración verificados.
