@@ -7,7 +7,7 @@
 > desincronizarse del código.
 
 - **Versión actual:** `v1.0-rc1`
-- **Fase actual:** Fase 7 — Central cloud y multi-cliente (Fase 6 cerrada 2026-06-07)
+- **Fase actual:** Fase 7 — Madurez del producto (Fase 6 cerrada 2026-06-07)
 - **Última actualización:** 2026-06-07
 
 ---
@@ -51,17 +51,21 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | 4 | Demo y validación | R-032 → R-039 | ✅ Cerrada | — |
 | 5 | Pilotos reales y RC | R-040 → R-047 | ✅ Cerrada | — |
 | **6** | **Endurecimiento y producto vendible** | **R-048 → R-057** | ✅ **Cerrada** | **—** |
-| 7 | Central cloud y multi-cliente | R-058 → R-070 (aprox.) | 🗓️ Planificada | Siguiente |
-| 8 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
-| 9 | Evolución (IA, Windows, refactor) | (se numera al planificar) | 📦 Backlog | Después |
+| **7** | **Madurez del producto** | **R-058 → R-064 (aprox.)** | 🔵 **En curso** | **Ahora** |
+| **8** | **Madurez operacional** | **R-065 → R-071 (aprox.)** | ▶️ Siguiente | Siguiente |
+| **9** | **Infraestructura de negocio** | **R-072 → R-078 (aprox.)** | ▶️ Siguiente | Siguiente |
+| 10 | Central cloud y multi-cliente | (se numera al planificar) | 🗓️ Planificada | Después |
+| 11 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
+| 12 | Evolución (IA avanzada, Windows GUI, refactor) | (se numera al planificar) | 📦 Backlog | Después |
 
 **Próximos objetivos concretos** (lo que dicta el propio repo, en orden):
 
-1. ~~**R-053** — Validación de instalación desde cero por perfil (VM limpia).~~ ✅ Cerrado 2026-06-07.
-2. ~~**R-054** — Cierre del endurecimiento de infraestructura: UFW, HTTPS/certbot, fail2ban, `pip-audit`.~~ ✅ Cerrado 2026-06-07.
-3. ~~**R-055** — Guías de uso desde Windows.~~ ✅ Cerrado 2026-06-07. ~~**R-056** — Limpieza repo.~~ ✅ Cerrado 2026-06-07.
-4. ~~**R-057** — Release interna estable (freeze).~~ ✅ Cerrado 2026-06-07. **F6-GATE-06 superado.**
-5. **Ahora:** retomar **R-048** (primer cliente de pago) y comenzar **Fase 7** (Central cloud).
+1. ~~**R-053 → R-057** — Fases de validación, hardening, guías y freeze.~~ ✅ Todas cerradas 2026-06-07.
+2. **Ahora — Fase 7:** Madurez del producto (UI/UX, dashboard, informes, monitorización, notificaciones).
+3. **Siguiente — Fase 8:** Madurez operacional (instalador v2, actualizador, backup de DASC, soporte real, IA triage).
+4. **Siguiente — Fase 9:** Infraestructura de negocio (dominio, web, planes, pagos, legal).
+5. **Gate F9-GATE superado → R-048:** Primer cliente de pago real.
+6. **Después — Fase 10:** Central cloud, multi-idioma, IA avanzada (financiado por ingresos).
 
 ---
 
@@ -218,56 +222,134 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 
 ---
 
-## 5. Fase 7 — Central cloud y multi-cliente · 🗓️ PLANIFICADA
+## 5. Fase 7 — Madurez del producto · 🔵 EN CURSO
 
-> **Objetivo:** convertir DASC en producto multi-cliente de verdad: una Central
-> propia (VPS DASC) que agregue el estado de todas las instalaciones. Detalle
-> medio; cada tarea se afina al entrar en la fase. Rango orientativo
-> `R-058 → R-070`.
+> **Objetivo:** que el panel sea un producto de pago real — visualmente cuidado,
+> funcional sin fricciones y diferenciado de las herramientas masivas por su
+> cercanía al cliente PyME. Todo lo que el cliente ve y toca directamente.
+> Sin esta fase no se vende.
 
-| Ruta | Contenido | Estado |
+| Ruta | Contenido | Coste estimado |
 |---|---|---|
-| 7.1 Diseño central cloud | Arquitectura de la Central en VPS, modelo HTTPS, topología | 🗓️ Planificada |
-| 7.2 Central VPS + HTTPS productivo | Despliegue real de Central Support con dominio + TLS + Nginx | 🗓️ Planificada |
-| 7.3 Panel multi-cliente | Gestión de clientes, tokens por cliente, rotación y revocación | 🗓️ Planificada |
-| 7.4 Dashboard de salud | Heartbeat de instalaciones: último backup, alertas, soporte, último contacto | 🗓️ Planificada |
-| 7.5 Seguridad central | 2FA para el equipo DASC, backup de la propia Central, auditoría de login central | 🗓️ Planificada |
+| 7.1 UI/UX | Rediseño visual: paleta coherente, tipografía amigable, padding correcto, tono cercano (no corporativo frío). Diferenciación clave frente a Nagios/Zabbix. | $0 |
+| 7.2 Dashboard de estado | Pantalla de inicio con estado a-golpe-de-vista: último backup OK/KO, disco X% usado, N servicios activos, alertas pendientes. Imprescindible para el cliente PyME. | $0 |
+| 7.3 Polish funcional | Corrección de bugs conocidos, optimización de rendimiento, diseño responsive/mobile (el cliente quiere ver el estado desde el móvil). | $0 |
+| 7.4 Monitorización integrada | Grafana self-hosted integrado en el panel (más accesible que Cacti). Alternativa: completar la integración Cacti si se prefiere. | $0 (self-host) |
+| 7.5 Notificaciones proactivas | Alertas por email + Telegram cuando algo falla: backup KO, disco >80%, servicio caído. Email es lo mínimo esperado en un producto de pago. | $0–3/mes |
+| 7.6 Configuración desde el panel | Política de retención, programación de backups y parámetros clave sin tener que editar `config.env`. El cliente no debe tocar ficheros. | $0 |
+| 7.7 Informes periódicos configurables | Desde el panel: elegir contenido del informe (backups, disco, servicios, alertas), frecuencia (diario/semanal/mensual) y canal de envío (email, Telegram). Envío automático programado + botón de envío manual bajo demanda. **Diferenciador clave:** el cliente recibe tranquilidad sin tener que entrar al panel. | $0 |
+| 7.8 Reporte de bugs desde el panel | Botón "Reportar problema" que abre un ticket con contexto del sistema adjunto automáticamente. Retroalimentación del cliente sin fricción. | $0 |
 
-**Gate de salida `F7-GATE` "Central productiva":** Central accesible por HTTPS,
-al menos 1 instalación reportando estado real, tokens gestionables y backup de la
-Central verificado.
+**Funciones pospuestas a Fase 12** (coste o esfuerzo no justificado aún):
+modo oscuro/claro, multi-idioma (ES → CA → EN), WhatsApp como canal de informes.
 
----
-
-## 6. Fase 8 — Comercial y escalado · 📦 BACKLOG (objetivos gruesos)
-
-> Se desglosa en tareas `R-xxx` solo cuando se planifique. Aquí, los objetivos.
-
-- **Oferta y onboarding** listos (paquetes finales Lite/Standard/Pro, precios,
-  proceso de alta del cliente).
-- **SLA y legal** definitivos (tiempos de respuesta, exclusiones, condiciones de
-  servicio).
-- **Pilotos pagados** (1 y 2) ejecutados y feedback aplicado.
-- **Marketing** mínimo (web actualizada, material comercial honesto).
-- **Release v1.0 comercial limitada** — solo si los pilotos y la seguridad pasan.
-- **Decisión Go/No-Go comercial** documentada (puede ser No-Go).
+**Gate de salida `F7-GATE` "Producto presentable":**
+panel visualmente cuidado; dashboard funcional; al menos un canal de notificaciones
+activo; informes configurables y enviados en prueba; responsive en móvil verificado.
 
 ---
 
-## 7. Fase 9 — Evolución · 📦 BACKLOG (objetivos gruesos)
+## 6. Fase 8 — Madurez operacional · ▶️ SIGUIENTE
 
-- **IA de soporte / diagnóstico interno** (ayuda al técnico: resumen de logs y
-  sugerencias; no sustituye al humano).
-- **Agente Windows** (servicio que reporta estado / backup de carpetas).
-- **Refactor de `main.py`** (deuda L-6 de la auditoría: ~5000 líneas en un
-  fichero). 🕓 Diferida con justificación.
-- **Integraciones / API de producto** y **observabilidad avanzada**.
-- **Migración de la Central de SQLite a PostgreSQL/MariaDB** si crece el número de
+> **Objetivo:** que instalar, actualizar y operar DASC en producción sea seguro
+> y esté documentado. Sin esta fase, un cliente real sería un riesgo operacional.
+
+| Ruta | Contenido | Coste estimado |
+|---|---|---|
+| 8.1 Instalador v2 | Recuperar y actualizar los scripts de desinstalación y actualización que existían. Hacer el proceso de instalación más guiado y robusto ante errores. | $0 |
+| 8.2 Compatibilidad Windows | Mínimo viable: script PowerShell que ejecute el SSH y los instaladores por el usuario, sin que toque la terminal de Linux. GUI completo → Fase 12. | $0 |
+| 8.3 Actualizador de DASC | Proceso safe y documentado para llevar una nueva versión a un cliente en producción: preservar `config.env`, claves SSH, datos, tickets. | $0 |
+| 8.4 Backup de DASC | Script que hace backup de la propia herramienta: `config.env`, SQLite de tickets, claves SSH, `users.json`, `auth_logs.json`. Plan de recuperación documentado. | $0 |
+| 8.5 Soporte de producción | Jira integrado (plan free, hasta 10 agentes) + email de soporte + bug reporting desde el panel (R-7.8) conectado a Jira. Canal de WhatsApp manual hasta que haya API justificada. | $0–6/mes |
+| 8.6 IA de triage | Bot entrenado con la documentación DASC para responder preguntas frecuentes sin llegar al desarrollador. Fundamental para escalar siendo un equipo de 1. | $0–5/mes |
+
+**Gate de salida `F8-GATE` "Operación sin riesgos":**
+existe proceso documentado de instalación, actualización y recuperación; backup de
+DASC verificado restaurable; Jira recibe tickets desde el panel; IA responde al
+menos 5 preguntas de la FAQ sin intervención humana.
+
+---
+
+## 7. Fase 9 — Infraestructura de negocio · ▶️ SIGUIENTE
+
+> **Objetivo:** que exista todo lo necesario para que un cliente entregue dinero
+> con confianza. Sin esta fase no hay primera venta posible.
+>
+> **Restricción de costes:** priorizar opciones gratuitas o de bajo coste (<$5/mes)
+> hasta tener ingresos. Los pagos grandes se justifican cuando hay cliente pagando.
+
+| Ruta | Contenido | Coste estimado |
+|---|---|---|
+| 9.1 Dominio + email profesional | Dominio propio (ej. dascmanager.com) + email de soporte (soporte@...). Mínimo indispensable de credibilidad. | ~$1 dominio + ~$3–6 email/mes |
+| 9.2 Web del producto | Landing page: qué es DASC, planes Lite/Standard/Pro, precios, cómo funciona, contacto, descarga o solicitud de instalación. | hosting mínimo o gratuito |
+| 9.3 Planes y métodos de pago | Definir precios de Lite/Standard/Pro + soporte. Método de cobro (Stripe, transferencia, factura). | variable según volumen |
+| 9.4 Licencias y legal | Términos de servicio, política de privacidad, límites de responsabilidad del servicio. Asesoramiento legal básico. | $0–consulta puntual |
+| 9.5 Documentación de operación | Plan de recuperación ante desastres, guía anti-hackeo/gestión de incidentes, documentación completa de soporte para un equipo futuro. | $0 |
+
+### 🚪 Gate de salida `F9-GATE` "Primer cliente de pago"
+**No se acepta el primer cliente hasta cumplir TODO esto:**
+- [ ] F7-GATE superado (producto presentable).
+- [ ] F8-GATE superado (operación sin riesgos).
+- [ ] Dominio + email profesional activos.
+- [ ] Web del producto publicada con planes y precios.
+- [ ] Método de cobro operativo.
+- [ ] Términos de servicio y privacidad publicados.
+- [ ] Plan de recuperación documentado y probado.
+
+**→ R-048: Primer cliente de pago real** (se activa al superar F9-GATE)
+
+---
+
+## 8. Fase 10 — Central cloud y multi-cliente · 🗓️ PLANIFICADA
+
+> **Objetivo:** convertir DASC en producto multi-cliente de verdad — una Central
+> propia en VPS que agregue el estado de todas las instalaciones.
+> Se financia con los ingresos de los primeros clientes.
+
+| Ruta | Contenido |
+|---|---|
+| 10.1 Diseño central cloud | Arquitectura del VPS DASC, modelo HTTPS productivo, topología multi-cliente |
+| 10.2 Central VPS + HTTPS productivo | Despliegue real con dominio propio, TLS válido, nginx |
+| 10.3 Panel multi-cliente | Gestión de clientes, tokens por cliente, rotación y revocación |
+| 10.4 Dashboard de salud global | Heartbeat de todas las instalaciones: último backup, alertas, soporte, último contacto |
+| 10.5 Seguridad central | 2FA para el equipo DASC, backup de la Central, auditoría de acceso |
+| 10.6 Multi-idioma | ES (principal) → CA (Cataluña) → EN. Cuando haya base de usuarios suficiente. |
+| 10.7 Modo oscuro/claro | Toggle desde el panel. Pospuesto aquí por esfuerzo vs. impacto en Fase 7. |
+
+**Gate `F10-GATE` "Central productiva":** Central accesible por HTTPS, al menos
+2 instalaciones reportando estado real, tokens gestionables, backup de la Central
+verificado.
+
+---
+
+## 9. Fase 11 — Comercial y escalado · 📦 BACKLOG
+
+> Se desglosa en `R-xxx` al planificar. Requiere ingresos reales de Fase 9+.
+
+- Oferta y onboarding de clientes nuevos sistematizado.
+- SLA y legal definitivos con asesoramiento real.
+- Marketing: web actualizada, material comercial honesto, casos de éxito.
+- Release v1.0 comercial completa — solo tras pilotos pagados y feedback aplicado.
+- Decisión Go/No-Go de escalado documentada (puede ser No-Go).
+
+---
+
+## 10. Fase 12 — Evolución · 📦 BACKLOG
+
+- **IA avanzada de soporte/diagnóstico** (RAG sobre logs del cliente, sugerencias
+  proactivas al técnico; no sustituye al humano).
+- **Instalador gráfico Windows** (GUI completo, cero terminal para el cliente).
+- **WhatsApp Business API** (canal de notificaciones e informes cuando el volumen
+  justifique el coste de la API de Meta/Twilio).
+- **Refactor de `main.py`** (deuda L-6: ~5000 líneas en un fichero). 🕓 Diferida
+  conscientemente; no se toca hasta que la funcionalidad esté estable.
+- **Integraciones y API de producto** para ecosistemas de terceros.
+- **Migración de la Central de SQLite a PostgreSQL/MariaDB** si crece la base de
   clientes.
 
 ---
 
-## 8. Perfiles de despliegue (referencia)
+## 11. Perfiles de despliegue (referencia)
 
 | Perfil | Arquitectura | Uso recomendado | Decisión |
 |---|---|---|---|
@@ -278,7 +360,7 @@ Central verificado.
 
 ---
 
-## 9. Registro de decisiones de roadmap
+## 12. Registro de decisiones de roadmap
 
 | Fecha | Decisión | Motivo |
 |---|---|---|
@@ -288,6 +370,8 @@ Central verificado.
 | 2026-06-06 | Fase 6 redefinida como "Endurecimiento y producto vendible"; ventas (R-048) al final | Calidad antes que velocidad comercial (plan de reordenación) |
 | 2026-06-06 | Se detalla solo Fase 6–7; Fase 8–9 quedan como backlog grueso | Evitar el churn de planificar 2028 al detalle |
 | 2026-06-06 | Gates: se mantiene la convención real `F6-GATE-xx`; se descartan los `G-00…G-36` genéricos del Excel integral | Eran texto de relleno idéntico, sin criterio real |
+| 2026-06-07 | Reorganización completa: Fases 7-12 redefinidas. La antigua Fase 7 (Central cloud) pasa a Fase 10. Se insertan Fases 7 (madurez producto), 8 (madurez operacional) y 9 (negocio) como bloqueantes de la primera venta | El producto no estaba listo para vender: UI cruda, instaladores manuales, sin proceso de actualización, sin infraestructura de negocio. Calidad antes que velocidad comercial. |
+| 2026-06-07 | F9-GATE "Primer cliente de pago" reemplaza a F6-GATE-06 como gate comercial real | F6-GATE-06 se cerró prematuramente; el nuevo gate exige Fases 7+8+9 completas |
 
 ---
 

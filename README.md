@@ -6,16 +6,16 @@ Panel web autohospedado para que una PyME centralice copias de seguridad, logs, 
 
 ## Estado actual
 
-**Fase 6 — Primeras ventas · Release candidate `v1.0-rc1`**
+**Fase 7 en curso — Madurez del producto · Release candidate `v1.0-rc1`**
 
 | Hito | Estado |
 |---|---|
 | Fases 0-5 (MVP → pilotos reales) | ✅ Cerradas |
-| R-053 — Instalación validada en 3 perfiles (Lite, Standard, Pro) | ✅ Cerrado 2026-06-07 |
-| R-054 — Endurecimiento: UFW, HTTPS, fail2ban, pip-audit | ✅ Cerrado 2026-06-07 |
-| R-055 — Guías de uso desde Windows | ✅ Cerrado 2026-06-07 |
-| R-056 — Limpieza repo y documentación | ✅ Cerrado 2026-06-07 |
-| R-057 — Release freeze: checklist, changelog, smoke test, tag | ✅ Cerrado 2026-06-07 |
+| Fase 6 — Hardening, validación 3 perfiles, guías, freeze | ✅ Cerrada 2026-06-07 |
+| Fase 7 — Madurez del producto (UI/UX, dashboard, informes, monitorización) | 🔵 En curso |
+| Fase 8 — Madurez operacional (instalador v2, actualizador, soporte real, IA) | ▶️ Siguiente |
+| Fase 9 — Infraestructura de negocio (dominio, web, planes, legal) | ▶️ Siguiente |
+| **F9-GATE — Primer cliente de pago** | 🔒 Bloqueado hasta Fases 7+8+9 |
 
 Seguimiento completo: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
