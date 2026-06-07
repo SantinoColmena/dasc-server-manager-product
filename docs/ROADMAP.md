@@ -239,6 +239,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 | 7.6 Configuración desde el panel | Política de retención, programación de backups y parámetros clave sin tener que editar `config.env`. El cliente no debe tocar ficheros. | $0 |
 | 7.7 Informes periódicos configurables | Desde el panel: elegir contenido del informe (backups, disco, servicios, alertas), frecuencia (diario/semanal/mensual) y canal de envío (email, Telegram). Envío automático programado + botón de envío manual bajo demanda. **Diferenciador clave:** el cliente recibe tranquilidad sin tener que entrar al panel. | $0 |
 | 7.8 Reporte de bugs desde el panel | Botón "Reportar problema" que abre un ticket con contexto del sistema adjunto automáticamente. Retroalimentación del cliente sin fricción. | $0 |
+| 7.9 Integridad y consistencia de copias | SHA256 ya existe; extender con test de consistencia lógica: `mysqlcheck`, simulación de restore mínimo, informe de salud de copias visible en el panel. El cliente ve que sus copias están sanas — diferenciador real frente a la competencia. | $0 |
 
 **Funciones pospuestas a Fase 12** (coste o esfuerzo no justificado aún):
 modo oscuro/claro, multi-idioma (ES → CA → EN), WhatsApp como canal de informes.
@@ -262,6 +263,7 @@ activo; informes configurables y enviados en prueba; responsive en móvil verifi
 | 8.4 Backup de DASC | Script que hace backup de la propia herramienta: `config.env`, SQLite de tickets, claves SSH, `users.json`, `auth_logs.json`. Plan de recuperación documentado. | $0 |
 | 8.5 Soporte de producción | Jira integrado (plan free, hasta 10 agentes) + email de soporte + bug reporting desde el panel (R-7.8) conectado a Jira. Canal de WhatsApp manual hasta que haya API justificada. | $0–6/mes |
 | 8.6 IA de triage | Bot entrenado con la documentación DASC para responder preguntas frecuentes sin llegar al desarrollador. Fundamental para escalar siendo un equipo de 1. | $0–5/mes |
+| 8.7 DRO — Orquestación de recuperación ante desastres | Runbooks ejecutables desde el panel: secuencia de recuperación automatizada paso a paso (restore → verificación → arranque de servicios), test de restauración programado, tracking de RPO/RTO real. No requiere infraestructura nueva; convierte el proceso de recuperación en algo accionable con un clic. Diferenciador enterprise asequible. | $0 |
 
 **Gate de salida `F8-GATE` "Operación sin riesgos":**
 existe proceso documentado de instalación, actualización y recuperación; backup de
@@ -346,6 +348,12 @@ verificado.
 - **Integraciones y API de producto** para ecosistemas de terceros.
 - **Migración de la Central de SQLite a PostgreSQL/MariaDB** si crece la base de
   clientes.
+- **Alta disponibilidad y redundancia** — Múltiples instancias activas del panel
+  con failover automático, replicación MariaDB primary/replica, detección de nodo
+  caído y conmutación automática. Implica cambios arquitectónicos significativos
+  (load balancer, storage compartido o replicado, health-check endpoints). Solo se
+  justifica con clientes de alta criticidad y base de ingresos consolidada. Se
+  evalúa al planificar Fase 12 en función de la demanda real.
 
 ---
 
@@ -372,6 +380,7 @@ verificado.
 | 2026-06-06 | Gates: se mantiene la convención real `F6-GATE-xx`; se descartan los `G-00…G-36` genéricos del Excel integral | Eran texto de relleno idéntico, sin criterio real |
 | 2026-06-07 | Reorganización completa: Fases 7-12 redefinidas. La antigua Fase 7 (Central cloud) pasa a Fase 10. Se insertan Fases 7 (madurez producto), 8 (madurez operacional) y 9 (negocio) como bloqueantes de la primera venta | El producto no estaba listo para vender: UI cruda, instaladores manuales, sin proceso de actualización, sin infraestructura de negocio. Calidad antes que velocidad comercial. |
 | 2026-06-07 | F9-GATE "Primer cliente de pago" reemplaza a F6-GATE-06 como gate comercial real | F6-GATE-06 se cerró prematuramente; el nuevo gate exige Fases 7+8+9 completas |
+| 2026-06-08 | Añadidas 7.9 (Integridad y consistencia de copias) y 8.7 (DRO) al roadmap | Propuesta del desarrollador: checksums + consistencia lógica son diferenciador inmediato; DRO orquestado es diferenciador enterprise sin coste. Alta disponibilidad registrada en Fase 12 — scope demasiado amplio para justificarse antes de tener base de clientes. |
 
 ---
 
