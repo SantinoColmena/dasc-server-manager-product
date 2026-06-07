@@ -153,6 +153,7 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
         "cat",
         "crontab",
         "/bin/bash",
+        "df",  # R-058 dashboard 7.2: uso de disco (solo df -h /)
     }
 
     if script not in allowed_scripts:
@@ -169,6 +170,9 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
 
     if script == "/bin/bash" and args != ["-lc", "hostname && date"]:
         raise ValueError("Uso de /bin/bash no permitido en ssh_run")
+
+    if script == "df" and args != ["-h", "/"]:
+        raise ValueError("Uso de df no permitido (solo df -h /)")
 
 
 def build_ssh_base_command(host: str) -> list[str]:
@@ -1883,6 +1887,132 @@ def home(request: Request):
     context["users_count"] = len(load_users()) + 1 if context["is_admin"] else None
     context.update(get_alert_stats())
     return templates.TemplateResponse(request, "index.html", context)
+
+
+# =====================
+# DASHBOARD STATUS (R-058 / Ruta 7.2)
+# =====================
+
+def _parse_df_output(stdout: str) -> dict[str, Any]:
+    """Parsea la salida de 'df -h /' y devuelve porcentaje, usado y total."""
+    for line in stdout.strip().splitlines():
+        parts = line.split()
+        if len(parts) >= 5 and "%" in parts[4]:
+            try:
+                percent = int(parts[4].replace("%", ""))
+                return {
+                    "available": True,
+                    "percent": percent,
+                    "used": parts[2],
+                    "total": parts[1],
+                    "free": parts[3],
+                }
+            except (ValueError, IndexError):
+                pass
+    return {"available": False}
+
+
+def _backup_age_label(date_str: str) -> str:
+    """Convierte una fecha 'YYYY-MM-DD HH:MM:SS' en 'hace X min/h/días'."""
+    try:
+        from datetime import datetime, timezone
+        dt = datetime.strptime(date_str[:19], "%Y-%m-%d %H:%M:%S")
+        # El historial no guarda timezone; asumimos UTC == local en el servidor
+        now = datetime.now()
+        diff = now - dt
+        secs = int(diff.total_seconds())
+        if secs < 60:
+            return "ahora mismo"
+        if secs < 3600:
+            return f"hace {secs // 60} min"
+        if secs < 86400:
+            return f"hace {secs // 3600}h"
+        return f"hace {secs // 86400} días"
+    except Exception:
+        return date_str[:16] if date_str else "—"
+
+
+@app.get("/api/dashboard/status")
+def dashboard_status(request: Request):
+    """Endpoint JSON para el dashboard de estado (Ruta 7.2).
+    Devuelve datos de backup, servicios, disco y alertas con timeout propio.
+    Nunca lanza excepción: si un origen falla devuelve available=false."""
+    if not is_authenticated(request):
+        return JSONResponse({"error": "no autenticado"}, status_code=401)
+
+    perms_context = get_common_context(request)
+
+    # ── Alertas (local SQLite, siempre rápido) ──────────────────────────────
+    try:
+        stats = get_alert_stats()
+        alert_block = {
+            "available": True,
+            "total": stats["alerts_total"],
+            "ok": stats["alerts_ok"],
+            "error": stats["alerts_error"],
+            "last": stats["alerts_last"],
+        }
+    except Exception:
+        alert_block = {"available": False}
+
+    # ── Último backup (SSH historial) ───────────────────────────────────────
+    backup_block: dict[str, Any] = {"available": False}
+    if perms_context.get("can_backups"):
+        try:
+            history = cargar_historial_backups(limit=1)
+            if history:
+                last = history[0]
+                status_raw = (last.get("status") or last.get("result") or "").upper()
+                status_ok = status_raw in ("OK", "SUCCESS", "0", "")
+                backup_block = {
+                    "available": True,
+                    "date": last.get("date") or last.get("start_time") or "",
+                    "age_label": _backup_age_label(
+                        last.get("date") or last.get("start_time") or ""
+                    ),
+                    "status": "OK" if status_ok else "ERROR",
+                    "type": last.get("tipo_label") or last.get("type") or "—",
+                    "db": last.get("db") or "—",
+                }
+        except Exception:
+            backup_block = {"available": False}
+
+    # ── Servicios (SSH) ─────────────────────────────────────────────────────
+    services_block: dict[str, Any] = {"available": False}
+    if perms_context.get("can_servicios"):
+        try:
+            result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+            lista: list[dict[str, str]] = []
+            for linea in result.get("text", "").split("\n"):
+                if "|" in linea:
+                    nombre, estado = linea.split("|", 1)
+                    lista.append({"nombre": nombre.strip(), "estado": estado.strip()})
+            total = len(lista)
+            active = sum(1 for s in lista if s["estado"] == "active")
+            services_block = {
+                "available": True,
+                "total": total,
+                "active": active,
+                "inactive": total - active,
+            }
+        except Exception:
+            services_block = {"available": False}
+
+    # ── Disco (SSH df -h /) ─────────────────────────────────────────────────
+    disk_block: dict[str, Any] = {"available": False}
+    try:
+        result_df = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        if result_df.get("ok"):
+            disk_block = _parse_df_output(result_df.get("stdout", "") or result_df.get("text", ""))
+    except Exception:
+        disk_block = {"available": False}
+
+    return JSONResponse({
+        "backup": backup_block,
+        "services": services_block,
+        "disk": disk_block,
+        "alerts": alert_block,
+    })
 
 
 # =====================
