@@ -70,3 +70,30 @@ Run `check_api_package_installable.ps1` after changing anything in `deploy/api/p
 ## Line endings (enforced by .gitattributes)
 
 `.sh`, `.py`, `.md`, `.yml`/`.yaml` must be **LF**; `.ps1` must be **CRLF**. The installable check fails if a bash script contains CRLF. On this Windows dev machine, preserve LF when editing shell/Python files.
+
+## Autonomía operativa (validación R-053 y siguientes)
+
+El desarrollador ha dado permiso explícito para operar con autonomía total durante
+el ciclo de validación R-053 y el trabajo en la rama `docs/roadmap-canonico`. En
+concreto, Claude puede sin pedir confirmación previa:
+
+- **VMs multipass** — lanzar, transferir ficheros (`multipass transfer`), ejecutar
+  comandos (`multipass exec`), detener y eliminar instancias.
+- **Fixes de código** — aplicar correcciones en `deploy/*/install_*.sh`, `main.py`
+  y scripts auxiliares cuando se detecte un defecto bloqueante durante la validación.
+  Criterio: el fix debe ser mínimo, comentado con el ID de defecto (`R-053x/Bx`) y
+  revertible. Si el cambio afecta a lógica de negocio o seguridad más allá del
+  defecto inmediato, parar y consultar.
+- **Commits en `docs/roadmap-canonico`** — documentación de validaciones,
+  actualizaciones de ROADMAP.md y fixes de instaladores. Nunca a `main` hasta que
+  R-053 esté completamente cerrado.
+- **Comandos sudo en las VMs de validación** — las VMs son efímeras y el
+  desarrollador tiene copia del repo; operar como root dentro de ellas es seguro.
+- **Decisiones de orden y método** — elegir la secuencia de instalación, los valores
+  de las variables de entorno de prueba y la estrategia de transferencia de ficheros
+  sin esperar aprobación paso a paso.
+
+**Límites que siguen inamovibles** (aunque el desarrollador lo pida en el momento):
+- Nunca commitear `config.env` real (solo `config.env.example`).
+- Nunca fusionar a `main` hasta cerrar R-053 completo.
+- Nunca omitir el comentario de autoría `Co-Authored-By` en commits.

@@ -205,10 +205,13 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
   rsync \
   openssh-client
 
-echo "==> Instalando cliente MySQL/MariaDB"
-if ! DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client; then
-  echo "AVISO: no se pudo instalar default-mysql-client. Probando mariadb-client."
-  DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client
+echo "==> Instalando cliente de base de datos"
+# R-053A/B1: preferimos mariadb-client. Convive con mariadb-server (caso Lite en
+# un unico host). default-mysql-client (MySQL 8.0) entra en conflicto con MariaDB
+# y en single-host desinstalaria mariadb-server. Solo como ultimo recurso.
+if ! DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client; then
+  echo "AVISO: no se pudo instalar mariadb-client. Probando default-mysql-client."
+  DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client
 fi
 
 ensure_cmd_alias() {
@@ -238,12 +241,22 @@ ensure_cmd_alias "mysql" "mariadb" || true
 ensure_cmd_alias "mysqldump" "mariadb-dump" || true
 ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
 
-for required_cmd in mysql mysqldump mysqlbinlog gzip rsync ssh; do
+# R-053B/B4: mysqlbinlog/mariadb-binlog solo existe en el paquete completo
+# mariadb-server-10.6 (Ubuntu 22.04). En Standard/Pro el host de backup no tiene
+# servidor local, asi que el binario no esta disponible. Los scripts de runtime
+# (backups_api.sh, restore_api.sh) no usan mysqlbinlog directamente: los backups
+# completos usan mysqldump y las operaciones de binlog se realizan en el host DB.
+# Se mantiene como comprobacion opcional (AVISO), no bloqueante.
+for required_cmd in mysql mysqldump gzip rsync ssh; do
   if ! command -v "$required_cmd" >/dev/null 2>&1; then
     echo "ERROR: falta comando requerido: $required_cmd"
     exit 1
   fi
 done
+if ! command -v mysqlbinlog >/dev/null 2>&1; then
+  echo "AVISO: mysqlbinlog no disponible en este host (esperado en Standard/Pro)."
+  echo "       Los scripts de backup usan mysqldump; el binlog remoto se gestiona en el host DB."
+fi
 
 echo "==> Habilitando SSH"
 systemctl enable --now ssh
@@ -252,7 +265,7 @@ echo "==> Habilitando CRON"
 systemctl enable --now cron
 
 if [[ -f "$SSHD_CONFIG" ]]; then
-  echo "==> Asegurando autenticaciÃ³n por contraseÃ±a y clave pÃºblica en SSH"
+  echo "==> Asegurando autenticación por contraseña y clave pública en SSH"
   if grep -qE '^[#[:space:]]*PasswordAuthentication' "$SSHD_CONFIG"; then
     sed -i -E 's|^[#[:space:]]*PasswordAuthentication[[:space:]]+.*|PasswordAuthentication yes|g' "$SSHD_CONFIG"
   else
@@ -265,6 +278,19 @@ if [[ -f "$SSHD_CONFIG" ]]; then
     echo 'PubkeyAuthentication yes' >> "$SSHD_CONFIG"
   fi
 
+  # R-053A/B3: las imagenes cloud de Ubuntu traen un drop-in
+  # (60-cloudimg-settings.conf) con PasswordAuthentication no que, al leerse antes
+  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-dasc
+  # que se lee el primero para garantizar la auth por contrasena del bootstrap.
+  SSHD_DROPIN_DIR="/etc/ssh/sshd_config.d"
+  if [[ -d "$SSHD_DROPIN_DIR" ]]; then
+    cat > "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf" <<'SSHDROP'
+PasswordAuthentication yes
+PubkeyAuthentication yes
+SSHDROP
+    chmod 644 "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf"
+  fi
+
   systemctl restart ssh
 fi
 
@@ -275,24 +301,24 @@ fi
 
 if [[ -z "${APP_PASSWORD:-}" ]]; then
   echo
-  read -rsp "Introduce la contraseÃ±a para ${APP_USER}: " APP_PASSWORD
+  read -rsp "Introduce la contraseña para ${APP_USER}: " APP_PASSWORD
   echo
-  read -rsp "Repite la contraseÃ±a para ${APP_USER}: " APP_PASSWORD_CONFIRM
+  read -rsp "Repite la contraseña para ${APP_USER}: " APP_PASSWORD_CONFIRM
   echo
 
   if [[ "$APP_PASSWORD" != "$APP_PASSWORD_CONFIRM" ]]; then
-    echo "ERROR: las contraseÃ±as no coinciden."
+    echo "ERROR: las contraseñas no coinciden."
     exit 1
   fi
 fi
 
 if [[ -z "$APP_PASSWORD" ]]; then
-  echo "ERROR: la contraseÃ±a de ${APP_USER} no puede estar vacÃ­a."
+  echo "ERROR: la contraseña de ${APP_USER} no puede estar vacía."
   exit 1
 fi
 
 echo "${APP_USER}:${APP_PASSWORD}" | chpasswd
-echo "==> ContraseÃ±a de ${APP_USER} configurada"
+echo "==> Contraseña de ${APP_USER} configurada"
 
 mkdir -p "${APP_HOME}/.ssh"
 mkdir -p "${BACKUP_DIR}"
@@ -362,7 +388,7 @@ EOF2
 chown "${APP_USER}:${APP_GROUP}" "${APP_HOME}/.my_restore.cnf"
 chmod 600 "${APP_HOME}/.my_restore.cnf"
 
-echo "==> Configurando sudoers para controlar servicios sin contraseÃ±a"
+echo "==> Configurando sudoers para controlar servicios sin contraseña"
 cat > "${SUDOERS_FILE}" <<EOF2
 ${APP_USER} ALL=(ALL) NOPASSWD: /usr/bin/systemctl start *, /usr/bin/systemctl stop *, /usr/bin/systemctl restart *, /usr/bin/systemctl status *, /usr/bin/systemctl is-active *
 EOF2
@@ -370,20 +396,22 @@ chmod 440 "${SUDOERS_FILE}"
 visudo -cf "${SUDOERS_FILE}"
 
 if [[ -f "${OPTIONAL_API_PUBKEY}" ]]; then
-  echo "==> Instalando clave pÃºblica opcional desde api_panel.pub"
+  echo "==> Instalando clave pública opcional desde api_panel.pub"
   touch "${APP_HOME}/.ssh/authorized_keys"
   chown "${APP_USER}:${APP_GROUP}" "${APP_HOME}/.ssh/authorized_keys"
   chmod 600 "${APP_HOME}/.ssh/authorized_keys"
   grep -qxF "$(cat "${OPTIONAL_API_PUBKEY}")" "${APP_HOME}/.ssh/authorized_keys" || \
     cat "${OPTIONAL_API_PUBKEY}" >> "${APP_HOME}/.ssh/authorized_keys"
 else
-  echo "==> No se encontrÃ³ api_panel.pub. La API podrÃ¡ copiar su clave automÃ¡ticamente con sshpass."
+  echo "==> No se encontró api_panel.pub. La API podrá copiar su clave automáticamente con sshpass."
 fi
 
 echo "==> Validando herramientas de base de datos"
 command -v mysql >/dev/null || { echo "ERROR: falta mysql"; exit 1; }
 command -v mysqldump >/dev/null || { echo "ERROR: falta mysqldump"; exit 1; }
-command -v mysqlbinlog >/dev/null || { echo "ERROR: falta mysqlbinlog"; exit 1; }
+# R-053B/B4: mysqlbinlog solo esta en mariadb-server (Ubuntu 22.04); en
+# Standard/Pro no hay servidor local. Los scripts de runtime no lo requieren.
+command -v mysqlbinlog >/dev/null || echo "AVISO: mysqlbinlog no disponible (esperado en Standard/Pro)."
 command -v crontab >/dev/null || { echo "ERROR: falta crontab"; exit 1; }
 
 echo "==> Validaciones"
@@ -405,7 +433,7 @@ else
   echo "AVISO: la prueba mysql ha fallado. Revisa DB_HOST, usuario o permisos."
 fi
 
-echo "==> Comprobando usuario de restauraciÃ³n"
+echo "==> Comprobando usuario de restauración"
 if sudo -u "${APP_USER}" mysql --defaults-extra-file="${APP_HOME}/.my_restore.cnf" --protocol=tcp -h "${DB_HOST}" -e "SHOW DATABASES;" >/dev/null; then
   echo "Prueba usuario restore OK"
 else
@@ -425,10 +453,10 @@ if [[ -n "$FIRST_BINLOG" ]]; then
   if sudo -u "${APP_USER}" mysqlbinlog --defaults-extra-file="${APP_HOME}/.my.cnf" --read-from-remote-server --host="${DB_HOST}" --port=3306 "$FIRST_BINLOG" >/dev/null 2>&1; then
     echo "Prueba mysqlbinlog OK"
   else
-    echo "AVISO: mysqlbinlog devolviÃ³ avisos/error de versiÃ³n, pero puede funcionar igualmente con MariaDB."
+    echo "AVISO: mysqlbinlog devolvió avisos/error de versión, pero puede funcionar igualmente con MariaDB."
   fi
 else
-  echo "AVISO: no se han detectado binlogs. Revisa log_bin en la mÃ¡quina DB."
+  echo "AVISO: no se han detectado binlogs. Revisa log_bin en la máquina DB."
 fi
 
 echo
@@ -449,5 +477,5 @@ echo "DB_HOST=${DB_HOST}"
 echo "DB_NAME=${DB_NAME}"
 echo "Backups en: ${BACKUP_DIR}"
 echo "Scripts: ${INSTALL_BACKUP_SCRIPT}, ${INSTALL_RESTORE_SCRIPT}, ${INSTALL_RESTORE_DRILL_SCRIPT} y ${INSTALL_SERVICES_SCRIPT}"
-echo "SSH listo para autenticaciÃ³n por contraseÃ±a y clave pÃºblica"
+echo "SSH listo para autenticación por contraseña y clave pública"
 echo "============================================"

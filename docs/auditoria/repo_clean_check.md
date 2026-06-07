@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio DASC
 
-Fecha: 2026-05-23 14:47:05
+Fecha: 2026-06-07 12:13:39
 
 Ruta revisada:
 
@@ -10,7 +10,19 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ## 1. Estado Git
 
-- OK: el repositorio está limpio o solo está pendiente el propio informe de auditoría.
+- AVISO: hay cambios pendientes.
+
+~~~text
+ M deploy/api/package/requirements.txt
+ M deploy/proxy/install_reverse_proxy.sh
+ M docs/ROADMAP.md
+ M docs/validaciones/validacion_paquete_api_instalable.md
+?? deploy/api/harden_fail2ban_api.sh
+?? deploy/api/harden_ufw_api.sh
+?? deploy/backup-services/harden_ufw_backup.sh
+?? deploy/db/harden_ufw_db.sh
+?? docs/validaciones/R-054_validacion_endurecimiento.md
+~~~
 
 ## 2. Estructura mínima obligatoria
 
@@ -66,9 +78,12 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - REVISAR: hay variables sensibles en código o instaladores. Es aceptable si se generan, se leen del entorno o se usan como nombre de variable, no como secreto real.
 
   - deploy\api\install_dasc_api.sh -> contiene patrón `ADMIN_PASSWORD=`
+  - deploy\api\install_dasc_api.sh -> contiene patrón `LOGS_DB_PASS=`
   - deploy\api\install_dasc_api.sh -> contiene patrón `SECRET_KEY=`
   - deploy\api\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\backup-services\install_backup_services.sh -> contiene patrón `DB_BACKUP_PASS=`
+  - deploy\central-support\install_central_support.sh -> contiene patrón `SECRET_KEY=`
+  - deploy\central-support\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\db\install_db.sh -> contiene patrón `LOGS_DB_PASS=`
 
 ### 5.3 Documentación
@@ -77,10 +92,26 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
   - docs\pilotos\R-042_correccion_fallos_piloto_1.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\pilotos\piloto_1\incidencias.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `ADMIN_PASSWORD=`
+  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `SECRET_KEY=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `ADMIN_PASSWORD=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `SECRET_KEY=`
   - docs\tecnico\r-007_mejoras_install_dasc_api.md -> contiene patrón `ADMIN_PASSWORD=`
+  - docs\validaciones\F6-GATE-02A_cierre_api_db_logs_2_servidores.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\F6-GATE-04H_cierre_limpieza_ssh_allowed_hosts.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-051A_auditoria_ips_variables_instaladores.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-051A_auditoria_ips_variables_instaladores.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\validaciones\R-051E_adaptar_instalador_db_perfiles.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-051E_cierre_adaptar_instalador_db_perfiles.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-051F_adaptar_instalador_backup_services_perfiles.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\validaciones\R-051F_cierre_adaptar_instalador_backup_services_perfiles.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\validaciones\R-051H_cierre_global_instaladores_adaptables.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-051H_cierre_global_instaladores_adaptables.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\validaciones\R-053D_checklist_instalacion_desde_cero.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\validaciones\R-053D_checklist_instalacion_desde_cero.md -> contiene patrón `DB_BACKUP_PASS=`
 
 ### 5.4 Riesgo real
 

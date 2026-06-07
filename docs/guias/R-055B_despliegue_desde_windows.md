@@ -1,0 +1,233 @@
+# R-055B — Despliegue de DASC desde un PC Windows
+
+> **Destinatario:** técnico o reseller que instala DASC en servidores Linux
+> desde un PC de desarrollo o administración con Windows 10/11.
+>
+> Para la guía del usuario final, ver [`R-055A`](R-055A_acceso_navegador_windows.md).
+
+---
+
+## Herramientas necesarias en Windows
+
+No hace falta instalar nada especial. Windows 10 (versión 1809 o posterior) y
+Windows 11 incluyen de serie todo lo necesario:
+
+| Herramienta | Dónde está | Para qué |
+|---|---|---|
+| **SSH client** | Activado por defecto en W10/W11 | Conectarse a los servidores Linux |
+| **SCP** | Incluido con el cliente SSH | Copiar ficheros al servidor |
+| **Windows Terminal** | Microsoft Store (recomendado) o `cmd.exe` / PowerShell | Ejecutar los comandos |
+
+> Si SSH no está disponible: *Configuración → Aplicaciones → Características opcionales → Añadir → "Servidor OpenSSH cliente"*. Reinicia si es necesario.
+
+**Herramientas opcionales (GUI):**
+- **WinSCP** — gestor de ficheros gráfico para transferir archivos al servidor.
+- **PuTTY** — cliente SSH con interfaz gráfica, útil para sesiones largas.
+
+---
+
+## Qué ocurre en cada servidor
+
+DASC se instala íntegramente en el/los servidores Linux mediante scripts bash.
+Desde Windows solo necesitas:
+
+1. **Conectarte por SSH** a cada servidor.
+2. **Copiar el repositorio** DASC al servidor (una sola vez).
+3. **Ejecutar los instaladores** con los parámetros del entorno.
+
+Todo el software (Python, MariaDB, nginx, fail2ban, etc.) lo instalan los propios
+scripts de DASC en el servidor Linux. El PC Windows solo actúa de terminal remota.
+
+---
+
+## 1. Preparar el PC Windows
+
+Abre **Windows Terminal** (o PowerShell / cmd) y comprueba que SSH funciona:
+
+```powershell
+ssh -V
+# OpenSSH_for_Windows_9.x, LibreSSL ...  ← correcto
+```
+
+Si el servidor Linux usa autenticación por clave (recomendado), genera un par de claves
+si aún no tienes:
+
+```powershell
+ssh-keygen -t ed25519 -C "tecnico-dasc"
+# Guarda la clave en la ruta por defecto (Enter) y define una passphrase
+```
+
+Copia la clave pública al servidor:
+
+```powershell
+# Reemplaza con el usuario y la IP del servidor
+ssh-copy-id ubuntu@192.168.1.50
+# Si ssh-copy-id no está disponible en tu versión:
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh ubuntu@192.168.1.50 "cat >> ~/.ssh/authorized_keys"
+```
+
+---
+
+## 2. Descargar / obtener el repositorio DASC
+
+Tienes dos opciones para llevar el código al servidor:
+
+### Opción A — Clonar directamente en el servidor (si tiene acceso a Internet)
+
+```powershell
+# Conéctate al servidor
+ssh ubuntu@192.168.1.50
+
+# En el servidor Linux:
+git clone https://github.com/<tu-org>/dasc-server-manager-product.git ~/dasc
+# O usa el tag/commit específico de la release:
+git -C ~/dasc checkout v1.0-rc1
+```
+
+### Opción B — Transferir el archivo desde Windows con SCP (red sin acceso a Internet)
+
+En Windows, desde el directorio local del repo:
+
+```powershell
+# Crear un tarball del repo (sin git archive para incluir ficheros no commiteados si fuera necesario):
+git archive --format=tar.gz -o C:\Temp\dasc-src.tgz HEAD
+
+# Copiar al servidor
+scp C:\Temp\dasc-src.tgz ubuntu@192.168.1.50:/home/ubuntu/dasc-src.tgz
+
+# En el servidor (via SSH):
+ssh ubuntu@192.168.1.50 "mkdir -p ~/dasc && tar xzf ~/dasc-src.tgz -C ~/dasc"
+```
+
+---
+
+## 3. Instalación por perfil
+
+La instalación se ejecuta **en el servidor Linux** via SSH. Usa la guía de referencia:
+
+> **[`docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`](../validaciones/R-053D_checklist_instalacion_desde_cero.md)**
+>
+> Este documento contiene los comandos exactos para los 3 perfiles (Lite, Standard, Pro),
+> el orden correcto de los instaladores, y las variables de entorno necesarias.
+
+### Flujo típico para un perfil Standard (2 servidores)
+
+Desde Windows Terminal, abres **dos pestañas SSH** — una por servidor:
+
+**Pestaña 1 — servidor DB (`192.168.1.51`):**
+```bash
+ssh ubuntu@192.168.1.51
+cd ~/dasc/deploy/db
+sudo -E DASC_PROFILE=standard APP_PASSWORD='<pass-dasc>' \
+    BACKUP_ALLOWED_HOST=192.168.1.50 LOGS_ALLOWED_HOST=192.168.1.50 \
+    bash install_db.sh
+# Cuando termine: anota las credenciales de /root/dasc-db-install-secrets.env
+```
+
+**Pestaña 2 — servidor panel+backup (`192.168.1.50`):**
+```bash
+ssh ubuntu@192.168.1.50
+cd ~/dasc/deploy/backup-services
+sudo -E DASC_PROFILE=standard APP_PASSWORD='<pass-dasc>' \
+    DB_HOST=192.168.1.51 ... bash install_backup_services.sh
+
+cd ~/dasc/deploy/api
+sudo -E DASC_PROFILE=standard ... bash install_dasc_api.sh </dev/null
+```
+
+---
+
+## 4. Transferir secretos entre servidores (si necesario)
+
+En despliegues Standard y Pro, el instalador de DB genera un fichero de secretos
+`/root/dasc-db-install-secrets.env` que los otros instaladores necesitan.
+Para copiarlo entre servidores **desde Windows** como intermediario:
+
+```powershell
+# 1. En el servidor DB: copiar el fichero a /home/ubuntu/ (accesible por SCP)
+ssh ubuntu@192.168.1.51 "sudo cp /root/dasc-db-install-secrets.env /home/ubuntu/ && sudo chown ubuntu: /home/ubuntu/dasc-db-install-secrets.env"
+
+# 2. Desde Windows: descargarlo
+scp ubuntu@192.168.1.51:/home/ubuntu/dasc-db-install-secrets.env C:\Temp\dasc-db-secrets.env
+
+# 3. Subirlo al servidor de panel/backup
+scp C:\Temp\dasc-db-secrets.env ubuntu@192.168.1.50:/home/ubuntu/dasc-db-install-secrets.env
+
+# 4. En el servidor de panel: moverlo a /root/ para que el instalador lo encuentre
+ssh ubuntu@192.168.1.50 "sudo mv /home/ubuntu/dasc-db-install-secrets.env /root/"
+
+# 5. Eliminar la copia local (contiene credenciales)
+Remove-Item C:\Temp\dasc-db-secrets.env
+```
+
+---
+
+## 5. Endurecimiento post-instalación (R-054)
+
+Una vez instalado DASC, aplica los scripts de hardening desde cada servidor:
+
+```bash
+# En el servidor del panel (API host):
+cd ~/dasc/deploy/proxy
+sudo bash install_reverse_proxy.sh          # HTTPS + activa HTTPS_ONLY
+
+cd ~/dasc/deploy/api
+sudo bash harden_ufw_api.sh                 # UFW: 22/80/443
+sudo bash harden_fail2ban_api.sh            # fail2ban: sshd + dasc-auth
+
+# En el servidor DB:
+cd ~/dasc/deploy/db
+sudo MARIADB_ALLOWED_HOSTS="192.168.1.50" bash harden_ufw_db.sh
+
+# En el servidor de backup (si es separado — perfil Pro):
+cd ~/dasc/deploy/backup-services
+sudo bash harden_ufw_backup.sh
+```
+
+---
+
+## 6. Verificar desde el navegador Windows
+
+Tras instalar, comprueba que el panel responde:
+
+1. Abre Chrome, Edge o Firefox en Windows.
+2. Accede a `https://192.168.1.50` (o el dominio si tienes uno).
+3. Si aparece el aviso de certificado autofirmado → sigue los pasos de [`R-055A §2`](R-055A_acceso_navegador_windows.md#2-el-aviso-del-navegador-sobre-el-certificado).
+4. Inicia sesión con el usuario admin y la contraseña configurada.
+5. Lanza un backup de prueba para confirmar que el circuito completo funciona.
+
+---
+
+## 7. Actualizaciones futuras
+
+Para actualizar DASC a una nueva versión desde Windows:
+
+```powershell
+# 1. Crear tarball del nuevo código:
+git archive --format=tar.gz -o C:\Temp\dasc-src-nuevo.tgz HEAD
+
+# 2. Subir al servidor:
+scp C:\Temp\dasc-src-nuevo.tgz ubuntu@192.168.1.50:/home/ubuntu/
+
+# 3. En el servidor: extraer, hacer backup de config.env, re-ejecutar instalador
+ssh ubuntu@192.168.1.50
+#   cp /opt/dasc/api/config.env ~/config.env.bak
+#   mkdir -p ~/dasc-nuevo && tar xzf ~/dasc-src-nuevo.tgz -C ~/dasc-nuevo
+#   cd ~/dasc-nuevo/deploy/api && sudo bash install_dasc_api.sh </dev/null
+```
+
+> El instalador es idempotente: conserva `config.env`, `SECRET_KEY` y
+> `known_hosts` en re-ejecuciones.
+
+---
+
+## Resumen rápido
+
+| Paso | Dónde | Herramienta Windows |
+|---|---|---|
+| Generar clave SSH | PC Windows | `ssh-keygen` en Terminal |
+| Copiar repo al servidor | Windows → servidor | `scp` o WinSCP |
+| Ejecutar instaladores | En el servidor Linux | `ssh` + sesión interactiva |
+| Transferir secretos entre servidores | Windows como intermediario | `scp` doble |
+| Hardening (UFW, nginx, fail2ban) | En cada servidor Linux | `ssh` |
+| Verificar el panel | PC Windows | Navegador (Chrome/Edge/Firefox) |

@@ -1,9 +1,12 @@
 fastapi==0.135.1
-starlette==0.52.1
+# R-054D: starlette actualizado 0.52.1→1.0.1 (PYSEC-2026-161). Salto de versión mayor;
+# compatibilidad con fastapi 0.135.1 verificada (pip --dry-run). Requiere prueba en VM.
+starlette==1.0.1
 uvicorn==0.42.0
 jinja2==3.1.6
 python-dotenv==1.2.2
-python-multipart==0.0.22
+# R-054D: python-multipart actualizado 0.0.22→0.0.27 (CVE-2026-40347, CVE-2026-42561).
+python-multipart==0.0.27
 pymysql==1.1.2
 itsdangerous==2.2.0
 passlib[bcrypt]==1.7.4
