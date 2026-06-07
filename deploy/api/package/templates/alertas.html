@@ -66,6 +66,13 @@
         <h2 class="page-title">Alertas y avisos</h2>
         <p class="page-subtitle">Define quién recibe avisos y cuándo. Nosotros nos encargamos del resto.</p>
     </div>
+    {% if is_admin %}
+    <div class="topbar-actions">
+        <a class="btn" href="/alertas/proactivas">
+            <i class="fa-solid fa-bell"></i> Notificaciones automáticas
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <section class="grid-3">

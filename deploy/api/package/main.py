@@ -11,6 +11,11 @@ import subprocess
 import shlex
 import secrets
 import posixpath
+import smtplib
+import threading
+import time as _time_mod
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from datetime import datetime
 from typing import Any
@@ -34,6 +39,10 @@ async def lifespan(app: FastAPI):
     ensure_users_file()
     init_alerts_db()
     ensure_default_recipient()
+    # R-060: arranque del hilo de notificaciones proactivas (solo si está habilitado)
+    if NOTIF_ENABLED:
+        t = threading.Thread(target=_proactivo_worker, daemon=True, name="dasc-notif")
+        t.start()
     yield
 
 
@@ -136,6 +145,21 @@ SSH_ALLOWED_HOSTS = {
     for item in os.getenv("DASC_SSH_ALLOWED_HOSTS", _default_ssh_hosts).split(",")
     if item.strip()
 }
+
+
+# =====================
+# CONFIG NOTIFICACIONES PROACTIVAS (R-060 / Ruta 7.5)
+# =====================
+NOTIF_ENABLED        = os.getenv("NOTIF_ENABLED", "false").lower() == "true"
+NOTIF_EMAIL_TO       = os.getenv("NOTIF_EMAIL_TO", "").strip()
+NOTIF_EMAIL_FROM     = os.getenv("NOTIF_EMAIL_FROM", "").strip()
+NOTIF_SMTP_HOST      = os.getenv("NOTIF_SMTP_HOST", "").strip()
+NOTIF_SMTP_PORT      = int(os.getenv("NOTIF_SMTP_PORT", "587"))
+NOTIF_SMTP_USER      = os.getenv("NOTIF_SMTP_USER", "").strip()
+NOTIF_SMTP_PASS      = os.getenv("NOTIF_SMTP_PASS", "").strip()
+NOTIF_DISK_THRESHOLD = int(os.getenv("NOTIF_DISK_THRESHOLD", "80"))
+NOTIF_CHECK_INTERVAL = int(os.getenv("NOTIF_CHECK_INTERVAL", "900"))   # segundos (15 min)
+NOTIF_COOLDOWN       = int(os.getenv("NOTIF_COOLDOWN", "14400"))        # segundos entre alertas iguales (4 h)
 
 
 def is_allowed_ssh_host(host: str) -> bool:
@@ -2151,6 +2175,268 @@ def monitoreo_metrics(request: Request):
         "uptime": uptime_block,
         "ts":     _time.time(),
     })
+
+
+# =====================
+# NOTIFICACIONES PROACTIVAS (R-060 / Ruta 7.5)
+# =====================
+
+# Estado en memoria (se reinicia con el panel; suficiente para uso operacional)
+_proactivo_estado: dict[str, Any] = {
+    "enabled":    NOTIF_ENABLED,
+    "last_run":   None,          # ISO-string última ejecución
+    "runs_total": 0,
+    "checks": {
+        "disk":     {"last_value": None, "last_ok": None, "last_ts": None, "alerts_sent": 0},
+        "backup":   {"last_value": None, "last_ok": None, "last_ts": None, "alerts_sent": 0},
+        "services": {"last_value": None, "last_ok": None, "last_ts": None, "alerts_sent": 0,
+                     "inactive_list": []},
+    },
+    "alert_log": [],   # lista de dicts {ts, tipo, canal, ok}
+}
+
+_last_alert_time: dict[str, float] = {}  # condition_key → timestamp último envío
+
+
+def _can_alert(key: str) -> bool:
+    return (_time_mod.time() - _last_alert_time.get(key, 0.0)) >= NOTIF_COOLDOWN
+
+
+def _mark_alerted(key: str) -> None:
+    _last_alert_time[key] = _time_mod.time()
+
+
+# ── Email ──────────────────────────────────────────────────────────────────
+
+def _send_email_alert(subject: str, body_html: str) -> bool:
+    """Envía un email de alerta vía SMTP. Devuelve True si el envío tuvo éxito."""
+    if not all([NOTIF_EMAIL_TO, NOTIF_SMTP_HOST, NOTIF_SMTP_USER, NOTIF_SMTP_PASS]):
+        return False
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"[DASC Alert] {subject}"
+        msg["From"]    = NOTIF_EMAIL_FROM or NOTIF_SMTP_USER
+        msg["To"]      = NOTIF_EMAIL_TO
+        msg.attach(MIMEText(body_html, "html", "utf-8"))
+
+        with smtplib.SMTP(NOTIF_SMTP_HOST, NOTIF_SMTP_PORT, timeout=20) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(NOTIF_SMTP_USER, NOTIF_SMTP_PASS)
+            smtp.sendmail(msg["From"], [NOTIF_EMAIL_TO], msg.as_string())
+        return True
+    except Exception:
+        return False
+
+
+def _html_email(title: str, body: str) -> str:
+    """Genera el HTML base para emails de alerta DASC."""
+    return f"""<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<style>
+  body {{ font-family: -apple-system, sans-serif; background:#f3f4f6; margin:0; padding:24px; }}
+  .card {{ background:#fff; border-radius:14px; padding:28px 32px; max-width:540px; margin:0 auto; }}
+  h1 {{ color:#1e1b4b; font-size:18px; margin:0 0 16px; }}
+  p {{ color:#374151; font-size:14px; line-height:1.6; }}
+  .badge {{ display:inline-block; padding:4px 12px; border-radius:99px; font-size:12px; font-weight:700; }}
+  .badge.error {{ background:#fee2e2; color:#b91c1c; }}
+  .badge.warn {{ background:#fef3c7; color:#b45309; }}
+  .footer {{ color:#9ca3af; font-size:11px; margin-top:20px; border-top:1px solid #e5e7eb; padding-top:12px; }}
+</style>
+</head>
+<body><div class="card">
+  <h1>🚨 {title}</h1>
+  {body}
+  <div class="footer">DASC Server Manager · Notificación automática · No responder a este correo.</div>
+</div></body></html>"""
+
+
+# ── Envío combinado Telegram + Email ────────────────────────────────────────
+
+def _send_proactive_alert(tipo: str, tg_text: str, email_subject: str, email_body: str) -> None:
+    """Envía alerta por Telegram (si hay destinatario) y por email (si está config)."""
+    log_entry: dict[str, Any] = {
+        "ts":   datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "tipo": tipo,
+        "tg":   False,
+        "mail": False,
+    }
+    # Telegram
+    default = get_default_recipient("telegram")
+    if default:
+        r = send_telegram_message(tg_text, default["destination"])
+        log_entry["tg"] = bool(r.get("ok"))
+
+    # Email
+    if NOTIF_EMAIL_TO and NOTIF_SMTP_HOST:
+        log_entry["mail"] = _send_email_alert(email_subject, _html_email(email_subject, email_body))
+
+    _proactivo_estado["alert_log"].append(log_entry)
+    if len(_proactivo_estado["alert_log"]) > 30:
+        _proactivo_estado["alert_log"] = _proactivo_estado["alert_log"][-30:]
+
+
+# ── Comprobaciones individuales ─────────────────────────────────────────────
+
+def _check_disk_proactive() -> None:
+    check = _proactivo_estado["checks"]["disk"]
+    try:
+        r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        if not r.get("ok"):
+            check["last_ok"] = None
+            return
+        info = _parse_df_output(r["stdout"])
+        if not info.get("available"):
+            check["last_ok"] = None
+            return
+        pct = info.get("percent", 0)
+        check["last_value"] = f"{pct}% ({info.get('used','?')} de {info.get('total','?')})"
+        check["last_ts"] = datetime.now().isoformat()
+        ok = pct < NOTIF_DISK_THRESHOLD
+        check["last_ok"] = ok
+        if not ok and _can_alert("disk"):
+            _mark_alerted("disk")
+            check["alerts_sent"] += 1
+            tg = (f"🚨 <b>DASC — Disco casi lleno</b>\n\n"
+                  f"El disco del servidor está al <b>{pct}%</b> de capacidad.\n"
+                  f"Umbral configurado: {NOTIF_DISK_THRESHOLD}%.\n\n"
+                  f"<i>Elimina archivos o amplía el espacio antes de que se llene.</i>")
+            mail_body = (f"<p>El disco del servidor ha superado el umbral configurado.</p>"
+                         f"<p><span class='badge error'>Disco al {pct}%</span></p>"
+                         f"<p>Umbral: {NOTIF_DISK_THRESHOLD}% &nbsp;|&nbsp; "
+                         f"Usado: {info.get('used','?')} de {info.get('total','?')}</p>"
+                         f"<p>Revisa el servidor y libera espacio cuanto antes.</p>")
+            _send_proactive_alert("disco", tg, f"Disco casi lleno ({pct}%)", mail_body)
+    except Exception:
+        check["last_ok"] = None
+
+
+def _check_backup_proactive() -> None:
+    check = _proactivo_estado["checks"]["backup"]
+    try:
+        history = cargar_historial_backups(limit=1)
+        if not history:
+            check["last_ok"] = None
+            return
+        last = history[0]
+        status_raw = (last.get("status") or last.get("result") or "").upper()
+        ok = status_raw in ("OK", "SUCCESS", "0", "")
+        date_str = last.get("date") or last.get("start_time") or "—"
+        check["last_value"] = f"{status_raw or 'OK'} · {date_str[:16]}"
+        check["last_ts"]    = datetime.now().isoformat()
+        check["last_ok"]    = ok
+        if not ok and _can_alert("backup"):
+            _mark_alerted("backup")
+            check["alerts_sent"] += 1
+            tipo_label = last.get("tipo_label") or last.get("type") or "—"
+            tg = (f"🚨 <b>DASC — Copia de seguridad fallida</b>\n\n"
+                  f"La última copia registrada ha terminado con error.\n"
+                  f"Tipo: <b>{tipo_label}</b> &nbsp;|&nbsp; Fecha: {date_str[:16]}\n\n"
+                  f"<i>Revisa el servidor de backups y comprueba el historial.</i>")
+            mail_body = (f"<p>La última copia de seguridad ha terminado con error.</p>"
+                         f"<p><span class='badge error'>Estado: {status_raw}</span></p>"
+                         f"<p>Tipo: {tipo_label} &nbsp;|&nbsp; Fecha: {date_str[:16]}</p>"
+                         f"<p>Accede al panel de DASC y revisa el historial de copias.</p>")
+            _send_proactive_alert("backup", tg, "Copia de seguridad fallida", mail_body)
+    except Exception:
+        check["last_ok"] = None
+
+
+def _check_services_proactive() -> None:
+    check = _proactivo_estado["checks"]["services"]
+    try:
+        result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+        lista: list[dict[str, str]] = []
+        for linea in result.get("text", "").split("\n"):
+            if "|" in linea:
+                nombre, estado = linea.split("|", 1)
+                lista.append({"nombre": nombre.strip(), "estado": estado.strip()})
+        if not lista:
+            check["last_ok"] = None
+            return
+        inactive = [s["nombre"] for s in lista if s["estado"] != "active"]
+        ok = len(inactive) == 0
+        check["last_value"]     = f"{len(lista) - len(inactive)}/{len(lista)} activos"
+        check["last_ts"]        = datetime.now().isoformat()
+        check["last_ok"]        = ok
+        check["inactive_list"]  = inactive
+        if not ok and _can_alert("services"):
+            _mark_alerted("services")
+            check["alerts_sent"] += 1
+            inactive_str = ", ".join(inactive)
+            tg = (f"🚨 <b>DASC — Servicio(s) caído(s)</b>\n\n"
+                  f"Se ha detectado {'un servicio inactivo' if len(inactive)==1 else f'{len(inactive)} servicios inactivos'}:\n"
+                  f"<b>{inactive_str}</b>\n\n"
+                  f"<i>Revisa el servidor y reinicia el servicio si es necesario.</i>")
+            mail_body = (f"<p>Se ha detectado {'un servicio inactivo' if len(inactive)==1 else f'{len(inactive)} servicios inactivos'}.</p>"
+                         f"<p><span class='badge error'>Inactivos: {inactive_str}</span></p>"
+                         f"<p>Accede al panel &gt; Servicios y reinicia los servicios afectados.</p>")
+            _send_proactive_alert("servicios", tg,
+                                  f"Servicio caído: {inactive_str}", mail_body)
+    except Exception:
+        check["last_ok"] = None
+
+
+def _run_proactive_checks() -> None:
+    """Ejecuta las tres comprobaciones y actualiza el estado en memoria."""
+    _proactivo_estado["last_run"]   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    _proactivo_estado["runs_total"] += 1
+    _check_disk_proactive()
+    _check_backup_proactive()
+    _check_services_proactive()
+
+
+def _proactivo_worker() -> None:
+    """Hilo daemon de comprobaciones periódicas (se inicia solo si NOTIF_ENABLED=true)."""
+    _time_mod.sleep(90)           # espera inicial para no sobrecargar el arranque
+    while True:
+        try:
+            _run_proactive_checks()
+        except Exception:
+            pass
+        _time_mod.sleep(NOTIF_CHECK_INTERVAL)
+
+
+# ── Rutas ────────────────────────────────────────────────────────────────────
+
+@app.get("/alertas/proactivas")
+def alertas_proactivas_page(request: Request):
+    """Página de configuración y estado de notificaciones proactivas (Ruta 7.5)."""
+    if not is_admin(request):
+        return permission_redirect()
+    context = get_common_context(request)
+    context["estado"]            = _proactivo_estado
+    context["notif_enabled"]     = NOTIF_ENABLED
+    context["notif_email_to"]    = NOTIF_EMAIL_TO
+    context["notif_smtp_host"]   = NOTIF_SMTP_HOST
+    context["notif_threshold"]   = NOTIF_DISK_THRESHOLD
+    context["notif_interval_min"] = NOTIF_CHECK_INTERVAL // 60
+    context["notif_cooldown_h"]  = NOTIF_COOLDOWN // 3600
+    context["has_email"]         = bool(NOTIF_EMAIL_TO and NOTIF_SMTP_HOST)
+    context["has_telegram"]      = bool(get_default_recipient("telegram"))
+    return templates.TemplateResponse(request, "alertas_proactivas.html", context)
+
+
+@app.post("/alertas/proactivas/check")
+def alertas_proactivas_check(request: Request):
+    """Dispara una comprobación inmediata (solo admins)."""
+    if not is_admin(request):
+        return JSONResponse({"error": "sin permiso"}, status_code=403)
+    try:
+        _run_proactive_checks()
+        return JSONResponse({
+            "ok": True,
+            "last_run":  _proactivo_estado["last_run"],
+            "checks": {
+                k: {
+                    "last_value": v["last_value"],
+                    "last_ok":    v["last_ok"],
+                }
+                for k, v in _proactivo_estado["checks"].items()
+            },
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
 # =====================
