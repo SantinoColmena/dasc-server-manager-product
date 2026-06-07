@@ -8,7 +8,7 @@
 
 - **Versión actual:** `v1.0-rc1`
 - **Fase actual:** Fase 6 — Endurecimiento y producto vendible
-- **Última actualización:** 2026-06-06
+- **Última actualización:** 2026-06-07
 
 ---
 
@@ -139,13 +139,21 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 > confirman o ajustan al entrar en cada tarea. Así el plan absorbe lo que vaya
 > surgiendo sin romper la numeración ni inflar el roadmap por adelantado.
 
-#### Ruta 6.7 — Validación de instalación desde cero · ▶️ Siguiente
+#### Ruta 6.7 — Validación de instalación desde cero · 🔵 En curso
 - **R-053** — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
   ocultos, partiendo del repo/tag. *Depende de:* H-1 y M/L de la auditoría (✅).
-  - `R-053A` 🗓️ — Validación perfil **Lite** (1 servidor + copia externa).
+  - `R-053A` 🔵 — Validación perfil **Lite** (1 servidor + copia externa).
+    Instalación desde cero **funcional** en VM limpia (multipass/Ubuntu 22.04)
+    tras corregir 4 defectos: **B1** (backup-services desinstalaba MariaDB en
+    single-host), **B2** (hosts quedaban como placeholder en todos los perfiles),
+    **F8** (credenciales de logs sin importar) y **B3** (drop-in SSH de imágenes
+    cloud bloqueaba el bootstrap de clave del panel). Evidencia:
+    `docs/validaciones/R-053A_validacion_lite.md`. Pendiente F5 (copia externa)
+    para el cierre formal.
   - `R-053B` 🗓️ — Validación perfil **Standard** (2 servidores).
   - `R-053C` 🗓️ — Validación perfil **Pro** (3 servidores).
-  - `R-053D` 🗓️ — Checklist reproducible + informe consolidado por perfil.
+  - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
+    (creado: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`).
 
 #### Ruta 6.8 — Cierre de endurecimiento de infraestructura · 🗓️ Planificada
 > Pendientes explícitamente listados en `R-052H` y en la auditoría de código.

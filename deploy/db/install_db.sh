@@ -158,6 +158,19 @@ if [[ -f "$SSHD_CONFIG" ]]; then
     echo 'PubkeyAuthentication yes' >> "$SSHD_CONFIG"
   fi
 
+  # R-053A/B3: las imagenes cloud de Ubuntu traen un drop-in
+  # (60-cloudimg-settings.conf) con PasswordAuthentication no que, al leerse antes
+  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-dasc
+  # que se lee el primero para garantizar la auth por contrasena del bootstrap.
+  SSHD_DROPIN_DIR="/etc/ssh/sshd_config.d"
+  if [[ -d "$SSHD_DROPIN_DIR" ]]; then
+    cat > "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf" <<'SSHDROP'
+PasswordAuthentication yes
+PubkeyAuthentication yes
+SSHDROP
+    chmod 644 "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf"
+  fi
+
   systemctl restart ssh
 fi
 
