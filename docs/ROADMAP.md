@@ -59,7 +59,7 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 
 1. ~~**R-053** — Validación de instalación desde cero por perfil (VM limpia).~~ ✅ Cerrado 2026-06-07.
 2. ~~**R-054** — Cierre del endurecimiento de infraestructura: UFW, HTTPS/certbot, fail2ban, `pip-audit`.~~ ✅ Cerrado 2026-06-07.
-3. **R-055 / R-056** — Guía de uso desde Windows + limpieza final del repo y la documentación.
+3. ~~**R-055**~~ ✅ Cerrado 2026-06-07. **R-056** — Limpieza final del repo y la documentación.
 4. **R-057** — Release interna estable (freeze) → y recién entonces retomar **R-048** (primer cliente de pago).
 
 ---
@@ -178,12 +178,15 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
   - `R-054C` ✅ — **fail2ban**: jaulas `sshd` + `dasc-auth`; filtro DASC validado con `fail2ban-regex`.
   - `R-054D` ✅ — **`pip-audit`**: `starlette→1.0.1`, `python-multipart→0.0.27`; ambos paquetes limpios.
 
-#### Ruta 6.9 — Experiencia Windows y limpieza final · 🗓️ Planificada
+#### Ruta 6.9 — Experiencia Windows y limpieza final · 🟡 En curso
 > Bloques 1 y 2 del plan de reordenación de Fase 6.
-- **R-055** — Guía de uso desde Windows.
-  - `R-055A` 🗓️ — Acceso **por navegador**: qué puede hacer el cliente.
-  - `R-055B` 🗓️ — Despliegue real en **Linux** desde un PC Windows.
-  - `R-055C` 🗓️ — Valorar **script auxiliar** Windows vs. solo documentación.
+- **R-055** ✅ — Guía de uso desde Windows. **CERRADO 2026-06-07**.
+  - `R-055A` ✅ — Acceso por navegador: URL HTTPS, aviso certificado autofirmado, funciones disponibles.
+    Evidencia: `docs/guias/R-055A_acceso_navegador_windows.md`.
+  - `R-055B` ✅ — Despliegue desde Windows: SSH nativo W10/W11, SCP, instalación por perfil, hardening.
+    Evidencia: `docs/guias/R-055B_despliegue_desde_windows.md`.
+  - `R-055C` ✅ — Decisión sobre script auxiliar: se descarta wrapper PS; SSH nativo es suficiente.
+    Evidencia: `docs/guias/R-055C_decision_script_auxiliar.md`.
 - **R-056** — Limpieza final del repo y la documentación.
   - `R-056A` 🗓️ — Revisión de estructura de carpetas y README.
   - `R-056B` 🗓️ — Revisión de docs duplicadas / demasiado comerciales.
@@ -202,7 +205,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 **No se pasa a actividad comercial real hasta cumplir TODO esto:**
 - [x] Instalación desde cero OK en los 3 perfiles (R-053). ✅ Cerrado 2026-06-07.
 - [x] UFW + HTTPS + fail2ban + `pip-audit` aplicados (R-054). ✅ Cerrado 2026-06-07.
-- [ ] Documentado el uso desde Windows / navegador vs. Linux (R-055).
+- [x] Documentado el uso desde Windows / navegador vs. Linux (R-055). ✅ Cerrado 2026-06-07.
 - [ ] Repo y docs limpios, sin promesas de funciones inexistentes (R-056).
 - [ ] Release interna estable congelada con changelog (R-057).
 - [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
