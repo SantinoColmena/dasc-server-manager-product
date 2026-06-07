@@ -139,7 +139,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 > confirman o ajustan al entrar en cada tarea. Así el plan absorbe lo que vaya
 > surgiendo sin romper la numeración ni inflar el roadmap por adelantado.
 
-#### Ruta 6.7 — Validación de instalación desde cero · 🔵 En curso
+#### Ruta 6.7 — Validación de instalación desde cero · 🔵 En curso (Lite ✅ Standard ✅)
 - **R-053** — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
   ocultos, partiendo del repo/tag. *Depende de:* H-1 y M/L de la auditoría (✅).
   - `R-053A` ✅ — Validación perfil **Lite** (1 servidor + copia externa).
@@ -150,7 +150,14 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
     cloud bloqueaba el bootstrap de clave del panel). F5 (copia externa): validada
     con `sync_external_backup.sh` tipo `local`, exit 0. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053A_validacion_lite.md`.
-  - `R-053B` 🗓️ — Validación perfil **Standard** (2 servidores).
+  - `R-053B` ✅ — Validación perfil **Standard** (2 servidores).
+    Instalación desde cero en 2 VMs limpias (dasc-std-db + dasc-std-api) completamente
+    funcional tras corregir 2 defectos: **B4** (`mysqlbinlog` ausente en host backup
+    Standard/Pro — convertido a AVISO no bloqueante) y **B5** (`unset DASC_PASS`
+    dentro del bucle SSH multi-host causaba salida silenciosa del installer con
+    `set -euo pipefail`). SSH sin contraseña panel→DB, BD logs, backup real vía red
+    y HTTP 200 verificados. **Cerrada 2026-06-07.**
+    Evidencia: `docs/validaciones/R-053B_validacion_standard.md`.
   - `R-053C` 🗓️ — Validación perfil **Pro** (3 servidores).
   - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
     (creado: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`).

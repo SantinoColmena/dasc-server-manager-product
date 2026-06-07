@@ -605,8 +605,12 @@ echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
       exit 1
     }
 
-  unset DASC_PASS
 done
+# R-053B/B5: unset DASC_PASS fuera del bucle para que la contraseña persista
+# en despliegues multi-host (Standard/Pro). Dentro del bucle, el unset borraba
+# la variable antes de la segunda iteración; read desde stdin=/dev/null devuelve
+# exit 1, que set -euo pipefail convierte en salida silenciosa del instalador.
+unset DASC_PASS
 
 chmod 640 "$CONFIG_FILE"
 if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then

@@ -207,9 +207,8 @@ DEBIAN_FRONTEND=noninteractive apt install -y \
 
 echo "==> Instalando cliente de base de datos"
 # R-053A/B1: preferimos mariadb-client. Convive con mariadb-server (caso Lite en
-# un unico host) y aporta mariadb-dump/mariadb-binlog para los alias mysql*.
-# default-mysql-client (MySQL 8.0) entra en conflicto con MariaDB y en single-host
-# desinstalaria mariadb-server. Solo como ultimo recurso si mariadb-client falta.
+# un unico host). default-mysql-client (MySQL 8.0) entra en conflicto con MariaDB
+# y en single-host desinstalaria mariadb-server. Solo como ultimo recurso.
 if ! DEBIAN_FRONTEND=noninteractive apt install -y mariadb-client; then
   echo "AVISO: no se pudo instalar mariadb-client. Probando default-mysql-client."
   DEBIAN_FRONTEND=noninteractive apt install -y default-mysql-client
@@ -242,12 +241,22 @@ ensure_cmd_alias "mysql" "mariadb" || true
 ensure_cmd_alias "mysqldump" "mariadb-dump" || true
 ensure_cmd_alias "mysqlbinlog" "mariadb-binlog" || true
 
-for required_cmd in mysql mysqldump mysqlbinlog gzip rsync ssh; do
+# R-053B/B4: mysqlbinlog/mariadb-binlog solo existe en el paquete completo
+# mariadb-server-10.6 (Ubuntu 22.04). En Standard/Pro el host de backup no tiene
+# servidor local, asi que el binario no esta disponible. Los scripts de runtime
+# (backups_api.sh, restore_api.sh) no usan mysqlbinlog directamente: los backups
+# completos usan mysqldump y las operaciones de binlog se realizan en el host DB.
+# Se mantiene como comprobacion opcional (AVISO), no bloqueante.
+for required_cmd in mysql mysqldump gzip rsync ssh; do
   if ! command -v "$required_cmd" >/dev/null 2>&1; then
     echo "ERROR: falta comando requerido: $required_cmd"
     exit 1
   fi
 done
+if ! command -v mysqlbinlog >/dev/null 2>&1; then
+  echo "AVISO: mysqlbinlog no disponible en este host (esperado en Standard/Pro)."
+  echo "       Los scripts de backup usan mysqldump; el binlog remoto se gestiona en el host DB."
+fi
 
 echo "==> Habilitando SSH"
 systemctl enable --now ssh
@@ -400,7 +409,9 @@ fi
 echo "==> Validando herramientas de base de datos"
 command -v mysql >/dev/null || { echo "ERROR: falta mysql"; exit 1; }
 command -v mysqldump >/dev/null || { echo "ERROR: falta mysqldump"; exit 1; }
-command -v mysqlbinlog >/dev/null || { echo "ERROR: falta mysqlbinlog"; exit 1; }
+# R-053B/B4: mysqlbinlog solo esta en mariadb-server (Ubuntu 22.04); en
+# Standard/Pro no hay servidor local. Los scripts de runtime no lo requieren.
+command -v mysqlbinlog >/dev/null || echo "AVISO: mysqlbinlog no disponible (esperado en Standard/Pro)."
 command -v crontab >/dev/null || { echo "ERROR: falta crontab"; exit 1; }
 
 echo "==> Validaciones"
