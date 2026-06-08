@@ -271,7 +271,7 @@ restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ r
 
 ---
 
-## 7. Fase 9 — Infraestructura de negocio · ▶️ SIGUIENTE
+## 7. Fase 9 — Infraestructura de negocio · 🟡 EN CURSO (acción pendiente del usuario)
 
 > **Objetivo:** que exista todo lo necesario para que un cliente entregue dinero
 > con confianza. Sin esta fase no hay primera venta posible.
@@ -281,21 +281,21 @@ restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ r
 
 | Ruta | Contenido | Coste estimado |
 |---|---|---|
-| 9.1 Dominio + email profesional | Dominio propio (ej. dascmanager.com) + email de soporte (soporte@...). Mínimo indispensable de credibilidad. | ~$1 dominio + ~$3–6 email/mes |
-| 9.2 Web del producto | Landing page: qué es DASC, planes Lite/Standard/Pro, precios, cómo funciona, contacto, descarga o solicitud de instalación. | hosting mínimo o gratuito |
-| 9.3 Planes y métodos de pago | Definir precios de Lite/Standard/Pro + soporte. Método de cobro (Stripe, transferencia, factura). | variable según volumen |
-| 9.4 Licencias y legal | Términos de servicio, política de privacidad, límites de responsabilidad del servicio. Asesoramiento legal básico. | $0–consulta puntual |
-| 9.5 Documentación de operación | Plan de recuperación ante desastres, guía anti-hackeo/gestión de incidentes, documentación completa de soporte para un equipo futuro. | $0 |
+| ✅ 9.1 Dominio + email | Guía paso a paso en `docs/guias/guia_dominio_email.md`: registradores .es, Zoho Mail/Google Workspace, DNS SPF/DKIM/DMARC, despliegue Netlify. ✅ Código entregado 2026-06-08 (R-076). ⏳ **Pendiente: comprar dominio y activar email.** | ~€1/año + €0–6/mes |
+| ✅ 9.2 Web del producto | Landing page completa en `web/`: hero, funcionalidades, precios, FAQ, formulario (Formspree), footer legal. Responsive. Lista para desplegar en Netlify/GitHub Pages. ✅ Entregado 2026-06-08 (R-072). ⏳ **Pendiente: rellenar TODOs (dominio, datos fiscales) y desplegar.** | hosting gratuito |
+| ✅ 9.3 Planes y precios | Precios definidos (Lite €15 / Standard €35 / Pro €65 / Managed consultar). Guía Stripe, Payment Links y política de piloto en `docs/comercial/planes_precios.md`. ✅ Entregado 2026-06-08 (R-074). ⏳ **Pendiente: crear cuenta Stripe y activar cobros.** | variable |
+| ✅ 9.4 Legal | `web/legal/terminos.html` y `web/legal/privacidad.html` (RGPD + LOPDGDD). Referencias al doc existente `docs/legal/limites_responsabilidad.md`. ✅ Entregado 2026-06-08 (R-073). ⏳ **Pendiente: completar datos fiscales y revisar antes de publicar.** | €0 |
+| ✅ 9.5 Docs operacionales | `docs/tecnico/plan_recuperacion.md` (RTO/RPO, 4 escenarios), `guia_antihackeo.md` (10 controles), `gestion_incidentes.md` (P1-P4, post-mortem). ✅ Entregado 2026-06-08 (R-075). | €0 |
 
 ### 🚪 Gate de salida `F9-GATE` "Primer cliente de pago"
 **No se acepta el primer cliente hasta cumplir TODO esto:**
 - [x] F7-GATE superado (producto presentable). ✅ Cerrado 2026-06-08.
 - [x] F8-GATE superado (operación sin riesgos). ✅ Cerrado 2026-06-08.
-- [ ] Dominio + email profesional activos.
-- [ ] Web del producto publicada con planes y precios.
-- [ ] Método de cobro operativo.
-- [ ] Términos de servicio y privacidad publicados.
-- [ ] Plan de recuperación documentado y probado.
+- [ ] Dominio + email profesional activos. *(guía lista, falta comprar dominio y activar email)*
+- [ ] Web del producto publicada con planes y precios. *(landing lista en `web/`, falta desplegar y rellenar TODOs)*
+- [ ] Método de cobro operativo. *(guía Stripe lista, falta crear cuenta y activar cobros)*
+- [ ] Términos de servicio y privacidad publicados. *(plantillas listas, faltan datos fiscales y publicación)*
+- [ ] Plan de recuperación documentado y probado. *(documentado en `docs/tecnico/`, falta prueba trimestral)*
 
 **→ R-048: Primer cliente de pago real** (se activa al superar F9-GATE)
 
