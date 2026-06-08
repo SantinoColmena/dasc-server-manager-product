@@ -16,6 +16,9 @@
     <!-- Estilos base -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
 
+    <!-- CSRF global (R-063: disponible en todas las páginas para el modal de bug report) -->
+    <meta name="csrf-token" content="{{ csrf_token_value(request) }}">
+
     <!-- Bloque para CSS y meta-tags adicionales por plantilla -->
     {% block extra_head %}{% endblock %}
 </head>
@@ -142,6 +145,66 @@
 </div>
 <!-- /LAYOUT -->
 
+<!-- ── Botón flotante + modal "Reportar problema" (R-063 / Ruta 7.8) ── -->
+<button class="fab-report" id="fab-report" title="Reportar un problema" aria-label="Reportar problema">
+    <i class="fa-solid fa-flag"></i>
+</button>
+
+<div class="fab-modal-overlay" id="fab-modal-overlay" aria-hidden="true">
+    <div class="fab-modal" role="dialog" aria-modal="true" aria-labelledby="fab-modal-title">
+        <div class="fab-modal-header">
+            <div class="fab-modal-icon"><i class="fa-solid fa-flag"></i></div>
+            <div>
+                <h3 id="fab-modal-title">Reportar un problema</h3>
+                <p>Cuéntanos qué ha fallado. El sistema adjuntará el contexto automáticamente.</p>
+            </div>
+            <button class="fab-modal-close" id="fab-modal-close" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="fab-modal-body">
+            <div class="fab-tipo-group">
+                <label class="fab-tipo-chip" data-tipo="bug">
+                    <input type="radio" name="fab-tipo" value="bug" checked>
+                    <i class="fa-solid fa-bug"></i> Bug
+                </label>
+                <label class="fab-tipo-chip" data-tipo="sugerencia">
+                    <input type="radio" name="fab-tipo" value="sugerencia">
+                    <i class="fa-solid fa-lightbulb"></i> Sugerencia
+                </label>
+                <label class="fab-tipo-chip" data-tipo="pregunta">
+                    <input type="radio" name="fab-tipo" value="pregunta">
+                    <i class="fa-solid fa-circle-question"></i> Pregunta
+                </label>
+            </div>
+
+            <textarea
+                id="fab-desc"
+                class="fab-textarea"
+                placeholder="Describe el problema con el mayor detalle posible: qué hiciste, qué esperabas y qué ocurrió..."
+                maxlength="2000"
+                rows="5"
+            ></textarea>
+            <div class="fab-char-count"><span id="fab-chars">0</span> / 2000</div>
+
+            <div class="fab-context-note">
+                <i class="fa-solid fa-circle-info"></i>
+                El sistema incluirá automáticamente: página actual, usuario, estado del disco y alertas recientes.
+            </div>
+        </div>
+
+        <div class="fab-modal-footer">
+            <button class="fab-btn-cancel" id="fab-btn-cancel">Cancelar</button>
+            <button class="fab-btn-send" id="fab-btn-send">
+                <i class="fa-solid fa-paper-plane"></i> Enviar reporte
+            </button>
+        </div>
+
+        <div class="fab-result" id="fab-result" style="display:none;"></div>
+    </div>
+</div>
+
 <!-- Bloque para JS adicional por plantilla -->
 {% block extra_js %}{% endblock %}
 
@@ -183,6 +246,118 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeMenu();
     });
+}());
+</script>
+
+<!-- JS modal bug report (R-063) -->
+<script>
+(function () {
+    'use strict';
+    var fab     = document.getElementById('fab-report');
+    var overlay = document.getElementById('fab-modal-overlay');
+    var btnClose= document.getElementById('fab-modal-close');
+    var btnCanc = document.getElementById('fab-btn-cancel');
+    var btnSend = document.getElementById('fab-btn-send');
+    var textarea= document.getElementById('fab-desc');
+    var chars   = document.getElementById('fab-chars');
+    var result  = document.getElementById('fab-result');
+
+    function openModal() {
+        overlay.removeAttribute('aria-hidden');
+        overlay.style.display = 'flex';
+        textarea.value = '';
+        if (chars) chars.textContent = '0';
+        result.style.display = 'none';
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+        setTimeout(function () { textarea.focus(); }, 80);
+    }
+    function closeModal() {
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.style.display = 'none';
+    }
+
+    if (fab)      fab.addEventListener('click', openModal);
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCanc)  btnCanc.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.style.display === 'flex') closeModal();
+    });
+
+    // Contador de caracteres
+    if (textarea && chars) {
+        textarea.addEventListener('input', function () {
+            chars.textContent = textarea.value.length;
+        });
+    }
+
+    // Chips de tipo
+    document.querySelectorAll('.fab-tipo-chip').forEach(function (chip) {
+        var input = chip.querySelector('input');
+        function sync() {
+            document.querySelectorAll('.fab-tipo-chip').forEach(function (c) { c.classList.remove('selected'); });
+            if (input.checked) chip.classList.add('selected');
+        }
+        sync();
+        input.addEventListener('change', sync);
+        chip.addEventListener('click', function () {
+            input.checked = true;
+            sync();
+        });
+    });
+    // Marcar el primero como seleccionado al inicio
+    var firstChip = document.querySelector('.fab-tipo-chip');
+    if (firstChip) firstChip.classList.add('selected');
+
+    // Envío
+    if (btnSend) {
+        btnSend.addEventListener('click', function () {
+            var desc = textarea ? textarea.value.trim() : '';
+            if (!desc) {
+                textarea.focus();
+                textarea.style.borderColor = '#ef4444';
+                return;
+            }
+            textarea.style.borderColor = '';
+            var tipo = 'bug';
+            var tipoInput = document.querySelector('input[name="fab-tipo"]:checked');
+            if (tipoInput) tipo = tipoInput.value;
+            var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+            btnSend.disabled = true;
+            btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando…';
+
+            fetch('/reportar-problema', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                body: JSON.stringify({ tipo: tipo, descripcion: desc, url_pagina: window.location.pathname })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                result.style.display = 'block';
+                if (data.ok) {
+                    result.className = 'fab-result ok';
+                    result.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + data.msg;
+                    setTimeout(closeModal, 2200);
+                } else {
+                    result.className = 'fab-result error';
+                    result.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.msg || 'Error al enviar.');
+                    btnSend.disabled = false;
+                    btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+                }
+            })
+            .catch(function () {
+                result.style.display = 'block';
+                result.className = 'fab-result error';
+                result.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Error de red.';
+                btnSend.disabled = false;
+                btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+            });
+        });
+    }
 }());
 </script>
 

@@ -6381,3 +6381,105 @@ def informes_enviar(request: Request):
         return JSONResponse(result)
     except Exception as e:
         return JSONResponse({"ok": False, "msg": str(e)}, status_code=500)
+
+
+# =====================
+# R-063 / Ruta 7.8 — Reporte de bugs desde el panel
+# =====================
+# Botón "Reportar problema" accesible desde cualquier página del panel.
+# Crea un ticket de soporte con contexto del sistema adjunto automáticamente.
+
+_REPORT_TIPOS_MAP = {
+    "bug":        ("Incidencia", "Alta",  "Panel DASC"),
+    "sugerencia": ("Cambio",     "Baja",  "Panel DASC"),
+    "pregunta":   ("Consulta",   "Media", "Panel DASC"),
+}
+
+
+@app.post("/reportar-problema")
+async def reportar_problema(request: Request):
+    """Crea un ticket de soporte con contexto del sistema. R-063
+    Accesible a cualquier usuario autenticado (no solo admins).
+    """
+    if not request.session.get("user"):
+        return JSONResponse({"ok": False, "msg": "Sesión no activa."}, status_code=401)
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Datos no válidos."}, status_code=400)
+
+    tipo_raw   = str(data.get("tipo", "bug")).lower().strip()
+    descripcion = str(data.get("descripcion", "")).strip()
+    url_pagina  = str(data.get("url_pagina", "—")).strip()
+
+    if not descripcion:
+        return JSONResponse({"ok": False, "msg": "La descripción no puede estar vacía."}, status_code=400)
+
+    if len(descripcion) > 2000:
+        return JSONResponse({"ok": False, "msg": "Descripción demasiado larga (máx. 2000 caracteres)."}, status_code=400)
+
+    tipo_ticket, prioridad, servicio = _REPORT_TIPOS_MAP.get(tipo_raw, ("Incidencia", "Media", "Panel DASC"))
+
+    usuario   = request.session.get("user", "anon")
+    ahora     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Contexto del sistema recogido en el momento del reporte
+    ctx_lineas = [
+        f"Página: {url_pagina}",
+        f"Usuario: {usuario}",
+        f"Fecha: {ahora}",
+    ]
+    # Disco (si hay datos en memoria de la última comprobación)
+    disco_check = _proactivo_estado.get("checks", {}).get("disk", {})
+    if disco_check.get("last_value"):
+        ctx_lineas.append(f"Disco: {disco_check['last_value']}")
+    # Alertas recientes
+    n_alertas = len(_proactivo_estado.get("alert_log", []))
+    ctx_lineas.append(f"Alertas proactivas en sesión: {n_alertas}")
+
+    descripcion_completa = (
+        f"[Reporte enviado desde el panel — {tipo_ticket}]\n\n"
+        f"{descripcion}\n\n"
+        f"--- Contexto del sistema ---\n"
+        + "\n".join(ctx_lineas)
+    )
+
+    ticket_id = next_support_ticket_id()
+    ticket = {
+        "id":            ticket_id,
+        "fecha_apertura": ahora,
+        "cliente":        "Uso interno DASC",
+        "contacto":       usuario,
+        "email":          "",
+        "telefono":       "",
+        "canal":          "Reporte de panel",
+        "tipo":           tipo_ticket,
+        "prioridad":      prioridad,
+        "servicio":       servicio,
+        "descripcion":    descripcion_completa,
+        "evidencia":      "",
+        "estado":         "Abierto",
+        "creado_por":     usuario,
+        "origen":         "bug_report",
+    }
+
+    try:
+        save_support_ticket(ticket)
+    except Exception as e:
+        return JSONResponse({"ok": False, "msg": f"Error al crear el ticket: {e}"}, status_code=500)
+
+    log_event(
+        tipo="bug_report",
+        resultado="OK",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /reportar-problema",
+        detalle=f"ticket={ticket_id} tipo={tipo_raw}",
+    )
+
+    return JSONResponse({
+        "ok":       True,
+        "ticket_id": ticket_id,
+        "msg":      f"Reporte enviado. Referencia: {ticket_id}",
+    })
