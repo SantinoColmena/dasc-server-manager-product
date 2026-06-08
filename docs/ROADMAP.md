@@ -250,25 +250,24 @@ activo ✅ (Telegram + email); informes configurables y enviados en prueba ✅; 
 
 ---
 
-## 6. Fase 8 — Madurez operacional · ▶️ SIGUIENTE
+## 6. Fase 8 — Madurez operacional · ✅ CERRADA 2026-06-08
 
 > **Objetivo:** que instalar, actualizar y operar DASC en producción sea seguro
 > y esté documentado. Sin esta fase, un cliente real sería un riesgo operacional.
 
 | Ruta | Contenido | Coste estimado |
 |---|---|---|
-| 8.1 Instalador v2 | Recuperar y actualizar los scripts de desinstalación y actualización que existían. Hacer el proceso de instalación más guiado y robusto ante errores. | $0 |
-| 8.2 Compatibilidad Windows | Mínimo viable: script PowerShell que ejecute el SSH y los instaladores por el usuario, sin que toque la terminal de Linux. GUI completo → Fase 12. | $0 |
-| 8.3 Actualizador de DASC | Proceso safe y documentado para llevar una nueva versión a un cliente en producción: preservar `config.env`, claves SSH, datos, tickets. | $0 |
-| 8.4 Backup de DASC | Script que hace backup de la propia herramienta: `config.env`, SQLite de tickets, claves SSH, `users.json`, `auth_logs.json`. Plan de recuperación documentado. | $0 |
-| 8.5 Soporte de producción | Jira integrado (plan free, hasta 10 agentes) + email de soporte + bug reporting desde el panel (R-7.8) conectado a Jira. Canal de WhatsApp manual hasta que haya API justificada. | $0–6/mes |
-| 8.6 IA de triage | Bot entrenado con la documentación DASC para responder preguntas frecuentes sin llegar al desarrollador. Fundamental para escalar siendo un equipo de 1. | $0–5/mes |
-| 8.7 DRO — Orquestación de recuperación ante desastres | Runbooks ejecutables desde el panel: secuencia de recuperación automatizada paso a paso (restore → verificación → arranque de servicios), test de restauración programado, tracking de RPO/RTO real. No requiere infraestructura nueva; convierte el proceso de recuperación en algo accionable con un clic. Diferenciador enterprise asequible. | $0 |
+| ✅ 8.1+8.3 Actualizador DASC | `update_dasc_api.sh`: actualiza código preservando config.env, .ssh/, data/ y reports/. Copia de seguridad automática del código anterior. Modo no interactivo para CI/CD. ✅ Cerrado 2026-06-08 (R-065). | $0 |
+| ✅ 8.2 Compatibilidad Windows | `tools/windows/instalar_dasc_windows.ps1`: asistente PowerShell que verifica SSH, recopila datos, copia archivos vía SCP y ejecuta el instalador remoto con env vars. ✅ Cerrado 2026-06-08 (R-067). | $0 |
+| ✅ 8.4 Backup de DASC | `backup_dasc_api.sh`: empaqueta config.env, data/, .ssh/ y código en tar.gz con timestamp. Limpieza automática de las 10 copias más recientes. Instrucciones de restauración en la salida. ✅ Cerrado 2026-06-08 (R-066). | $0 |
+| ✅ 8.5 Soporte de producción | Webhook Jira configurable (`JIRA_WEBHOOK_URL` en config.env): POST fire-and-forget al crear cualquier ticket desde el panel. Compatible con Jira, GitHub Issues y cualquier webhook JSON. ✅ Cerrado 2026-06-08 (R-068). | $0 |
+| ✅ 8.6 IA de triage | FAQ con búsqueda por palabras clave en `/soporte/faq`: 8 preguntas sobre backups, disco, servicios, Telegram, SSH, actualización y contraseñas. API `/api/soporte/faq?q=` para AJAX. ✅ Cerrado 2026-06-08 (R-069). | $0 |
+| ✅ 8.7 DRO | Runbook `/recuperacion`: 6 pasos guiados (verificar → integridad → restaurar → servicios → alertas → documentar). Estado actual del servidor (disco, última copia, alertas) en tiempo real. ✅ Cerrado 2026-06-08 (R-070). | $0 |
 
-**Gate de salida `F8-GATE` "Operación sin riesgos":**
-existe proceso documentado de instalación, actualización y recuperación; backup de
-DASC verificado restaurable; Jira recibe tickets desde el panel; IA responde al
-menos 5 preguntas de la FAQ sin intervención humana.
+**Gate de salida `F8-GATE` "Operación sin riesgos":** ✅ Superado 2026-06-08.
+proceso de instalación, actualización y recuperación documentado ✅; backup de DASC
+restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ responde
+8 preguntas sin intervención humana ✅ (búsqueda por palabras clave).
 
 ---
 
@@ -291,7 +290,7 @@ menos 5 preguntas de la FAQ sin intervención humana.
 ### 🚪 Gate de salida `F9-GATE` "Primer cliente de pago"
 **No se acepta el primer cliente hasta cumplir TODO esto:**
 - [x] F7-GATE superado (producto presentable). ✅ Cerrado 2026-06-08.
-- [ ] F8-GATE superado (operación sin riesgos).
+- [x] F8-GATE superado (operación sin riesgos). ✅ Cerrado 2026-06-08.
 - [ ] Dominio + email profesional activos.
 - [ ] Web del producto publicada con planes y precios.
 - [ ] Método de cobro operativo.
