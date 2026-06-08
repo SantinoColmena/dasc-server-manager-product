@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Vigex">
+  <defs>
+    <linearGradient id="vg-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="vg-dot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c7d2fe"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo redondeado -->
+  <rect width="64" height="64" rx="14" fill="url(#vg-bg)"/>
+
+  <!-- Anillo sutil interior -->
+  <circle cx="32" cy="32" r="22" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" fill="none"/>
+
+  <!-- Brazos de la V -->
+  <polyline
+    points="15,16 32,46 49,16"
+    stroke="white"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+
+  <!-- Punto sensor / ojo en el vértice -->
+  <circle cx="32" cy="46" r="4.5" fill="url(#vg-dot)"/>
+  <circle cx="32" cy="46" r="2"   fill="white" opacity="0.9"/>
+</svg>
