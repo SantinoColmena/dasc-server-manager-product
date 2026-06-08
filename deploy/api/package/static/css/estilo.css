@@ -38,6 +38,59 @@
     --dangerBorder: #fecdd3;
 }
 
+/* === MODO OSCURO (R-083 / Ruta 10.7) ===
+ * Activado con data-theme="dark" en <html>.
+ * El sidebar ya es oscuro en ambos modos; solo cambian fondo,
+ * paneles, texto y bordes del área principal.
+ * ============================================== */
+[data-theme="dark"] {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    --successBg: #052e16;
+    --successText: #86efac;
+    --successBorder: #166534;
+    --warningBg: #1c1407;
+    --warningText: #fde68a;
+    --warningBorder: #92400e;
+    --dangerBg: #1f0d13;
+    --dangerText: #fda4af;
+    --dangerBorder: #be123c;
+}
+
+/* === BOTÓN TOGGLE MODO OSCURO === */
+.dark-mode-toggle {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+.dark-mode-toggle:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.08);
+}
+[data-theme="dark"] .dark-mode-toggle {
+    color: #fbbf24;
+    border-color: #475569;
+}
+[data-theme="dark"] .dark-mode-toggle:hover {
+    color: #fde68a;
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+}
+
 /* === BODY === */
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

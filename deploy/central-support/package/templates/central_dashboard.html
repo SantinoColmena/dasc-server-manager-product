@@ -253,6 +253,28 @@
             border: 1px dashed #cbd5e1;
         }
 
+        /* ── Barra de navegación (R-079/R-080) ── */
+        .nav-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 18px 0 0;
+        }
+        .nav-item {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+            transition: background .18s, color .18s;
+        }
+        .nav-item:hover { background: #e2e8f0; color: #0f172a; }
+        .nav-item.active { background: var(--blue-soft); color: #1d4ed8; border-color: #bfdbfe; }
+
         @media (max-width: 980px) {
             .hero {
                 display: block;
@@ -290,6 +312,16 @@
                 </div>
             {% endif %}
         </section>
+
+        <!-- Barra de navegación (R-079 / Ruta 10.3) -->
+        <nav class="nav-bar">
+            <a href="/" class="nav-item active">🎫 Tickets</a>
+            <a href="/salud" class="nav-item">🟢 Salud global</a>
+            {% if current_role == 'admin' %}
+                <a href="/clientes" class="nav-item">🏢 Clientes</a>
+                <a href="/auditoria" class="nav-item">🔍 Auditoría</a>
+            {% endif %}
+        </nav>
 
         <section class="summary">
             <div class="summary-card">

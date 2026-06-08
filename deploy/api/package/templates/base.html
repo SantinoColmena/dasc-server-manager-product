@@ -34,11 +34,29 @@
         </div>
     </a>
     {% block header_center %}{% endblock %}
+    <!-- Toggle modo oscuro/claro (R-083 / Ruta 10.7) -->
+    <button class="dark-mode-toggle" id="dark-mode-toggle"
+            title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+        <i class="fa-solid fa-moon" id="dark-mode-icon"></i>
+    </button>
+
     <!-- Botón hamburguesa — visible solo en mobile (Ruta 7.3) -->
     <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menú" aria-expanded="false">
         <i class="fa-solid fa-bars"></i>
     </button>
 </header>
+
+<!-- ── Script modo oscuro: aplica preferencia antes del primer render ── -->
+<script>
+(function () {
+    /* R-083: leer preferencia guardada o preferencia del sistema */
+    var saved = localStorage.getItem('dasc-theme');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+})();
+</script>
 
 {% set current_path = request.url.path %}
 
@@ -254,6 +272,40 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeMenu();
     });
+}());
+</script>
+
+<!-- JS toggle modo oscuro/claro (R-083 / Ruta 10.7) -->
+<script>
+(function () {
+    'use strict';
+    var btn  = document.getElementById('dark-mode-toggle');
+    var icon = document.getElementById('dark-mode-icon');
+
+    function isDark() {
+        return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    function applyTheme(dark) {
+        if (dark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (icon) { icon.className = 'fa-solid fa-sun'; }
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            if (icon) { icon.className = 'fa-solid fa-moon'; }
+        }
+    }
+
+    /* Sincronizar icono al cargar (el tema ya fue aplicado por el script inline) */
+    applyTheme(isDark());
+
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var nowDark = !isDark();
+            applyTheme(nowDark);
+            localStorage.setItem('dasc-theme', nowDark ? 'dark' : 'light');
+        });
+    }
 }());
 </script>
 

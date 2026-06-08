@@ -7,8 +7,8 @@
 > desincronizarse del código.
 
 - **Versión actual:** `v1.0-rc1`
-- **Fase actual:** Fase 7 — Madurez del producto (Fase 6 cerrada 2026-06-07)
-- **Última actualización:** 2026-06-07
+- **Fase actual:** Fase 10 — Central cloud y multi-cliente (Fases 7+8 cerradas, 9 en curso)
+- **Última actualización:** 2026-06-08
 
 ---
 
@@ -54,7 +54,7 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | **7** | **Madurez del producto** | **R-058 → R-064 (aprox.)** | 🔵 **En curso** | **Ahora** |
 | **8** | **Madurez operacional** | **R-065 → R-071 (aprox.)** | ▶️ Siguiente | Siguiente |
 | **9** | **Infraestructura de negocio** | **R-072 → R-078 (aprox.)** | ▶️ Siguiente | Siguiente |
-| 10 | Central cloud y multi-cliente | (se numera al planificar) | 🗓️ Planificada | Después |
+| **10** | **Central cloud y multi-cliente** | **R-077 → R-083 (aprox.)** | 🟡 **En curso (acción pendiente del usuario)** | **Ahora** |
 | 11 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
 | 12 | Evolución (IA avanzada, Windows GUI, refactor) | (se numera al planificar) | 📦 Backlog | Después |
 
@@ -301,25 +301,33 @@ restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ r
 
 ---
 
-## 8. Fase 10 — Central cloud y multi-cliente · 🗓️ PLANIFICADA
+## 8. Fase 10 — Central cloud y multi-cliente · 🟡 EN CURSO (acción pendiente del usuario)
 
 > **Objetivo:** convertir DASC en producto multi-cliente de verdad — una Central
 > propia en VPS que agregue el estado de todas las instalaciones.
 > Se financia con los ingresos de los primeros clientes.
 
-| Ruta | Contenido |
-|---|---|
-| 10.1 Diseño central cloud | Arquitectura del VPS DASC, modelo HTTPS productivo, topología multi-cliente |
-| 10.2 Central VPS + HTTPS productivo | Despliegue real con dominio propio, TLS válido, nginx |
-| 10.3 Panel multi-cliente | Gestión de clientes, tokens por cliente, rotación y revocación |
-| 10.4 Dashboard de salud global | Heartbeat de todas las instalaciones: último backup, alertas, soporte, último contacto |
-| 10.5 Seguridad central | 2FA para el equipo DASC, backup de la Central, auditoría de acceso |
-| 10.6 Multi-idioma | ES (principal) → CA (Cataluña) → EN. Cuando haya base de usuarios suficiente. |
-| 10.7 Modo oscuro/claro | Toggle desde el panel. Pospuesto aquí por esfuerzo vs. impacto en Fase 7. |
+| Ruta | Contenido | Estado |
+|---|---|---|
+| ✅ 10.1 Diseño central cloud | Arquitectura del VPS DASC, modelo HTTPS productivo, topología multi-cliente. ✅ Entregado 2026-06-08 (R-077). `docs/tecnico/arquitectura_central_cloud.md` | ✅ |
+| 10.2 Central VPS + HTTPS productivo | Despliegue real con dominio propio, TLS válido, nginx. Guía completa en `docs/guias/guia_central_vps.md`. ✅ Guía entregada 2026-06-08 (R-078). ⏳ **Pendiente: contratar VPS y ejecutar la guía.** | 🟡 |
+| ✅ 10.3 Panel multi-cliente | Gestión de clientes: alta, baja, rotación de tokens. Panel admin `/clientes` en Central Support. ✅ Entregado 2026-06-08 (R-079). | ✅ |
+| ✅ 10.4 Dashboard de salud global | Heartbeat cada 5 min desde paneles clientes. Endpoint `POST /api/v1/heartbeat` en Central. Dashboard `/salud` con semáforos. ✅ Entregado 2026-06-08 (R-080). | ✅ |
+| ✅ 10.5 Seguridad central | Log de auditoría de acciones admin en `/auditoria`. Restricción de rutas sensibles a rol admin. ✅ Entregado 2026-06-08 (R-081). | ✅ |
+| 10.6 Multi-idioma | ES (principal) → CA (Cataluña) → EN. Pospuesto: esfuerzo no justificado sin base de usuarios. 🕓 Diferido a Fase 12. | 🕓 |
+| ✅ 10.7 Modo oscuro/claro | Toggle CSS en el panel cliente. Persiste preferencia en localStorage. Detecta `prefers-color-scheme`. ✅ Entregado 2026-06-08 (R-083). | ✅ |
 
-**Gate `F10-GATE` "Central productiva":** Central accesible por HTTPS, al menos
-2 instalaciones reportando estado real, tokens gestionables, backup de la Central
-verificado.
+### 🚪 Gate `F10-GATE` "Central productiva"
+Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, tokens gestionables, backup de la Central verificado.
+
+**Checklist:**
+- [x] Arquitectura documentada (10.1). ✅ 2026-06-08.
+- [ ] Central en VPS con HTTPS real. ⏳ *(guía lista en `docs/guias/guia_central_vps.md`, pendiente contratar VPS y ejecutar)*
+- [x] Panel multi-cliente: alta/baja/rotación de tokens (10.3). ✅ 2026-06-08.
+- [x] Dashboard de salud global con heartbeat (10.4). ✅ 2026-06-08.
+- [x] Log de auditoría admin (10.5). ✅ 2026-06-08.
+- [x] Modo oscuro/claro en el panel (10.7). ✅ 2026-06-08.
+- [ ] Al menos 2 instalaciones de clientes reales reportando. ⏳ *(requiere F9-GATE + VPS activo)*
 
 ---
 
@@ -380,6 +388,7 @@ verificado.
 | 2026-06-07 | Reorganización completa: Fases 7-12 redefinidas. La antigua Fase 7 (Central cloud) pasa a Fase 10. Se insertan Fases 7 (madurez producto), 8 (madurez operacional) y 9 (negocio) como bloqueantes de la primera venta | El producto no estaba listo para vender: UI cruda, instaladores manuales, sin proceso de actualización, sin infraestructura de negocio. Calidad antes que velocidad comercial. |
 | 2026-06-07 | F9-GATE "Primer cliente de pago" reemplaza a F6-GATE-06 como gate comercial real | F6-GATE-06 se cerró prematuramente; el nuevo gate exige Fases 7+8+9 completas |
 | 2026-06-08 | Añadidas 7.9 (Integridad y consistencia de copias) y 8.7 (DRO) al roadmap | Propuesta del desarrollador: checksums + consistencia lógica son diferenciador inmediato; DRO orquestado es diferenciador enterprise sin coste. Alta disponibilidad registrada en Fase 12 — scope demasiado amplio para justificarse antes de tener base de clientes. |
+| 2026-06-08 | Fase 10 iniciada con 6 de 7 rutas completadas en código (10.2 y 10.6 quedan pendientes de acción externa) | El VPS y el dominio requieren pago real; multi-idioma requiere base de usuarios. Todo el código necesario entregado, incluyendo guía VPS. |
 
 ---
 

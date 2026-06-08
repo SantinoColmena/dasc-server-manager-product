@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Salud global — DASC Central Support</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe3ee;
+            --blue: #2563eb;
+            --blue-soft: #dbeafe;
+            --green-soft: #dcfce7;
+            --yellow-soft: #fef3c7;
+            --red-soft: #fee2e2;
+            --shadow: 0 16px 34px rgba(15, 23, 42, .08);
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .wrapper { max-width: 1200px; margin: 34px auto; padding: 0 22px 60px; }
+        .hero { background: linear-gradient(135deg, #fff 0%, #eff6ff 100%); border: 1px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 10px; }
+        .hero h1 { margin: 0 0 6px; font-size: 26px; }
+        .hero p { margin: 0; color: var(--muted); }
+        .nav-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+        .nav-item { display: inline-block; padding: 8px 16px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 600; background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; transition: background .18s; }
+        .nav-item:hover { background: #e2e8f0; color: #0f172a; }
+        .nav-item.active { background: var(--blue-soft); color: #1d4ed8; border-color: #bfdbfe; }
+        /* Resumen superior */
+        .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0 0 24px; }
+        .s-card { background: var(--card); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); text-align: center; }
+        .s-card .num { font-size: 36px; font-weight: 800; }
+        .s-card .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        .s-card.verde .num { color: #166534; }
+        .s-card.naranja .num { color: #92400e; }
+        .s-card.rojo .num { color: #991b1b; }
+        /* Tarjetas de clientes */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+        .client-card { background: var(--card); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); border-left: 5px solid #e2e8f0; }
+        .client-card.verde { border-left-color: #22c55e; }
+        .client-card.naranja { border-left-color: #f59e0b; }
+        .client-card.rojo { border-left-color: #ef4444; }
+        .client-name { font-size: 16px; font-weight: 700; margin: 0 0 2px; }
+        .client-id { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+        .semaforo { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; }
+        .semaforo.verde { background: #dcfce7; color: #166534; }
+        .semaforo.naranja { background: #fef3c7; color: #92400e; }
+        .semaforo.rojo { background: #fee2e2; color: #991b1b; }
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .metric { background: #f8fafc; border-radius: 8px; padding: 9px 12px; }
+        .metric .m-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+        .metric .m-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+        .metric .m-value.warn { color: #92400e; }
+        .metric .m-value.danger { color: #991b1b; }
+        .last-seen { font-size: 12px; color: var(--muted); margin-top: 12px; }
+        .empty { padding: 40px; text-align: center; color: var(--muted); background: var(--card); border-radius: 18px; box-shadow: var(--shadow); }
+        .auto-refresh { font-size: 12px; color: var(--muted); text-align: right; margin-bottom: 10px; }
+        @media (max-width: 760px) { .summary { grid-template-columns: 1fr 1fr; } }
+    </style>
+    <!-- Auto-refresco cada 60 s -->
+    <meta http-equiv="refresh" content="60">
+</head>
+<body>
+<div class="wrapper">
+
+    <section class="hero">
+        <h1>🌐 Salud global de instalaciones</h1>
+        <p>Estado en tiempo real de todos los paneles DASC conectados a esta Central. Se actualiza automáticamente.</p>
+        <p style="margin-top:6px;font-size:13px;color:#94a3b8;">Sesión: {{ current_user }} · {{ current_role }}</p>
+    </section>
+
+    <nav class="nav-bar">
+        <a href="/" class="nav-item">🎫 Tickets</a>
+        <a href="/salud" class="nav-item active">🟢 Salud global</a>
+        {% if current_role == 'admin' %}
+            <a href="/clientes" class="nav-item">🏢 Clientes</a>
+            <a href="/auditoria" class="nav-item">🔍 Auditoría</a>
+        {% endif %}
+        <a href="/logout" class="nav-item" style="margin-left:auto;">Cerrar sesión</a>
+    </nav>
+
+    <p class="auto-refresh">⟳ Actualización automática cada 60 segundos</p>
+
+    <!-- Resumen semáforos -->
+    <div class="summary">
+        <div class="s-card verde">
+            <div class="num">{{ verdes }}</div>
+            <div class="lbl">🟢 Sin incidencias (&lt; 10 min)</div>
+        </div>
+        <div class="s-card naranja">
+            <div class="num">{{ naranjas }}</div>
+            <div class="lbl">🟡 Tardío (10–60 min)</div>
+        </div>
+        <div class="s-card rojo">
+            <div class="num">{{ rojos }}</div>
+            <div class="lbl">🔴 Sin señal (&gt; 60 min)</div>
+        </div>
+    </div>
+
+    <!-- Tarjetas por cliente -->
+    {% if clientes %}
+        <div class="grid">
+            {% for c in clientes %}
+                <div class="client-card {{ c.semaforo }}">
+                    <div class="client-name">{{ c.nombre_cliente }}</div>
+                    <div class="client-id">{{ c.cliente_id }}</div>
+
+                    {% set emojis = {'verde': '🟢', 'naranja': '🟡', 'rojo': '🔴'} %}
+                    {% set labels = {'verde': 'Sin incidencias', 'naranja': 'Tardío', 'rojo': 'Sin señal'} %}
+                    <div class="semaforo {{ c.semaforo }}">
+                        {{ emojis[c.semaforo] }} {{ labels[c.semaforo] }}
+                    </div>
+
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="m-label">Disco usado</div>
+                            <div class="m-value {% if c.disco_pct and c.disco_pct >= 90 %}danger{% elif c.disco_pct and c.disco_pct >= 75 %}warn{% endif %}">
+                                {% if c.disco_pct is not none %}{{ c.disco_pct }}%{% else %}—{% endif %}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="m-label">Backups OK</div>
+                            <div class="m-value {% if c.backups_ok == 0 %}danger{% endif %}">
+                                {% if c.backups_ok is not none %}{{ '✅' if c.backups_ok else '❌' }}{% else %}—{% endif %}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="m-label">Alertas activas</div>
+                            <div class="m-value {% if c.alertas_activas and c.alertas_activas > 0 %}warn{% endif %}">
+                                {% if c.alertas_activas is not none %}{{ c.alertas_activas }}{% else %}—{% endif %}
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="m-label">Servicios activos</div>
+                            <div class="m-value">
+                                {% if c.servicios_activos is not none %}{{ c.servicios_activos }}{% else %}—{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="last-seen">
+                        {% if c.fecha %}
+                            Último contacto: {{ c.fecha }}
+                            {% if c.version_panel %} · v{{ c.version_panel }}{% endif %}
+                        {% else %}
+                            Sin heartbeat registrado
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <p><strong>Ningún panel ha enviado heartbeat aún.</strong></p>
+            <p>Para que un panel aparezca aquí, debe tener configuradas las variables<br>
+            <code>CENTRAL_SUPPORT_ENABLED=true</code> y <code>CENTRAL_SUPPORT_URL</code> en su <code>config.env</code>.</p>
+        </div>
+    {% endif %}
+
+</div>
+</body>
+</html>

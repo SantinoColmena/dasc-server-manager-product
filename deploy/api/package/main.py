@@ -3953,6 +3953,16 @@ CENTRAL_SUPPORT_TIMEOUT = int(os.getenv("CENTRAL_SUPPORT_TIMEOUT", "5"))
 JIRA_WEBHOOK_URL = os.getenv("JIRA_WEBHOOK_URL", "").strip()
 JIRA_WEBHOOK_TIMEOUT = int(os.getenv("JIRA_WEBHOOK_TIMEOUT", "5"))
 
+# R-080 / Ruta 10.4 — Heartbeat a Central Support
+# URL base de la Central (sin path); 0 = desactivado
+_CENTRAL_BASE_URL = CENTRAL_SUPPORT_URL.rstrip("/")
+if _CENTRAL_BASE_URL.endswith("/api/v1/support/tickets"):
+    _CENTRAL_BASE_URL = _CENTRAL_BASE_URL[: -len("/api/v1/support/tickets")]
+CENTRAL_HEARTBEAT_URL = (
+    f"{_CENTRAL_BASE_URL}/api/v1/heartbeat" if CENTRAL_SUPPORT_ENABLED else ""
+)
+CENTRAL_HEARTBEAT_INTERVAL = int(os.getenv("CENTRAL_HEARTBEAT_INTERVAL", "300"))  # segundos
+
 
 SUPPORT_TYPES = [
     "Incidencia",
@@ -6986,3 +6996,109 @@ def recuperacion_dro(request: Request):
     context["dro_pasos"] = _DRO_PASOS
     context["estado"] = estado
     return templates.TemplateResponse(request, "recuperacion.html", context)
+
+
+# =====================================================================
+# R-080 / Ruta 10.4 — Heartbeat hacia DASC Central Support
+# =====================================================================
+
+def _collect_heartbeat_data() -> dict:
+    """Recopila métricas locales para el heartbeat. Sin excepciones al exterior."""
+    data: dict = {
+        "cliente_id": CENTRAL_SUPPORT_CLIENT_ID,
+        "nombre_cliente": CENTRAL_SUPPORT_CLIENT_NAME,
+        "version_panel": os.getenv("DASC_VERSION", "1.0-rc1"),
+    }
+    # Disco
+    try:
+        import shutil as _shutil
+        uso = _shutil.disk_usage("/")
+        data["disco_pct"] = int(uso.used * 100 / uso.total) if uso.total else None
+    except Exception:
+        data["disco_pct"] = None
+
+    # Último backup
+    try:
+        historial = cargar_historial_backups(limit=1)
+        if historial:
+            ultimo = historial[0]
+            data["backups_ok"] = 1 if str(ultimo.get("estado", "")).upper() == "OK" else 0
+            data["ultimo_backup"] = str(ultimo.get("fecha", ""))
+        else:
+            data["backups_ok"] = None
+            data["ultimo_backup"] = ""
+    except Exception:
+        data["backups_ok"] = None
+        data["ultimo_backup"] = ""
+
+    # Alertas
+    try:
+        stats = get_alert_stats()
+        data["alertas_activas"] = int(stats.get("alerts_total", 0))
+    except Exception:
+        data["alertas_activas"] = None
+
+    # Uptime del proceso (si está disponible)
+    try:
+        import time as _time
+        data["uptime_segundos"] = int(_time.time() - _startup_ts)
+    except Exception:
+        data["uptime_segundos"] = None
+
+    return data
+
+
+# Timestamp de arranque del proceso (para calcular uptime)
+import time as _time_mod
+_startup_ts: float = _time_mod.time()
+
+
+def _fire_heartbeat() -> None:
+    """Envía el heartbeat a Central en segundo plano. Fallo silencioso."""
+    if not CENTRAL_HEARTBEAT_URL or not CENTRAL_SUPPORT_ENABLED:
+        return
+    try:
+        import urllib.request as _req
+        import json as _json
+        data = _collect_heartbeat_data()
+        body = _json.dumps(data).encode("utf-8")
+        req = _req.Request(
+            CENTRAL_HEARTBEAT_URL,
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
+                "User-Agent": "DASC-Panel/1.0",
+            },
+            method="POST",
+        )
+        with _req.urlopen(req, timeout=CENTRAL_SUPPORT_TIMEOUT) as _r:
+            pass  # respuesta ignorada
+    except Exception:
+        pass  # silencioso — el heartbeat nunca debe interrumpir el panel
+
+
+def _heartbeat_daemon() -> None:
+    """Daemon thread: envía heartbeat cada CENTRAL_HEARTBEAT_INTERVAL segundos."""
+    import time as _t
+    _t.sleep(30)  # espera inicial para que la app arranque completamente
+    while True:
+        _fire_heartbeat()
+        _t.sleep(max(60, CENTRAL_HEARTBEAT_INTERVAL))
+
+
+if CENTRAL_SUPPORT_ENABLED and CENTRAL_HEARTBEAT_URL:
+    threading.Thread(
+        target=_heartbeat_daemon,
+        daemon=True,
+        name="dasc-heartbeat",
+    ).start()
+
+
+@app.get("/api/v1/heartbeat")
+def api_heartbeat(request: Request):
+    """
+    Endpoint público de salud del panel (sin autenticación para llamadas de monitoring).
+    Devuelve métricas básicas del servidor en JSON.
+    """
+    return _collect_heartbeat_data()

@@ -921,3 +921,415 @@ def central_ticket_update_status_priority(
         url=f"/tickets/{ticket_id}?msg={msg.replace(' ', '+')}",
         status_code=303,
     )
+
+
+# =====================
+# R-079 / Ruta 10.3 — Gestión de clientes (solo admin)
+# =====================
+
+def is_central_admin(request) -> bool:
+    return request.session.get("central_role") == "admin"
+
+
+def require_admin(request):
+    """Devuelve None si ok, o una respuesta de redirección/error si no autorizado."""
+    if not is_central_authenticated(request):
+        return central_login_redirect()
+    if not is_central_admin(request):
+        raise HTTPException(status_code=403, detail="Se requiere rol de administrador")
+    return None
+
+
+def list_clients() -> list:
+    init_db()
+    with db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, nombre, token, activo, fecha_alta
+            FROM central_clients
+            ORDER BY fecha_alta DESC
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def add_client(client_id: str, nombre: str) -> dict:
+    """Alta de cliente con token seguro (256 bits). Devuelve el dict con el token."""
+    token = secrets.token_hex(32)
+    now = now_text()
+    with db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO central_clients (id, nombre, token, activo, fecha_alta)
+            VALUES (?, ?, ?, 1, ?)
+            """,
+            (client_id, nombre, token, now),
+        )
+        conn.commit()
+    return {"id": client_id, "nombre": nombre, "token": token, "activo": 1, "fecha_alta": now}
+
+
+def set_client_active(client_id: str, activo: int):
+    with db_connect() as conn:
+        conn.execute(
+            "UPDATE central_clients SET activo = ? WHERE id = ?",
+            (activo, client_id),
+        )
+        conn.commit()
+
+
+def rotate_client_token(client_id: str) -> str:
+    token = secrets.token_hex(32)
+    with db_connect() as conn:
+        conn.execute(
+            "UPDATE central_clients SET token = ? WHERE id = ?",
+            (token, client_id),
+        )
+        conn.commit()
+    return token
+
+
+@app.get("/clientes", response_class=HTMLResponse)
+def central_clientes(request: Request):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    clientes = list_clients()
+    return templates.TemplateResponse(
+        request,
+        "central_clientes.html",
+        {
+            "clientes": clientes,
+            "msg": request.query_params.get("msg"),
+            "nuevo_token": request.query_params.get("nuevo_token"),
+            "nuevo_cliente_id": request.query_params.get("nuevo_cliente_id"),
+            **get_central_session_context(request),
+        },
+    )
+
+
+@app.post("/clientes/nuevo")
+def central_cliente_nuevo(
+    request: Request,
+    cliente_id: str = Form(...),
+    nombre: str = Form(...),
+):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    cliente_id = cliente_id.strip().lower().replace(" ", "-")
+    nombre = nombre.strip()
+    if not cliente_id or not nombre:
+        return RedirectResponse(url="/clientes?msg=ID+y+nombre+son+obligatorios", status_code=303)
+    existing = list_clients()
+    if any(c["id"] == cliente_id for c in existing):
+        return RedirectResponse(
+            url=f"/clientes?msg=Ya+existe+un+cliente+con+ID+{cliente_id}",
+            status_code=303,
+        )
+    cliente = add_client(cliente_id, nombre)
+    add_audit_log(
+        usuario=request.session.get("central_user", "admin"),
+        accion="cliente_nuevo",
+        detalle=f"Nuevo cliente: {nombre} (ID: {cliente_id})",
+    )
+    return RedirectResponse(
+        url=(
+            f"/clientes?nuevo_token={cliente['token']}"
+            f"&nuevo_cliente_id={cliente_id}"
+            f"&msg=Cliente+creado+correctamente"
+        ),
+        status_code=303,
+    )
+
+
+@app.post("/clientes/{cliente_id}/revocar")
+def central_cliente_revocar(request: Request, cliente_id: str):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    if cliente_id == DEMO_CLIENT_ID:
+        return RedirectResponse(
+            url="/clientes?msg=No+se+puede+revocar+el+cliente+demo",
+            status_code=303,
+        )
+    clientes = list_clients()
+    cliente = next((c for c in clientes if c["id"] == cliente_id), None)
+    if not cliente:
+        return RedirectResponse(url="/clientes?msg=Cliente+no+encontrado", status_code=303)
+    nuevo_activo = 0 if int(cliente["activo"]) == 1 else 1
+    set_client_active(cliente_id, nuevo_activo)
+    accion_txt = "desactivado" if nuevo_activo == 0 else "reactivado"
+    add_audit_log(
+        usuario=request.session.get("central_user", "admin"),
+        accion=f"cliente_{accion_txt}",
+        detalle=f"Cliente {cliente_id} {accion_txt}",
+    )
+    return RedirectResponse(url=f"/clientes?msg=Cliente+{accion_txt}", status_code=303)
+
+
+@app.post("/clientes/{cliente_id}/rotar")
+def central_cliente_rotar(request: Request, cliente_id: str):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    clientes = list_clients()
+    if not any(c["id"] == cliente_id for c in clientes):
+        return RedirectResponse(url="/clientes?msg=Cliente+no+encontrado", status_code=303)
+    nuevo_token = rotate_client_token(cliente_id)
+    add_audit_log(
+        usuario=request.session.get("central_user", "admin"),
+        accion="token_rotado",
+        detalle=f"Token rotado para cliente {cliente_id}",
+    )
+    return RedirectResponse(
+        url=(
+            f"/clientes?nuevo_token={nuevo_token}"
+            f"&nuevo_cliente_id={cliente_id}"
+            f"&msg=Token+rotado+correctamente"
+        ),
+        status_code=303,
+    )
+
+
+# =====================
+# R-080 / Ruta 10.4 — Heartbeat y dashboard de salud global
+# =====================
+
+import json as _json_mod
+from datetime import datetime as _dt
+
+
+def ensure_heartbeats_table():
+    init_db()
+    with db_connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS central_heartbeats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente_id TEXT NOT NULL,
+                nombre_cliente TEXT NOT NULL,
+                fecha TEXT NOT NULL,
+                version_panel TEXT,
+                disco_pct INTEGER,
+                backups_ok INTEGER,
+                ultimo_backup TEXT,
+                alertas_activas INTEGER,
+                servicios_activos INTEGER,
+                uptime_segundos INTEGER,
+                datos_extra TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_heartbeats_cliente
+            ON central_heartbeats (cliente_id)
+            """
+        )
+        conn.commit()
+
+
+def save_heartbeat(cliente_id: str, nombre_cliente: str, datos: dict):
+    ensure_heartbeats_table()
+    with db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO central_heartbeats (
+                cliente_id, nombre_cliente, fecha,
+                version_panel, disco_pct, backups_ok, ultimo_backup,
+                alertas_activas, servicios_activos, uptime_segundos, datos_extra
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                cliente_id,
+                nombre_cliente,
+                now_text(),
+                datos.get("version_panel", ""),
+                datos.get("disco_pct"),
+                datos.get("backups_ok"),
+                datos.get("ultimo_backup", ""),
+                datos.get("alertas_activas"),
+                datos.get("servicios_activos"),
+                datos.get("uptime_segundos"),
+                datos.get("datos_extra", ""),
+            ),
+        )
+        conn.commit()
+
+
+def get_last_heartbeat_per_client() -> list:
+    ensure_heartbeats_table()
+    with db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT h.*
+            FROM central_heartbeats h
+            INNER JOIN (
+                SELECT cliente_id, MAX(id) AS max_id
+                FROM central_heartbeats
+                GROUP BY cliente_id
+            ) latest ON h.id = latest.max_id
+            ORDER BY h.fecha DESC
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _semaforo(fecha_str) -> str:
+    """Verde < 10 min · Naranja < 60 min · Rojo ≥ 60 min o sin dato."""
+    if not fecha_str:
+        return "rojo"
+    try:
+        ts = _dt.strptime(str(fecha_str), "%Y-%m-%d %H:%M:%S")
+        minutos = (_dt.now() - ts).total_seconds() / 60
+        if minutos < 10:
+            return "verde"
+        if minutos < 60:
+            return "naranja"
+        return "rojo"
+    except Exception:
+        return "rojo"
+
+
+class HeartbeatIn(BaseModel):
+    cliente_id: str = Field(..., min_length=1)
+    nombre_cliente: str = Field(..., min_length=1)
+    version_panel: Optional[str] = ""
+    disco_pct: Optional[int] = None
+    backups_ok: Optional[int] = None
+    ultimo_backup: Optional[str] = ""
+    alertas_activas: Optional[int] = None
+    servicios_activos: Optional[int] = None
+    uptime_segundos: Optional[int] = None
+    datos_extra: Optional[str] = ""
+
+
+@app.post("/api/v1/heartbeat")
+def receive_heartbeat(
+    payload: HeartbeatIn,
+    x_dasc_client_token: Optional[str] = Header(default=None),
+):
+    """Recibe heartbeat periódico de un panel cliente. Requiere token válido."""
+    if not validate_client_token(payload.cliente_id, x_dasc_client_token):
+        raise HTTPException(status_code=401, detail="Token de cliente no válido")
+    save_heartbeat(
+        cliente_id=payload.cliente_id,
+        nombre_cliente=payload.nombre_cliente,
+        datos=payload.dict(),
+    )
+    return {"ok": True, "mensaje": "Heartbeat registrado"}
+
+
+@app.get("/salud", response_class=HTMLResponse)
+def central_salud(request: Request):
+    if not is_central_authenticated(request):
+        return central_login_redirect()
+    heartbeats = get_last_heartbeat_per_client()
+    clientes_estado = []
+    for hb in heartbeats:
+        hb_dict = dict(hb)
+        hb_dict["semaforo"] = _semaforo(hb_dict.get("fecha"))
+        clientes_estado.append(hb_dict)
+    # Clientes sin heartbeat alguno
+    todos = list_clients()
+    ids_con_hb = {c["cliente_id"] for c in clientes_estado}
+    for c in todos:
+        if c["id"] not in ids_con_hb and int(c["activo"]) == 1:
+            clientes_estado.append({
+                "cliente_id": c["id"],
+                "nombre_cliente": c["nombre"],
+                "fecha": None,
+                "semaforo": "rojo",
+                "disco_pct": None,
+                "backups_ok": None,
+                "ultimo_backup": None,
+                "alertas_activas": None,
+                "servicios_activos": None,
+                "version_panel": None,
+            })
+    verdes   = sum(1 for c in clientes_estado if c["semaforo"] == "verde")
+    naranjas = sum(1 for c in clientes_estado if c["semaforo"] == "naranja")
+    rojos    = sum(1 for c in clientes_estado if c["semaforo"] == "rojo")
+    return templates.TemplateResponse(
+        request,
+        "central_salud.html",
+        {
+            "clientes": clientes_estado,
+            "verdes": verdes,
+            "naranjas": naranjas,
+            "rojos": rojos,
+            **get_central_session_context(request),
+        },
+    )
+
+
+# =====================
+# R-081 / Ruta 10.5 — Log de auditoría de acciones de admin
+# =====================
+
+def ensure_audit_table():
+    init_db()
+    with db_connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS central_audit_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha TEXT NOT NULL,
+                usuario TEXT NOT NULL,
+                accion TEXT NOT NULL,
+                detalle TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_audit_usuario
+            ON central_audit_log (usuario)
+            """
+        )
+        conn.commit()
+
+
+def add_audit_log(usuario: str, accion: str, detalle: str = ""):
+    ensure_audit_table()
+    with db_connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO central_audit_log (fecha, usuario, accion, detalle)
+            VALUES (?, ?, ?, ?)
+            """,
+            (now_text(), usuario, accion, detalle),
+        )
+        conn.commit()
+
+
+def get_audit_log(limit: int = 200) -> list:
+    ensure_audit_table()
+    with db_connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, fecha, usuario, accion, detalle
+            FROM central_audit_log
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+@app.get("/auditoria", response_class=HTMLResponse)
+def central_auditoria(request: Request):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    registros = get_audit_log(limit=200)
+    return templates.TemplateResponse(
+        request,
+        "central_auditoria.html",
+        {
+            "registros": registros,
+            **get_central_session_context(request),
+        },
+    )

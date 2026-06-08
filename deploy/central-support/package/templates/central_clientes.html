@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Clientes — DASC Central Support</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe3ee;
+            --blue: #2563eb;
+            --blue-soft: #dbeafe;
+            --green-soft: #dcfce7;
+            --yellow-soft: #fef3c7;
+            --red-soft: #fee2e2;
+            --shadow: 0 16px 34px rgba(15, 23, 42, .08);
+            --radius: 18px;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .wrapper { max-width: 1100px; margin: 34px auto; padding: 0 22px 60px; }
+        .hero { background: linear-gradient(135deg, #fff 0%, #eff6ff 100%); border: 1px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 10px; }
+        .hero h1 { margin: 0 0 6px; font-size: 26px; }
+        .hero p { margin: 0; color: var(--muted); }
+        .nav-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+        .nav-item { display: inline-block; padding: 8px 16px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 600; background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; transition: background .18s, color .18s; }
+        .nav-item:hover { background: #e2e8f0; color: #0f172a; }
+        .nav-item.active { background: var(--blue-soft); color: #1d4ed8; border-color: #bfdbfe; }
+        .msg { padding: 12px 18px; border-radius: 10px; margin-bottom: 18px; font-weight: 600; font-size: 14px; background: var(--blue-soft); color: #1e40af; border: 1px solid #bfdbfe; }
+        .token-box { background: #fef3c7; border: 1.5px solid #fbbf24; border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; }
+        .token-box h3 { margin: 0 0 8px; color: #92400e; font-size: 15px; }
+        .token-value { font-family: monospace; font-size: 14px; background: #fff; border: 1px solid #fcd34d; border-radius: 8px; padding: 10px 14px; word-break: break-all; color: #78350f; }
+        .panel { background: var(--card); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
+        .panel h2 { margin: 0 0 20px; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--line); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; background: #f8fafc; color: var(--muted); }
+        td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fbff; }
+        .badge { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge.activo { background: var(--green-soft); color: #166534; }
+        .badge.inactivo { background: var(--red-soft); color: #991b1b; }
+        .token-preview { font-family: monospace; font-size: 12px; color: var(--muted); }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block; }
+        .btn-danger { background: var(--red-soft); color: #991b1b; }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-warning { background: var(--yellow-soft); color: #92400e; }
+        .btn-warning:hover { background: #fde68a; }
+        .btn-success { background: var(--green-soft); color: #166534; }
+        .btn-success:hover { background: #bbf7d0; }
+        .btn-primary { background: var(--blue-soft); color: #1d4ed8; }
+        .btn-primary:hover { background: #bfdbfe; }
+        /* Formulario nuevo cliente */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+        .form-group input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 14px; background: #f8fafc; }
+        .form-group input:focus { outline: none; border-color: var(--blue); background: #fff; }
+        .empty { padding: 34px; text-align: center; color: var(--muted); background: #f8fafc; border-radius: 14px; border: 1px dashed #cbd5e1; }
+        @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .actions { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <!-- Cabecera -->
+    <section class="hero">
+        <h1>🏢 Gestión de clientes</h1>
+        <p>Alta, baja y rotación de tokens de las instalaciones DASC conectadas a esta Central.</p>
+        <p style="margin-top:6px;font-size:13px;color:#94a3b8;">Sesión: {{ current_user }} · {{ current_role }}</p>
+    </section>
+
+    <!-- Navegación -->
+    <nav class="nav-bar">
+        <a href="/" class="nav-item">🎫 Tickets</a>
+        <a href="/salud" class="nav-item">🟢 Salud global</a>
+        <a href="/clientes" class="nav-item active">🏢 Clientes</a>
+        <a href="/auditoria" class="nav-item">🔍 Auditoría</a>
+        <a href="/logout" class="nav-item" style="margin-left:auto;">Cerrar sesión</a>
+    </nav>
+
+    <!-- Mensaje de operación -->
+    {% if msg %}
+        <div class="msg">{{ msg }}</div>
+    {% endif %}
+
+    <!-- Token nuevo (solo se muestra una vez) -->
+    {% if nuevo_token and nuevo_cliente_id %}
+        <div class="token-box">
+            <h3>⚠️ Copia este token ahora — no se volverá a mostrar</h3>
+            <p style="margin:0 0 10px;font-size:13px;color:#92400e;">
+                Cliente: <strong>{{ nuevo_cliente_id }}</strong>
+            </p>
+            <div class="token-value">{{ nuevo_token }}</div>
+            <p style="margin:10px 0 0;font-size:12px;color:#92400e;">
+                Añade este token al <code>config.env</code> del servidor del cliente:<br>
+                <code>CENTRAL_SUPPORT_TOKEN={{ nuevo_token }}</code><br>
+                <code>CENTRAL_SUPPORT_CLIENT_ID={{ nuevo_cliente_id }}</code>
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Formulario: nuevo cliente -->
+    <div class="panel">
+        <h2>Registrar nuevo cliente</h2>
+        <form method="post" action="/clientes/nuevo">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cliente_id">ID del cliente</label>
+                    <input type="text" id="cliente_id" name="cliente_id"
+                           placeholder="empresa-nombre-corto" required
+                           pattern="[a-zA-Z0-9\-]+" title="Solo letras, números y guiones">
+                </div>
+                <div class="form-group">
+                    <label for="nombre">Nombre del cliente</label>
+                    <input type="text" id="nombre" name="nombre"
+                           placeholder="Empresa S.L." required maxlength="100">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                ➕ Crear cliente y generar token
+            </button>
+        </form>
+    </div>
+
+    <!-- Lista de clientes -->
+    <div class="panel">
+        <h2>Clientes registrados ({{ clientes|length }})</h2>
+        {% if clientes %}
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Estado</th>
+                            <th>Token (preview)</th>
+                            <th>Alta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in clientes %}
+                            <tr>
+                                <td><strong>{{ c.id }}</strong></td>
+                                <td>{{ c.nombre }}</td>
+                                <td>
+                                    <span class="badge {{ 'activo' if c.activo else 'inactivo' }}">
+                                        {{ '✅ Activo' if c.activo else '🚫 Inactivo' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="token-preview">
+                                        {{ c.token[:8] }}…{{ c.token[-4:] }}
+                                    </span>
+                                </td>
+                                <td style="white-space:nowrap;">{{ c.fecha_alta }}</td>
+                                <td>
+                                    <div class="actions">
+                                        <!-- Rotar token -->
+                                        <form method="post"
+                                              action="/clientes/{{ c.id }}/rotar"
+                                              onsubmit="return confirm('¿Rotar token de {{ c.nombre }}? El panel del cliente dejará de conectarse hasta configurar el nuevo token.');">
+                                            <button type="submit" class="btn btn-warning">🔄 Rotar token</button>
+                                        </form>
+                                        <!-- Activar / revocar -->
+                                        {% if c.id != 'cliente-demo-a' %}
+                                            <form method="post"
+                                                  action="/clientes/{{ c.id }}/revocar"
+                                                  onsubmit="return confirm('¿{{ 'Desactivar' if c.activo else 'Reactivar' }} al cliente {{ c.nombre }}?');">
+                                                <button type="submit"
+                                                        class="btn {{ 'btn-danger' if c.activo else 'btn-success' }}">
+                                                    {{ '🚫 Desactivar' if c.activo else '✅ Reactivar' }}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty">Aún no hay clientes registrados. Usa el formulario de arriba para añadir el primero.</div>
+        {% endif %}
+    </div>
+
+</div>
+</body>
+</html>
