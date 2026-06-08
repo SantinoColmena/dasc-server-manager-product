@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASC Server Manager — Panel de gestión para PYMES</title>
+    <meta name="description" content="DASC centraliza copias de seguridad, monitoreo, servicios, alertas y soporte en un único panel privado para tu empresa. Sin dependencias de la nube.">
+    <meta name="robots" content="index, follow">
+    <!-- TODO: cambiar al dominio real una vez registrado -->
+    <link rel="canonical" href="https://dascpyme.es/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="DASC Server Manager — Panel para PYMES">
+    <meta property="og:description" content="Controla tus servidores sin complicaciones. Backups, alertas, servicios y soporte desde un panel sencillo.">
+    <meta property="og:type" content="website">
+    <!-- TODO: añadir og:image con captura del panel -->
+
+    <!-- Fuente Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="estilos.css">
+
+    <!-- Favicon -->
+    <!-- TODO: añadir favicon.ico -->
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+    <div class="container">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">D</div>
+                <span class="nav-logo-name">DASC</span>
+            </a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#funcionalidades">Funcionalidades</a></li>
+                <li><a href="#como-funciona">Cómo funciona</a></li>
+                <li><a href="#precios">Precios</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+            <a href="#contacto" class="btn btn-primary nav-cta">
+                Solicitar demo <i class="fa-solid fa-arrow-right"></i>
+            </a>
+            <button class="nav-hamburger" id="hamburger" aria-label="Abrir menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-inner">
+            <div class="hero-content">
+                <span class="hero-tag">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Panel privado para PYMES · Sin nube obligatoria
+                </span>
+                <h1 class="hero-title">
+                    Gestiona tus servidores<br>
+                    <em>sin complicaciones</em>
+                </h1>
+                <p class="hero-subtitle">
+                    DASC centraliza copias de seguridad, monitoreo, servicios, alertas y soporte
+                    en un único panel privado instalado en tu propio servidor.
+                    Tus datos, en tu infraestructura.
+                </p>
+                <div class="hero-actions">
+                    <a href="#contacto" class="btn btn-white btn-lg">
+                        <i class="fa-solid fa-calendar-check"></i> Solicitar demo gratuita
+                    </a>
+                    <a href="#precios" class="btn btn-outline btn-lg" style="color:#c7d2fe;border-color:rgba(199,210,254,.4);">
+                        Ver precios <i class="fa-solid fa-arrow-down"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mockup del panel -->
+            <div class="hero-visual">
+                <div class="panel-mock">
+                    <div class="panel-mock-bar">
+                        <span class="mock-dot r"></span>
+                        <span class="mock-dot y"></span>
+                        <span class="mock-dot g"></span>
+                        <span class="mock-url">panel.tuempresa.es</span>
+                    </div>
+                    <div class="panel-mock-content">
+                        <div class="mock-kpi-row">
+                            <div class="mock-kpi g">
+                                <div class="mock-kpi-label">Último backup</div>
+                                <div class="mock-kpi-val">✓ OK</div>
+                            </div>
+                            <div class="mock-kpi b">
+                                <div class="mock-kpi-label">Disco</div>
+                                <div class="mock-kpi-val">42%</div>
+                            </div>
+                            <div class="mock-kpi g">
+                                <div class="mock-kpi-label">Servicios</div>
+                                <div class="mock-kpi-val">5/5</div>
+                            </div>
+                            <div class="mock-kpi y">
+                                <div class="mock-kpi-label">Alertas</div>
+                                <div class="mock-kpi-val">1</div>
+                            </div>
+                        </div>
+                        <div class="mock-row w80 b"></div>
+                        <div class="mock-row w60 g"></div>
+                        <div class="mock-row w80"></div>
+                        <div class="mock-row w45"></div>
+                        <div class="mock-row w80 b"></div>
+                        <div class="mock-row w60"></div>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:1rem;font-size:.75rem;color:rgba(255,255,255,.4);">
+                    Panel instalado en tu propia infraestructura
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ESTADÍSTICAS
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="stats-strip">
+    <div class="container">
+        <div class="stats-grid">
+            <div>
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Datos en tu servidor</div>
+            </div>
+            <div>
+                <div class="stat-num">3</div>
+                <div class="stat-label">Perfiles de despliegue</div>
+            </div>
+            <div>
+                <div class="stat-num">6</div>
+                <div class="stat-label">Módulos integrados</div>
+            </div>
+            <div>
+                <div class="stat-num">€0</div>
+                <div class="stat-label">Coste de infraestructura en la nube</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PROBLEMA
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section section-alt">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-triangle-exclamation"></i> El problema</span>
+            <h2 class="section-title">¿Tus backups funcionan de verdad?</h2>
+            <p class="section-subtitle">
+                La mayoría de empresas pequeñas cree que sus copias de seguridad están bien.
+                Hasta que necesitan restaurar una.
+            </p>
+        </div>
+        <div class="problems-grid">
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-question"></i></div>
+                <p class="problem-title">Backups sin verificar</p>
+                <p class="problem-desc">Se ejecutan los scripts, pero nadie comprueba si terminaron bien ni si el fichero resultante se puede restaurar.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-bell-slash"></i></div>
+                <p class="problem-title">Sin alertas automáticas</p>
+                <p class="problem-desc">Cuando falla algo, te enteras cuando ya es tarde: el servicio lleva horas caído o el disco está lleno al 99%.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-person-running"></i></div>
+                <p class="problem-title">Dependencia de una sola persona</p>
+                <p class="problem-desc">Todo el conocimiento del servidor está en la cabeza de una persona. Si no está disponible, nadie sabe qué hacer.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-file-circle-xmark"></i></div>
+                <p class="problem-title">Logs imposibles de leer</p>
+                <p class="problem-desc">Los logs existen, pero están dispersos en varios ficheros, sin ningún orden ni forma fácil de consultarlos.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-lock-open"></i></div>
+                <p class="problem-title">Sin control de accesos</p>
+                <p class="problem-desc">Todos entran con el mismo usuario root, no hay registro de quién hizo qué ni cuándo.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <p class="problem-title">Restauración lenta y arriesgada</p>
+                <p class="problem-desc">Cuando hay un incidente real, el proceso de recuperación se improvisa porque nunca se ensayó ni documentó.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FUNCIONALIDADES
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="funcionalidades">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-star"></i> Funcionalidades</span>
+            <h2 class="section-title">Todo lo que necesitas, en un solo lugar</h2>
+            <p class="section-subtitle">
+                DASC integra los módulos esenciales para gestionar un servidor de empresa
+                sin tener que abrir una terminal para cada cosa.
+            </p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-database"></i></div>
+                <p class="feature-title">Copias de seguridad</p>
+                <p class="feature-desc">Lanza backups completos, incrementales y diferenciales. Historial completo con estado, SHA256 y tamaño de cada copia.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-chart-area"></i></div>
+                <p class="feature-title">Monitoreo en tiempo real</p>
+                <p class="feature-desc">CPU, RAM, disco y estado de la red. Gráficas de tendencia e historial para detectar patrones antes de que fallen.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-server"></i></div>
+                <p class="feature-title">Gestión de servicios</p>
+                <p class="feature-desc">Arranca, para y reinicia servicios del sistema desde el panel. Control por usuario: solo quien debe puede actuar.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+                <p class="feature-title">Alertas proactivas</p>
+                <p class="feature-desc">Notificaciones por email y Telegram cuando el disco supera el umbral, un backup falla o un servicio se cae.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-file-lines"></i></div>
+                <p class="feature-title">Informes automáticos</p>
+                <p class="feature-desc">Envía informes periódicos (diario, semanal, mensual) con el estado de backups, disco, servicios y alertas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+                <p class="feature-title">Soporte integrado</p>
+                <p class="feature-desc">Sistema de tickets, preguntas frecuentes con búsqueda y runbook guiado de recuperación ante desastres.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CÓMO FUNCIONA
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="como-funciona">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-list-check"></i> Proceso</span>
+            <h2 class="section-title">En marcha en menos de una hora</h2>
+            <p class="section-subtitle">
+                Sin agentes que instalar en cada máquina, sin configuración compleja.
+                Solo tres pasos y tu equipo ya puede usarlo.
+            </p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <p class="step-title">Instalación en tu servidor</p>
+                <p class="step-desc">Un script bash o un asistente PowerShell instala DASC en tu servidor Ubuntu. Sin Docker, sin Kubernetes.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <p class="step-title">Configuración guiada</p>
+                <p class="step-desc">Desde el panel configuras backups, alertas, usuarios y permisos. Sin tocar ficheros de configuración manualmente.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <p class="step-title">Tranquilidad desde el día uno</p>
+                <p class="step-desc">Recibes informes automáticos, alertas cuando algo falla y tienes todo el historial de operaciones a un clic.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PRECIOS
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="precios">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-tag"></i> Precios</span>
+            <h2 class="section-title">Sin sorpresas, sin letra pequeña</h2>
+            <p class="section-subtitle">
+                Pago mensual o anual. Factura española. Sin compromisos de permanencia.
+                <!-- TODO: confirmar precios antes de publicar -->
+            </p>
+        </div>
+        <div class="pricing-grid">
+
+            <!-- Plan Lite -->
+            <div class="pricing-card">
+                <p class="pricing-plan">Plan</p>
+                <p class="pricing-name">DASC Lite</p>
+                <div class="pricing-price">
+                    <span class="pricing-amount">€15</span>
+                    <span class="pricing-period"> / mes</span>
+                </div>
+                <p class="pricing-desc">Para microempresas o autónomos con un único servidor. Todo lo esencial, sin complicaciones.</p>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check check"></i> 1 servidor</li>
+                    <li><i class="fa-solid fa-check check"></i> Copias de seguridad completas</li>
+                    <li><i class="fa-solid fa-check check"></i> Monitoreo básico (disco, CPU, RAM)</li>
+                    <li><i class="fa-solid fa-check check"></i> Alertas por email</li>
+                    <li><i class="fa-solid fa-check check"></i> Informes periódicos</li>
+                    <li><i class="fa-solid fa-xmark cross"></i> Backups incrementales/diferenciales</li>
+                    <li><i class="fa-solid fa-xmark cross"></i> Soporte prioritario</li>
+                </ul>
+                <a href="#contacto" class="btn btn-outline" style="width:100%;justify-content:center;">Empezar con Lite</a>
+                <p class="pricing-note">Instalación incluida · Sin permanencia</p>
+            </div>
+
+            <!-- Plan Standard (popular) -->
+            <div class="pricing-card popular">
+                <div class="pricing-popular-badge"><i class="fa-solid fa-star"></i> Más popular</div>
+                <p class="pricing-plan">Plan</p>
+                <p class="pricing-name">DASC Standard</p>
+                <div class="pricing-price">
+                    <span class="pricing-amount">€35</span>
+                    <span class="pricing-period"> / mes</span>
+                </div>
+                <p class="pricing-desc">Para pequeñas empresas. Panel + servidor de backups separado. La opción recomendada para PYMES.</p>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check check"></i> Hasta 2 servidores</li>
+                    <li><i class="fa-solid fa-check check"></i> Backups completos + incrementales</li>
+                    <li><i class="fa-solid fa-check check"></i> Monitoreo completo + gráficas</li>
+                    <li><i class="fa-solid fa-check check"></i> Alertas email + Telegram</li>
+                    <li><i class="fa-solid fa-check check"></i> Informes personalizables</li>
+                    <li><i class="fa-solid fa-check check"></i> Verificación SHA256 de copias</li>
+                    <li><i class="fa-solid fa-check check"></i> Soporte prioritario por email (24h)</li>
+                </ul>
+                <a href="#contacto" class="btn btn-primary" style="width:100%;justify-content:center;">Empezar con Standard</a>
+                <p class="pricing-note">Instalación incluida · Sin permanencia</p>
+            </div>
+
+            <!-- Plan Pro -->
+            <div class="pricing-card">
+                <p class="pricing-plan">Plan</p>
+                <p class="pricing-name">DASC Pro</p>
+                <div class="pricing-price">
+                    <span class="pricing-amount">€65</span>
+                    <span class="pricing-period"> / mes</span>
+                </div>
+                <p class="pricing-desc">Para empresas con mayor criticidad o infraestructura distribuida en tres o más nodos independientes.</p>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check check"></i> 3+ servidores distribuidos</li>
+                    <li><i class="fa-solid fa-check check"></i> Backups completos + incrementales + diferenciales</li>
+                    <li><i class="fa-solid fa-check check"></i> Runbook DRO integrado en el panel</li>
+                    <li><i class="fa-solid fa-check check"></i> Test de restauración incluido</li>
+                    <li><i class="fa-solid fa-check check"></i> Informes personalizados con historial</li>
+                    <li><i class="fa-solid fa-check check"></i> Soporte prioritario (4h respuesta)</li>
+                    <li><i class="fa-solid fa-check check"></i> Revisión mensual del sistema</li>
+                </ul>
+                <a href="#contacto" class="btn btn-outline" style="width:100%;justify-content:center;">Empezar con Pro</a>
+                <p class="pricing-note">Instalación incluida · Sin permanencia</p>
+            </div>
+        </div>
+
+        <!-- Nota Managed -->
+        <div style="max-width:700px;margin:2.5rem auto 0;background:var(--bg-alt);border:1.5px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;">
+            <p style="font-size:.95rem;font-weight:700;color:var(--primary-dark);margin-bottom:.4rem;">
+                <i class="fa-solid fa-hands-helping" style="color:var(--primary);"></i>
+                ¿Prefieres delegar completamente?
+            </p>
+            <p style="font-size:.84rem;color:var(--text-light);">
+                El plan <strong>DASC Managed</strong> incluye Pro + mantenimiento mensual, revisiones proactivas e informes para dirección.
+                Precio bajo consulta según infraestructura.
+            </p>
+            <a href="#contacto" style="display:inline-block;margin-top:1rem;font-size:.85rem;color:var(--primary);font-weight:600;text-decoration:none;">
+                Consultar precio Managed <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FAQ
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="faq">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-circle-question"></i> FAQ</span>
+            <h2 class="section-title">Preguntas frecuentes</h2>
+            <p class="section-subtitle">Lo que más nos preguntan antes de empezar.</p>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item open">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    ¿DASC funciona en local, sin enviar datos a la nube?
+                    <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a">
+                    <p>Sí. DASC se instala en tu propio servidor Ubuntu. Los datos de backups, logs y configuración nunca salen de tu infraestructura. Si quieres una copia externa, puedes configurar sincronización a un storage externo que tú controles.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    ¿Qué sistema operativo necesito?
+                    <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a">
+                    <p>Ubuntu Server 22.04 LTS o superior. El panel se puede gestionar desde cualquier navegador moderno, incluyendo móvil. El equipo de gestión (el tuyo) puede ser Windows, Mac o Linux.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    ¿DASC sustituye a un técnico informático?
+                    <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a">
+                    <p>No completamente, y no lo pretende. DASC reduce la necesidad de acceder al servidor para tareas rutinarias y da visibilidad del estado del sistema a usuarios no técnicos. Las acciones críticas (como restaurar ante un desastre) siguen requiriendo supervisión técnica.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    ¿Puedo probar DASC antes de pagar?
+                    <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a">
+                    <p>Sí. Ofrecemos una demo técnica en entorno controlado, sin acceso a tus datos reales. Si quieres instalarlo tú mismo, el repositorio es de código abierto y puedes probarlo en una VM o servidor de pruebas sin coste.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    ¿Qué incluye el soporte del plan Standard?
+                    <i class="fa-solid fa-chevron-down faq-chevron"></i>
+                </div>
+                <div class="faq-a">
+                    <p>Soporte por email con respuesta garantizada en 24 horas laborables. Resolución de incidencias del propio software DASC y orientación sobre configuración. El soporte no incluye administración de sistemas fuera del alcance de DASC ni soporte 24/7.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CTA BANNER
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="cta-banner">
+    <div class="container">
+        <h2>¿Sabes si tus copias de seguridad se pueden restaurar?</h2>
+        <p>La mayoría de empresas no lo saben hasta que las necesitan. DASC cambia eso.</p>
+        <div class="cta-actions">
+            <a href="#contacto" class="btn btn-white btn-lg">
+                <i class="fa-solid fa-calendar-check"></i> Solicitar demo gratuita
+            </a>
+            <a href="#precios" class="btn btn-lg" style="background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.3);">
+                Ver planes y precios
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CONTACTO
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="contacto">
+    <div class="container">
+        <div class="contact-inner">
+            <div class="contact-info">
+                <span class="tag"><i class="fa-solid fa-envelope"></i> Contacto</span>
+                <h2>Hablemos sin compromiso</h2>
+                <p>Cuéntanos tu situación y te explicamos si DASC encaja en tu empresa y qué plan tiene más sentido para ti.</p>
+                <div class="contact-detail">
+                    <!-- TODO: sustituir por el email real una vez configurado -->
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>soporte@dascpyme.es</span>
+                </div>
+                <div class="contact-detail">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Respondemos en menos de 24 horas laborables</span>
+                </div>
+                <div class="contact-detail">
+                    <i class="fa-solid fa-map-marker-alt"></i>
+                    <span>España · Servicio para empresas nacionales</span>
+                </div>
+            </div>
+
+            <!-- Formulario — action de Formspree (gratuito) -->
+            <!-- TODO: crear cuenta en formspree.io y sustituir el action por la URL real -->
+            <div class="contact-form">
+                <form action="https://formspree.io/f/XXXXXXXX" method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre">Nombre *</label>
+                            <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+                        </div>
+                        <div class="form-group">
+                            <label for="empresa">Empresa *</label>
+                            <input type="text" id="empresa" name="empresa" required placeholder="Nombre de la empresa">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required placeholder="tu@empresa.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="600 000 000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="interes">Tipo de consulta *</label>
+                        <select id="interes" name="interes" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="demo">Quiero una demo</option>
+                            <option value="piloto">Quiero un piloto técnico</option>
+                            <option value="info">Solo quiero información</option>
+                            <option value="soporte">Soy cliente y necesito soporte</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mensaje">Mensaje</label>
+                        <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos brevemente tu situación: cuántos servidores tienes, qué usas actualmente, qué problema quieres resolver…"></textarea>
+                    </div>
+                    <!-- Honeypot antispam -->
+                    <input type="text" name="_gotcha" style="display:none;">
+                    <input type="hidden" name="_subject" value="Nueva consulta desde dascpyme.es">
+                    <button type="submit" class="btn btn-primary form-submit">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar mensaje
+                    </button>
+                    <p class="form-legal">
+                        Al enviar este formulario aceptas nuestra
+                        <a href="legal/privacidad.html">política de privacidad</a>.
+                        No compartimos tus datos con terceros.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon">D</div>
+                    <span class="footer-logo-name">DASC Server Manager</span>
+                </div>
+                <p>Panel de gestión para PYMES. Backups, monitoreo, servicios y soporte en tu propio servidor.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Producto</h4>
+                <ul>
+                    <li><a href="#funcionalidades">Funcionalidades</a></li>
+                    <li><a href="#precios">Precios</a></li>
+                    <li><a href="#como-funciona">Cómo funciona</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Empresa</h4>
+                <ul>
+                    <li><a href="#contacto">Contacto</a></li>
+                    <li><a href="#contacto">Demo gratuita</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="legal/terminos.html">Términos de servicio</a></li>
+                    <li><a href="legal/privacidad.html">Política de privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <!-- TODO: actualizar año y nombre legal -->
+            <span>© 2026 DASC Server Manager. Todos los derechos reservados.</span>
+            <div style="display:flex;gap:1.5rem;">
+                <a href="legal/terminos.html">Términos</a>
+                <a href="legal/privacidad.html">Privacidad</a>
+                <a href="#contacto">Contacto</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+    'use strict';
+
+    // ── FAQ acordeón ──────────────────────────────────────────────────────────
+    function toggleFaq(qEl) {
+        var item = qEl.parentElement;
+        var isOpen = item.classList.contains('open');
+        // cerrar todos
+        document.querySelectorAll('.faq-item.open').forEach(function (el) { el.classList.remove('open'); });
+        // abrir el pulsado si estaba cerrado
+        if (!isOpen) item.classList.add('open');
+    }
+    window.toggleFaq = toggleFaq;
+
+    // ── Hamburger ─────────────────────────────────────────────────────────────
+    var hamburger = document.getElementById('hamburger');
+    var navLinks  = document.getElementById('nav-links');
+    if (hamburger && navLinks) {
+        hamburger.addEventListener('click', function () {
+            navLinks.classList.toggle('open');
+        });
+    }
+
+    // ── Cerrar nav al pulsar enlace ───────────────────────────────────────────
+    if (navLinks) {
+        navLinks.querySelectorAll('a').forEach(function (a) {
+            a.addEventListener('click', function () { navLinks.classList.remove('open'); });
+        });
+    }
+
+    // ── Smooth scroll para los botones internos ───────────────────────────────
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            var target = document.querySelector(a.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+}());
+</script>
+
+</body>
+</html>
