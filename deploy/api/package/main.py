@@ -191,7 +191,8 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
 
     # R-059 monitoreo 7.4: cat permitido solo para estos ficheros exactos
     _CAT_ALLOWED = {
-        "/home/dasc/backups/.dasc/history.tsv",  # historial de backups
+        "/home/dasc/backups/.dasc/history.tsv",      # historial de backups
+        "/home/dasc/backups/.dasc/checksums.sha256",  # checksums SHA256 (R-064 / 7.9)
         "/proc/loadavg",   # carga del sistema
         "/proc/meminfo",   # información de memoria RAM
         "/proc/uptime",    # tiempo activo del sistema
@@ -6483,3 +6484,167 @@ async def reportar_problema(request: Request):
         "ticket_id": ticket_id,
         "msg":      f"Reporte enviado. Referencia: {ticket_id}",
     })
+
+
+# =====================
+# R-064 / Ruta 7.9 — Integridad y consistencia de copias
+# =====================
+# Comprueba la salud de las copias de seguridad y de las tablas de la BD:
+#  - Analiza history.tsv: edad, estado OK/ERROR, presencia de SHA256
+#  - Lee checksums.sha256 para contar cuántos ficheros tienen checksum
+#  - SHOW TABLE STATUS sobre la BD de logs para detectar posibles corrupciones
+# Todo sin nuevos comandos SSH: reutiliza cat (allowlist ampliada) y pymysql.
+
+def _extraer_sha256_de_notas(notas: str) -> str | None:
+    """Extrae sha256=XXXX del campo de notas de history.tsv."""
+    for parte in notas.split(";"):
+        if parte.startswith("sha256="):
+            valor = parte[7:].strip()
+            return valor if len(valor) == 64 else None
+    return None
+
+
+def _extraer_size_de_notas(notas: str) -> int | None:
+    """Extrae size=NNNN (bytes) del campo de notas de history.tsv."""
+    for parte in notas.split(";"):
+        if parte.startswith("size="):
+            try:
+                return int(parte[5:])
+            except ValueError:
+                return None
+    return None
+
+
+def _analizar_salud_copias() -> dict[str, Any]:
+    """Recopila todos los indicadores de salud de copias y BD. R-064"""
+    ahora = datetime.now()
+    resultado: dict[str, Any] = {
+        "ts":               ahora.strftime("%Y-%m-%d %H:%M:%S"),
+        "backups":          [],
+        "checksums_total":  0,
+        "checksums_ok":     0,
+        "db_tables":        [],
+        "db_error":         None,
+        "ssh_error":        None,
+        "resumen":          {},
+    }
+
+    # ── 1. Historial de copias ─────────────────────────────────────────────
+    try:
+        historia = cargar_historial_backups(limit=30)
+        filas: list[dict[str, Any]] = []
+        sha_presentes = 0
+        errores = 0
+        ultima_fecha: str | None = None
+
+        for item in historia:
+            estado = (item.get("status") or item.get("result") or "OK").upper()
+            ok     = estado in ("OK", "SUCCESS", "0", "")
+            notas  = item.get("notes", "") or ""
+            sha    = _extraer_sha256_de_notas(notas)
+            size_b = _extraer_size_de_notas(notas)
+            size_s = ""
+            if size_b is not None:
+                if size_b >= 1_048_576:
+                    size_s = f"{size_b / 1_048_576:.1f} MB"
+                elif size_b >= 1024:
+                    size_s = f"{size_b / 1024:.0f} KB"
+                else:
+                    size_s = f"{size_b} B"
+            if ok:
+                if sha:
+                    sha_presentes += 1
+            else:
+                errores += 1
+            fecha = item.get("date") or item.get("start_time") or ""
+            if fecha and not ultima_fecha:
+                ultima_fecha = fecha[:16]
+
+            filas.append({
+                "id":        item.get("id", "—"),
+                "fecha":     fecha[:16] if fecha else "—",
+                "tipo":      item.get("tipo_label", item.get("type", "—")),
+                "db":        item.get("db", "—"),
+                "estado":    estado if ok else estado,
+                "ok":        ok,
+                "sha_ok":    bool(sha),
+                "sha_corto": sha[:8] + "…" if sha else "—",
+                "size":      size_s or "—",
+            })
+
+        resultado["backups"]        = filas
+        resultado["checksums_ok"]   = sha_presentes
+        resultado["checksums_total"] = len(filas)
+        resultado["ultima_fecha"]   = ultima_fecha
+
+        # Resumen de salud
+        total = len(filas)
+        sin_sha = total - sha_presentes
+        resultado["resumen"] = {
+            "total":     total,
+            "errores":   errores,
+            "sin_sha":   sin_sha,
+            "ultima":    ultima_fecha,
+        }
+    except Exception as e:
+        resultado["ssh_error"] = str(e)
+
+    # ── 2. Checksums.sha256 (total de ficheros con checksum registrado) ────
+    try:
+        r_cs = ssh_run(SERVIDOR_BACKUPS, "cat", ["/home/dasc/backups/.dasc/checksums.sha256"])
+        if r_cs.get("ok") and r_cs.get("stdout", "").strip():
+            lineas_cs = [l for l in r_cs["stdout"].splitlines() if l.strip() and not l.startswith("#")]
+            resultado["checksums_total_archivo"] = len(lineas_cs)
+        else:
+            resultado["checksums_total_archivo"] = 0
+    except Exception:
+        resultado["checksums_total_archivo"] = None
+
+    # ── 3. Integridad de tablas de la BD de logs (pymysql) ─────────────────
+    try:
+        conn = pymysql.connect(
+            host=LOGS_DB_HOST,
+            user=LOGS_DB_USER,
+            password=LOGS_DB_PASS,
+            database=LOGS_DB_NAME,
+            connect_timeout=4,
+            cursorclass=pymysql.cursors.DictCursor,
+        )
+        with conn.cursor() as cur:
+            cur.execute("SHOW TABLE STATUS")
+            tablas = cur.fetchall()
+        conn.close()
+        resultado["db_tables"] = [
+            {
+                "nombre":     t.get("Name", "?"),
+                "filas":      t.get("Rows", 0),
+                "size_mb":    round((int(t.get("Data_length") or 0) + int(t.get("Index_length") or 0)) / 1_048_576, 2),
+                "comentario": t.get("Comment", "") or "",
+                "ok":         (t.get("Comment") or "") not in ("crashed", "repair required", "repair recommended"),
+            }
+            for t in tablas
+        ]
+    except Exception as e:
+        resultado["db_error"] = str(e)
+
+    return resultado
+
+
+@app.get("/copias/salud")
+def copias_salud_page(request: Request):
+    """Página de integridad y salud de copias de seguridad. R-064"""
+    if not has_permission(request, "backups"):
+        return permission_redirect()
+
+    ctx = get_common_context(request)
+    ctx["current_path"] = "/copias/salud"
+    ctx["datos"]        = _analizar_salud_copias()
+    return templates.TemplateResponse(request, "copias_salud.html", ctx)
+
+
+@app.get("/api/copias/salud")
+def copias_salud_api(request: Request):
+    """API JSON de salud de copias (para refresco asíncrono). R-064"""
+    if not has_permission(request, "backups"):
+        return JSONResponse({"error": "sin permiso"}, status_code=403)
+    return JSONResponse(_analizar_salud_copias())
