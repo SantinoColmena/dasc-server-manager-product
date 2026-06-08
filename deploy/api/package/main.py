@@ -3949,6 +3949,10 @@ CENTRAL_SUPPORT_CLIENT_NAME = os.getenv("CENTRAL_SUPPORT_CLIENT_NAME", "Cliente 
 CENTRAL_SUPPORT_TOKEN = os.getenv("CENTRAL_SUPPORT_TOKEN", "dasc-central-demo-token-lab").strip()
 CENTRAL_SUPPORT_TIMEOUT = int(os.getenv("CENTRAL_SUPPORT_TIMEOUT", "5"))
 
+# R-069 / Ruta 8.5 — Webhook Jira (opcional; vacío = desactivado)
+JIRA_WEBHOOK_URL = os.getenv("JIRA_WEBHOOK_URL", "").strip()
+JIRA_WEBHOOK_TIMEOUT = int(os.getenv("JIRA_WEBHOOK_TIMEOUT", "5"))
+
 
 SUPPORT_TYPES = [
     "Incidencia",
@@ -4147,6 +4151,44 @@ def load_support_tickets(limit=10):
     return [support_row_to_dict(row) for row in rows]
 
 
+def _push_ticket_jira_webhook(ticket: dict) -> None:
+    """Envía el ticket a un webhook Jira configurado en JIRA_WEBHOOK_URL (R-069).
+    Fire-and-forget en hilo daemon; nunca bloquea ni lanza excepción al llamador."""
+    if not JIRA_WEBHOOK_URL:
+        return
+
+    def _fire():
+        try:
+            import urllib.request as _req
+            import json as _json
+            payload = {
+                "summary":     f"[DASC] {ticket.get('tipo','Incidencia')}: {ticket.get('descripcion','')[:120]}",
+                "description": ticket.get("descripcion", ""),
+                "issue_type":  ticket.get("tipo", "Incidencia"),
+                "priority":    ticket.get("prioridad", "Media"),
+                "ticket_id":   ticket.get("id", ""),
+                "servicio":    ticket.get("servicio", ""),
+                "contacto":    ticket.get("contacto", ""),
+                "email":       ticket.get("email", ""),
+                "cliente":     ticket.get("cliente", ""),
+                "fecha":       ticket.get("fecha_apertura", ""),
+                "origen":      "dasc-panel",
+            }
+            body = _json.dumps(payload).encode("utf-8")
+            req = _req.Request(
+                JIRA_WEBHOOK_URL,
+                data=body,
+                headers={"Content-Type": "application/json", "User-Agent": "DASC-Panel/1.0"},
+                method="POST",
+            )
+            with _req.urlopen(req, timeout=JIRA_WEBHOOK_TIMEOUT) as _r:
+                pass  # respuesta ignorada intencionadamente
+        except Exception:
+            pass  # webhook no bloquea el flujo principal
+
+    threading.Thread(target=_fire, daemon=True, name="dasc-jira-hook").start()
+
+
 def save_support_ticket(ticket):
     ensure_support_db()
 
@@ -4195,6 +4237,9 @@ def save_support_ticket(ticket):
             ),
         )
         conn.commit()
+
+    # R-069: notificar webhook Jira si está configurado (fire-and-forget)
+    _push_ticket_jira_webhook(ticket)
 
 
 def next_support_ticket_id():
@@ -6648,3 +6693,296 @@ def copias_salud_api(request: Request):
     if not has_permission(request, "backups"):
         return JSONResponse({"error": "sin permiso"}, status_code=403)
     return JSONResponse(_analizar_salud_copias())
+
+
+# =============================================================================
+# R-070 / Ruta 8.6 — FAQ / IA de triage
+# =============================================================================
+
+_FAQ_ENTRIES: list[dict] = [
+    {
+        "id": "backup-fallo",
+        "pregunta": "¿Qué hago si una copia de seguridad falló?",
+        "respuesta": (
+            "Ve a **Copias** en el menú lateral y revisa el historial. "
+            "El color rojo indica error. Comprueba que el servidor de backups está activo "
+            "y que el usuario `dasc` tiene espacio en disco. "
+            "Puedes lanzar una copia manual con el botón 'Nueva copia'. "
+            "Si el error persiste, revisa el log: `journalctl -u dasc-api -n 100`."
+        ),
+        "palabras_clave": ["backup", "copia", "falló", "fallo", "error", "rojo", "fallar"],
+    },
+    {
+        "id": "disco-lleno",
+        "pregunta": "El disco está al 90% o más. ¿Qué hago?",
+        "respuesta": (
+            "Ve a **Monitoreo** para ver el detalle de uso por partición. "
+            "Las causas más comunes son: copias de seguridad acumuladas (borra las antiguas desde "
+            "la pantalla Copias), logs sin rotar (`logrotate -f /etc/logrotate.conf`) "
+            "o el directorio `/var/log`. También puedes usar `df -h` y `du -sh /*` "
+            "para identificar qué ocupa más espacio."
+        ),
+        "palabras_clave": ["disco", "espacio", "lleno", "90", "80", "uso", "almacenamiento", "df"],
+    },
+    {
+        "id": "servicio-caido",
+        "pregunta": "Un servicio aparece como caído. ¿Cómo lo reinicio?",
+        "respuesta": (
+            "Ve a **Servicios** en el menú lateral. Pulsa el botón de reinicio junto al servicio "
+            "afectado. Si no responde, usa la Terminal integrada para ejecutar "
+            "`systemctl restart <nombre-servicio>`. "
+            "Consulta el log del servicio con `journalctl -u <nombre> -n 50` para ver el motivo."
+        ),
+        "palabras_clave": ["servicio", "caído", "caido", "reiniciar", "parado", "stopped", "failed"],
+    },
+    {
+        "id": "restaurar-backup",
+        "pregunta": "¿Cómo restauro una copia de seguridad?",
+        "respuesta": (
+            "Ve a **Copias** y selecciona la copia que quieres restaurar. "
+            "Pulsa 'Restaurar' y confirma el proceso. "
+            "DASC ejecutará `restore_api.sh` en el servidor de backups vía SSH. "
+            "Si el proceso falla, consulta **Integridad** para verificar que la copia tiene "
+            "checksum SHA256 válido. Para un desastre total, sigue los pasos del **DRO** "
+            "en el menú Recuperación."
+        ),
+        "palabras_clave": ["restaurar", "restore", "recuperar", "copia", "backup", "restablecer"],
+    },
+    {
+        "id": "alerta-telegram",
+        "pregunta": "No recibo alertas por Telegram. ¿Cómo lo configuro?",
+        "respuesta": (
+            "Necesitas un bot de Telegram y el chat ID. Pasos: "
+            "1) Crea un bot con `@BotFather` → `/newbot` → copia el token. "
+            "2) Envía un mensaje al bot y obtén tu chat ID con "
+            "`https://api.telegram.org/bot<TOKEN>/getUpdates`. "
+            "3) Abre `config.env` en el servidor (`/opt/dasc/api/config.env`) y configura "
+            "`NOTIF_TELEGRAM_TOKEN` y `NOTIF_TELEGRAM_CHAT_ID`. "
+            "4) Reinicia el servicio: `systemctl restart dasc-api`."
+        ),
+        "palabras_clave": ["telegram", "alerta", "notificación", "notificacion", "bot", "aviso", "token"],
+    },
+    {
+        "id": "actualizar-dasc",
+        "pregunta": "¿Cómo actualizo DASC a una nueva versión?",
+        "respuesta": (
+            "Desde el servidor Linux, ejecuta como root: "
+            "`sudo bash /ruta/al/repo/deploy/api/update_dasc_api.sh`. "
+            "El script preserva `config.env`, las claves SSH y los datos. "
+            "Desde Windows puedes usar el asistente PowerShell: "
+            "`tools\\windows\\instalar_dasc_windows.ps1` y seleccionar la opción 2 (Actualizar)."
+        ),
+        "palabras_clave": ["actualizar", "actualización", "update", "nueva versión", "upgrade", "version"],
+    },
+    {
+        "id": "password-admin",
+        "pregunta": "Olvidé la contraseña del administrador. ¿Cómo la cambio?",
+        "respuesta": (
+            "Accede al servidor por SSH y edita `config.env`: "
+            "`nano /opt/dasc/api/config.env`. "
+            "Genera un nuevo hash bcrypt con Python: "
+            '`python3 -c "from passlib.context import CryptContext; '
+            "print(CryptContext(['bcrypt']).hash('nueva_contraseña'))\"`. "
+            "Pega el hash en la línea `ADMIN_PASSWORD=`. "
+            "Reinicia: `systemctl restart dasc-api`."
+        ),
+        "palabras_clave": ["contraseña", "password", "olvidé", "olvide", "admin", "acceso", "login"],
+    },
+    {
+        "id": "ssh-fallo-conexion",
+        "pregunta": "El panel no puede conectarse al servidor de backups por SSH.",
+        "respuesta": (
+            "Comprueba: "
+            "1) Que el servidor de backups está encendido y accesible en red. "
+            "2) Que el usuario `dasc` existe en el servidor remoto. "
+            "3) Que la clave pública SSH está en `~dasc/.ssh/authorized_keys` del servidor remoto. "
+            "Puedes ver la clave pública en `/opt/dasc/api/api_panel.pub`. "
+            "Test manual: `sudo -u dasc ssh -i /opt/dasc/api/.ssh/id_rsa_dasc dasc@<IP-backups> hostname`."
+        ),
+        "palabras_clave": ["ssh", "conexión", "conexion", "backups", "remoto", "acceso", "authorized_keys"],
+    },
+]
+
+
+def _buscar_faq(query: str) -> list[dict]:
+    """Busca entradas FAQ por palabras clave. Devuelve lista ordenada por relevancia."""
+    if not query:
+        return _FAQ_ENTRIES
+
+    q = query.lower().strip()
+    palabras = q.split()
+    resultados = []
+
+    for entry in _FAQ_ENTRIES:
+        puntos = 0
+        texto_busqueda = (
+            entry["pregunta"].lower()
+            + " "
+            + entry["respuesta"].lower()
+            + " "
+            + " ".join(entry["palabras_clave"])
+        )
+        for palabra in palabras:
+            if palabra in texto_busqueda:
+                puntos += 1
+            if palabra in entry["palabras_clave"]:
+                puntos += 2  # más peso a palabras clave exactas
+        if puntos > 0:
+            resultados.append({"puntos": puntos, "entry": entry})
+
+    resultados.sort(key=lambda x: x["puntos"], reverse=True)
+    return [r["entry"] for r in resultados]
+
+
+@app.get("/soporte/faq")
+def soporte_faq(request: Request, q: str = ""):
+    """Pantalla de preguntas frecuentes (FAQ / IA de triage). R-070"""
+    if not get_current_user(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    resultados = _buscar_faq(q)
+
+    context = get_common_context(request)
+    context["faq_entries"] = resultados
+    context["faq_todos"] = _FAQ_ENTRIES
+    context["faq_query"] = q
+    return templates.TemplateResponse(request, "soporte_faq.html", context)
+
+
+@app.get("/api/soporte/faq")
+def api_soporte_faq(request: Request, q: str = ""):
+    """API de búsqueda FAQ para autocompletar/AJAX. R-070"""
+    if not get_current_user(request):
+        return JSONResponse({"error": "no autenticado"}, status_code=401)
+    resultados = _buscar_faq(q)
+    return JSONResponse({"resultados": resultados, "total": len(resultados)})
+
+
+# =============================================================================
+# R-068 / Ruta 8.7 — DRO: Orquestación de recuperación ante desastres
+# =============================================================================
+
+_DRO_PASOS: list[dict] = [
+    {
+        "num": 1,
+        "titulo": "Verificar estado del servidor",
+        "descripcion": (
+            "Comprueba que el servidor de la API responde, el disco tiene espacio suficiente "
+            "y los servicios críticos están activos."
+        ),
+        "accion_label": "Ir a Monitoreo",
+        "accion_url": "/monitoreo",
+        "accion_icon": "fa-chart-area",
+        "tipo": "normal",
+    },
+    {
+        "num": 2,
+        "titulo": "Verificar integridad de copias",
+        "descripcion": (
+            "Revisa que existen copias recientes con SHA256 válido antes de iniciar cualquier "
+            "restauración. Una copia corrupta puede empeorar la situación."
+        ),
+        "accion_label": "Ver integridad",
+        "accion_url": "/copias/salud",
+        "accion_icon": "fa-shield-check",
+        "tipo": "normal",
+    },
+    {
+        "num": 3,
+        "titulo": "Seleccionar y restaurar la copia",
+        "descripcion": (
+            "Elige la copia más reciente en buen estado. Usa el botón 'Restaurar' en la "
+            "pantalla de Copias para lanzar el proceso vía SSH. El panel pedirá confirmación "
+            "antes de ejecutar."
+        ),
+        "accion_label": "Ir a Copias",
+        "accion_url": "/backups",
+        "accion_icon": "fa-database",
+        "tipo": "critico",
+    },
+    {
+        "num": 4,
+        "titulo": "Verificar servicios tras la restauración",
+        "descripcion": (
+            "Una vez finalizada la restauración, comprueba que todos los servicios configurados "
+            "vuelven a estar activos. Reinicia los que estén caídos."
+        ),
+        "accion_label": "Ver servicios",
+        "accion_url": "/servicios",
+        "accion_icon": "fa-server",
+        "tipo": "normal",
+    },
+    {
+        "num": 5,
+        "titulo": "Revisar alertas activas",
+        "descripcion": (
+            "Comprueba si quedan alertas sin resolver después de la recuperación. "
+            "Desactiva las alertas que ya estén corregidas para evitar notificaciones "
+            "redundantes."
+        ),
+        "accion_label": "Ver alertas",
+        "accion_url": "/alertas",
+        "accion_icon": "fa-bell",
+        "tipo": "normal",
+    },
+    {
+        "num": 6,
+        "titulo": "Documentar el incidente",
+        "descripcion": (
+            "Abre un ticket de soporte describiendo qué falló, cuándo ocurrió, qué copia "
+            "se restauró y el tiempo de recuperación (RTO real). Esta información es clave "
+            "para mejorar el plan ante futuras incidencias."
+        ),
+        "accion_label": "Abrir ticket",
+        "accion_url": "/soporte",
+        "accion_icon": "fa-headset",
+        "tipo": "normal",
+    },
+]
+
+
+@app.get("/recuperacion")
+def recuperacion_dro(request: Request):
+    """Pantalla DRO: runbook guiado de recuperación ante desastres. R-068"""
+    if not get_current_user(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    # Recopilar estado actual del servidor para el resumen inicial
+    estado: dict[str, Any] = {}
+
+    # Disco (usa la función de monitoreo existente si está disponible)
+    try:
+        import shutil as _shutil
+        total, usado, libre = _shutil.disk_usage("/")
+        estado["disco_pct"] = round(usado / total * 100)
+        estado["disco_libre_gb"] = round(libre / (1024 ** 3), 1)
+        estado["disco_ok"] = estado["disco_pct"] < 85
+    except Exception:
+        estado["disco_pct"] = None
+        estado["disco_ok"] = None
+
+    # Última copia
+    try:
+        historial = cargar_historial_backups(limit=1)
+        if historial:
+            ultima = historial[0]
+            estado["ultima_copia_fecha"] = ultima.get("fecha", "—")
+            estado["ultima_copia_ok"] = (ultima.get("estado", "").upper() == "OK")
+        else:
+            estado["ultima_copia_fecha"] = "Sin registros"
+            estado["ultima_copia_ok"] = False
+    except Exception:
+        estado["ultima_copia_fecha"] = "No disponible"
+        estado["ultima_copia_ok"] = None
+
+    # Alertas — total de eventos registrados
+    try:
+        stats = get_alert_stats()
+        estado["alertas_activas"] = stats.get("alerts_total", 0)
+    except Exception:
+        estado["alertas_activas"] = None
+
+    context = get_common_context(request)
+    context["dro_pasos"] = _DRO_PASOS
+    context["estado"] = estado
+    return templates.TemplateResponse(request, "recuperacion.html", context)
