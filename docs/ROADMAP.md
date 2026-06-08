@@ -331,15 +331,24 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 
 ---
 
-## 9. Fase 11 — Comercial y escalado · 📦 BACKLOG
+## 9. Fase 11 — Comercial y escalado · 🟡 EN CURSO (acción pendiente del usuario)
 
-> Se desglosa en `R-xxx` al planificar. Requiere ingresos reales de Fase 9+.
+> R-084 parcialmente entregado 2026-06-08. Los bloques de código y documentación están listos;
+> los bloques que requieren ingresos reales, asesor legal o clientes pagando se marcan ⏳.
 
-- Oferta y onboarding de clientes nuevos sistematizado.
-- SLA y legal definitivos con asesoramiento real.
-- Marketing: web actualizada, material comercial honesto, casos de éxito.
-- Release v1.0 comercial completa — solo tras pilotos pagados y feedback aplicado.
-- Decisión Go/No-Go de escalado documentada (puede ser No-Go).
+| Ruta | Contenido | Estado |
+|---|---|---|
+| ✅ 11.1 Onboarding sistematizado | Checklist completo (`onboarding_cliente.md`), script bash (`onboarding_nuevo_cliente.sh`), plantilla de propuesta (`plantilla_propuesta.md`), checklist de primera venta (`checklist_primera_venta.md`). ✅ Entregado 2026-06-08 (R-084). | ✅ |
+| 11.2 SLA y legal definitivos | Requiere asesor legal real para revisión de los términos y adaptación al perfil fiscal exacto. ⏳ **Pendiente: revisar `web/legal/` con asesor y completar datos fiscales.** | ⏳ |
+| 11.3 Marketing y casos de éxito | Web ya lista (`web/`). Casos de éxito y testimoniales requieren clientes reales. ⏳ **Pendiente: actualizar web con primer cliente de referencia (con su permiso).** | ⏳ |
+| 11.4 Release v1.0 comercial | Solo tras pilotos pagados y feedback aplicado. ⏳ **Pendiente: primer cliente de pago real (R-048).** | ⏳ |
+| 11.5 Decisión Go/No-Go de escalado | Requiere datos reales de MRR, churn y feedback. ⏳ **Pendiente: datos reales de al menos 3 meses de operación.** | ⏳ |
+
+### Acciones pendientes del usuario (Fase 11)
+- ⏳ Revisar documentación legal con asesor y completar datos fiscales
+- ⏳ Dar de alta como autónomo/empresa y configurar software de facturación
+- ⏳ Completar F9-GATE → conseguir el primer cliente de pago (R-048)
+- ⏳ Tras primer cliente: registrar feedback y decidir si escalar
 
 ---
 
