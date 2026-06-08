@@ -6707,7 +6707,69 @@ def copias_salud_api(request: Request):
 
 # =============================================================================
 # R-070 / Ruta 8.6 — FAQ / IA de triage
+# R-085 / Ruta 12.1 — IA básica mejorada: más entradas, sinónimos, puntuación mejorada
 # =============================================================================
+
+# Mapa de sinónimos: cada clave se normaliza a su forma canónica antes de puntuar.
+_FAQ_SINONIMOS: dict[str, str] = {
+    # copias/backups
+    "backups": "backup", "copias": "backup", "copia": "backup", "respaldo": "backup",
+    "respaldos": "backup", "bkp": "backup",
+    # fallos
+    "falló": "fallo", "fallado": "fallo", "falla": "fallo", "fallas": "fallo",
+    "error": "fallo", "errores": "fallo",
+    # disco
+    "almacenamiento": "disco", "espacio": "disco", "partición": "disco", "particion": "disco",
+    "volumen": "disco",
+    # servicios
+    "servicio": "servicio", "servicios": "servicio", "proceso": "servicio",
+    "demonio": "servicio", "daemon": "servicio",
+    # contraseña
+    "password": "contraseña", "clave": "contraseña", "credencial": "contraseña",
+    "credenciales": "contraseña", "acceso": "contraseña",
+    # actualizar
+    "actualización": "actualizar", "actualizacion": "actualizar",
+    "update": "actualizar", "upgrade": "actualizar", "versión": "actualizar",
+    "version": "actualizar",
+    # alertas/notificaciones
+    "notificación": "alerta", "notificacion": "alerta", "notificaciones": "alerta",
+    "aviso": "alerta", "avisos": "alerta",
+    # restaurar
+    "restore": "restaurar", "recuperar": "restaurar", "restablecer": "restaurar",
+    "recuperación": "restaurar", "recuperacion": "restaurar",
+    # conexión SSH
+    "conexión": "conexion", "conectar": "conexion", "conectarse": "conexion",
+    # log/logs
+    "logs": "log", "registro": "log", "registros": "log", "journalctl": "log",
+    # monitoreo
+    "monitor": "monitoreo", "monitoring": "monitoreo", "métricas": "monitoreo",
+    "metricas": "monitoreo",
+    # HTTPS / certificado
+    "tls": "certificado", "ssl": "certificado", "https": "certificado",
+    "cert": "certificado",
+}
+
+# Palabras vacías que no aportan al score
+_FAQ_STOPWORDS = {
+    "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "al",
+    "en", "con", "por", "para", "que", "qué", "cómo", "como", "hay", "no",
+    "si", "se", "me", "te", "le", "es", "son", "está", "estan", "están",
+    "a", "y", "o", "e", "i", "u", "mi", "su", "tu", "sus",
+}
+
+
+def _normalizar_palabras(texto: str) -> list[str]:
+    """Tokeniza, elimina stopwords y aplica sinónimos."""
+    palabras = texto.lower().strip().split()
+    resultado = []
+    for p in palabras:
+        p = p.strip("¿?¡!.,;:()")
+        if not p or p in _FAQ_STOPWORDS:
+            continue
+        p = _FAQ_SINONIMOS.get(p, p)
+        resultado.append(p)
+    return resultado
+
 
 _FAQ_ENTRIES: list[dict] = [
     {
@@ -6720,7 +6782,7 @@ _FAQ_ENTRIES: list[dict] = [
             "Puedes lanzar una copia manual con el botón 'Nueva copia'. "
             "Si el error persiste, revisa el log: `journalctl -u dasc-api -n 100`."
         ),
-        "palabras_clave": ["backup", "copia", "falló", "fallo", "error", "rojo", "fallar"],
+        "palabras_clave": ["backup", "copia", "fallo", "error", "rojo", "historial"],
     },
     {
         "id": "disco-lleno",
@@ -6732,7 +6794,7 @@ _FAQ_ENTRIES: list[dict] = [
             "o el directorio `/var/log`. También puedes usar `df -h` y `du -sh /*` "
             "para identificar qué ocupa más espacio."
         ),
-        "palabras_clave": ["disco", "espacio", "lleno", "90", "80", "uso", "almacenamiento", "df"],
+        "palabras_clave": ["disco", "espacio", "lleno", "90", "80", "uso", "df"],
     },
     {
         "id": "servicio-caido",
@@ -6756,7 +6818,7 @@ _FAQ_ENTRIES: list[dict] = [
             "checksum SHA256 válido. Para un desastre total, sigue los pasos del **DRO** "
             "en el menú Recuperación."
         ),
-        "palabras_clave": ["restaurar", "restore", "recuperar", "copia", "backup", "restablecer"],
+        "palabras_clave": ["restaurar", "restore", "recuperar", "backup", "restablecer", "sha256"],
     },
     {
         "id": "alerta-telegram",
@@ -6770,7 +6832,19 @@ _FAQ_ENTRIES: list[dict] = [
             "`NOTIF_TELEGRAM_TOKEN` y `NOTIF_TELEGRAM_CHAT_ID`. "
             "4) Reinicia el servicio: `systemctl restart dasc-api`."
         ),
-        "palabras_clave": ["telegram", "alerta", "notificación", "notificacion", "bot", "aviso", "token"],
+        "palabras_clave": ["telegram", "alerta", "notificacion", "bot", "token", "chatid"],
+    },
+    {
+        "id": "alerta-email",
+        "pregunta": "No recibo alertas por email. ¿Cómo lo configuro?",
+        "respuesta": (
+            "Necesitas una cuenta SMTP con acceso de aplicación. Configura en `config.env`: "
+            "`NOTIF_SMTP_HOST`, `NOTIF_SMTP_PORT`, `NOTIF_SMTP_USER`, `NOTIF_SMTP_PASS`, "
+            "`NOTIF_EMAIL_FROM` y `NOTIF_EMAIL_TO`. "
+            "Para Gmail: activa la verificación en dos pasos y genera una 'Contraseña de aplicación'. "
+            "Prueba el envío desde el panel: Alertas → Probar alertas."
+        ),
+        "palabras_clave": ["email", "correo", "smtp", "gmail", "alerta", "notificacion", "envio"],
     },
     {
         "id": "actualizar-dasc",
@@ -6782,7 +6856,7 @@ _FAQ_ENTRIES: list[dict] = [
             "Desde Windows puedes usar el asistente PowerShell: "
             "`tools\\windows\\instalar_dasc_windows.ps1` y seleccionar la opción 2 (Actualizar)."
         ),
-        "palabras_clave": ["actualizar", "actualización", "update", "nueva versión", "upgrade", "version"],
+        "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade"],
     },
     {
         "id": "password-admin",
@@ -6796,7 +6870,7 @@ _FAQ_ENTRIES: list[dict] = [
             "Pega el hash en la línea `ADMIN_PASSWORD=`. "
             "Reinicia: `systemctl restart dasc-api`."
         ),
-        "palabras_clave": ["contraseña", "password", "olvidé", "olvide", "admin", "acceso", "login"],
+        "palabras_clave": ["contraseña", "password", "olvide", "admin", "acceso", "login", "bcrypt"],
     },
     {
         "id": "ssh-fallo-conexion",
@@ -6809,34 +6883,164 @@ _FAQ_ENTRIES: list[dict] = [
             "Puedes ver la clave pública en `/opt/dasc/api/api_panel.pub`. "
             "Test manual: `sudo -u dasc ssh -i /opt/dasc/api/.ssh/id_rsa_dasc dasc@<IP-backups> hostname`."
         ),
-        "palabras_clave": ["ssh", "conexión", "conexion", "backups", "remoto", "acceso", "authorized_keys"],
+        "palabras_clave": ["ssh", "conexion", "backups", "remoto", "authorized_keys", "id_rsa"],
+    },
+    {
+        "id": "panel-no-arranca",
+        "pregunta": "El panel no arranca o aparece un error 500.",
+        "respuesta": (
+            "Pasos de diagnóstico: "
+            "1) `systemctl status dasc-api` — comprueba si el servicio está activo. "
+            "2) `journalctl -u dasc-api -n 100` — busca el error concreto. "
+            "3) Comprueba que `config.env` existe y tiene SECRET_KEY y ADMIN_PASSWORD. "
+            "4) `df -h /opt/dasc` — verifica que no esté el disco lleno. "
+            "5) Si el problema persiste, abre un ticket desde el panel de soporte."
+        ),
+        "palabras_clave": ["panel", "arrancar", "500", "error", "caido", "blanco", "fallo", "inicio"],
+    },
+    {
+        "id": "logs-vacios",
+        "pregunta": "Los logs aparecen vacíos o no se actualizan.",
+        "respuesta": (
+            "Los logs se leen de la base de datos MariaDB en el servidor de logs. Comprueba: "
+            "1) Conexión a la BD: `mysql -h <IP_DB> -u dasc_user -p dasc_logs` "
+            "desde el servidor del panel. "
+            "2) Que `DASC_DB_HOST`, `DB_USER`, `DB_PASSWORD` están correctos en `config.env`. "
+            "3) Que el servicio `mysql` (o `mariadb`) está activo en el servidor de BD."
+        ),
+        "palabras_clave": ["log", "logs", "vacio", "vacios", "db", "base de datos", "mariadb", "mysql"],
+    },
+    {
+        "id": "monitoreo-grafica",
+        "pregunta": "El gráfico de monitoreo no carga o está vacío.",
+        "respuesta": (
+            "La sección Monitoreo integra Grafana (si está instalado). Si aparece vacía: "
+            "1) Comprueba que `GRAFANA_URL` está configurado en `config.env`. "
+            "2) Verifica que el servicio Grafana está activo: `systemctl status grafana-server`. "
+            "3) Si usas Cacti, configura `CACTI_URL` en lugar de `GRAFANA_URL`. "
+            "Si el monitoreo externo no está disponible, la sección muestra un mensaje "
+            "informativo. El dashboard principal siempre muestra disco y servicios."
+        ),
+        "palabras_clave": ["monitoreo", "grafica", "grafico", "grafana", "cacti", "vacio", "carga"],
+    },
+    {
+        "id": "certificado-https",
+        "pregunta": "El navegador advierte de certificado no válido o conexión no segura.",
+        "respuesta": (
+            "Si usas el certificado autofirmado que instala DASC por defecto, el navegador "
+            "mostrará una advertencia. Es normal y seguro si conoces el servidor. "
+            "Para tener HTTPS real con certificado válido: "
+            "1) Instala certbot: `sudo apt install certbot python3-certbot-nginx`. "
+            "2) Obtén el certificado: `sudo certbot --nginx -d TU_DOMINIO`. "
+            "3) Certbot renueva automáticamente. "
+            "Ver guía completa en `docs/guias/guia_dominio_email.md`."
+        ),
+        "palabras_clave": ["certificado", "https", "ssl", "tls", "seguro", "advertencia", "certbot"],
+    },
+    {
+        "id": "informe-no-llega",
+        "pregunta": "El informe automático no llega por email.",
+        "respuesta": (
+            "Comprueba en Panel → Informes: "
+            "1) Que hay un perfil de informe configurado y activo. "
+            "2) Que la frecuencia (diario/semanal/mensual) y hora de envío son correctas. "
+            "3) Que el email configurado en el perfil es el correcto. "
+            "4) Que la configuración SMTP de `config.env` es válida "
+            "(prueba con Alertas → Probar alertas). "
+            "Puedes enviar un informe manual con el botón 'Enviar ahora'."
+        ),
+        "palabras_clave": ["informe", "reporte", "email", "correo", "automatico", "llega", "envio"],
+    },
+    {
+        "id": "nuevo-usuario",
+        "pregunta": "¿Cómo añado un usuario al panel?",
+        "respuesta": (
+            "Ve a **Admin → Usuarios** (solo disponible para el administrador). "
+            "Pulsa 'Añadir usuario', introduce el nombre de usuario, contraseña "
+            "y selecciona los permisos que tendrá (backups, logs, servicios, alertas, terminal). "
+            "El nuevo usuario puede entrar de inmediato en `/login`."
+        ),
+        "palabras_clave": ["usuario", "user", "añadir", "nuevo", "acceso", "permisos", "admin"],
+    },
+    {
+        "id": "dasc-version",
+        "pregunta": "¿Cómo sé qué versión de DASC tengo instalada?",
+        "respuesta": (
+            "La versión aparece en el pie del panel (footer del dashboard). "
+            "También puedes verla en el servidor: "
+            "`cat /opt/dasc/api/config.env | grep DASC_VERSION` "
+            "o leyendo la cabecera del fichero `main.py`: "
+            "`head -5 /opt/dasc/api/main.py`. "
+            "La versión actual del producto se define en `config.env` como `DASC_VERSION`."
+        ),
+        "palabras_clave": ["version", "versión", "instalada", "dasc", "actual", "numero"],
     },
 ]
 
 
-def _buscar_faq(query: str) -> list[dict]:
-    """Busca entradas FAQ por palabras clave. Devuelve lista ordenada por relevancia."""
+def _buscar_faq(query: str, contexto_url: str = "") -> list[dict]:
+    """Busca entradas FAQ por palabras clave (R-085: algoritmo mejorado).
+
+    Mejoras sobre R-070:
+    - Normalización de sinónimos antes de puntuar
+    - Eliminación de stopwords
+    - Bonus por coincidencia de la frase completa (2 pts extra)
+    - Bonus por coincidencia de palabra exacta en palabra_clave (3 pts)
+    - Descuento parcial para palabras cortas (< 3 chars)
+    - contexto_url: boost de 1 pto si la URL actual tiene relación con la entrada
+    """
     if not query:
         return _FAQ_ENTRIES
 
-    q = query.lower().strip()
-    palabras = q.split()
+    # Normalizar query
+    palabras_norm = _normalizar_palabras(query)
+    q_norm = " ".join(palabras_norm)
+
+    if not palabras_norm:
+        return _FAQ_ENTRIES
+
     resultados = []
 
     for entry in _FAQ_ENTRIES:
         puntos = 0
-        texto_busqueda = (
+
+        # Texto plano de búsqueda (normalizado)
+        texto_full = (
             entry["pregunta"].lower()
             + " "
             + entry["respuesta"].lower()
             + " "
             + " ".join(entry["palabras_clave"])
         )
-        for palabra in palabras:
-            if palabra in texto_busqueda:
+        texto_norm_palabras = _normalizar_palabras(texto_full)
+        texto_norm_str = " ".join(texto_norm_palabras)
+        kws_norm = [_FAQ_SINONIMOS.get(k, k) for k in entry["palabras_clave"]]
+
+        for p in palabras_norm:
+            if len(p) < 2:
+                continue
+            if p in texto_norm_str:
                 puntos += 1
-            if palabra in entry["palabras_clave"]:
-                puntos += 2  # más peso a palabras clave exactas
+            if p in kws_norm:
+                puntos += 3  # coincidencia exacta en keyword = mayor peso
+
+        # Bonus si la frase completa aparece en el texto
+        if len(q_norm) > 4 and q_norm in texto_norm_str:
+            puntos += 2
+
+        # Boost por contexto de página actual (10.4 / R-085)
+        if contexto_url:
+            url_l = contexto_url.lower()
+            entry_id = entry["id"]
+            if (("backup" in url_l or "copi" in url_l) and "backup" in entry_id):
+                puntos += 1
+            elif ("servicio" in url_l and "servicio" in entry_id):
+                puntos += 1
+            elif ("log" in url_l and "log" in entry_id):
+                puntos += 1
+            elif ("alerta" in url_l and "alerta" in entry_id):
+                puntos += 1
+
         if puntos > 0:
             resultados.append({"puntos": puntos, "entry": entry})
 
@@ -6845,26 +7049,28 @@ def _buscar_faq(query: str) -> list[dict]:
 
 
 @app.get("/soporte/faq")
-def soporte_faq(request: Request, q: str = ""):
-    """Pantalla de preguntas frecuentes (FAQ / IA de triage). R-070"""
+def soporte_faq(request: Request, q: str = "", desde: str = ""):
+    """Pantalla de preguntas frecuentes (FAQ / IA de triage). R-070 / R-085"""
     if not get_current_user(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    resultados = _buscar_faq(q)
+    # R-085: pasar contexto de página de origen para boost de relevancia
+    resultados = _buscar_faq(q, contexto_url=desde or request.headers.get("referer", ""))
 
     context = get_common_context(request)
     context["faq_entries"] = resultados
     context["faq_todos"] = _FAQ_ENTRIES
     context["faq_query"] = q
+    context["faq_total"] = len(_FAQ_ENTRIES)
     return templates.TemplateResponse(request, "soporte_faq.html", context)
 
 
 @app.get("/api/soporte/faq")
-def api_soporte_faq(request: Request, q: str = ""):
-    """API de búsqueda FAQ para autocompletar/AJAX. R-070"""
+def api_soporte_faq(request: Request, q: str = "", desde: str = ""):
+    """API de búsqueda FAQ para autocompletar/AJAX. R-070 / R-085"""
     if not get_current_user(request):
         return JSONResponse({"error": "no autenticado"}, status_code=401)
-    resultados = _buscar_faq(q)
+    resultados = _buscar_faq(q, contexto_url=desde)
     return JSONResponse({"resultados": resultados, "total": len(resultados)})
 
 
@@ -7102,3 +7308,36 @@ def api_heartbeat(request: Request):
     Devuelve métricas básicas del servidor en JSON.
     """
     return _collect_heartbeat_data()
+
+
+# =====================================================================
+# R-086 / Ruta 12.2 — API de producto: endpoint de información de versión
+# =====================================================================
+
+_DASC_API_VERSION = "1.0"
+_DASC_BUILD_DATE = "2026-06-08"
+
+@app.get("/api/v1/info")
+def api_info():
+    """
+    Información pública de la instalación DASC.
+    Utilizable por integraciones externas para verificar compatibilidad.
+    No requiere autenticación.
+    """
+    return {
+        "producto": "DASC Server Manager",
+        "api_version": _DASC_API_VERSION,
+        "panel_version": os.getenv("DASC_VERSION", "1.0-rc1"),
+        "build_date": _DASC_BUILD_DATE,
+        "endpoints_publicos": [
+            "GET /health",
+            "GET /api/v1/info",
+            "GET /api/v1/heartbeat",
+        ],
+        "endpoints_autenticados": [
+            "GET /api/soporte/faq?q=",
+            "POST /api/soporte/tickets",
+            "GET /api/soporte/estado/{ticket_id}",
+        ],
+        "documentacion": "/api/docs",
+    }

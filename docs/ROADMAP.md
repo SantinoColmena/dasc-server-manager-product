@@ -352,24 +352,18 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 
 ---
 
-## 10. Fase 12 — Evolución · 📦 BACKLOG
+## 10. Fase 12 — Evolución · 🟡 EN CURSO (parcial)
 
-- **IA avanzada de soporte/diagnóstico** (RAG sobre logs del cliente, sugerencias
-  proactivas al técnico; no sustituye al humano).
-- **Instalador gráfico Windows** (GUI completo, cero terminal para el cliente).
-- **WhatsApp Business API** (canal de notificaciones e informes cuando el volumen
-  justifique el coste de la API de Meta/Twilio).
-- **Refactor de `main.py`** (deuda L-6: ~5000 líneas en un fichero). 🕓 Diferida
-  conscientemente; no se toca hasta que la funcionalidad esté estable.
-- **Integraciones y API de producto** para ecosistemas de terceros.
-- **Migración de la Central de SQLite a PostgreSQL/MariaDB** si crece la base de
-  clientes.
-- **Alta disponibilidad y redundancia** — Múltiples instancias activas del panel
-  con failover automático, replicación MariaDB primary/replica, detección de nodo
-  caído y conmutación automática. Implica cambios arquitectónicos significativos
-  (load balancer, storage compartido o replicado, health-check endpoints). Solo se
-  justifica con clientes de alta criticidad y base de ingresos consolidada. Se
-  evalúa al planificar Fase 12 en función de la demanda real.
+| Ruta | Contenido | Estado |
+|---|---|---|
+| ✅ 12.1 IA básica de soporte mejorada | FAQ ampliado: 16 entradas (era 8). Algoritmo con sinónimos, normalización, boost contextual. `_normalizar_palabras`, `_FAQ_SINONIMOS`. ✅ Entregado 2026-06-08 (R-085). | ✅ |
+| ✅ 12.2 API de producto documentada | Endpoint `GET /api/v1/info` con metadatos de versión. Documento `docs/tecnico/api_producto.md` con todos los endpoints, códigos HTTP e integraciones. ✅ Entregado 2026-06-08 (R-086). | ✅ |
+| ✅ 12.4 Preparación migración SQLite → MariaDB | Script `deploy/db/migrate_sqlite_to_mariadb.sh`: crea schema MariaDB, exporta CSVs, carga datos, verifica recuentos. Listo para cuando haga falta. ✅ Entregado 2026-06-08 (R-087). | ✅ |
+| 12.3 IA avanzada (RAG) | Análisis de logs con LLM, sugerencias proactivas. Requiere presupuesto para API OpenAI/Anthropic y base de clientes que lo justifique. ⏳ Backlog. | 🕓 |
+| 12.5 Instalador gráfico Windows | GUI completo (WPF/Electron). Requiere tiempo significativo y base de clientes no técnicos. ⏳ Backlog. | 🕓 |
+| 12.6 WhatsApp Business API | Canal adicional de notificaciones. Requiere cuenta Meta/Twilio (~€0,05/mensaje). ⏳ Backlog. | 🕓 |
+| 12.7 Refactor de `main.py` | Deuda técnica L-6: ~7000 líneas en un fichero. 🕓 Diferida conscientemente hasta que la funcionalidad esté estable. | 🕓 |
+| 12.8 Alta disponibilidad | Failover automático, replicación MariaDB. Solo se justifica con clientes de alta criticidad e ingresos consolidados. ⏳ Backlog. | 🕓 |
 
 ---
 
