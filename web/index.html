@@ -489,9 +489,9 @@
                 </div>
             </div>
 
-            <!-- Formulario — action de Formspree (gratuito) -->
+            <!-- Formulario — enviado via fetch; Formspree ID xbdeowpd -->
             <div class="contact-form">
-                <form action="https://formspree.io/f/xbdeowpd" method="POST">
+                <form id="form-contacto" novalidate>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nombre">Nombre *</label>
@@ -529,8 +529,9 @@
                     <!-- Honeypot antispam -->
                     <input type="text" name="_gotcha" style="display:none;">
                     <input type="hidden" name="_subject" value="Nueva consulta desde vigex.es">
-                    <button type="submit" class="btn btn-primary form-submit">
-                        <i class="fa-solid fa-paper-plane"></i> Enviar mensaje
+                    <button type="submit" class="btn btn-primary form-submit" id="btn-enviar">
+                        <span class="btn-text"><i class="fa-solid fa-paper-plane"></i> Enviar mensaje</span>
+                        <span class="spinner" aria-hidden="true"></span>
                     </button>
                     <p class="form-legal">
                         Al enviar este formulario aceptas nuestra
@@ -538,6 +539,16 @@
                         No compartimos tus datos con terceros.
                     </p>
                 </form>
+
+                <!-- Confirmación de éxito (oculta hasta envío) -->
+                <div class="form-success" id="form-success" role="status" aria-live="polite">
+                    <canvas class="form-success-canvas" id="confeti-canvas"></canvas>
+                    <div class="form-success-inner">
+                        <i class="fa-solid fa-circle-check form-success-icon"></i>
+                        <h3 class="form-success-title">¡Mensaje enviado!</h3>
+                        <p class="form-success-sub">Te contactaremos en menos de 24&nbsp;h.<br>Revisa también tu carpeta de spam.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -635,6 +646,103 @@
             }
         });
     });
+
+    // ── Formulario de contacto — envío async + confeti ────────────────────────
+    var formContacto = document.getElementById('form-contacto');
+    if (formContacto) {
+        formContacto.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var btn = document.getElementById('btn-enviar');
+            btn.classList.add('loading');
+
+            fetch('https://formspree.io/f/xbdeowpd', {
+                method: 'POST',
+                body: new FormData(formContacto),
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function (res) {
+                if (res.ok) {
+                    formContacto.style.display = 'none';
+                    var exito = document.getElementById('form-success');
+                    exito.classList.add('visible');
+                    lanzarConfeti(document.getElementById('confeti-canvas'));
+                } else {
+                    return res.json().then(function (cuerpo) {
+                        var msg = (cuerpo.errors || []).map(function (er) { return er.message; }).join(', ') || 'Error desconocido';
+                        throw new Error(msg);
+                    });
+                }
+            })
+            .catch(function (err) {
+                btn.classList.remove('loading');
+                alert('No se pudo enviar el mensaje. Por favor escríbenos directamente a soporte@vigex.es');
+                console.error('[vigex-form]', err);
+            });
+        });
+    }
+
+    function lanzarConfeti(canvas) {
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        canvas.width  = canvas.offsetWidth  || 400;
+        canvas.height = canvas.offsetHeight || 300;
+
+        var colores = ['#4f46e5', '#10b981', '#a5b4fc', '#6ee7b7', '#c7d2fe', '#ffffff'];
+        var partics  = [];
+
+        for (var i = 0; i < 130; i++) {
+            partics.push({
+                x:         Math.random() * canvas.width,
+                y:         Math.random() * canvas.height - canvas.height * 0.6,
+                r:         Math.random() * 5.5 + 3,
+                d:         Math.random() * 80 + 20,
+                color:     colores[Math.floor(Math.random() * colores.length)],
+                tilt:      Math.floor(Math.random() * 10) - 10,
+                tiltAngle: 0,
+                tiltSpeed: Math.random() * 0.07 + 0.04
+            });
+        }
+
+        var angulo  = 0;
+        var fotograma = 0;
+        var DURACION  = 90;   // ~1.5 s a 60 fps
+        var FADE_OUT  = 30;   // 0.5 s de desvanecido
+
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            angulo += 0.01;
+            fotograma++;
+
+            var alfa = fotograma <= DURACION
+                ? 1
+                : Math.max(0, 1 - (fotograma - DURACION) / FADE_OUT);
+
+            partics.forEach(function (p) {
+                p.tiltAngle += p.tiltSpeed;
+                p.y += (Math.cos(angulo + p.d) + 2.8 + p.r / 2) * 0.75;
+                p.x += Math.sin(angulo) * 0.55;
+                p.tilt = Math.sin(p.tiltAngle) * 12;
+
+                ctx.beginPath();
+                ctx.globalAlpha = alfa;
+                ctx.fillStyle   = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r / 4, p.y);
+                ctx.lineTo(p.x + p.tilt,             p.y + p.tilt + p.r);
+                ctx.lineTo(p.x + p.tilt - p.r / 4,  p.y + p.r * 0.7);
+                ctx.closePath();
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            if (fotograma <= DURACION + FADE_OUT) {
+                requestAnimationFrame(dibujar);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        dibujar();
+    }
 
 }());
 </script>
