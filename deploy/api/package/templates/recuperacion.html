@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    /* ── DRO — Orquestación de recuperación ante desastres (Ruta 8.7) ── */
+    .dro-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: .75rem; margin-bottom: 1.75rem;
+    }
+    .dro-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
+    .dro-subtitle { color: #6b7280; font-size: .95rem; margin: .25rem 0 0; }
+
+    .dro-badge {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: #fee2e2; color: #b91c1c;
+        padding: .3rem .8rem; border-radius: 99px;
+        font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    }
+
+    /* ── Estado actual del servidor ── */
+    .dro-estado {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: .85rem;
+        margin-bottom: 1.75rem;
+    }
+    .dro-estado-card {
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 1rem 1.2rem;
+        display: flex; align-items: center; gap: .85rem;
+    }
+    .dro-estado-icon {
+        width: 38px; height: 38px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .9rem; flex-shrink: 0;
+    }
+    .dro-estado-icon.green  { background: #d1fae5; color: #065f46; }
+    .dro-estado-icon.amber  { background: #fffbeb; color: #b45309; }
+    .dro-estado-icon.red    { background: #fee2e2; color: #b91c1c; }
+    .dro-estado-icon.gray   { background: #f3f4f6; color: #6b7280; }
+    .dro-estado-icon.indigo { background: #eef2ff; color: #4f46e5; }
+    .dro-estado-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
+    .dro-estado-val   { font-size: 1rem; font-weight: 700; color: #1e1b4b; line-height: 1.2; margin-top: .1rem; }
+    .dro-estado-sub   { font-size: .72rem; color: #6b7280; }
+
+    /* ── Aviso de uso ── */
+    .dro-aviso {
+        display: flex; align-items: flex-start; gap: .65rem;
+        padding: .85rem 1rem; background: #fefce8; border: 1px solid #fde68a;
+        border-radius: 10px; font-size: .83rem; color: #713f12;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ── Runbook — pasos ── */
+    .dro-steps-title {
+        font-size: .78rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .06em; color: #9ca3af; margin: 0 0 1rem;
+    }
+    .dro-steps { display: flex; flex-direction: column; gap: .85rem; }
+
+    .dro-step {
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        display: flex; align-items: stretch; overflow: hidden;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .dro-step:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,.07); }
+    .dro-step.critico { border-left: 3px solid #ef4444; }
+    .dro-step.critico:hover { border-color: #ef4444; }
+
+    .dro-step-num {
+        min-width: 52px; display: flex; align-items: center; justify-content: center;
+        background: #f9fafb; border-right: 1px solid #f3f4f6;
+        font-size: 1.15rem; font-weight: 800; color: #d1d5db;
+        flex-shrink: 0;
+    }
+    .dro-step.critico .dro-step-num { color: #fca5a5; background: #fff7f7; }
+
+    .dro-step-body {
+        flex: 1; padding: 1rem 1.25rem;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem; flex-wrap: wrap;
+    }
+    .dro-step-content { flex: 1; min-width: 180px; }
+    .dro-step-titulo  { font-size: .95rem; font-weight: 700; color: #1e1b4b; margin: 0 0 .3rem; }
+    .dro-step-desc    { font-size: .82rem; color: #6b7280; line-height: 1.55; margin: 0; }
+
+    .dro-step-critico-badge {
+        display: inline-flex; align-items: center; gap: .3rem;
+        background: #fee2e2; color: #b91c1c;
+        padding: .15rem .5rem; border-radius: 99px;
+        font-size: .68rem; font-weight: 700; margin-bottom: .35rem;
+    }
+
+    .dro-btn {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .5rem 1rem; border-radius: 8px;
+        font-size: .82rem; font-weight: 600;
+        text-decoration: none; white-space: nowrap;
+        transition: all .15s; flex-shrink: 0;
+    }
+    .dro-btn.normal {
+        background: #eef2ff; color: #4f46e5;
+        border: 1.5px solid #c7d2fe;
+    }
+    .dro-btn.normal:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .dro-btn.critico {
+        background: #ef4444; color: #fff;
+        border: 1.5px solid #ef4444;
+    }
+    .dro-btn.critico:hover { background: #b91c1c; border-color: #b91c1c; }
+
+    @media (max-width: 900px) { .dro-estado { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) {
+        .dro-estado { grid-template-columns: 1fr; }
+        .dro-step-body { flex-direction: column; align-items: flex-start; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set e = estado %}
+
+<div class="dro-header">
+    <div>
+        <h1 class="dro-title">Recuperación ante desastres</h1>
+        <p class="dro-subtitle">Sigue los pasos en orden. No saltes ninguno salvo que no aplique.</p>
+    </div>
+    <span class="dro-badge"><i class="fa-solid fa-triangle-exclamation"></i> DRO — Runbook</span>
+</div>
+
+<!-- ── Estado actual ── -->
+<div class="dro-estado">
+    <!-- Disco -->
+    {% if e.disco_pct is not none %}
+    <div class="dro-estado-card">
+        <div class="dro-estado-icon {% if e.disco_ok %}green{% else %}red{% endif %}">
+            <i class="fa-solid fa-hard-drive"></i>
+        </div>
+        <div>
+            <div class="dro-estado-label">Disco del servidor</div>
+            <div class="dro-estado-val">{{ e.disco_pct }}% usado</div>
+            <div class="dro-estado-sub">{{ e.disco_libre_gb }} GB libres</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="dro-estado-card">
+        <div class="dro-estado-icon gray"><i class="fa-solid fa-hard-drive"></i></div>
+        <div>
+            <div class="dro-estado-label">Disco del servidor</div>
+            <div class="dro-estado-val">—</div>
+            <div class="dro-estado-sub">Sin datos</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Última copia -->
+    <div class="dro-estado-card">
+        <div class="dro-estado-icon {% if e.ultima_copia_ok %}green{% elif e.ultima_copia_ok is none %}gray{% else %}red{% endif %}">
+            <i class="fa-solid fa-database"></i>
+        </div>
+        <div>
+            <div class="dro-estado-label">Última copia</div>
+            <div class="dro-estado-val">
+                {% if e.ultima_copia_ok %}OK
+                {% elif e.ultima_copia_ok is none %}—
+                {% else %}Error
+                {% endif %}
+            </div>
+            <div class="dro-estado-sub">{{ e.ultima_copia_fecha }}</div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="dro-estado-card">
+        <div class="dro-estado-icon {% if e.alertas_activas == 0 %}green{% elif e.alertas_activas is none %}gray{% else %}amber{% endif %}">
+            <i class="fa-solid fa-bell"></i>
+        </div>
+        <div>
+            <div class="dro-estado-label">Alertas registradas</div>
+            <div class="dro-estado-val">
+                {% if e.alertas_activas is not none %}{{ e.alertas_activas }}{% else %}—{% endif %}
+            </div>
+            <div class="dro-estado-sub">Total en el historial</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Aviso ── -->
+<div class="dro-aviso">
+    <i class="fa-solid fa-circle-info"></i>
+    <div>
+        Este runbook guía la recuperación ante desastres. Sigue los pasos en orden.
+        El <strong>paso 3 (restauración)</strong> es destructivo e irreversible — asegúrate
+        de haber verificado la integridad de la copia antes de ejecutarlo.
+    </div>
+</div>
+
+<!-- ── Pasos del runbook ── -->
+<p class="dro-steps-title">Runbook de recuperación — 6 pasos</p>
+
+<div class="dro-steps">
+    {% for paso in dro_pasos %}
+    <div class="dro-step {{ paso.tipo }}">
+        <div class="dro-step-num">{{ paso.num }}</div>
+        <div class="dro-step-body">
+            <div class="dro-step-content">
+                {% if paso.tipo == 'critico' %}
+                <div class="dro-step-critico-badge">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Acción destructiva
+                </div>
+                {% endif %}
+                <p class="dro-step-titulo">{{ paso.titulo }}</p>
+                <p class="dro-step-desc">{{ paso.descripcion }}</p>
+            </div>
+            <a href="{{ paso.accion_url }}" class="dro-btn {{ paso.tipo }}">
+                <i class="fa-solid {{ paso.accion_icon }}"></i>
+                {{ paso.accion_label }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block sidebar_info %}
+<div class="sidebar-info-block">
+    <span class="sidebar-info-label">Pasos runbook</span>
+    <span>{{ dro_pasos | length }}</span>
+</div>
+{% if estado.disco_pct is not none %}
+<div class="sidebar-info-block">
+    <span class="sidebar-info-label">Disco usado</span>
+    <span>{{ estado.disco_pct }}%</span>
+</div>
+{% endif %}
+<div class="sidebar-info-block">
+    <span class="sidebar-info-label">Última copia</span>
+    <span style="font-size:.78rem;">{{ estado.ultima_copia_fecha }}</span>
+</div>
+{% endblock %}
