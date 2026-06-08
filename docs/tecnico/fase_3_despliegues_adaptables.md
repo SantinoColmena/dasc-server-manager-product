@@ -4,7 +4,7 @@
 
 La Fase 3 parte de la Fase 2 ya cerrada, implementada, documentada y validada en laboratorio real con tres máquinas Ubuntu.
 
-El objetivo de esta fase no es añadir funciones visuales nuevas al panel, sino adaptar DASC Server Manager para poder instalarse de forma flexible según el tamaño y presupuesto del cliente.
+El objetivo de esta fase no es añadir funciones visuales nuevas al panel, sino adaptar Vigex para poder instalarse de forma flexible según el tamaño y presupuesto del cliente.
 
 ## Tareas incluidas
 
@@ -20,7 +20,7 @@ El objetivo de esta fase no es añadir funciones visuales nuevas al panel, sino 
 
 ## Perfiles definidos
 
-### 1. DASC Lite - 1 servidor
+### 1. Vigex Lite - 1 servidor
 
 Este perfil concentra panel, base de datos, logs y backups en una misma máquina.
 
@@ -39,14 +39,14 @@ Riesgo principal:
 
 Si el servidor falla completamente, se pierden el sistema y las copias locales. Por eso la copia externa es obligatoria.
 
-### 2. DASC PyME - 2 servidores
+### 2. Vigex PyME - 2 servidores
 
 Este perfil es el estándar recomendado para clientes reales.
 
 Distribución:
 
 - Servidor principal: base de datos o aplicación del cliente.
-- Servidor DASC: panel, backups, logs, alertas y restauración.
+- Servidor Vigex: panel, backups, logs, alertas y restauración.
 
 Ventajas:
 
@@ -64,7 +64,7 @@ Uso recomendado:
 - Comercios con base de datos local.
 - Empresas de 5 a 30 empleados.
 
-### 3. DASC Pro - 3 servidores
+### 3. Vigex Pro - 3 servidores
 
 Este perfil mantiene la arquitectura distribuida validada en laboratorio.
 

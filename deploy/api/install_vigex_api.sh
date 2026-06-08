@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="DASC Server Manager"
-SERVICE_NAME="dasc-api"
+APP_NAME="Vigex"
+SERVICE_NAME="vigex-api"
 APP_USER="${SUDO_USER:-$USER}"
 APP_GROUP="$APP_USER"
-PADRE_DIR="/opt/dasc"
-INSTALL_DIR="/opt/dasc/api"
+PADRE_DIR="/opt/vigex"
+INSTALL_DIR="/opt/vigex/api"
 VENV_DIR="$INSTALL_DIR/venv"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
@@ -131,9 +131,9 @@ is_empty_or_placeholder() {
      "$value" == "IP_SERVIDOR_BACKUPS" ||
      "$value" == "IP_SERVIDOR_DB_BACKUPS" ||
      "$value" == "IP_SERVIDOR_SERVICIOS_O_BACKUPS" ||
-     "$value" == "dasc_backup_2026" ||
-     "$value" == "dasc_restore_2026" ||
-     "$value" == "dasc_logs_2026" ]]
+     "$value" == "vigex_backup_2026" ||
+     "$value" == "vigex_restore_2026" ||
+     "$value" == "vigex_logs_2026" ]]
 }
 
 write_config_if_env_set() {
@@ -200,26 +200,26 @@ prompt_config_key() {
   echo "==> ${key} configurado"
 }
 
-DASC_PROFILE_VALUE="${DASC_PROFILE:-$(read_env_value "DASC_PROFILE" "$CONFIG_FILE" || true)}"
-DASC_PROFILE_VALUE="${DASC_PROFILE_VALUE:-custom}"
-DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+VIGEX_PROFILE_VALUE="${VIGEX_PROFILE:-$(read_env_value "VIGEX_PROFILE" "$CONFIG_FILE" || true)}"
+VIGEX_PROFILE_VALUE="${VIGEX_PROFILE_VALUE:-custom}"
+VIGEX_PROFILE_VALUE="$(echo "$VIGEX_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
 
-case "$DASC_PROFILE_VALUE" in
+case "$VIGEX_PROFILE_VALUE" in
   lite|standard|pro|custom)
     ;;
   *)
-    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    echo "ERROR: VIGEX_PROFILE debe ser lite, standard, pro o custom."
     exit 1
     ;;
 esac
 
-write_env_value "DASC_PROFILE" "$DASC_PROFILE_VALUE"
-echo "==> Perfil DASC API seleccionado: ${DASC_PROFILE_VALUE}"
+write_env_value "VIGEX_PROFILE" "$VIGEX_PROFILE_VALUE"
+echo "==> Perfil Vigex API seleccionado: ${VIGEX_PROFILE_VALUE}"
 
 # R-053A/F8 - Importar credenciales de la BD de logs generadas por install_db.sh.
 # En Lite (un host) o en multi-host con el fichero de secretos copiado a este
 # servidor, el panel necesita la contrasena real de LOGS_DB para conectarse.
-DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/dasc-db-install-secrets.env}"
+DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/vigex-db-install-secrets.env}"
 if [[ -f "$DB_SECRETS_FILE" ]]; then
   echo "==> Importando credenciales de logs desde ${DB_SECRETS_FILE}"
   SECRET_LOGS_DB_NAME="$(read_env_value "LOGS_DB_NAME" "$DB_SECRETS_FILE" || true)"
@@ -239,7 +239,7 @@ write_config_if_env_set "CENTRAL_SUPPORT_URL"
 write_config_if_env_set "CENTRAL_SUPPORT_CLIENT_ID"
 write_config_if_env_set "CENTRAL_SUPPORT_CLIENT_NAME"
 write_config_if_env_set "CENTRAL_SUPPORT_TOKEN"
-write_config_if_env_set "DASC_LOCAL_INTERNAL_SUPPORT_ENABLED"
+write_config_if_env_set "VIGEX_LOCAL_INTERNAL_SUPPORT_ENABLED"
 
 # Alias cómodos de plantilla.
 if [[ -n "${CLIENT_ID:-}" && -z "${CENTRAL_SUPPORT_CLIENT_ID:-}" ]]; then
@@ -252,7 +252,7 @@ if [[ -n "${CLIENT_NAME:-}" && -z "${CENTRAL_SUPPORT_CLIENT_NAME:-}" ]]; then
   echo "==> CENTRAL_SUPPORT_CLIENT_NAME configurado desde CLIENT_NAME"
 fi
 
-case "$DASC_PROFILE_VALUE" in
+case "$VIGEX_PROFILE_VALUE" in
   lite)
     write_config_if_empty "BACKUPS_HOST" "127.0.0.1"
     write_config_if_empty "SERVICIOS_HOST" "127.0.0.1"
@@ -285,7 +285,7 @@ case "$DASC_PROFILE_VALUE" in
 esac
 
 # Valor limpio por defecto para cliente real si no está definido.
-write_config_if_empty "DASC_LOCAL_INTERNAL_SUPPORT_ENABLED" "false"
+write_config_if_empty "VIGEX_LOCAL_INTERNAL_SUPPORT_ENABLED" "false"
 
 CURRENT_SECRET_KEY="$(read_env_value "SECRET_KEY" "$CONFIG_FILE" || true)"
 if [[ -z "$CURRENT_SECRET_KEY" || "$CURRENT_SECRET_KEY" == CAMBIAR_* || "$CURRENT_SECRET_KEY" == "cambia-esta-clave-por-una-segura" ]]; then
@@ -360,14 +360,14 @@ path.write_text("\n".join(out) + "\n", encoding="utf-8")
 PY
 }
 
-dedupe_config_csv_key "DASC_SSH_ALLOWED_HOSTS"
+dedupe_config_csv_key "VIGEX_SSH_ALLOWED_HOSTS"
 
 echo "==> Ajustando permisos iniciales"
 echo "==> Preparando directorios runtime"
 mkdir -p "$INSTALL_DIR/data"
 mkdir -p "$INSTALL_DIR/reports"
 mkdir -p "$INSTALL_DIR/tools"
-chown -R "$APP_USER:$APP_GROUP" /opt/dasc
+chown -R "$APP_USER:$APP_GROUP" /opt/vigex
 chmod 750 "$PADRE_DIR"
 chmod 750 "$INSTALL_DIR"
 if [[ -f "$INSTALL_DIR/tools/generate_operational_report.sh" ]]; then
@@ -439,7 +439,7 @@ fi
 echo "==> Creando servicio systemd"
 cat > "$SERVICE_FILE" <<EOF2
 [Unit]
-Description=DASC Panel + API (FastAPI/Uvicorn)
+Description=Panel Vigex + API (FastAPI/Uvicorn)
 After=network-online.target
 Wants=network-online.target
 
@@ -468,8 +468,8 @@ systemctl restart "$SERVICE_NAME"
 
 echo "==> Preparando clave SSH dedicada para la API"
 SSH_DIR="${INSTALL_DIR}/.ssh"
-SSH_KEY_FILE="${SSH_DIR}/id_rsa_dasc"
-SSH_KNOWN_HOSTS_FILE="${SSH_DIR}/known_hosts_dasc"
+SSH_KEY_FILE="${SSH_DIR}/id_rsa_vigex"
+SSH_KNOWN_HOSTS_FILE="${SSH_DIR}/known_hosts_vigex"
 
 mkdir -p "$SSH_DIR"
 chown "$APP_USER:$APP_GROUP" "$SSH_DIR"
@@ -503,10 +503,10 @@ if [[ -z "$SERVICES_HOST" || "$SERVICES_HOST" == CAMBIAR_* ]]; then
   SERVICES_HOST="$BACKUP_HOST"
 fi
 
-write_env_value "DASC_SSH_KEY" "$SSH_KEY_FILE"
-write_env_value "DASC_SSH_KNOWN_HOSTS" "$SSH_KNOWN_HOSTS_FILE"
-write_env_value "DASC_SSH_TIMEOUT" "30"
-write_env_value "DASC_SSH_CONNECT_TIMEOUT" "10"
+write_env_value "VIGEX_SSH_KEY" "$SSH_KEY_FILE"
+write_env_value "VIGEX_SSH_KNOWN_HOSTS" "$SSH_KNOWN_HOSTS_FILE"
+write_env_value "VIGEX_SSH_TIMEOUT" "30"
+write_env_value "VIGEX_SSH_CONNECT_TIMEOUT" "10"
 DATABASE_HOST="$(read_env_value "TERMINAL_DATABASE_HOST" "$CONFIG_FILE" || true)"
 
 if [[ -z "$DATABASE_HOST" || "$DATABASE_HOST" == CAMBIAR_* ]]; then
@@ -541,8 +541,8 @@ build_unique_csv() {
 
   printf '%s\n' "$result"
 }
-DASC_ALLOWED_HOSTS="$(build_unique_csv "127.0.0.1" "localhost" "${BACKUP_HOST}" "${SERVICES_HOST}" "${DATABASE_HOST}")"
-write_env_value "DASC_SSH_ALLOWED_HOSTS" "${DASC_ALLOWED_HOSTS}"
+Vigex_ALLOWED_HOSTS="$(build_unique_csv "127.0.0.1" "localhost" "${BACKUP_HOST}" "${SERVICES_HOST}" "${DATABASE_HOST}")"
+write_env_value "VIGEX_SSH_ALLOWED_HOSTS" "${Vigex_ALLOWED_HOSTS}"
 
 touch "$SSH_KNOWN_HOSTS_FILE"
 chown "$APP_USER:$APP_GROUP" "$SSH_KNOWN_HOSTS_FILE"
@@ -558,7 +558,7 @@ if [[ "$DATABASE_HOST" != "$BACKUP_HOST" && "$DATABASE_HOST" != "$SERVICES_HOST"
 fi
 
 for TARGET_HOST in "${TARGET_HOSTS[@]}"; do
-  echo "==> Registrando host SSH en known_hosts_dasc: ${TARGET_HOST}"
+  echo "==> Registrando host SSH en known_hosts_vigex: ${TARGET_HOST}"
   ssh-keygen -R "$TARGET_HOST" -f "$SSH_KNOWN_HOSTS_FILE" >/dev/null 2>&1 || true
   if ssh-keyscan -H "$TARGET_HOST" >> "$SSH_KNOWN_HOSTS_FILE" 2>/dev/null; then
     echo "==> Huella SSH registrada correctamente para ${TARGET_HOST}"
@@ -574,23 +574,23 @@ chown "$APP_USER:$APP_GROUP" "${APP_USER_HOME}/.ssh"
 chmod 700 "${APP_USER_HOME}/.ssh"
 
 echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
-  if [[ -z "${DASC_PASS:-}" ]]; then
+  if [[ -z "${Vigex_PASS:-}" ]]; then
     echo
-    read -rsp "Introduce la contraseña actual del usuario dasc en ${TARGET_HOST}: " DASC_PASS
+    read -rsp "Introduce la contraseña actual del usuario vigex en ${TARGET_HOST}: " Vigex_PASS
     echo
   fi
 
-  if [[ -z "$DASC_PASS" ]]; then
-    echo "ERROR: la contraseña de dasc no puede estar vacía."
+  if [[ -z "$Vigex_PASS" ]]; then
+    echo "ERROR: la contraseña de vigex no puede estar vacía."
     exit 1
   fi
 
-  sudo -u "$APP_USER" sshpass -p "$DASC_PASS" ssh-copy-id \
+  sudo -u "$APP_USER" sshpass -p "$Vigex_PASS" ssh-copy-id \
     -i "$SSH_KEY_FILE.pub" \
     -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
-    "dasc@${TARGET_HOST}" || {
-      echo "ERROR: no se pudo copiar la clave automáticamente a dasc@${TARGET_HOST}."
+    "vigex@${TARGET_HOST}" || {
+      echo "ERROR: no se pudo copiar la clave automáticamente a vigex@${TARGET_HOST}."
       exit 1
     }
 
@@ -600,17 +600,17 @@ echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
     -o BatchMode=yes \
     -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
-    "dasc@${TARGET_HOST}" "hostname >/dev/null" || {
+    "vigex@${TARGET_HOST}" "hostname >/dev/null" || {
       echo "ERROR: la verificación SSH sin contraseña ha fallado contra ${TARGET_HOST}."
       exit 1
     }
 
 done
-# R-053B/B5: unset DASC_PASS fuera del bucle para que la contraseña persista
+# R-053B/B5: unset Vigex_PASS fuera del bucle para que la contraseña persista
 # en despliegues multi-host (Standard/Pro). Dentro del bucle, el unset borraba
 # la variable antes de la segunda iteración; read desde stdin=/dev/null devuelve
 # exit 1, que set -euo pipefail convierte en salida silenciosa del instalador.
-unset DASC_PASS
+unset Vigex_PASS
 
 chmod 640 "$CONFIG_FILE"
 if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ==================================================
-# DASC Server Manager
+# Vigex
 # R-028 / R-029 - Sincronización externa de backups
 # Soporta:
 #   - local / nas: destino montado en el sistema
@@ -10,7 +10,7 @@ set -euo pipefail
 #   - cifrado opcional con GPG simétrico
 # ==================================================
 
-SOURCE_DIR="${1:-${BACKUP_DIR:-/home/dasc/backups}}"
+SOURCE_DIR="${1:-${BACKUP_DIR:-/home/vigex/backups}}"
 CONFIG_FILE="${2:-}"
 
 if [[ -n "${CONFIG_FILE}" && -f "${CONFIG_FILE}" ]]; then
@@ -20,7 +20,7 @@ fi
 
 EXTERNAL_BACKUP_ENABLED="${EXTERNAL_BACKUP_ENABLED:-no}"
 EXTERNAL_BACKUP_TYPE="${EXTERNAL_BACKUP_TYPE:-none}"
-EXTERNAL_BACKUP_PATH="${EXTERNAL_BACKUP_PATH:-/mnt/dasc-external}"
+EXTERNAL_BACKUP_PATH="${EXTERNAL_BACKUP_PATH:-/mnt/vigex-external}"
 EXTERNAL_BACKUP_ENCRYPTION="${EXTERNAL_BACKUP_ENCRYPTION:-none}"
 EXTERNAL_SYNC_DELETE="${EXTERNAL_SYNC_DELETE:-no}"
 

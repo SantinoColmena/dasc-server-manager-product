@@ -1,4 +1,4 @@
-# DASC Server Manager
+# Vigex
 
 Panel web autohospedado para que una PyME centralice copias de seguridad, logs, servicios, restauración y alertas en uno o varios servidores Linux, sin depender de soluciones cloud externas.
 
@@ -48,7 +48,7 @@ El panel (FastAPI/Uvicorn) se comunica con los otros hosts **exclusivamente por 
 - Control de servicios del sistema (start/stop/status).
 - Alertas por Telegram (configurables).
 - Enlace a herramienta de monitorización externa (Cacti, configurable via `CACTI_URL`).
-- Soporte con sistema de tickets local + sincronización con DASC Central Support.
+- Soporte con sistema de tickets local + sincronización con Vigex Central.
 - Informes mensuales automáticos.
 - Instaladores bash automatizados e idempotentes por perfil.
 
@@ -56,14 +56,14 @@ El panel (FastAPI/Uvicorn) se comunica con los otros hosts **exclusivamente por 
 
 ## Seguridad implementada
 
-- Usuario de sistema sin shell (`dasc-api`, no login).
+- Usuario de sistema sin shell (`vigex-api`, no login).
 - Uvicorn escucha solo en `127.0.0.1:8000` — expuesto vía nginx.
 - Reverse proxy nginx con TLS 1.2/1.3 (autofirmado o Let's Encrypt).
-- `DASC_SESSION_HTTPS_ONLY=true` cuando HTTPS está activo.
+- `VIGEX_SESSION_HTTPS_ONLY=true` cuando HTTPS está activo.
 - UFW activo por host (scripts en `deploy/*/harden_ufw_*.sh`).
-- fail2ban: jaulas `sshd` + `dasc-auth` (bloqueo de IPs con intentos fallidos).
+- fail2ban: jaulas `sshd` + `vigex-auth` (bloqueo de IPs con intentos fallidos).
 - SSH hardened: ed25519, BatchMode, StrictHostKeyChecking, known_hosts dedicado.
-- `config.env` protegido (640, root:dasc-api), nunca commiteado.
+- `config.env` protegido (640, root:vigex-api), nunca commiteado.
 - Dependencias auditadas con `pip-audit` (sin CVEs conocidos en `v1.0-rc1`).
 
 ---
@@ -76,7 +76,7 @@ deploy/
   backup-services/ → Scripts de backup/restore/servicios + instalador
   db/              → Instalador MariaDB + hardening
   proxy/           → Reverse proxy nginx (HTTPS)
-  central-support/ → DASC Central Support (agregador multi-cliente)
+  central-support/ → Vigex Central (agregador multi-cliente)
 config/
   perfiles/        → Plantillas config.env por perfil (Lite/Standard/Pro)
 docs/
@@ -102,22 +102,22 @@ scripts/           → Utilidades de configuración y soporte
 ```bash
 # 1. Base de datos
 cd deploy/db
-sudo -E DASC_PROFILE=lite APP_PASSWORD='<pass>' \
+sudo -E VIGEX_PROFILE=lite APP_PASSWORD='<pass>' \
     BACKUP_ALLOWED_HOST=127.0.0.1 LOGS_ALLOWED_HOST=127.0.0.1 \
     bash install_db.sh
 
 # 2. Scripts de backup y servicios
 cd ../backup-services
-sudo -E DASC_PROFILE=lite APP_PASSWORD='<pass>' bash install_backup_services.sh
+sudo -E VIGEX_PROFILE=lite APP_PASSWORD='<pass>' bash install_backup_services.sh
 
 # 3. Panel API
 cd ../api
-sudo -E DASC_PROFILE=lite ADMIN_PASSWORD_INPUT='<pass-admin>' \
-    DASC_PASS='<pass>' bash install_dasc_api.sh </dev/null
+sudo -E VIGEX_PROFILE=lite ADMIN_PASSWORD_INPUT='<pass-admin>' \
+    Vigex_PASS='<pass>' bash install_vigex_api.sh </dev/null
 
 # 4. Proxy HTTPS
 cd ../proxy
-sudo bash install_reverse_proxy.sh   # activa HTTPS + DASC_SESSION_HTTPS_ONLY=true
+sudo bash install_reverse_proxy.sh   # activa HTTPS + VIGEX_SESSION_HTTPS_ONLY=true
 
 # 5. Firewall y fail2ban
 cd ../api
@@ -145,7 +145,7 @@ Checklist completo por perfil: [`docs/validaciones/R-053D_checklist_instalacion_
 
 ## Aviso
 
-DASC Server Manager es un producto en fase de primeras ventas (`v1.0-rc1`).
+Vigex es un producto en fase de primeras ventas (`v1.0-rc1`).
 Ha sido instalado y validado en entornos de laboratorio (3 perfiles, VM Ubuntu 22.04)
 y en pilotos reales. Antes de usar en producción crítica se recomienda:
 

@@ -1,7 +1,7 @@
-# Guía: Despliegue de DASC Central Support en VPS
+# Guía: Despliegue de Vigex Central en VPS
 ## R-078 / Ruta 10.2
 
-Pasos para tener la Central DASC funcionando en un VPS propio con HTTPS real.
+Pasos para tener la Central Vigex funcionando en un VPS propio con HTTPS real.
 Tiempo estimado: 60-90 minutos.
 
 **Prerequisito:** haber completado la Ruta 9.1 (dominio y email profesionales activos).
@@ -41,15 +41,15 @@ Conéctate por SSH con el usuario root:
 # Actualizar el sistema
 apt update && apt upgrade -y
 
-# Crear usuario dasc (sin contraseña SSH, solo clave)
-adduser --disabled-password --gecos "" dasc
-usermod -aG sudo dasc
+# Crear usuario vigex (sin contraseña SSH, solo clave)
+adduser --disabled-password --gecos "" vigex
+usermod -aG sudo vigex
 
 # Copiar tu clave pública al nuevo usuario
-mkdir -p /home/dasc/.ssh
-cp /root/.ssh/authorized_keys /home/dasc/.ssh/authorized_keys
-chown -R dasc:dasc /home/dasc/.ssh
-chmod 700 /home/dasc/.ssh && chmod 600 /home/dasc/.ssh/authorized_keys
+mkdir -p /home/vigex/.ssh
+cp /root/.ssh/authorized_keys /home/vigex/.ssh/authorized_keys
+chown -R vigex:vigex /home/vigex/.ssh
+chmod 700 /home/vigex/.ssh && chmod 600 /home/vigex/.ssh/authorized_keys
 
 # Desactivar login root por SSH
 sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
@@ -65,33 +65,33 @@ ufw --force enable
 
 ---
 
-## Paso 3 — Instalar DASC Central Support
+## Paso 3 — Instalar Vigex Central
 
 Desde tu máquina Windows (con el repo clonado), transfiere los archivos:
 
 ```powershell
 # En PowerShell (Windows) — desde la raíz del repo
 $VPS_IP = "IP.DEL.VPS"
-$DASC_USER = "dasc"
+$Vigex_USER = "vigex"
 
 # Copiar el paquete al VPS
-scp -r deploy\central-support "$DASC_USER@${VPS_IP}:/tmp/"
+scp -r deploy\central-support "$Vigex_USER@${VPS_IP}:/tmp/"
 
 # Ejecutar el instalador
-ssh "$DASC_USER@${VPS_IP}" "sudo bash /tmp/central-support/install_central_support.sh"
+ssh "$Vigex_USER@${VPS_IP}" "sudo bash /tmp/central-support/install_central_support.sh"
 ```
 
 O desde Linux/WSL:
 ```bash
 VPS_IP="IP.DEL.VPS"
-scp -r deploy/central-support/ dasc@${VPS_IP}:/tmp/
-ssh dasc@${VPS_IP} "sudo bash /tmp/central-support/install_central_support.sh"
+scp -r deploy/central-support/ vigex@${VPS_IP}:/tmp/
+ssh vigex@${VPS_IP} "sudo bash /tmp/central-support/install_central_support.sh"
 ```
 
 El instalador:
 1. Instala Python 3 y dependencias.
-2. Copia el paquete a `/opt/dasc/central-support/`.
-3. Crea el servicio systemd `dasc-central-support`.
+2. Copia el paquete a `/opt/vigex/central-support/`.
+3. Crea el servicio systemd `vigex-central`.
 4. Arranca el servicio en el puerto 8010.
 
 ---
@@ -101,25 +101,25 @@ El instalador:
 El servicio lee variables del entorno. Créalas en el fichero de override de systemd:
 
 ```bash
-sudo systemctl edit dasc-central-support
+sudo systemctl edit vigex-central
 ```
 
 Añade este contenido (ajusta las contraseñas):
 ```ini
 [Service]
-Environment="DASC_CENTRAL_AUTH_ENABLED=true"
-Environment="DASC_CENTRAL_LAB_MODE=false"
-Environment="DASC_CENTRAL_ADMIN_USER=admin"
-Environment="DASC_CENTRAL_ADMIN_PASSWORD=CAMBIA_ESTO_POR_UNA_PASSWORD_SEGURA"
-Environment="DASC_CENTRAL_TECH_USER=tecnico"
-Environment="DASC_CENTRAL_TECH_PASSWORD=CAMBIA_ESTO_POR_UNA_PASSWORD_SEGURA"
-Environment="DASC_CENTRAL_SECRET_KEY=GENERA_UN_SECRET_CON_python3_-c_secrets.token_hex(48)"
+Environment="Vigex_CENTRAL_AUTH_ENABLED=true"
+Environment="Vigex_CENTRAL_LAB_MODE=false"
+Environment="Vigex_CENTRAL_ADMIN_USER=admin"
+Environment="Vigex_CENTRAL_ADMIN_PASSWORD=CAMBIA_ESTO_POR_UNA_PASSWORD_SEGURA"
+Environment="Vigex_CENTRAL_TECH_USER=tecnico"
+Environment="Vigex_CENTRAL_TECH_PASSWORD=CAMBIA_ESTO_POR_UNA_PASSWORD_SEGURA"
+Environment="Vigex_CENTRAL_SECRET_KEY=GENERA_UN_SECRET_CON_python3_-c_secrets.token_hex(48)"
 ```
 
 Guarda y reinicia:
 ```bash
-sudo systemctl restart dasc-central-support
-sudo systemctl status dasc-central-support
+sudo systemctl restart vigex-central
+sudo systemctl status vigex-central
 ```
 
 ---
@@ -139,14 +139,14 @@ El instalador de nginx configura el proxy a `127.0.0.1:8010`.
 Luego obtén el certificado TLS:
 ```bash
 # Sustituye por tu dominio real
-sudo certbot --nginx -d central.dascpyme.es
+sudo certbot --nginx -d central.vigexpyme.es
 ```
 
 Certbot se encarga de renovar automáticamente via cron.
 
 Verifica que funciona:
 ```bash
-curl -I https://central.dascpyme.es/health
+curl -I https://central.vigexpyme.es/health
 # Debe devolver HTTP/2 200
 ```
 
@@ -172,7 +172,7 @@ sudo ufw reload
 
 ## Paso 7 — Registrar el primer cliente
 
-1. Accede al panel central: `https://central.dascpyme.es`
+1. Accede al panel central: `https://central.vigexpyme.es`
 2. Inicia sesión con el usuario `admin`.
 3. Navega a **Clientes → Registrar nuevo cliente**.
 4. Introduce el ID y nombre del cliente. Se generará un token seguro.
@@ -180,13 +180,13 @@ sudo ufw reload
 6. En el servidor del cliente, añade a `config.env`:
    ```bash
    CENTRAL_SUPPORT_ENABLED=true
-   CENTRAL_SUPPORT_URL=https://central.dascpyme.es/api/v1/support/tickets
+   CENTRAL_SUPPORT_URL=https://central.vigexpyme.es/api/v1/support/tickets
    CENTRAL_SUPPORT_CLIENT_ID=<id_del_cliente>
    CENTRAL_SUPPORT_CLIENT_NAME=<nombre_del_cliente>
    CENTRAL_SUPPORT_TOKEN=<token_copiado>
    CENTRAL_HEARTBEAT_INTERVAL=300
    ```
-7. Reinicia el panel del cliente: `sudo systemctl restart dasc-api`
+7. Reinicia el panel del cliente: `sudo systemctl restart vigex-api`
 8. En el panel central, ve a **Salud global** — el cliente debe aparecer en verde en ≤ 10 minutos.
 
 ---
@@ -197,11 +197,11 @@ Ejecuta periódicamente (recomendado: semanal via cron):
 ```bash
 # En el VPS
 tar -czf /root/backups/central_$(date +%Y%m%d_%H%M%S).tar.gz \
-    --exclude=/opt/dasc/central-support/venv \
-    /opt/dasc/central-support/
+    --exclude=/opt/vigex/central-support/venv \
+    /opt/vigex/central-support/
 
 # Copiar a almacenamiento externo
-rsync -avz /root/backups/ tu_servidor_externo:/backups/dasc-central/
+rsync -avz /root/backups/ tu_servidor_externo:/backups/vigex-central/
 ```
 
 ---
@@ -209,10 +209,10 @@ rsync -avz /root/backups/ tu_servidor_externo:/backups/dasc-central/
 ## Checklist de activación de la Central
 
 - [ ] VPS contratado y accesible por SSH
-- [ ] Usuario `dasc` creado, acceso root desactivado
-- [ ] `dasc-central-support` arrancado y en verde con `systemctl status`
+- [ ] Usuario `vigex` creado, acceso root desactivado
+- [ ] `vigex-central` arrancado y en verde con `systemctl status`
 - [ ] Variables de entorno configuradas con contraseñas reales
-- [ ] nginx + HTTPS (Let's Encrypt) activo en `https://central.dascpyme.es`
+- [ ] nginx + HTTPS (Let's Encrypt) activo en `https://central.vigexpyme.es`
 - [ ] Hardening aplicado (fail2ban, UFW)
 - [ ] Al menos un cliente de prueba registrado y aparece en verde en Salud global
 - [ ] Backup de la Central configurado
@@ -224,7 +224,7 @@ rsync -avz /root/backups/ tu_servidor_externo:/backups/dasc-central/
 
 ```bash
 # Ver logs del servicio central
-sudo journalctl -u dasc-central-support -n 100 -f
+sudo journalctl -u vigex-central -n 100 -f
 
 # Comprobar que el puerto 8010 está escuchando
 sudo ss -tlnp | grep 8010
@@ -233,7 +233,7 @@ sudo ss -tlnp | grep 8010
 curl http://127.0.0.1:8010/health
 
 # Comprobar que nginx hace el proxy correctamente
-curl -I https://central.dascpyme.es/health
+curl -I https://central.vigexpyme.es/health
 
 # Recargar nginx si cambias la config
 sudo nginx -t && sudo systemctl reload nginx

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
-# migrate_sqlite_to_mariadb.sh — DASC Central Support
+# migrate_sqlite_to_mariadb.sh — Vigex Central
 # R-087 / Ruta 12.4
 #
-# Migra la base de datos SQLite de DASC Central Support a MariaDB.
+# Migra la base de datos SQLite de Vigex Central a MariaDB.
 # Solo necesario cuando la base de clientes crezca y SQLite no sea suficiente.
 # Umbral orientativo: > 50 clientes activos o > 100.000 tickets.
 #
@@ -18,12 +18,12 @@
 # =============================================================================
 set -euo pipefail
 
-SQLITE_DB="${DASC_SQLITE_PATH:-/opt/dasc/central-support/data/central_support.db}"
-MARIADB_HOST="${DASC_MARIADB_HOST:-127.0.0.1}"
-MARIADB_PORT="${DASC_MARIADB_PORT:-3306}"
-MARIADB_USER="${DASC_MARIADB_USER:-dasc_central}"
-MARIADB_PASS="${DASC_MARIADB_PASS:-}"
-MARIADB_DB="${DASC_MARIADB_DB:-dasc_central}"
+SQLITE_DB="${Vigex_SQLITE_PATH:-/opt/vigex/central-support/data/central_support.db}"
+MARIADB_HOST="${Vigex_MARIADB_HOST:-127.0.0.1}"
+MARIADB_PORT="${Vigex_MARIADB_PORT:-3306}"
+MARIADB_USER="${Vigex_MARIADB_USER:-vigex_central}"
+MARIADB_PASS="${Vigex_MARIADB_PASS:-}"
+MARIADB_DB="${Vigex_MARIADB_DB:-vigex_central}"
 
 RESET="\033[0m"; BOLD="\033[1m"; GREEN="\033[32m"; BLUE="\033[34m"
 YELLOW="\033[33m"; RED="\033[31m"
@@ -33,7 +33,7 @@ warn()    { echo -e "${YELLOW}[AVISO]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*"; }
 
 echo ""
-echo "  DASC Central Support — Migración SQLite → MariaDB"
+echo "  Vigex Central — Migración SQLite → MariaDB"
 echo "  R-087 / Ruta 12.4"
 echo ""
 
@@ -41,7 +41,7 @@ echo ""
 
 if [[ ! -f "${SQLITE_DB}" ]]; then
     error "No se encuentra la base de datos SQLite en: ${SQLITE_DB}"
-    error "Ajusta DASC_SQLITE_PATH si la ruta es diferente."
+    error "Ajusta Vigex_SQLITE_PATH si la ruta es diferente."
     exit 1
 fi
 
@@ -151,7 +151,7 @@ ok "Schema creado en MariaDB."
 
 # ── Exportar datos de SQLite a CSV y cargar en MariaDB ──────────────────────
 
-TMPDIR_MIG="$(mktemp -d /tmp/dasc_migration_XXXXXX)"
+TMPDIR_MIG="$(mktemp -d /tmp/vigex_migration_XXXXXX)"
 trap "rm -rf ${TMPDIR_MIG}" EXIT
 
 info "Exportando datos de SQLite..."

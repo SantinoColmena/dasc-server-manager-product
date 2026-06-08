@@ -1,4 +1,4 @@
-# Checklist de primera venta — DASC Server Manager
+# Checklist de primera venta — Vigex
 ## R-084 / Ruta 11.1
 
 Lista de verificación que DEBE estar completa antes de aceptar dinero de un cliente.
@@ -15,8 +15,8 @@ No es burocracia: cada punto evita un problema real.
 
 ## 2. Infraestructura de negocio lista
 
-- [ ] **Dominio profesional activo** (p.ej. `dascpyme.es`) ⏳
-- [ ] **Email profesional** (`soporte@dascpyme.es`) funcionando ⏳
+- [ ] **Dominio profesional activo** (p.ej. `vigexpyme.es`) ⏳
+- [ ] **Email profesional** (`soporte@vigexpyme.es`) funcionando ⏳
 - [ ] **Cuenta Stripe activa** con verificación KYC completada ⏳
 - [ ] **Payment Links** creados para cada plan ⏳
 - [ ] **Landing page publicada** con HTTPS real ⏳
@@ -33,7 +33,7 @@ No es burocracia: cada punto evita un problema real.
 
 ## 4. Operativo listo para el cliente
 
-- [ ] **DASC Central Support** en VPS con HTTPS real ⏳
+- [ ] **Vigex Central** en VPS con HTTPS real ⏳
       *(ver `docs/guias/guia_central_vps.md`)*
 - [ ] **Proceso de onboarding** probado en al menos una instalación real
       *(usar `deploy/api/onboarding_nuevo_cliente.sh`)*

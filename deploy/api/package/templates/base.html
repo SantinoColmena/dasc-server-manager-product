@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DASC Server Manager{% endblock %}</title>
+    <title>{% block title %}Vigex{% endblock %}</title>
 
     <!-- Fuente Inter (Fase 7.1) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,9 +27,9 @@
 <!-- ===== CABECERA ===== -->
 <header class="header">
     <a href="/" class="brand">
-        <img src="{{ url_for('static', path='img/logo-dasc.png') }}" class="logo" alt="DASC">
+        <img src="{{ url_for('static', path='img/logo-vigex.png') }}" class="logo" alt="Vigex">
         <div class="brand-text">
-            <span class="brand-title">DASC</span>
+            <span class="brand-title">Vigex</span>
             <span class="brand-subtitle">Server Manager</span>
         </div>
     </a>
@@ -50,7 +50,7 @@
 <script>
 (function () {
     /* R-083: leer preferencia guardada o preferencia del sistema */
-    var saved = localStorage.getItem('dasc-theme');
+    var saved = localStorage.getItem('vigex-theme');
     var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (saved === 'dark' || (!saved && prefersDark)) {
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -303,7 +303,7 @@
         btn.addEventListener('click', function () {
             var nowDark = !isDark();
             applyTheme(nowDark);
-            localStorage.setItem('dasc-theme', nowDark ? 'dark' : 'light');
+            localStorage.setItem('vigex-theme', nowDark ? 'dark' : 'light');
         });
     }
 }());

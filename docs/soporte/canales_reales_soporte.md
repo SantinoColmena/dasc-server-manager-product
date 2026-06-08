@@ -1,14 +1,14 @@
-# Canales reales de soporte - DASC Server Manager
+# Canales reales de soporte - Vigex
 
 ## Objetivo
 
-Definir los canales mínimos por los que un cliente PyME puede contactar con el equipo DASC sin usar GitHub.
+Definir los canales mínimos por los que un cliente PyME puede contactar con el equipo Vigex sin usar GitHub.
 
 ## Principio
 
 El cliente debe tener canales simples, claros y controlados.
 
-GitHub queda reservado para gestión interna del equipo DASC.
+GitHub queda reservado para gestión interna del equipo Vigex.
 
 ## Canales oficiales recomendados
 
@@ -38,7 +38,7 @@ Sirve para:
 ### Ejemplo temporal
 
 ~~~text
-soporte@dasc.local
+soporte@vigex.local
 ~~~
 
 En entorno real debe sustituirse por un dominio comercial.
@@ -109,7 +109,7 @@ Toda llamada debe terminar en un registro interno.
 
 ### Uso previsto
 
-A medio plazo, DASC puede incorporar un portal de cliente.
+A medio plazo, Vigex puede incorporar un portal de cliente.
 
 Funciones futuras:
 
@@ -122,7 +122,7 @@ Funciones futuras:
 
 ## Datos mínimos para abrir soporte
 
-Para poder actuar correctamente, el equipo DASC debe intentar obtener como mínimo:
+Para poder actuar correctamente, el equipo Vigex debe intentar obtener como mínimo:
 
 ~~~text
 Cliente
@@ -161,14 +161,14 @@ Internamente se debe registrar:
 
 ## Conclusión
 
-DASC Server Manager debe usar canales simples para el cliente y mantener la gestión técnica de soporte de forma interna.
+Vigex debe usar canales simples para el cliente y mantener la gestión técnica de soporte de forma interna.
 
 El cliente no necesita GitHub para recibir soporte.
 ## Integración con herramientas gratuitas de ticketing
 
 Los canales anteriores no obligan a gestionar todo manualmente.
 
-DASC puede conectar esos canales con una herramienta interna de ticketing.
+Vigex puede conectar esos canales con una herramienta interna de ticketing.
 
 Opciones contempladas:
 
@@ -185,6 +185,6 @@ El cliente seguirá usando canales simples.
 Email / Formulario / WhatsApp / Teléfono
 ~~~
 
-El equipo DASC podrá registrar o centralizar esas solicitudes en Jira o Zammad.
+El equipo Vigex podrá registrar o centralizar esas solicitudes en Jira o Zammad.
 
 GitHub sigue siendo únicamente herramienta interna de desarrollo.

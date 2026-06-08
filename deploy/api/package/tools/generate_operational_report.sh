@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/dasc/api}"
-CLIENT="${1:-DASC interno}"
+APP_DIR="${APP_DIR:-/opt/vigex/api}"
+CLIENT="${1:-Vigex interno}"
 PERIOD="${2:-$(date +%Y-%m)}"
 
 PYTHON_BIN="${APP_DIR}/venv/bin/python"

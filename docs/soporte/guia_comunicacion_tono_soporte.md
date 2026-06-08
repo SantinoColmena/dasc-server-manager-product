@@ -1,14 +1,14 @@
-# Guía de comunicación y tono de soporte - DASC Server Manager
+# Guía de comunicación y tono de soporte - Vigex
 
 ## Objetivo
 
-Definir cómo debe comunicarse el equipo DASC con clientes PyME durante incidencias, consultas, mantenimientos y solicitudes de soporte.
+Definir cómo debe comunicarse el equipo Vigex con clientes PyME durante incidencias, consultas, mantenimientos y solicitudes de soporte.
 
 El objetivo es mantener una comunicación profesional, clara y cercana, sin obligar al cliente a entender detalles técnicos internos.
 
 ## Principios generales
 
-La comunicación de soporte DASC debe ser:
+La comunicación de soporte Vigex debe ser:
 
 - Clara.
 - Profesional.
@@ -56,7 +56,7 @@ Siempre que sea posible, una respuesta debe incluir:
 
 ## Qué evitar
 
-El equipo DASC debe evitar:
+El equipo Vigex debe evitar:
 
 - Respuestas demasiado técnicas.
 - Culpabilizar al cliente.
@@ -75,7 +75,7 @@ Cuando exista un problema técnico, se debe traducir a lenguaje comprensible.
 Ejemplo técnico interno:
 
 ~~~text
-Access denied for user 'dasc_logs'@'192.168.60.10'
+Access denied for user 'vigex_logs'@'192.168.60.10'
 ~~~
 
 Comunicación al cliente:
@@ -246,7 +246,7 @@ No podemos hacer nada.
 
 ## Regla final
 
-El cliente debe sentir que DASC controla la situación.
+El cliente debe sentir que Vigex controla la situación.
 
 Aunque internamente haya errores técnicos, la comunicación externa debe ser ordenada, clara y orientada a resolver.
 
@@ -254,4 +254,4 @@ Aunque internamente haya errores técnicos, la comunicación externa debe ser or
 
 Una buena comunicación forma parte del producto.
 
-DASC Server Manager no solo debe funcionar técnicamente, también debe dar confianza al cliente durante incidencias, cambios y mantenimientos.
+Vigex no solo debe funcionar técnicamente, también debe dar confianza al cliente durante incidencias, cambios y mantenimientos.

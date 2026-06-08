@@ -1,4 +1,4 @@
-# Plan de implementación de soporte real - DASC Server Manager
+# Plan de implementación de soporte real - Vigex
 
 ## Objetivo
 
@@ -6,7 +6,7 @@ Separar claramente el soporte que ya está definido documentalmente del soporte 
 
 ## Estado actual
 
-DASC Server Manager ya dispone de una base documental sólida para soporte al cliente.
+Vigex ya dispone de una base documental sólida para soporte al cliente.
 
 Sin embargo, todavía no existe una implementación completa dentro del panel para gestionar tickets reales de cliente.
 
@@ -30,7 +30,7 @@ Actualmente existe:
 
 | Funcionalidad | Estado |
 |---|---|
-| Panel DASC operativo | Implementado |
+| Panel Vigex operativo | Implementado |
 | Logs remotos de eventos | Implementado |
 | Informes operativos básicos | Implementado |
 | Registro de accesos/login/logout | Implementado |
@@ -64,7 +64,7 @@ Para convertirlo en implementación real, se divide en subtareas más concretas.
 |---|---|---|
 | R-049A | Formulario básico de soporte en el panel | Implementación |
 | R-049B | Guardar tickets en SQLite/JSON/DB | Implementación |
-| R-049C | Vista interna de tickets para equipo DASC | Implementación |
+| R-049C | Vista interna de tickets para equipo Vigex | Implementación |
 | R-049D | Estados y prioridades de tickets | Implementación |
 | R-049E | Usar plantillas de respuesta desde documentación | Implementación |
 | R-049F | Exportar o copiar resumen para Jira/Zammad | Implementación |
@@ -105,7 +105,7 @@ Estas funciones son útiles, pero deben llegar después de tener un flujo básic
 ~~~text
 Cliente contacta por email/formulario/WhatsApp
         ↓
-Equipo DASC crea ticket en panel o sistema interno
+Equipo Vigex crea ticket en panel o sistema interno
         ↓
 Se clasifica prioridad
         ↓
@@ -124,7 +124,7 @@ R-049 podrá considerarse implementado cuando:
 
 - Exista formulario de soporte funcional.
 - Los tickets se guarden.
-- El equipo DASC pueda verlos.
+- El equipo Vigex pueda verlos.
 - Existan estados y prioridades.
 - Se pueda cerrar un ticket con evidencia.
 - No se dependa de GitHub para soporte al cliente.

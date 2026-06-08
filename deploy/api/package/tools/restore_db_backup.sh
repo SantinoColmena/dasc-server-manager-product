@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/dasc/api}"
+APP_DIR="${APP_DIR:-/opt/vigex/api}"
 PYTHON_BIN="${APP_DIR}/venv/bin/python"
 RESTORE_SCRIPT="${APP_DIR}/tools/restore_db_backup.py"
 

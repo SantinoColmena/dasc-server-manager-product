@@ -1,14 +1,14 @@
-# Arquitectura de soporte central multi-cliente - DASC Server Manager
+# Arquitectura de soporte central multi-cliente - Vigex
 
 ## Objetivo
 
-Definir la arquitectura objetivo para que DASC Server Manager pueda gestionar incidencias de varios clientes desde un panel central propio.
+Definir la arquitectura objetivo para que Vigex pueda gestionar incidencias de varios clientes desde un panel central propio.
 
 ## Decisión principal
 
-DASC no dependerá inicialmente de Jira, Zammad ni Freshdesk como núcleo del soporte.
+Vigex no dependerá inicialmente de Jira, Zammad ni Freshdesk como núcleo del soporte.
 
-DASC tendrá un panel central propio.
+Vigex tendrá un panel central propio.
 
 Las herramientas externas podrán añadirse más adelante como integraciones opcionales.
 
@@ -25,15 +25,15 @@ Retomar partes de pago cuando el proyecto tenga clientes reales o presupuesto.
 ## Arquitectura objetivo
 
 ~~~text
-Panel DASC Cliente A
-Panel DASC Cliente B
-Panel DASC Cliente C
+Panel Vigex Cliente A
+Panel Vigex Cliente B
+Panel Vigex Cliente C
         ↓
-API central DASC
+API central Vigex
         ↓
-Panel central DASC
+Panel central Vigex
         ↓
-Equipo técnico DASC
+Equipo técnico Vigex
         ↓
 Opcional: Jira / Zammad / Email / WhatsApp / Portal futuro
 ~~~
@@ -57,7 +57,7 @@ El cliente no debe ver:
 ~~~text
 Tickets de otros clientes
 Historial técnico interno
-Notas internas del equipo DASC
+Notas internas del equipo Vigex
 Resumen Jira/Zammad
 Prioridades internas reales
 Herramientas administrativas globales
@@ -65,9 +65,9 @@ Tokens de integración
 Configuración central
 ~~~
 
-## Panel central DASC
+## Panel central Vigex
 
-El panel central DASC será usado por el equipo técnico.
+El panel central Vigex será usado por el equipo técnico.
 
 Debe permitir:
 
@@ -100,34 +100,34 @@ cliente_lector
 | cliente_operador | Consulta estado y ejecuta acciones permitidas |
 | cliente_lector | Solo consulta estado, backups e informes |
 
-## Roles internos DASC
+## Roles internos Vigex
 
 ~~~text
-dasc_tecnico
-dasc_admin
-dasc_superadmin
+vigex_tecnico
+vigex_admin
+vigex_superadmin
 ~~~
 
 | Rol | Uso |
 |---|---|
-| dasc_tecnico | Gestiona incidencias y soporte |
-| dasc_admin | Gestiona clientes, técnicos, tickets e informes |
-| dasc_superadmin | Configura plataforma, integraciones y seguridad global |
+| vigex_tecnico | Gestiona incidencias y soporte |
+| vigex_admin | Gestiona clientes, técnicos, tickets e informes |
+| vigex_superadmin | Configura plataforma, integraciones y seguridad global |
 
 ## Flujo recomendado de incidencia
 
 ~~~text
 Cliente crea solicitud simple en su panel local
         ↓
-Panel local envía incidencia a API central DASC
+Panel local envía incidencia a API central Vigex
         ↓
 API central valida token del cliente
         ↓
 API central registra ticket
         ↓
-Panel central DASC muestra el ticket
+Panel central Vigex muestra el ticket
         ↓
-Técnico DASC clasifica, responde y actúa
+Técnico Vigex clasifica, responde y actúa
         ↓
 Cliente recibe actualización por canal acordado
 ~~~
@@ -198,7 +198,7 @@ SLA contractual real
 
 ## Jira y Zammad
 
-Jira y Zammad no serán obligatorios para que DASC funcione.
+Jira y Zammad no serán obligatorios para que Vigex funcione.
 
 Se consideran integraciones opcionales futuras:
 
@@ -224,7 +224,7 @@ No integración real con Jira/Zammad
 Debe evolucionar hacia:
 
 ~~~text
-Panel central DASC
+Panel central Vigex
 API central
 Recepción multi-cliente
 Roles separados
@@ -279,6 +279,6 @@ Portal cliente externo
 
 ## Conclusión
 
-La arquitectura recomendada para DASC Server Manager es un panel central propio multi-cliente.
+La arquitectura recomendada para Vigex es un panel central propio multi-cliente.
 
-Esto permite vender DASC como servicio gestionado, sin depender desde el inicio de herramientas externas de pago.
+Esto permite vender Vigex como servicio gestionado, sin depender desde el inicio de herramientas externas de pago.

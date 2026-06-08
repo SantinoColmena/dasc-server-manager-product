@@ -183,7 +183,7 @@ def load_backup_metadata(meta_path: Path) -> dict:
 
 
 def inspect_backups(env: dict):
-    backup_dir = Path(env.get("BACKUP_OUTPUT_DIR", "/var/backups/dasc/mysql/full")).expanduser()
+    backup_dir = Path(env.get("BACKUP_OUTPUT_DIR", "/var/backups/vigex/mysql/full")).expanduser()
 
     result = {
         "status": "No comprobado",
@@ -257,7 +257,7 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
 
     lines = []
 
-    lines.append("# Informe operativo DASC Server Manager")
+    lines.append("# Informe operativo Vigex")
     lines.append("")
 
     lines.append("## 1. Datos generales")
@@ -274,11 +274,11 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
 
     lines.append("## 2. Resumen")
     lines.append("")
-    lines.append("Este informe se genera desde el paquete API de DASC Server Manager.")
+    lines.append("Este informe se genera desde el paquete API de Vigex.")
     lines.append("")
     lines.append("Su objetivo es acercar el informe mensual desde una herramienta interna de GitHub hacia una herramienta real de producto.")
     lines.append("")
-    lines.append("Esta versión todavía es operativa básica, pero ya está pensada para ejecutarse en el servidor donde se instala DASC.")
+    lines.append("Esta versión todavía es operativa básica, pero ya está pensada para ejecutarse en el servidor donde se instala Vigex.")
     lines.append("")
 
     lines.append("## 3. Configuración mínima")
@@ -449,9 +449,9 @@ def build_report(root: Path, client: str, period: str, output_path: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Genera un informe operativo de DASC Server Manager.")
-    parser.add_argument("--root", default=".", help="Ruta raíz de la instalación API. Ej: /opt/dasc/api")
-    parser.add_argument("--client", default="DASC interno", help="Nombre de cliente o entorno.")
+    parser = argparse.ArgumentParser(description="Genera un informe operativo de Vigex.")
+    parser.add_argument("--root", default=".", help="Ruta raíz de la instalación API. Ej: /opt/vigex/api")
+    parser.add_argument("--client", default="Vigex interno", help="Nombre de cliente o entorno.")
     parser.add_argument("--period", default=datetime.now().strftime("%Y-%m"), help="Periodo del informe. Ej: 2026-05")
     parser.add_argument("--output", default="", help="Ruta de salida del informe Markdown.")
 

@@ -22,7 +22,7 @@ def to_int(value, default):
 
 
 def main_cli():
-    limit = to_int(os.getenv("DASC_CENTRAL_RETRY_LIMIT", "50"), 50)
+    limit = to_int(os.getenv("Vigex_CENTRAL_RETRY_LIMIT", "50"), 50)
 
     results = main.retry_pending_central_sync_tickets(limit=limit)
 

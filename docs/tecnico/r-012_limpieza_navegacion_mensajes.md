@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es mejorar la navegación interna y los mensajes visibles de DASC Server Manager.
+El objetivo de esta tarea es mejorar la navegación interna y los mensajes visibles de Vigex.
 
 El MVP ya dispone de un panel funcional con secciones como:
 

@@ -1,4 +1,4 @@
-# Planes y precios — DASC Server Manager
+# Planes y precios — Vigex
 ## R-074 / Ruta 9.3
 
 > Documento interno de definición de precios. Actualiza antes de publicar.
@@ -10,19 +10,19 @@
 
 | Plan | Perfil cliente | Servidores | Precio/mes | Precio/año |
 |------|---------------|-----------|-----------|-----------|
-| **DASC Lite** | Autónomo o microempresa (1–3 personas) | 1 | €15 | €150 (ahorro €30) |
-| **DASC Standard** | PyME 5–50 empleados | Hasta 2 | €35 | €350 (ahorro €70) |
-| **DASC Pro** | Empresa con criticidad media-alta | 3+ | €65 | €650 (ahorro €130) |
-| **DASC Managed** | Cliente que delega la gestión | Según acuerdo | Consultar | Consultar |
+| **Vigex Lite** | Autónomo o microempresa (1–3 personas) | 1 | €15 | €150 (ahorro €30) |
+| **Vigex Standard** | PyME 5–50 empleados | Hasta 2 | €35 | €350 (ahorro €70) |
+| **Vigex Pro** | Empresa con criticidad media-alta | 3+ | €65 | €650 (ahorro €130) |
+| **Vigex Managed** | Cliente que delega la gestión | Según acuerdo | Consultar | Consultar |
 
 > **Nota de posicionamiento:** La competencia (Nagios XI ~€1.650/año, Zabbix Enterprise ~€500+/año)
-> está pensada para equipos técnicos. DASC es 10× más barato y no requiere conocimientos avanzados.
+> está pensada para equipos técnicos. Vigex es 10× más barato y no requiere conocimientos avanzados.
 
 ---
 
 ## Qué incluye cada plan
 
-### DASC Lite (€15/mes)
+### Vigex Lite (€15/mes)
 - ✅ Instalación en 1 servidor Ubuntu
 - ✅ Copias de seguridad completas (script backups_api.sh)
 - ✅ Monitoreo básico: CPU, RAM, disco, uptime
@@ -35,7 +35,7 @@
 - ❌ Logs avanzados con búsqueda
 - ❌ Test de restauración incluido
 
-### DASC Standard (€35/mes) — Recomendado PyME
+### Vigex Standard (€35/mes) — Recomendado PyME
 - ✅ Todo lo de Lite
 - ✅ Hasta 2 servidores (panel + backups separados)
 - ✅ Backups completos + incrementales
@@ -48,7 +48,7 @@
 - ✅ Soporte por email prioridad (respuesta garantizada 24h laborables)
 - ❌ Test de restauración mensual incluido
 
-### DASC Pro (€65/mes)
+### Vigex Pro (€65/mes)
 - ✅ Todo lo de Standard
 - ✅ Hasta 3 servidores distribuidos (panel, DB, backups separados)
 - ✅ Backups completos + incrementales + diferenciales
@@ -58,7 +58,7 @@
 - ✅ Soporte prioritario email + teléfono (respuesta 4h laborables)
 - ✅ Informe mensual ejecutivo para dirección
 
-### DASC Managed (precio bajo consulta)
+### Vigex Managed (precio bajo consulta)
 - ✅ Todo lo de Pro
 - ✅ Mantenimiento mensual activo (actualizaciones, revisiones)
 - ✅ Monitorización proactiva por parte del proveedor

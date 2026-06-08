@@ -41,10 +41,10 @@ async def lifespan(app: FastAPI):
     ensure_default_recipient()
     # R-060: arranque del hilo de notificaciones proactivas (solo si está habilitado)
     if NOTIF_ENABLED:
-        t = threading.Thread(target=_proactivo_worker, daemon=True, name="dasc-notif")
+        t = threading.Thread(target=_proactivo_worker, daemon=True, name="vigex-notif")
         t.start()
     # R-062: hilo de informes periódicos (siempre activo; comprueba config al despertar)
-    tr = threading.Thread(target=_reports_worker, daemon=True, name="dasc-reports")
+    tr = threading.Thread(target=_reports_worker, daemon=True, name="vigex-reports")
     tr.start()
     yield
 
@@ -110,16 +110,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # =====================
 # CONFIG MULTI-SERVIDOR
 # =====================
-USUARIO = os.getenv("SSH_USER", "dasc")
+USUARIO = os.getenv("SSH_USER", "vigex")
 SERVIDOR_BACKUPS = os.getenv("BACKUPS_HOST", "127.0.0.1")
 SERVIDOR_SERVICIOS = os.getenv("SERVICIOS_HOST", "127.0.0.1")
 CACTI_URL = os.getenv("CACTI_URL", "http://127.0.0.1/cacti/")
 
 LOGS_DB_HOST = os.getenv("LOGS_DB_HOST", "127.0.0.1")
-LOGS_DB_NAME = os.getenv("LOGS_DB_NAME", "dasc_logs")
-LOGS_DB_USER = os.getenv("LOGS_DB_USER", "dasc_logs")
-LOGS_DB_PASS = os.getenv("LOGS_DB_PASS", "dascpass")
-LOGS_ORIGIN = os.getenv("LOGS_ORIGIN", "dasc-web")
+LOGS_DB_NAME = os.getenv("LOGS_DB_NAME", "vigex_logs")
+LOGS_DB_USER = os.getenv("LOGS_DB_USER", "vigex_logs")
+LOGS_DB_PASS = os.getenv("LOGS_DB_PASS", "vigexpass")
+LOGS_ORIGIN = os.getenv("LOGS_ORIGIN", "vigex-web")
 
 TERMINAL_MAIN_HOST = os.getenv("TERMINAL_MAIN_HOST", "127.0.0.1")
 TERMINAL_DATABASE_HOST = os.getenv("TERMINAL_DATABASE_HOST", LOGS_DB_HOST)
@@ -129,23 +129,23 @@ TERMINAL_MAX_COMMAND_LENGTH = int(os.getenv("TERMINAL_MAX_COMMAND_LENGTH", "4000
 SCRIPT_SERVICIOS = os.getenv("SCRIPT_SERVICIOS", "/usr/local/bin/servicios_api.sh")
 SCRIPT_BACKUPS = os.getenv("SCRIPT_BACKUPS", "/usr/local/bin/backups_api.sh")
 SCRIPT_RESTORE = os.getenv("SCRIPT_RESTORE", "/usr/local/bin/restore_api.sh")
-BACKUP_AUTOMATION_MARKER = "# DASC_BACKUP_AUTO"
-BACKUP_AUTOMATION_LOG = os.getenv("BACKUP_AUTOMATION_LOG", "/home/dasc/backups/.dasc/cron.log")
+BACKUP_AUTOMATION_MARKER = "# Vigex_BACKUP_AUTO"
+BACKUP_AUTOMATION_LOG = os.getenv("BACKUP_AUTOMATION_LOG", "/home/vigex/backups/.vigex/cron.log")
 
 
 # =====================
 # CONFIG SSH ENDURECIDO
 # =====================
-SSH_KEY_PATH = os.getenv("DASC_SSH_KEY", "/opt/dasc/api/.ssh/id_rsa_dasc")
-SSH_KNOWN_HOSTS_PATH = os.getenv("DASC_SSH_KNOWN_HOSTS", "/opt/dasc/api/.ssh/known_hosts_dasc")
-SSH_TIMEOUT = int(os.getenv("DASC_SSH_TIMEOUT", "30"))
-SSH_CONNECT_TIMEOUT = int(os.getenv("DASC_SSH_CONNECT_TIMEOUT", "10"))
-SSH_STDIN_MAX_LENGTH = int(os.getenv("DASC_SSH_STDIN_MAX_LENGTH", "20000"))
+SSH_KEY_PATH = os.getenv("VIGEX_SSH_KEY", "/opt/vigex/api/.ssh/id_rsa_vigex")
+SSH_KNOWN_HOSTS_PATH = os.getenv("VIGEX_SSH_KNOWN_HOSTS", "/opt/vigex/api/.ssh/known_hosts_vigex")
+SSH_TIMEOUT = int(os.getenv("VIGEX_SSH_TIMEOUT", "30"))
+SSH_CONNECT_TIMEOUT = int(os.getenv("VIGEX_SSH_CONNECT_TIMEOUT", "10"))
+SSH_STDIN_MAX_LENGTH = int(os.getenv("VIGEX_SSH_STDIN_MAX_LENGTH", "20000"))
 
 _default_ssh_hosts = f"{SERVIDOR_BACKUPS},{SERVIDOR_SERVICIOS}"
 SSH_ALLOWED_HOSTS = {
     item.strip()
-    for item in os.getenv("DASC_SSH_ALLOWED_HOSTS", _default_ssh_hosts).split(",")
+    for item in os.getenv("VIGEX_SSH_ALLOWED_HOSTS", _default_ssh_hosts).split(",")
     if item.strip()
 }
 
@@ -191,8 +191,8 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
 
     # R-059 monitoreo 7.4: cat permitido solo para estos ficheros exactos
     _CAT_ALLOWED = {
-        "/home/dasc/backups/.dasc/history.tsv",      # historial de backups
-        "/home/dasc/backups/.dasc/checksums.sha256",  # checksums SHA256 (R-064 / 7.9)
+        "/home/vigex/backups/.vigex/history.tsv",      # historial de backups
+        "/home/vigex/backups/.vigex/checksums.sha256",  # checksums SHA256 (R-064 / 7.9)
         "/proc/loadavg",   # carga del sistema
         "/proc/meminfo",   # información de memoria RAM
         "/proc/uptime",    # tiempo activo del sistema
@@ -483,8 +483,8 @@ def get_auth_user(username: str, password: str) -> dict[str, Any] | None:
 # =====================
 # Limitador en memoria por IP. Apropiado para el despliegue de un solo worker
 # de Uvicorn. Si se escalan los workers, conviene un almacén compartido.
-LOGIN_MAX_ATTEMPTS = int(os.getenv("DASC_LOGIN_MAX_ATTEMPTS", "5"))
-LOGIN_WINDOW_SECONDS = int(os.getenv("DASC_LOGIN_WINDOW_SECONDS", "900"))
+LOGIN_MAX_ATTEMPTS = int(os.getenv("VIGEX_LOGIN_MAX_ATTEMPTS", "5"))
+LOGIN_WINDOW_SECONDS = int(os.getenv("VIGEX_LOGIN_WINDOW_SECONDS", "900"))
 _login_failures: dict[str, list[float]] = {}
 
 
@@ -1085,7 +1085,7 @@ def cargar_historial_backups(limit: int = 50) -> list[dict[str, str]]:
     result = ssh_run(
         SERVIDOR_BACKUPS,
         "cat",
-        ["/home/dasc/backups/.dasc/history.tsv"],
+        ["/home/vigex/backups/.vigex/history.tsv"],
     )
 
     raw = result.get("stdout", "") if result.get("ok") else ""
@@ -1275,9 +1275,9 @@ def crear_automatizacion_backup_remota(metadata: dict[str, Any], cron_expression
 set -euo pipefail
 TMP="$(mktemp)"
 crontab -l 2>/dev/null > "$TMP" || true
-cat >> "$TMP" <<'DASC_CRON_BLOCK'
+cat >> "$TMP" <<'Vigex_CRON_BLOCK'
 {block.rstrip()}
-DASC_CRON_BLOCK
+Vigex_CRON_BLOCK
 crontab "$TMP"
 rm -f "$TMP"
 mkdir -p "$(dirname {shlex.quote(BACKUP_AUTOMATION_LOG)})"
@@ -1450,7 +1450,7 @@ def restaurar_backup_remoto(backup_id: int) -> dict[str, Any]:
     return ssh_run(
         SERVIDOR_BACKUPS,
         SCRIPT_RESTORE,
-        [str(backup_id), "/home/dasc/backups", "SI"],
+        [str(backup_id), "/home/vigex/backups", "SI"],
     )
 
 
@@ -1478,7 +1478,7 @@ def validar_ruta_backup_descarga(remote_path: str) -> str:
         raise ValueError("Ruta de backup no válida.")
 
     normalized = posixpath.normpath(raw_path)
-    allowed_root = "/home/dasc/backups"
+    allowed_root = "/home/vigex/backups"
 
     if normalized == allowed_root:
         raise ValueError("No se puede descargar el directorio de backups completo.")
@@ -1570,7 +1570,7 @@ def eliminar_backups_cascada_remoto(ids: list[str]) -> dict[str, Any]:
     remote_cmd = f"""
 set -euo pipefail
 
-HIST="/home/dasc/backups/.dasc/history.tsv"
+HIST="/home/vigex/backups/.vigex/history.tsv"
 IDS="{ids_str}"
 
 if [[ ! -f "$HIST" ]]; then
@@ -1587,7 +1587,7 @@ for ID in $IDS; do
   fi
 
   case "$FILE" in
-    /home/dasc/backups/*)
+    /home/vigex/backups/*)
       ;;
     *)
       echo "ERROR: Ruta no permitida para ID=$ID: $FILE"
@@ -1745,13 +1745,13 @@ class AuthAndLogMiddleware(BaseHTTPMiddleware):
 # =====================
 # CORS: por defecto sin orígenes cross-site (el panel se sirve a sí mismo y
 # usa fetch del mismo origen). Si se necesita un frontend externo, indicar
-# orígenes separados por comas en DASC_CORS_ALLOWED_ORIGINS.
-_cors_origins_raw = os.getenv("DASC_CORS_ALLOWED_ORIGINS", "").strip()
+# orígenes separados por comas en VIGEX_CORS_ALLOWED_ORIGINS.
+_cors_origins_raw = os.getenv("VIGEX_CORS_ALLOWED_ORIGINS", "").strip()
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
 
 # Sesión: https_only configurable (activar cuando el proxy sirva HTTPS real).
-SESSION_HTTPS_ONLY = os.getenv("DASC_SESSION_HTTPS_ONLY", "false").strip().lower() in ("1", "true", "yes", "on")
-SESSION_MAX_AGE = int(os.getenv("DASC_SESSION_MAX_AGE", "28800"))  # 8 horas
+SESSION_HTTPS_ONLY = os.getenv("VIGEX_SESSION_HTTPS_ONLY", "false").strip().lower() in ("1", "true", "yes", "on")
+SESSION_MAX_AGE = int(os.getenv("VIGEX_SESSION_MAX_AGE", "28800"))  # 8 horas
 
 app.add_middleware(AuthAndLogMiddleware)
 app.add_middleware(
@@ -2218,7 +2218,7 @@ def _send_email_alert(subject: str, body_html: str) -> bool:
         return False
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"[DASC Alert] {subject}"
+        msg["Subject"] = f"[Vigex Alert] {subject}"
         msg["From"]    = NOTIF_EMAIL_FROM or NOTIF_SMTP_USER
         msg["To"]      = NOTIF_EMAIL_TO
         msg.attach(MIMEText(body_html, "html", "utf-8"))
@@ -2234,7 +2234,7 @@ def _send_email_alert(subject: str, body_html: str) -> bool:
 
 
 def _html_email(title: str, body: str) -> str:
-    """Genera el HTML base para emails de alerta DASC."""
+    """Genera el HTML base para emails de alerta Vigex."""
     return f"""<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <style>
@@ -2251,7 +2251,7 @@ def _html_email(title: str, body: str) -> str:
 <body><div class="card">
   <h1>🚨 {title}</h1>
   {body}
-  <div class="footer">DASC Server Manager · Notificación automática · No responder a este correo.</div>
+  <div class="footer">Vigex · Notificación automática · No responder a este correo.</div>
 </div></body></html>"""
 
 
@@ -2301,7 +2301,7 @@ def _check_disk_proactive() -> None:
         if not ok and _can_alert("disk"):
             _mark_alerted("disk")
             check["alerts_sent"] += 1
-            tg = (f"🚨 <b>DASC — Disco casi lleno</b>\n\n"
+            tg = (f"🚨 <b>Vigex — Disco casi lleno</b>\n\n"
                   f"El disco del servidor está al <b>{pct}%</b> de capacidad.\n"
                   f"Umbral configurado: {NOTIF_DISK_THRESHOLD}%.\n\n"
                   f"<i>Elimina archivos o amplía el espacio antes de que se llene.</i>")
@@ -2333,14 +2333,14 @@ def _check_backup_proactive() -> None:
             _mark_alerted("backup")
             check["alerts_sent"] += 1
             tipo_label = last.get("tipo_label") or last.get("type") or "—"
-            tg = (f"🚨 <b>DASC — Copia de seguridad fallida</b>\n\n"
+            tg = (f"🚨 <b>Vigex — Copia de seguridad fallida</b>\n\n"
                   f"La última copia registrada ha terminado con error.\n"
                   f"Tipo: <b>{tipo_label}</b> &nbsp;|&nbsp; Fecha: {date_str[:16]}\n\n"
                   f"<i>Revisa el servidor de backups y comprueba el historial.</i>")
             mail_body = (f"<p>La última copia de seguridad ha terminado con error.</p>"
                          f"<p><span class='badge error'>Estado: {status_raw}</span></p>"
                          f"<p>Tipo: {tipo_label} &nbsp;|&nbsp; Fecha: {date_str[:16]}</p>"
-                         f"<p>Accede al panel de DASC y revisa el historial de copias.</p>")
+                         f"<p>Accede al panel de Vigex y revisa el historial de copias.</p>")
             _send_proactive_alert("backup", tg, "Copia de seguridad fallida", mail_body)
     except Exception:
         check["last_ok"] = None
@@ -2368,7 +2368,7 @@ def _check_services_proactive() -> None:
             _mark_alerted("services")
             check["alerts_sent"] += 1
             inactive_str = ", ".join(inactive)
-            tg = (f"🚨 <b>DASC — Servicio(s) caído(s)</b>\n\n"
+            tg = (f"🚨 <b>Vigex — Servicio(s) caído(s)</b>\n\n"
                   f"Se ha detectado {'un servicio inactivo' if len(inactive)==1 else f'{len(inactive)} servicios inactivos'}:\n"
                   f"<b>{inactive_str}</b>\n\n"
                   f"<i>Revisa el servidor y reinicia el servicio si es necesario.</i>")
@@ -2573,7 +2573,7 @@ def get_terminal_machines() -> dict[str, dict[str, str]]:
         "main": {
             "key": "main",
             "label": "Máquina Main",
-            "description": "Servidor donde se ejecuta el panel DASC y la API principal.",
+            "description": "Servidor donde se ejecuta el panel Vigex y la API principal.",
             "host": TERMINAL_MAIN_HOST,
             "mode": "local",
             "icon": "fa-computer",
@@ -2923,7 +2923,7 @@ def alertas_test(request: Request):
         )
 
     text = (
-        "<b>DASC</b>\n"
+        "<b>Vigex</b>\n"
         "Prueba de alerta Telegram desde el panel.\n"
         f"Usuario: {request.session.get('user', 'anon')}\n"
         f"Hora: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -3394,7 +3394,7 @@ def backups_automation_create(
     request: Request,
     type: str = Form(...),
     db: str = Form(...),
-    dest: str = Form("/home/dasc/backups"),
+    dest: str = Form("/home/vigex/backups"),
     compress: str = Form("gzip"),
     retention: int = Form(7),
     schedule_type: str = Form("daily"),
@@ -3413,7 +3413,7 @@ def backups_automation_create(
         )
 
     db = (db or "").strip()
-    dest = (dest or "/home/dasc/backups").strip()
+    dest = (dest or "/home/vigex/backups").strip()
 
     if not db:
         return RedirectResponse(
@@ -3421,9 +3421,9 @@ def backups_automation_create(
             status_code=303,
         )
 
-    if not dest.startswith("/home/dasc/backups"):
+    if not dest.startswith("/home/vigex/backups"):
         return RedirectResponse(
-            url="/backups?ok=0&msg=La+ruta+destino+debe+estar+dentro+de+/home/dasc/backups",
+            url="/backups?ok=0&msg=La+ruta+destino+debe+estar+dentro+de+/home/vigex/backups",
             status_code=303,
         )
 
@@ -3631,7 +3631,7 @@ def backups_download(
 
     headers = {
         "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(filename)}",
-        "X-DASC-Backup-ID": str(backup_id),
+        "X-Vigex-Backup-ID": str(backup_id),
     }
 
     return Response(
@@ -3828,7 +3828,7 @@ def backups_run(
     request: Request,
     type: str = Form(...),
     db: str = Form(...),
-    dest: str = Form("/home/dasc/backups"),
+    dest: str = Form("/home/vigex/backups"),
     name: str = Form(...),
     compress: str = Form("gzip"),
     retention: int = Form(7),
@@ -3845,7 +3845,7 @@ def backups_run(
         )
 
     db = (db or "").strip()
-    dest = (dest or "/home/dasc/backups").strip()
+    dest = (dest or "/home/vigex/backups").strip()
     name = (name or "").strip()
     base_ref = (base_ref or "").strip()
     notes = (notes or "").strip()
@@ -3862,9 +3862,9 @@ def backups_run(
             status_code=303,
         )
 
-    if not dest.startswith("/home/dasc/backups"):
+    if not dest.startswith("/home/vigex/backups"):
         return RedirectResponse(
-            url="/backups?ok=0&msg=La+ruta+destino+debe+estar+dentro+de+/home/dasc/backups",
+            url="/backups?ok=0&msg=La+ruta+destino+debe+estar+dentro+de+/home/vigex/backups",
             status_code=303,
         )
 
@@ -3946,7 +3946,7 @@ CENTRAL_SUPPORT_ENABLED = os.getenv("CENTRAL_SUPPORT_ENABLED", "false").strip().
 CENTRAL_SUPPORT_URL = os.getenv("CENTRAL_SUPPORT_URL", "http://127.0.0.1:8010/api/v1/support/tickets").strip()
 CENTRAL_SUPPORT_CLIENT_ID = os.getenv("CENTRAL_SUPPORT_CLIENT_ID", "cliente-demo-a").strip()
 CENTRAL_SUPPORT_CLIENT_NAME = os.getenv("CENTRAL_SUPPORT_CLIENT_NAME", "Cliente Demo A").strip()
-CENTRAL_SUPPORT_TOKEN = os.getenv("CENTRAL_SUPPORT_TOKEN", "dasc-central-demo-token-lab").strip()
+CENTRAL_SUPPORT_TOKEN = os.getenv("CENTRAL_SUPPORT_TOKEN", "vigex-central-demo-token-lab").strip()
 CENTRAL_SUPPORT_TIMEOUT = int(os.getenv("CENTRAL_SUPPORT_TIMEOUT", "5"))
 
 # R-069 / Ruta 8.5 — Webhook Jira (opcional; vacío = desactivado)
@@ -4109,7 +4109,7 @@ def migrate_support_json_to_sqlite():
                     str(ticket.get("contacto", "")),
                     str(ticket.get("email", "")),
                     str(ticket.get("telefono", "")),
-                    str(ticket.get("canal", "Panel DASC")),
+                    str(ticket.get("canal", "Panel Vigex")),
                     str(ticket.get("tipo", "Incidencia")),
                     str(ticket.get("prioridad", "Media")),
                     str(ticket.get("servicio", "Otro")),
@@ -4172,7 +4172,7 @@ def _push_ticket_jira_webhook(ticket: dict) -> None:
             import urllib.request as _req
             import json as _json
             payload = {
-                "summary":     f"[DASC] {ticket.get('tipo','Incidencia')}: {ticket.get('descripcion','')[:120]}",
+                "summary":     f"[Vigex] {ticket.get('tipo','Incidencia')}: {ticket.get('descripcion','')[:120]}",
                 "description": ticket.get("descripcion", ""),
                 "issue_type":  ticket.get("tipo", "Incidencia"),
                 "priority":    ticket.get("prioridad", "Media"),
@@ -4182,13 +4182,13 @@ def _push_ticket_jira_webhook(ticket: dict) -> None:
                 "email":       ticket.get("email", ""),
                 "cliente":     ticket.get("cliente", ""),
                 "fecha":       ticket.get("fecha_apertura", ""),
-                "origen":      "dasc-panel",
+                "origen":      "vigex-panel",
             }
             body = _json.dumps(payload).encode("utf-8")
             req = _req.Request(
                 JIRA_WEBHOOK_URL,
                 data=body,
-                headers={"Content-Type": "application/json", "User-Agent": "DASC-Panel/1.0"},
+                headers={"Content-Type": "application/json", "User-Agent": "Vigex-Panel/1.0"},
                 method="POST",
             )
             with _req.urlopen(req, timeout=JIRA_WEBHOOK_TIMEOUT) as _r:
@@ -4196,7 +4196,7 @@ def _push_ticket_jira_webhook(ticket: dict) -> None:
         except Exception:
             pass  # webhook no bloquea el flujo principal
 
-    threading.Thread(target=_fire, daemon=True, name="dasc-jira-hook").start()
+    threading.Thread(target=_fire, daemon=True, name="vigex-jira-hook").start()
 
 
 def save_support_ticket(ticket):
@@ -4256,7 +4256,7 @@ def next_support_ticket_id():
     ensure_support_db()
 
     year = _support_datetime.now().year
-    prefix = f"DASC-{year}-"
+    prefix = f"Vigex-{year}-"
     max_num = 0
 
     with support_db_connect() as conn:
@@ -4430,7 +4430,7 @@ def send_support_ticket_to_central(ticket):
         "contacto": ticket.get("contacto", ""),
         "email": ticket.get("email", ""),
         "fecha_origen": ticket.get("fecha_apertura", ""),
-        "version_panel": os.getenv("DASC_VERSION", "lab-local"),
+        "version_panel": os.getenv("VIGEX_VERSION", "lab-local"),
         "origen": "panel-local",
     }
 
@@ -4441,7 +4441,7 @@ def send_support_ticket_to_central(ticket):
         data=data,
         headers={
             "Content-Type": "application/json",
-            "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
+            "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
         },
         method="POST",
     )
@@ -4492,19 +4492,19 @@ def send_support_ticket_to_central(ticket):
 # =====================
 
 def is_local_internal_support_enabled():
-    return os.getenv("DASC_LOCAL_INTERNAL_SUPPORT_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+    return os.getenv("VIGEX_LOCAL_INTERNAL_SUPPORT_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 def local_internal_support_redirect():
     return RedirectResponse(
-        url="/soporte?ok=0&msg=Gestion+interna+reservada+al+panel+central+DASC",
+        url="/soporte?ok=0&msg=Gestion+interna+reservada+al+panel+central+Vigex",
         status_code=303,
     )
 
 @app.get("/soporte")
 def soporte_page(request: Request):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     context = get_common_context(request)
     context["local_internal_support_enabled"] = is_local_internal_support_enabled()
@@ -4536,7 +4536,7 @@ def soporte_create(
     evidencia: str = Form(""),
 ):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     empresa = (empresa or "").strip()
     contacto = (contacto or "").strip()
@@ -4572,7 +4572,7 @@ def soporte_create(
         "contacto": contacto,
         "email": email,
         "telefono": telefono,
-        "canal": "Panel DASC",
+        "canal": "Panel Vigex",
         "tipo": tipo,
         "prioridad": prioridad,
         "servicio": servicio,
@@ -4904,7 +4904,7 @@ def retry_pending_central_sync_tickets(limit=50):
 @app.post("/soporte/tickets/reintentar-central")
 def soporte_retry_central_pending(request: Request):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -4946,7 +4946,7 @@ def get_support_ticket_client_progress(ticket):
 
     if estado in ("En curso", "En análisis"):
         return {
-            "label": "En revisión por el equipo DASC",
+            "label": "En revisión por el equipo Vigex",
             "percent": 60,
         }
 
@@ -5056,7 +5056,7 @@ def filter_tickets_by_central_sync(tickets, sync_filter=""):
 @app.get("/soporte/sincronizacion")
 def soporte_sync_dashboard(request: Request, sync: str = ""):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5090,7 +5090,7 @@ def soporte_sync_dashboard(request: Request, sync: str = ""):
 @app.post("/soporte/sincronizacion/reintentar-central")
 def soporte_sync_retry_central_pending(request: Request):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5124,7 +5124,7 @@ def soporte_tickets_page(
     q: str = "",
 ):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5201,8 +5201,8 @@ def fetch_central_ticket_status(central_ticket_id):
     req = _support_urlrequest.Request(
         url,
         headers={
-            "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
-            "X-DASC-Client-ID": CENTRAL_SUPPORT_CLIENT_ID,
+            "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
+            "X-Vigex-Client-ID": CENTRAL_SUPPORT_CLIENT_ID,
         },
         method="GET",
     )
@@ -5334,7 +5334,7 @@ def sync_support_ticket_from_central(ticket_id, usuario="central-sync"):
 @app.post("/soporte/tickets/{ticket_id}/sync-central")
 def soporte_ticket_sync_central_status(request: Request, ticket_id: str):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5366,7 +5366,7 @@ def soporte_ticket_sync_central_status(request: Request, ticket_id: str):
 @app.get("/soporte/tickets/{ticket_id}")
 def soporte_ticket_detail_page(request: Request, ticket_id: str):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5568,7 +5568,7 @@ def soporte_ticket_update_status_priority(
     prioridad: str = Form(...),
 ):
     if not is_admin(request):
-        return permission_redirect("Acceso reservado al equipo técnico DASC.")
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
 
     if not is_local_internal_support_enabled():
         return local_internal_support_redirect()
@@ -5626,7 +5626,7 @@ Prioridad: {prioridad}
 Te informaremos cuando tengamos un diagnóstico o si necesitamos más información.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "mas_informacion",
@@ -5645,12 +5645,12 @@ Para poder revisar la solicitud {ticket_id}, necesitamos algunos datos adicional
 Con esa información podremos continuar el diagnóstico.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "analisis",
         "titulo": "Incidencia en análisis",
-        "uso": "Informar de que el equipo DASC está revisando el caso.",
+        "uso": "Informar de que el equipo Vigex está revisando el caso.",
         "texto": """Hola {contacto},
 
 Estamos revisando la solicitud {ticket_id}.
@@ -5663,7 +5663,7 @@ Estado actual del ticket: {estado}
 Te informaremos con el resultado o con el siguiente paso necesario.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "servicio_operativo",
@@ -5683,7 +5683,7 @@ Si el problema continúa desde vuestro equipo o red, indícanos por favor:
 - Navegador utilizado.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "resuelto",
@@ -5704,7 +5704,7 @@ Resumen:
 Damos el ticket por cerrado. Si vuelve a ocurrir, puedes responder a este mismo hilo o abrir una nueva solicitud.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "restauracion",
@@ -5724,7 +5724,7 @@ Antes de ejecutar la restauración necesitamos confirmar:
 No ejecutaremos la restauración hasta recibir confirmación.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "mantenimiento",
@@ -5741,7 +5741,7 @@ Servicio afectado: {servicio}
 Por favor, indícanos qué horario sería más adecuado para vuestra empresa.
 
 Un saludo,
-Equipo DASC""",
+Equipo Vigex""",
     },
     {
         "key": "whatsapp",
@@ -5824,7 +5824,7 @@ def format_support_history_for_external_summary(history):
 def render_support_external_summary(ticket, history):
     history_text = format_support_history_for_external_summary(history)
 
-    return f"""# Resumen técnico de ticket DASC
+    return f"""# Resumen técnico de ticket Vigex
 
 ## Identificación
 
@@ -5866,11 +5866,11 @@ Origen: {ticket.get("origen", "")}
 
 ## Próximo paso recomendado
 
-Revisar el caso, confirmar diagnóstico y actualizar el estado del ticket en DASC.
+Revisar el caso, confirmar diagnóstico y actualizar el estado del ticket en Vigex.
 
 ## Nota
 
-Este resumen se ha generado desde DASC Server Manager para copiarlo en Jira, Zammad u otra herramienta interna de soporte.
+Este resumen se ha generado desde Vigex para copiarlo en Jira, Zammad u otra herramienta interna de soporte.
 """
 
 
@@ -6231,17 +6231,17 @@ def _informe_html(datos: dict[str, Any]) -> str:
 </style></head>
 <body><div class="card">
   <div class="hdr">
-    <h1>📊 Informe de estado DASC</h1>
+    <h1>📊 Informe de estado Vigex</h1>
     <span class="sub">Generado: {datos['fecha']} — Servidor: {datos['servidor_backups']}</span>
   </div>
   {bloques}
-  <div class="ftr">DASC Server Manager · Informe periódico automático · No responder a este correo.</div>
+  <div class="ftr">Vigex · Informe periódico automático · No responder a este correo.</div>
 </div></body></html>"""
 
 
 def _informe_telegram_texto(datos: dict[str, Any]) -> str:
     """Genera el texto del informe para Telegram."""
-    lineas = [f"📊 <b>Informe DASC — {datos['fecha']}</b>\n"]
+    lineas = [f"📊 <b>Informe Vigex — {datos['fecha']}</b>\n"]
 
     if "disco" in datos:
         disco = datos["disco"]
@@ -6446,9 +6446,9 @@ def informes_enviar(request: Request):
 # Crea un ticket de soporte con contexto del sistema adjunto automáticamente.
 
 _REPORT_TIPOS_MAP = {
-    "bug":        ("Incidencia", "Alta",  "Panel DASC"),
-    "sugerencia": ("Cambio",     "Baja",  "Panel DASC"),
-    "pregunta":   ("Consulta",   "Media", "Panel DASC"),
+    "bug":        ("Incidencia", "Alta",  "Panel Vigex"),
+    "sugerencia": ("Cambio",     "Baja",  "Panel Vigex"),
+    "pregunta":   ("Consulta",   "Media", "Panel Vigex"),
 }
 
 
@@ -6475,7 +6475,7 @@ async def reportar_problema(request: Request):
     if len(descripcion) > 2000:
         return JSONResponse({"ok": False, "msg": "Descripción demasiado larga (máx. 2000 caracteres)."}, status_code=400)
 
-    tipo_ticket, prioridad, servicio = _REPORT_TIPOS_MAP.get(tipo_raw, ("Incidencia", "Media", "Panel DASC"))
+    tipo_ticket, prioridad, servicio = _REPORT_TIPOS_MAP.get(tipo_raw, ("Incidencia", "Media", "Panel Vigex"))
 
     usuario   = request.session.get("user", "anon")
     ahora     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -6505,7 +6505,7 @@ async def reportar_problema(request: Request):
     ticket = {
         "id":            ticket_id,
         "fecha_apertura": ahora,
-        "cliente":        "Uso interno DASC",
+        "cliente":        "Uso interno Vigex",
         "contacto":       usuario,
         "email":          "",
         "telefono":       "",
@@ -6646,7 +6646,7 @@ def _analizar_salud_copias() -> dict[str, Any]:
 
     # ── 2. Checksums.sha256 (total de ficheros con checksum registrado) ────
     try:
-        r_cs = ssh_run(SERVIDOR_BACKUPS, "cat", ["/home/dasc/backups/.dasc/checksums.sha256"])
+        r_cs = ssh_run(SERVIDOR_BACKUPS, "cat", ["/home/vigex/backups/.vigex/checksums.sha256"])
         if r_cs.get("ok") and r_cs.get("stdout", "").strip():
             lineas_cs = [l for l in r_cs["stdout"].splitlines() if l.strip() and not l.startswith("#")]
             resultado["checksums_total_archivo"] = len(lineas_cs)
@@ -6778,9 +6778,9 @@ _FAQ_ENTRIES: list[dict] = [
         "respuesta": (
             "Ve a **Copias** en el menú lateral y revisa el historial. "
             "El color rojo indica error. Comprueba que el servidor de backups está activo "
-            "y que el usuario `dasc` tiene espacio en disco. "
+            "y que el usuario `vigex` tiene espacio en disco. "
             "Puedes lanzar una copia manual con el botón 'Nueva copia'. "
-            "Si el error persiste, revisa el log: `journalctl -u dasc-api -n 100`."
+            "Si el error persiste, revisa el log: `journalctl -u vigex-api -n 100`."
         ),
         "palabras_clave": ["backup", "copia", "fallo", "error", "rojo", "historial"],
     },
@@ -6813,7 +6813,7 @@ _FAQ_ENTRIES: list[dict] = [
         "respuesta": (
             "Ve a **Copias** y selecciona la copia que quieres restaurar. "
             "Pulsa 'Restaurar' y confirma el proceso. "
-            "DASC ejecutará `restore_api.sh` en el servidor de backups vía SSH. "
+            "Vigex ejecutará `restore_api.sh` en el servidor de backups vía SSH. "
             "Si el proceso falla, consulta **Integridad** para verificar que la copia tiene "
             "checksum SHA256 válido. Para un desastre total, sigue los pasos del **DRO** "
             "en el menú Recuperación."
@@ -6828,9 +6828,9 @@ _FAQ_ENTRIES: list[dict] = [
             "1) Crea un bot con `@BotFather` → `/newbot` → copia el token. "
             "2) Envía un mensaje al bot y obtén tu chat ID con "
             "`https://api.telegram.org/bot<TOKEN>/getUpdates`. "
-            "3) Abre `config.env` en el servidor (`/opt/dasc/api/config.env`) y configura "
+            "3) Abre `config.env` en el servidor (`/opt/vigex/api/config.env`) y configura "
             "`NOTIF_TELEGRAM_TOKEN` y `NOTIF_TELEGRAM_CHAT_ID`. "
-            "4) Reinicia el servicio: `systemctl restart dasc-api`."
+            "4) Reinicia el servicio: `systemctl restart vigex-api`."
         ),
         "palabras_clave": ["telegram", "alerta", "notificacion", "bot", "token", "chatid"],
     },
@@ -6847,14 +6847,14 @@ _FAQ_ENTRIES: list[dict] = [
         "palabras_clave": ["email", "correo", "smtp", "gmail", "alerta", "notificacion", "envio"],
     },
     {
-        "id": "actualizar-dasc",
-        "pregunta": "¿Cómo actualizo DASC a una nueva versión?",
+        "id": "actualizar-vigex",
+        "pregunta": "¿Cómo actualizo Vigex a una nueva versión?",
         "respuesta": (
             "Desde el servidor Linux, ejecuta como root: "
-            "`sudo bash /ruta/al/repo/deploy/api/update_dasc_api.sh`. "
+            "`sudo bash /ruta/al/repo/deploy/api/update_vigex_api.sh`. "
             "El script preserva `config.env`, las claves SSH y los datos. "
             "Desde Windows puedes usar el asistente PowerShell: "
-            "`tools\\windows\\instalar_dasc_windows.ps1` y seleccionar la opción 2 (Actualizar)."
+            "`tools\\windows\\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar)."
         ),
         "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade"],
     },
@@ -6863,12 +6863,12 @@ _FAQ_ENTRIES: list[dict] = [
         "pregunta": "Olvidé la contraseña del administrador. ¿Cómo la cambio?",
         "respuesta": (
             "Accede al servidor por SSH y edita `config.env`: "
-            "`nano /opt/dasc/api/config.env`. "
+            "`nano /opt/vigex/api/config.env`. "
             "Genera un nuevo hash bcrypt con Python: "
             '`python3 -c "from passlib.context import CryptContext; '
             "print(CryptContext(['bcrypt']).hash('nueva_contraseña'))\"`. "
             "Pega el hash en la línea `ADMIN_PASSWORD=`. "
-            "Reinicia: `systemctl restart dasc-api`."
+            "Reinicia: `systemctl restart vigex-api`."
         ),
         "palabras_clave": ["contraseña", "password", "olvide", "admin", "acceso", "login", "bcrypt"],
     },
@@ -6878,10 +6878,10 @@ _FAQ_ENTRIES: list[dict] = [
         "respuesta": (
             "Comprueba: "
             "1) Que el servidor de backups está encendido y accesible en red. "
-            "2) Que el usuario `dasc` existe en el servidor remoto. "
-            "3) Que la clave pública SSH está en `~dasc/.ssh/authorized_keys` del servidor remoto. "
-            "Puedes ver la clave pública en `/opt/dasc/api/api_panel.pub`. "
-            "Test manual: `sudo -u dasc ssh -i /opt/dasc/api/.ssh/id_rsa_dasc dasc@<IP-backups> hostname`."
+            "2) Que el usuario `vigex` existe en el servidor remoto. "
+            "3) Que la clave pública SSH está en `~vigex/.ssh/authorized_keys` del servidor remoto. "
+            "Puedes ver la clave pública en `/opt/vigex/api/api_panel.pub`. "
+            "Test manual: `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@<IP-backups> hostname`."
         ),
         "palabras_clave": ["ssh", "conexion", "backups", "remoto", "authorized_keys", "id_rsa"],
     },
@@ -6890,10 +6890,10 @@ _FAQ_ENTRIES: list[dict] = [
         "pregunta": "El panel no arranca o aparece un error 500.",
         "respuesta": (
             "Pasos de diagnóstico: "
-            "1) `systemctl status dasc-api` — comprueba si el servicio está activo. "
-            "2) `journalctl -u dasc-api -n 100` — busca el error concreto. "
+            "1) `systemctl status vigex-api` — comprueba si el servicio está activo. "
+            "2) `journalctl -u vigex-api -n 100` — busca el error concreto. "
             "3) Comprueba que `config.env` existe y tiene SECRET_KEY y ADMIN_PASSWORD. "
-            "4) `df -h /opt/dasc` — verifica que no esté el disco lleno. "
+            "4) `df -h /opt/vigex` — verifica que no esté el disco lleno. "
             "5) Si el problema persiste, abre un ticket desde el panel de soporte."
         ),
         "palabras_clave": ["panel", "arrancar", "500", "error", "caido", "blanco", "fallo", "inicio"],
@@ -6903,9 +6903,9 @@ _FAQ_ENTRIES: list[dict] = [
         "pregunta": "Los logs aparecen vacíos o no se actualizan.",
         "respuesta": (
             "Los logs se leen de la base de datos MariaDB en el servidor de logs. Comprueba: "
-            "1) Conexión a la BD: `mysql -h <IP_DB> -u dasc_user -p dasc_logs` "
+            "1) Conexión a la BD: `mysql -h <IP_DB> -u vigex_user -p vigex_logs` "
             "desde el servidor del panel. "
-            "2) Que `DASC_DB_HOST`, `DB_USER`, `DB_PASSWORD` están correctos en `config.env`. "
+            "2) Que `Vigex_DB_HOST`, `DB_USER`, `DB_PASSWORD` están correctos en `config.env`. "
             "3) Que el servicio `mysql` (o `mariadb`) está activo en el servidor de BD."
         ),
         "palabras_clave": ["log", "logs", "vacio", "vacios", "db", "base de datos", "mariadb", "mysql"],
@@ -6927,7 +6927,7 @@ _FAQ_ENTRIES: list[dict] = [
         "id": "certificado-https",
         "pregunta": "El navegador advierte de certificado no válido o conexión no segura.",
         "respuesta": (
-            "Si usas el certificado autofirmado que instala DASC por defecto, el navegador "
+            "Si usas el certificado autofirmado que instala Vigex por defecto, el navegador "
             "mostrará una advertencia. Es normal y seguro si conoces el servidor. "
             "Para tener HTTPS real con certificado válido: "
             "1) Instala certbot: `sudo apt install certbot python3-certbot-nginx`. "
@@ -6963,17 +6963,17 @@ _FAQ_ENTRIES: list[dict] = [
         "palabras_clave": ["usuario", "user", "añadir", "nuevo", "acceso", "permisos", "admin"],
     },
     {
-        "id": "dasc-version",
-        "pregunta": "¿Cómo sé qué versión de DASC tengo instalada?",
+        "id": "vigex-version",
+        "pregunta": "¿Cómo sé qué versión de Vigex tengo instalada?",
         "respuesta": (
             "La versión aparece en el pie del panel (footer del dashboard). "
             "También puedes verla en el servidor: "
-            "`cat /opt/dasc/api/config.env | grep DASC_VERSION` "
+            "`cat /opt/vigex/api/config.env | grep VIGEX_VERSION` "
             "o leyendo la cabecera del fichero `main.py`: "
-            "`head -5 /opt/dasc/api/main.py`. "
-            "La versión actual del producto se define en `config.env` como `DASC_VERSION`."
+            "`head -5 /opt/vigex/api/main.py`. "
+            "La versión actual del producto se define en `config.env` como `VIGEX_VERSION`."
         ),
-        "palabras_clave": ["version", "versión", "instalada", "dasc", "actual", "numero"],
+        "palabras_clave": ["version", "versión", "instalada", "vigex", "actual", "numero"],
     },
 ]
 
@@ -7205,7 +7205,7 @@ def recuperacion_dro(request: Request):
 
 
 # =====================================================================
-# R-080 / Ruta 10.4 — Heartbeat hacia DASC Central Support
+# R-080 / Ruta 10.4 — Heartbeat hacia Vigex Central
 # =====================================================================
 
 def _collect_heartbeat_data() -> dict:
@@ -7213,7 +7213,7 @@ def _collect_heartbeat_data() -> dict:
     data: dict = {
         "cliente_id": CENTRAL_SUPPORT_CLIENT_ID,
         "nombre_cliente": CENTRAL_SUPPORT_CLIENT_NAME,
-        "version_panel": os.getenv("DASC_VERSION", "1.0-rc1"),
+        "version_panel": os.getenv("VIGEX_VERSION", "1.0-rc1"),
     }
     # Disco
     try:
@@ -7273,8 +7273,8 @@ def _fire_heartbeat() -> None:
             data=body,
             headers={
                 "Content-Type": "application/json",
-                "X-DASC-Client-Token": CENTRAL_SUPPORT_TOKEN,
-                "User-Agent": "DASC-Panel/1.0",
+                "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
+                "User-Agent": "Vigex-Panel/1.0",
             },
             method="POST",
         )
@@ -7297,7 +7297,7 @@ if CENTRAL_SUPPORT_ENABLED and CENTRAL_HEARTBEAT_URL:
     threading.Thread(
         target=_heartbeat_daemon,
         daemon=True,
-        name="dasc-heartbeat",
+        name="vigex-heartbeat",
     ).start()
 
 
@@ -7314,21 +7314,21 @@ def api_heartbeat(request: Request):
 # R-086 / Ruta 12.2 — API de producto: endpoint de información de versión
 # =====================================================================
 
-_DASC_API_VERSION = "1.0"
-_DASC_BUILD_DATE = "2026-06-08"
+_Vigex_API_VERSION = "1.0"
+_Vigex_BUILD_DATE = "2026-06-08"
 
 @app.get("/api/v1/info")
 def api_info():
     """
-    Información pública de la instalación DASC.
+    Información pública de la instalación Vigex.
     Utilizable por integraciones externas para verificar compatibilidad.
     No requiere autenticación.
     """
     return {
-        "producto": "DASC Server Manager",
-        "api_version": _DASC_API_VERSION,
-        "panel_version": os.getenv("DASC_VERSION", "1.0-rc1"),
-        "build_date": _DASC_BUILD_DATE,
+        "producto": "Vigex",
+        "api_version": _Vigex_API_VERSION,
+        "panel_version": os.getenv("VIGEX_VERSION", "1.0-rc1"),
+        "build_date": _Vigex_BUILD_DATE,
         "endpoints_publicos": [
             "GET /health",
             "GET /api/v1/info",

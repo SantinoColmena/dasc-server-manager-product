@@ -1,10 +1,10 @@
-﻿# R-007 - Mejoras previstas sobre install_dasc_api.sh
+﻿# R-007 - Mejoras previstas sobre install_vigex_api.sh
 
 ## Objetivo
 
 Este documento aterriza la tarea R-007 sobre el instalador real del proyecto.
 
-El objetivo no es cambiar todavía toda la instalación de golpe, sino dejar claro qué partes del script `install_dasc_api.sh` deben mejorarse para convertirlo en un instalador base idempotente, reutilizable y preparado para perfiles de instalación.
+El objetivo no es cambiar todavía toda la instalación de golpe, sino dejar claro qué partes del script `install_vigex_api.sh` deben mejorarse para convertirlo en un instalador base idempotente, reutilizable y preparado para perfiles de instalación.
 
 ## Situación actual
 
@@ -13,10 +13,10 @@ El instalador actual de la API cumple su función dentro del entorno del MVP.
 Actualmente permite:
 
 - Instalar dependencias del sistema.
-- Copiar el paquete de la API a `/opt/dasc/api`.
+- Copiar el paquete de la API a `/opt/vigex/api`.
 - Crear un entorno virtual de Python.
 - Instalar dependencias desde `requirements.txt`.
-- Crear el servicio systemd `dasc-api`.
+- Crear el servicio systemd `vigex-api`.
 - Reiniciar el servicio.
 - Preparar clave SSH para la comunicación con el servidor de backups.
 - Exportar la clave pública como `api_panel.pub`.
@@ -31,7 +31,7 @@ Esto hace que el instalador sea útil para el laboratorio actual, pero todavía 
 El instalador copia el contenido del paquete directamente sobre:
 
 ~~~text
-/opt/dasc/api
+/opt/vigex/api
 ~~~
 
 Esto puede afectar a archivos ya configurados, especialmente:
@@ -71,7 +71,7 @@ El instalador debe poder ejecutarse más de una vez.
 
 Para ello debe comprobar antes de crear o copiar:
 
-- Si `/opt/dasc/api` ya existe.
+- Si `/opt/vigex/api` ya existe.
 - Si el entorno virtual ya existe.
 - Si el servicio systemd ya existe.
 - Si `config.env` ya existe.
@@ -86,7 +86,7 @@ Actualmente el instalador muestra mensajes por pantalla, pero no queda un regist
 Sería recomendable guardar un log en:
 
 ~~~text
-/var/log/dasc-install.log
+/var/log/vigex-install.log
 ~~~
 
 Esto ayudaría en soporte técnico y en resolución de errores.
@@ -124,11 +124,11 @@ Para instalaciones automatizadas sería útil permitir variables previas como:
 ~~~bash
 INSTALL_MODE=dual
 ADMIN_PASSWORD=...
-DASC_PASS=...
-sudo ./install_dasc_api.sh
+Vigex_PASS=...
+sudo ./install_vigex_api.sh
 ~~~
 
-Esto permitiría instalar DASC desde scripts, documentación o procesos semiautomáticos.
+Esto permitiría instalar Vigex desde scripts, documentación o procesos semiautomáticos.
 
 ## Mejoras propuestas
 
@@ -137,13 +137,13 @@ Esto permitiría instalar DASC desde scripts, documentación o procesos semiauto
 Antes de copiar archivos, el instalador debe comprobar si existe:
 
 ~~~text
-/opt/dasc/api/config.env
+/opt/vigex/api/config.env
 ~~~
 
 Si existe, debe hacer:
 
 ~~~text
-/opt/dasc/api/config.env.bak
+/opt/vigex/api/config.env.bak
 ~~~
 
 o conservar el archivo actual.
@@ -175,7 +175,7 @@ Esta variable será la base de la configuración por perfiles.
 Si ya existe:
 
 ~~~text
-/opt/dasc/api/venv
+/opt/vigex/api/venv
 ~~~
 
 no debe fallar.
@@ -189,12 +189,12 @@ pip install -r requirements.txt
 
 ### Mejora 4 - Actualizar systemd de forma segura
 
-El instalador puede regenerar el servicio `dasc-api.service`, pero siempre debe ejecutar:
+El instalador puede regenerar el servicio `vigex-api.service`, pero siempre debe ejecutar:
 
 ~~~bash
 systemctl daemon-reload
-systemctl enable dasc-api
-systemctl restart dasc-api
+systemctl enable vigex-api
+systemctl restart vigex-api
 ~~~
 
 Después debe mostrar el estado.
@@ -206,8 +206,8 @@ El final del instalador debería mostrar algo similar a:
 ~~~text
 Instalación completada
 Perfil usado: dual
-Panel instalado en: /opt/dasc/api
-Servicio: dasc-api
+Panel instalado en: /opt/vigex/api
+Servicio: vigex-api
 URL local: http://127.0.0.1:8000
 URL red: http://<IP_DEL_SERVIDOR>:8000
 SSH backups: configurado / pendiente de revisión

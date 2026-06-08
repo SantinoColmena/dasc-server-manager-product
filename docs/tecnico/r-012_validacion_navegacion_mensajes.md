@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar que la navegación interna y los mensajes visibles de DASC Server Manager son claros, coherentes y adecuados para una versión más estable del producto.
+Este documento define cómo validar que la navegación interna y los mensajes visibles de Vigex son claros, coherentes y adecuados para una versión más estable del producto.
 
 La validación busca comprobar que el usuario entiende qué puede hacer, dónde está dentro del panel y qué ha ocurrido después de cada acción.
 

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Preparar un guion sencillo para presentar DASC Server Manager a un posible cliente, explicar el problema que resuelve y enseñar una demo breve del producto.
+Preparar un guion sencillo para presentar Vigex a un posible cliente, explicar el problema que resuelve y enseñar una demo breve del producto.
 
 Este guion está pensado para una PyME que no tiene personal técnico especializado y necesita controlar mejor sus copias de seguridad, logs, servicios y alertas.
 
@@ -16,7 +16,7 @@ Distribución:
 |---|---|
 | Presentación inicial | 1 minuto |
 | Problema del cliente | 2 minutos |
-| Propuesta de DASC | 2 minutos |
+| Propuesta de Vigex | 2 minutos |
 | Demo del panel | 5 a 7 minutos |
 | Cierre y siguientes pasos | 2 minutos |
 
@@ -24,7 +24,7 @@ Distribución:
 
 Texto recomendado:
 
-Buenos días, soy del equipo de DASC Server Manager. La idea de esta llamada es enseñarte una solución pensada para pequeñas y medianas empresas que necesitan controlar sus copias de seguridad, revisar logs y tener una visión sencilla del estado de sus servicios sin depender de procesos manuales.
+Buenos días, soy del equipo de Vigex. La idea de esta llamada es enseñarte una solución pensada para pequeñas y medianas empresas que necesitan controlar sus copias de seguridad, revisar logs y tener una visión sencilla del estado de sus servicios sin depender de procesos manuales.
 
 No queremos venderte una herramienta complicada, sino enseñarte cómo podrías tener más control sobre tus datos y saber si tus backups realmente se están realizando.
 
@@ -40,7 +40,7 @@ Antes de enseñar la demo, hacer preguntas sencillas:
 - ¿Guardáis logs de acciones importantes?
 - ¿Dependéis de una persona concreta para revisar todo esto?
 
-## 3. Problema que resuelve DASC
+## 3. Problema que resuelve Vigex
 
 Explicación recomendada:
 
@@ -48,13 +48,13 @@ Muchas empresas pequeñas tienen copias de seguridad, pero no siempre saben si e
 
 También es habitual que las acciones se hagan manualmente, que no quede registro claro de quién hizo cada operación y que los errores se detecten tarde.
 
-DASC Server Manager intenta resolver ese problema centralizando en un panel las copias, los logs, los servicios y las alertas.
+Vigex intenta resolver ese problema centralizando en un panel las copias, los logs, los servicios y las alertas.
 
 ## 4. Propuesta de valor
 
 Texto recomendado:
 
-DASC no busca sustituir a herramientas empresariales muy grandes. Su objetivo es ser una solución sencilla, local y mantenida para PYMES.
+Vigex no busca sustituir a herramientas empresariales muy grandes. Su objetivo es ser una solución sencilla, local y mantenida para PYMES.
 
 La propuesta es:
 
@@ -139,19 +139,19 @@ Explicar las tres opciones:
 
 | Opción | Descripción | Cliente recomendado |
 |---|---|---|
-| DASC Lite | 1 servidor con copia externa obligatoria | Microempresa o prueba inicial |
-| DASC PyME | 2 servidores o servidor + nodo de backups | Opción recomendada para PyME |
-| DASC Pro | 3 servidores separados | Empresa con más necesidad de separación |
+| Vigex Lite | 1 servidor con copia externa obligatoria | Microempresa o prueba inicial |
+| Vigex PyME | 2 servidores o servidor + nodo de backups | Opción recomendada para PyME |
+| Vigex Pro | 3 servidores separados | Empresa con más necesidad de separación |
 
 Texto recomendado:
 
-Para una PyME, la opción más equilibrada suele ser la de 2 servidores: un servidor principal y otro nodo para DASC, backups o logs. Así las copias no dependen totalmente del mismo equipo donde están los datos principales.
+Para una PyME, la opción más equilibrada suele ser la de 2 servidores: un servidor principal y otro nodo para Vigex, backups o logs. Así las copias no dependen totalmente del mismo equipo donde están los datos principales.
 
 ## 7. Cierre de la demo
 
 Texto recomendado:
 
-La idea de DASC Server Manager es dar tranquilidad. No se trata solo de hacer backups, sino de saber si existen, si han funcionado, si se pueden revisar y si hay alertas cuando algo falla.
+La idea de Vigex es dar tranquilidad. No se trata solo de hacer backups, sino de saber si existen, si han funcionado, si se pueden revisar y si hay alertas cuando algo falla.
 
 El siguiente paso sería revisar vuestro entorno real, ver qué base de datos o servicios queréis proteger y preparar una instalación piloto controlada.
 
@@ -159,11 +159,11 @@ El siguiente paso sería revisar vuestro entorno real, ver qué base de datos o 
 
 ### ¿Esto sustituye a un técnico?
 
-No. DASC ayuda a reducir tareas manuales y a centralizar información, pero no sustituye totalmente a un responsable técnico. La ventaja es que facilita el mantenimiento y permite que el proveedor revise el sistema de forma más clara.
+No. Vigex ayuda a reducir tareas manuales y a centralizar información, pero no sustituye totalmente a un responsable técnico. La ventaja es que facilita el mantenimiento y permite que el proveedor revise el sistema de forma más clara.
 
 ### ¿Mis datos salen a la nube?
 
-No obligatoriamente. DASC está pensado para funcionar en local. Se puede añadir copia externa si el cliente lo necesita, por ejemplo en NAS, SFTP o almacenamiento externo cifrado.
+No obligatoriamente. Vigex está pensado para funcionar en local. Se puede añadir copia externa si el cliente lo necesita, por ejemplo en NAS, SFTP o almacenamiento externo cifrado.
 
 ### ¿Qué pasa si falla un backup?
 
@@ -175,7 +175,7 @@ Sí, pero la restauración debe hacerse con cuidado. En entornos reales se recom
 
 ### ¿Es una herramienta para empresas grandes?
 
-No es el objetivo inicial. DASC está pensado especialmente para microempresas y PYMES que necesitan una solución más sencilla y acompañada.
+No es el objetivo inicial. Vigex está pensado especialmente para microempresas y PYMES que necesitan una solución más sencilla y acompañada.
 
 ## 9. Siguientes pasos después de la llamada
 

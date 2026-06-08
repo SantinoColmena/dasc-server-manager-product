@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo comprobar que los perfiles de instalación de DASC Server Manager tienen sentido antes de integrarlos dentro del instalador y del código principal.
+Este documento define cómo comprobar que los perfiles de instalación de Vigex tienen sentido antes de integrarlos dentro del instalador y del código principal.
 
 La validación no consiste todavía en ejecutar una instalación automática completa, sino en revisar que cada perfil tiene una configuración coherente y que representa un escenario real.
 
@@ -59,9 +59,9 @@ El perfil `dual` representa una instalación con dos servidores.
 Debe cumplir:
 
 - `INSTALL_MODE=dual`
-- El servidor principal queda separado del nodo DASC.
+- El servidor principal queda separado del nodo Vigex.
 - `BACKUPS_HOST` apunta al servidor encargado de copias.
-- `LOGS_DB_HOST` puede apuntar al mismo servidor de DASC/backups.
+- `LOGS_DB_HOST` puede apuntar al mismo servidor de Vigex/backups.
 - `SERVICIOS_HOST` apunta al servidor donde se gestionan los servicios reales.
 
 Uso recomendado:
@@ -72,7 +72,7 @@ Uso recomendado:
 
 Riesgo principal:
 
-- Sigue existiendo concentración de varias funciones en el servidor DASC.
+- Sigue existiendo concentración de varias funciones en el servidor Vigex.
 
 ## Validación del perfil distributed
 

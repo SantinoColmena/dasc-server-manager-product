@@ -19,45 +19,45 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "central_support.db"
 
-APP_NAME = "DASC Central Support"
-DEMO_CLIENT_ID = os.getenv("DASC_CENTRAL_DEMO_CLIENT_ID", "cliente-demo-a")
-DEMO_CLIENT_NAME = os.getenv("DASC_CENTRAL_DEMO_CLIENT_NAME", "Cliente Demo A")
-DEMO_CLIENT_TOKEN = os.getenv("DASC_CENTRAL_DEMO_TOKEN", "dasc-central-demo-token-lab")
+APP_NAME = "Vigex Central"
+DEMO_CLIENT_ID = os.getenv("Vigex_CENTRAL_DEMO_CLIENT_ID", "cliente-demo-a")
+DEMO_CLIENT_NAME = os.getenv("Vigex_CENTRAL_DEMO_CLIENT_NAME", "Cliente Demo A")
+DEMO_CLIENT_TOKEN = os.getenv("Vigex_CENTRAL_DEMO_TOKEN", "vigex-central-demo-token-lab")
 
 # =====================
 # R-049Q - CONFIG AUTENTICACION CENTRAL
 # =====================
 
-CENTRAL_AUTH_ENABLED = os.getenv("DASC_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
-CENTRAL_LAB_MODE = os.getenv("DASC_CENTRAL_LAB_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_AUTH_ENABLED = os.getenv("Vigex_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_LAB_MODE = os.getenv("Vigex_CENTRAL_LAB_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
 
 DEFAULT_LAB_ADMIN_USER = "admin"
 DEFAULT_LAB_ADMIN_PASSWORD = "admin"
 DEFAULT_LAB_TECH_USER = "tecnico"
 DEFAULT_LAB_TECH_PASSWORD = "tecnico"
 
-CENTRAL_SECRET_KEY = os.getenv("DASC_CENTRAL_SECRET_KEY", "").strip()
+CENTRAL_SECRET_KEY = os.getenv("Vigex_CENTRAL_SECRET_KEY", "").strip()
 if not CENTRAL_SECRET_KEY:
     CENTRAL_SECRET_KEY = (
-        "dasc-central-support-secret-lab-change-me"
+        "vigex-central-secret-lab-change-me"
         if CENTRAL_LAB_MODE
         else secrets.token_urlsafe(48)
     )
 
 CENTRAL_ADMIN_USER = os.getenv(
-    "DASC_CENTRAL_ADMIN_USER",
+    "Vigex_CENTRAL_ADMIN_USER",
     DEFAULT_LAB_ADMIN_USER if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_ADMIN_PASSWORD = os.getenv(
-    "DASC_CENTRAL_ADMIN_PASSWORD",
+    "Vigex_CENTRAL_ADMIN_PASSWORD",
     DEFAULT_LAB_ADMIN_PASSWORD if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_TECH_USER = os.getenv(
-    "DASC_CENTRAL_TECH_USER",
+    "Vigex_CENTRAL_TECH_USER",
     DEFAULT_LAB_TECH_USER if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_TECH_PASSWORD = os.getenv(
-    "DASC_CENTRAL_TECH_PASSWORD",
+    "Vigex_CENTRAL_TECH_PASSWORD",
     DEFAULT_LAB_TECH_PASSWORD if CENTRAL_LAB_MODE else "",
 )
 
@@ -65,8 +65,8 @@ CENTRAL_TECH_PASSWORD = os.getenv(
 # dependencias externas). Si se define el hash, tiene prioridad sobre la
 # contraseña en texto plano. Retrocompatible: si no se define, el
 # comportamiento es idéntico al anterior.
-CENTRAL_ADMIN_PASSWORD_HASH = os.getenv("DASC_CENTRAL_ADMIN_PASSWORD_HASH", "").strip()
-CENTRAL_TECH_PASSWORD_HASH = os.getenv("DASC_CENTRAL_TECH_PASSWORD_HASH", "").strip()
+CENTRAL_ADMIN_PASSWORD_HASH = os.getenv("Vigex_CENTRAL_ADMIN_PASSWORD_HASH", "").strip()
+CENTRAL_TECH_PASSWORD_HASH = os.getenv("Vigex_CENTRAL_TECH_PASSWORD_HASH", "").strip()
 
 
 def verify_pbkdf2(plain, stored):
@@ -376,9 +376,9 @@ def health():
 @app.post("/api/v1/support/tickets")
 def receive_support_ticket(
     payload: CentralTicketIn,
-    x_dasc_client_token: Optional[str] = Header(default=None),
+    x_vigex_client_token: Optional[str] = Header(default=None),
 ):
-    if not validate_client_token(payload.cliente_id, x_dasc_client_token):
+    if not validate_client_token(payload.cliente_id, x_vigex_client_token):
         raise HTTPException(status_code=401, detail="Token de cliente no válido")
 
     ticket_id = create_central_ticket(payload)
@@ -387,7 +387,7 @@ def receive_support_ticket(
         "ok": True,
         "central_ticket_id": ticket_id,
         "estado": "Nuevo",
-        "mensaje": "Ticket recibido en API central DASC",
+        "mensaje": "Ticket recibido en API central Vigex",
     }
 
 
@@ -399,23 +399,23 @@ def receive_support_ticket(
 @app.get("/api/v1/support/tickets/{ticket_id}")
 def api_get_support_ticket_status(
     ticket_id: str,
-    x_dasc_client_token: Optional[str] = Header(default=None),
-    x_dasc_client_id: Optional[str] = Header(default=None),
+    x_vigex_client_token: Optional[str] = Header(default=None),
+    x_vigex_client_id: Optional[str] = Header(default=None),
 ):
     ticket = get_central_ticket(ticket_id)
 
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket central no encontrado")
 
-    client_id = (x_dasc_client_id or "").strip()
+    client_id = (x_vigex_client_id or "").strip()
 
     if not client_id:
-        raise HTTPException(status_code=400, detail="Falta cabecera X-DASC-Client-ID")
+        raise HTTPException(status_code=400, detail="Falta cabecera X-Vigex-Client-ID")
 
     if client_id != ticket.get("cliente_id"):
         raise HTTPException(status_code=403, detail="El ticket no pertenece al cliente indicado")
 
-    if not validate_client_token(client_id, x_dasc_client_token):
+    if not validate_client_token(client_id, x_vigex_client_token):
         raise HTTPException(status_code=401, detail="Token de cliente no válido")
 
     return {
@@ -474,7 +474,7 @@ def get_central_users():
         CENTRAL_TECH_PASSWORD,
         CENTRAL_TECH_PASSWORD_HASH,
         "tecnico",
-        "Tecnico DASC",
+        "Tecnico Vigex",
     )
 
     return users
@@ -886,7 +886,7 @@ def update_central_ticket_status_priority(ticket_id, estado, prioridad, usuario)
             accion=accion,
             valor_anterior=valor_anterior,
             valor_nuevo=valor_nuevo,
-            detalle="Actualización realizada desde panel central DASC",
+            detalle="Actualización realizada desde panel central Vigex",
         )
 
     return True, "Ticket actualizado"
@@ -902,7 +902,7 @@ def central_ticket_update_status_priority(
     if not is_central_authenticated(request):
         return central_login_redirect()
 
-    usuario = request.session.get("central_user", "dasc_tecnico_lab")
+    usuario = request.session.get("central_user", "vigex_tecnico_lab")
 
     ok, msg = update_central_ticket_status_priority(
         ticket_id=ticket_id,
@@ -1208,10 +1208,10 @@ class HeartbeatIn(BaseModel):
 @app.post("/api/v1/heartbeat")
 def receive_heartbeat(
     payload: HeartbeatIn,
-    x_dasc_client_token: Optional[str] = Header(default=None),
+    x_vigex_client_token: Optional[str] = Header(default=None),
 ):
     """Recibe heartbeat periódico de un panel cliente. Requiere token válido."""
-    if not validate_client_token(payload.cliente_id, x_dasc_client_token):
+    if not validate_client_token(payload.cliente_id, x_vigex_client_token):
         raise HTTPException(status_code=401, detail="Token de cliente no válido")
     save_heartbeat(
         cliente_id=payload.cliente_id,

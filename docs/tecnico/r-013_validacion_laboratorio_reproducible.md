@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar que el laboratorio de pruebas de DASC Server Manager es reproducible, útil y suficiente para probar cambios antes de una versión interna.
+Este documento define cómo validar que el laboratorio de pruebas de Vigex es reproducible, útil y suficiente para probar cambios antes de una versión interna.
 
 La validación busca comprobar que el proyecto puede instalarse, probarse y revisarse en un entorno controlado sin depender de configuraciones antiguas o máquinas preparadas manualmente sin documentar.
 
@@ -35,7 +35,7 @@ Se consideran válidos estos entornos:
 
 ## Validación de laboratorio single
 
-El perfil `single` debe permitir probar DASC en una sola máquina.
+El perfil `single` debe permitir probar Vigex en una sola máquina.
 
 Debe comprobarse:
 
@@ -55,20 +55,20 @@ Resultado esperado:
 
 ## Validación de laboratorio dual
 
-El perfil `dual` debe permitir probar DASC con dos máquinas.
+El perfil `dual` debe permitir probar Vigex con dos máquinas.
 
 Distribución esperada:
 
 ~~~text
 Servidor 1: servidor principal / base de datos / servicios
-Servidor 2: DASC / backups / logs
+Servidor 2: Vigex / backups / logs
 ~~~
 
 Debe comprobarse:
 
 - SSH entre máquinas.
 - Acceso a MariaDB remoto.
-- Ejecución de backups desde nodo DASC.
+- Ejecución de backups desde nodo Vigex.
 - Registro de logs.
 - Separación básica de responsabilidades.
 
@@ -109,25 +109,25 @@ Resultado esperado:
 Acción:
 
 ~~~bash
-sudo ./install_dasc_api.sh
+sudo ./install_vigex_api.sh
 ~~~
 
 Resultado esperado:
 
 - Instala dependencias.
-- Crea `/opt/dasc/api`.
+- Crea `/opt/vigex/api`.
 - Crea entorno virtual.
 - Instala dependencias Python.
-- Crea servicio `dasc-api`.
+- Crea servicio `vigex-api`.
 - Arranca el panel.
 - Muestra resumen final.
 
 Comprobaciones:
 
 ~~~bash
-systemctl status dasc-api --no-pager
+systemctl status vigex-api --no-pager
 curl -I http://127.0.0.1:8000
-ls -ld /opt/dasc/api
+ls -ld /opt/vigex/api
 ~~~
 
 ## Prueba 2 - Reinstalación
@@ -135,8 +135,8 @@ ls -ld /opt/dasc/api
 Acción:
 
 ~~~bash
-sudo ./install_dasc_api.sh
-sudo ./install_dasc_api.sh
+sudo ./install_vigex_api.sh
+sudo ./install_vigex_api.sh
 ~~~
 
 Resultado esperado:
@@ -152,22 +152,22 @@ Resultado esperado:
 Acción:
 
 ~~~bash
-sudo ./uninstall_dasc_api.sh
+sudo ./uninstall_vigex_api.sh
 ~~~
 
 Resultado esperado:
 
 - Detiene el servicio.
-- Deshabilita `dasc-api`.
+- Deshabilita `vigex-api`.
 - Elimina el archivo systemd.
-- Elimina `/opt/dasc/api`.
+- Elimina `/opt/vigex/api`.
 - Recarga systemd.
 
 Comprobaciones:
 
 ~~~bash
-systemctl status dasc-api --no-pager
-ls -ld /opt/dasc/api
+systemctl status vigex-api --no-pager
+ls -ld /opt/vigex/api
 ~~~
 
 ## Prueba 4 - Login

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar la futura programación automática de backups de DASC Server Manager.
+Este documento define cómo validar la futura programación automática de backups de Vigex.
 
 La validación busca comprobar que el sistema puede preparar tareas automáticas de copia sin romper el funcionamiento actual de los backups manuales.
 

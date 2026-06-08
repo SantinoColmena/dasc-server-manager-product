@@ -1,14 +1,14 @@
-# Perfiles de despliegue DASC Server Manager
+# Perfiles de despliegue Vigex
 
 ## Objetivo
 
-Definir los perfiles de despliegue previstos para DASC Server Manager como base de producto.
+Definir los perfiles de despliegue previstos para Vigex como base de producto.
 
 Los perfiles permiten adaptar la instalación a diferentes tamaños de cliente, presupuesto y nivel de separación técnica.
 
 ## Principio general
 
-DASC Server Manager debe poder instalarse en varios escenarios sin depender de IPs fijas de laboratorio.
+Vigex debe poder instalarse en varios escenarios sin depender de IPs fijas de laboratorio.
 
 Cada perfil debe definir:
 
@@ -55,7 +55,7 @@ En el mismo servidor:
 
 ### Variables principales
 
-- DASC_PROFILE=lite
+- VIGEX_PROFILE=lite
 - LOCAL_PANEL_HOST=127.0.0.1
 - LOCAL_PANEL_PORT=8000
 - NGINX_PUBLIC_PORT=80
@@ -116,7 +116,7 @@ Servidor 2:
 
 ### Variables principales
 
-- DASC_PROFILE=standard
+- VIGEX_PROFILE=standard
 - API_HOST=<IP_SERVIDOR_API>
 - DB_HOST=<IP_SERVIDOR_DB_BACKUPS>
 - BACKUPS_HOST=<IP_SERVIDOR_DB_BACKUPS>
@@ -134,7 +134,7 @@ Servidor 2:
 
 - PyME estándar.
 - Cliente que requiere separación mínima.
-- Servicio gestionado DASC con coste moderado.
+- Servicio gestionado Vigex con coste moderado.
 
 ## Perfil Pro
 
@@ -187,7 +187,7 @@ Servidor 3:
 
 ### Variables principales
 
-- DASC_PROFILE=pro
+- VIGEX_PROFILE=pro
 - API_HOST=<IP_SERVIDOR_API>
 - DB_HOST=<IP_SERVIDOR_DB>
 - BACKUPS_HOST=<IP_SERVIDOR_BACKUPS>
@@ -209,15 +209,15 @@ Servidor 3:
 - PyME con datos importantes.
 - Entorno donde la restauración y continuidad importan más.
 
-## Perfil Central DASC
+## Perfil Central Vigex
 
 ### Objetivo
 
-Servidor propio del equipo DASC para soporte multi-cliente.
+Servidor propio del equipo Vigex para soporte multi-cliente.
 
 ### Número de servidores
 
-1 servidor o VPS propio de DASC.
+1 servidor o VPS propio de Vigex.
 
 ### Componentes
 
@@ -231,20 +231,20 @@ Servidor propio del equipo DASC para soporte multi-cliente.
 
 ### Variables principales
 
-- DASC_CENTRAL_AUTH_ENABLED=true
-- DASC_CENTRAL_LAB_MODE=false
-- DASC_CENTRAL_SECRET_KEY
-- DASC_CENTRAL_ADMIN_USER
-- DASC_CENTRAL_ADMIN_PASSWORD
-- DASC_CENTRAL_TECH_USER
-- DASC_CENTRAL_TECH_PASSWORD
-- DASC_CENTRAL_DEMO_CLIENT_ID o futuro DASC_CENTRAL_INITIAL_CLIENT_ID
-- DASC_CENTRAL_DEMO_CLIENT_NAME o futuro DASC_CENTRAL_INITIAL_CLIENT_NAME
-- DASC_CENTRAL_DEMO_TOKEN o futuro token por cliente
+- Vigex_CENTRAL_AUTH_ENABLED=true
+- Vigex_CENTRAL_LAB_MODE=false
+- Vigex_CENTRAL_SECRET_KEY
+- Vigex_CENTRAL_ADMIN_USER
+- Vigex_CENTRAL_ADMIN_PASSWORD
+- Vigex_CENTRAL_TECH_USER
+- Vigex_CENTRAL_TECH_PASSWORD
+- Vigex_CENTRAL_DEMO_CLIENT_ID o futuro Vigex_CENTRAL_INITIAL_CLIENT_ID
+- Vigex_CENTRAL_DEMO_CLIENT_NAME o futuro Vigex_CENTRAL_INITIAL_CLIENT_NAME
+- Vigex_CENTRAL_DEMO_TOKEN o futuro token por cliente
 
 ### Uso recomendado
 
-- Servicio interno DASC.
+- Servicio interno Vigex.
 - Gestión centralizada de tickets.
 - Futuro portal multi-cliente.
 
@@ -255,7 +255,7 @@ Servidor propio del equipo DASC para soporte multi-cliente.
 | Lite | 1 | Bajo | Baja | Piloto o microcliente |
 | Standard | 2 | Medio | Media | PyME recomendada |
 | Pro | 3 | Alto | Alta | Cliente exigente |
-| Central DASC | 1 VPS | Medio | Interna DASC | Soporte multi-cliente |
+| Central Vigex | 1 VPS | Medio | Interna Vigex | Soporte multi-cliente |
 
 ## Decisión actual
 
@@ -265,4 +265,4 @@ Lite queda como opción de entrada, pero solo con copia externa obligatoria.
 
 Pro queda como opción avanzada.
 
-Central DASC no se instala en clientes; pertenece al equipo DASC.
+Central Vigex no se instala en clientes; pertenece al equipo Vigex.

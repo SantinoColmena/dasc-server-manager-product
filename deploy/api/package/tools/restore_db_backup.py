@@ -170,8 +170,8 @@ def write_restore_report(root: Path, payload: dict) -> Path:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Restaura un backup completo DASC en una base de prueba/controlada.")
-    parser.add_argument("--root", default="/opt/dasc/api", help="Ruta raíz de instalación API.")
+    parser = argparse.ArgumentParser(description="Restaura un backup completo Vigex en una base de prueba/controlada.")
+    parser.add_argument("--root", default="/opt/vigex/api", help="Ruta raíz de instalación API.")
     parser.add_argument("--backup", default="", help="Ruta del backup .sql. Si se omite usa el último backup válido.")
     parser.add_argument("--target-db", default="", help="Base de datos destino de restauración.")
     parser.add_argument("--apply", action="store_true", help="Aplica restauración real. Sin esto solo hace dry-run.")
@@ -181,17 +181,17 @@ def main():
     root = Path(args.root).resolve()
     env = load_env_file(root / "config.env")
 
-    backup_dir = Path(env.get("BACKUP_OUTPUT_DIR", "/var/backups/dasc/mysql/full")).resolve()
+    backup_dir = Path(env.get("BACKUP_OUTPUT_DIR", "/var/backups/vigex/mysql/full")).resolve()
     backup_path = Path(args.backup).resolve() if args.backup else find_latest_backup(backup_dir)
 
     source_db = first_config(env, ["BACKUP_DB_NAME", "LOGS_DB_NAME"], default="")
-    target_db = args.target_db or first_config(env, ["RESTORE_TARGET_DB"], default="dasc_logs_restore_test")
+    target_db = args.target_db or first_config(env, ["RESTORE_TARGET_DB"], default="vigex_logs_restore_test")
 
     host = first_config(env, ["RESTORE_DB_HOST", "BACKUP_DB_HOST", "LOGS_DB_HOST"], default="")
     user = first_config(env, ["RESTORE_DB_USER"], default="")
     password = first_config(env, ["RESTORE_DB_PASS"], default="")
 
-    print("Restauración controlada de backup DASC")
+    print("Restauración controlada de backup Vigex")
     print(f"Root: {root}")
     print(f"Modo: {'APLICAR' if args.apply else 'DRY-RUN'}")
     print(f"Backup: {backup_path}")
@@ -267,7 +267,7 @@ def main():
 
     mysql_binary = find_mysql_binary()
 
-    fd, tmp_config_name = tempfile.mkstemp(prefix="dasc_restore_", suffix=".cnf")
+    fd, tmp_config_name = tempfile.mkstemp(prefix="vigex_restore_", suffix=".cnf")
     tmp_config = Path(tmp_config_name)
 
     try:

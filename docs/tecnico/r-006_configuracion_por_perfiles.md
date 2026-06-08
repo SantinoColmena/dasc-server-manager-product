@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es preparar DASC Server Manager para poder funcionar en diferentes arquitecturas sin tener que modificar el código fuente en cada instalación.
+El objetivo de esta tarea es preparar Vigex para poder funcionar en diferentes arquitecturas sin tener que modificar el código fuente en cada instalación.
 
 Actualmente el proyecto funciona con variables concretas en `config.env`, como las IPs de servicios, backups, logs y Cacti. Esto es válido para el entorno académico y para el MVP, pero no es suficiente para convertir el proyecto en un producto adaptable a diferentes clientes.
 
-Con esta mejora, DASC podrá arrancar usando un modo de instalación definido mediante la variable `INSTALL_MODE`.
+Con esta mejora, Vigex podrá arrancar usando un modo de instalación definido mediante la variable `INSTALL_MODE`.
 
 ## Perfiles previstos
 
@@ -46,7 +46,7 @@ El perfil `dual` representa una instalación equilibrada con dos servidores.
 
 Este modo será el perfil estándar recomendado para una PyME.
 
-La idea es separar el servidor principal del cliente del nodo DASC, donde estarían el panel, los backups, logs y tareas de mantenimiento.
+La idea es separar el servidor principal del cliente del nodo Vigex, donde estarían el panel, los backups, logs y tareas de mantenimiento.
 
 Ejemplo:
 
@@ -104,7 +104,7 @@ Limitaciones:
 
 ## Variables principales
 
-Las variables mínimas que debe manejar DASC son:
+Las variables mínimas que debe manejar Vigex son:
 
 | Variable | Función |
 |---|---|

@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# update_dasc_api.sh — Actualiza DASC Panel a una nueva versión sin perder datos
+# update_vigex_api.sh — Actualiza Panel Vigex a una nueva versión sin perder datos
 # R-065 / Rutas 8.1 + 8.3
-# Uso: sudo bash update_dasc_api.sh
+# Uso: sudo bash update_vigex_api.sh
 #
 # Reemplaza : main.py · requirements.txt · templates/ · static/ · tools/ · config.env.example
 # Preserva  : config.env · .ssh/ · data/ · reports/
 
 set -euo pipefail
 
-SERVICE_NAME="dasc-api"
-INSTALL_DIR="/opt/dasc/api"
+SERVICE_NAME="vigex-api"
+INSTALL_DIR="/opt/vigex/api"
 VENV_DIR="${INSTALL_DIR}/venv"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="${SCRIPT_DIR}/package"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-CODE_BACKUP_DIR="/opt/dasc/actualizacion_backup_${TIMESTAMP}"
+CODE_BACKUP_DIR="/opt/vigex/actualizacion_backup_${TIMESTAMP}"
 
 # ── Verificaciones previas ──────────────────────────────────────────────────
 
@@ -24,8 +24,8 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 if [[ ! -d "$INSTALL_DIR" ]]; then
-  echo "ERROR: DASC no está instalado en ${INSTALL_DIR}."
-  echo "       Usa install_dasc_api.sh para una instalación nueva."
+  echo "ERROR: Vigex no está instalado en ${INSTALL_DIR}."
+  echo "       Usa install_vigex_api.sh para una instalación nueva."
   exit 1
 fi
 
@@ -46,7 +46,7 @@ APP_USER="$(stat -c '%U' "$INSTALL_DIR" 2>/dev/null || echo "${SUDO_USER:-$USER}
 # ── Presentación ────────────────────────────────────────────────────────────
 
 echo "==================================================================="
-echo " DASC — Actualización segura del panel"
+echo " Vigex — Actualización segura del panel"
 echo "==================================================================="
 echo "  Instalación actual : ${INSTALL_DIR}"
 echo "  Usuario servicio   : ${APP_USER}"
@@ -57,7 +57,7 @@ echo "  Se actualizarán : main.py, templates/, static/, tools/, requirements.tx
 echo "  Se conservarán  : config.env, .ssh/, data/, reports/"
 echo
 
-if [[ -z "${DASC_UPDATE_NONINTERACTIVE:-}" ]]; then
+if [[ -z "${Vigex_UPDATE_NONINTERACTIVE:-}" ]]; then
   read -rp "¿Continuar con la actualización? (S/N): " CONFIRM
   if [[ "${CONFIRM,,}" != "s" && "${CONFIRM,,}" != "si" ]]; then
     echo "Actualización cancelada."
@@ -121,7 +121,7 @@ echo "==> Ajustando permisos"
 chown -R "${APP_USER}:${APP_USER}" "${INSTALL_DIR}"
 chmod 640 "${INSTALL_DIR}/config.env"
 chmod 700 "${INSTALL_DIR}/.ssh" 2>/dev/null || true
-chmod 600 "${INSTALL_DIR}/.ssh/id_rsa_dasc" 2>/dev/null || true
+chmod 600 "${INSTALL_DIR}/.ssh/id_rsa_vigex" 2>/dev/null || true
 
 for script in "${INSTALL_DIR}/tools/"*.sh "${INSTALL_DIR}/tools/"*.py; do
   [[ -f "$script" ]] && chmod 755 "$script" || true
@@ -153,9 +153,9 @@ curl -sSf -o /dev/null -w "==> Health check HTTP: %{http_code}\n" http://127.0.0
   echo "    AVISO: health check HTTP no respondió (puede necesitar unos segundos)"
 
 # Limpiar copias de código antiguas (mantener las 5 más recientes)
-BACKUP_COUNT="$(ls -1d /opt/dasc/actualizacion_backup_* 2>/dev/null | wc -l)"
+BACKUP_COUNT="$(ls -1d /opt/vigex/actualizacion_backup_* 2>/dev/null | wc -l)"
 if [[ "$BACKUP_COUNT" -gt 5 ]]; then
-  ls -1dt /opt/dasc/actualizacion_backup_* | tail -n +6 | xargs rm -rf
+  ls -1dt /opt/vigex/actualizacion_backup_* | tail -n +6 | xargs rm -rf
   echo "==> Copias de actualización antiguas eliminadas (se mantienen las 5 más recientes)"
 fi
 

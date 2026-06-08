@@ -2,7 +2,7 @@
 
 ## Objetivo de la fase
 
-La Fase 2 tiene como objetivo reforzar la seguridad básica del producto DASC Server Manager y preparar un flujo más completo de restauración de backups.
+La Fase 2 tiene como objetivo reforzar la seguridad básica del producto Vigex y preparar un flujo más completo de restauración de backups.
 
 Esta fase no busca únicamente añadir funciones nuevas, sino convertir lo ya existente en un sistema más seguro, trazable y defendible como producto.
 
@@ -63,13 +63,13 @@ En laboratorio se contempla certificado autofirmado.
 
 La API deja de depender de una clave SSH global del usuario.
 
-Se prepara una clave propia de DASC:
+Se prepara una clave propia de Vigex:
 
-    /opt/dasc/api/.ssh/id_rsa_dasc
+    /opt/vigex/api/.ssh/id_rsa_vigex
 
 Y un archivo known_hosts propio:
 
-    /opt/dasc/api/.ssh/known_hosts_dasc
+    /opt/vigex/api/.ssh/known_hosts_vigex
 
 También se añaden timeouts, validación de hosts permitidos y validación de comandos remotos permitidos.
 
@@ -87,7 +87,7 @@ La restauración exige confirmación explícita:
 
 Cada backup generado registra un hash SHA256 en:
 
-    /home/dasc/backups/.dasc/checksums.sha256
+    /home/vigex/backups/.vigex/checksums.sha256
 
 Antes de restaurar, el sistema recalcula el hash y lo compara con el valor esperado.
 
@@ -101,7 +101,7 @@ La retención deja de borrar directamente con `find -delete`.
 
 Ahora se usa una función de limpieza segura que:
 
-- Solo actúa dentro de `/home/dasc/backups`.
+- Solo actúa dentro de `/home/vigex/backups`.
 - Marca backups purgados como `PRUNED`.
 - Elimina checksums obsoletos.
 - Evita borrar copias base todavía referenciadas por otras copias activas.
@@ -110,7 +110,7 @@ Ahora se usa una función de limpieza segura que:
 
 Se añade auditoría local en:
 
-    /home/dasc/backups/.dasc/audit.log
+    /home/vigex/backups/.vigex/audit.log
 
 Registra operaciones críticas como:
 
@@ -135,7 +135,7 @@ Permite comprobar que un backup está listo para restaurarse sin modificar todav
 - `deploy/api/package/main.py`
 - `deploy/api/package/requirements.txt`
 - `deploy/api/package/config.env.example`
-- `deploy/api/install_dasc_api.sh`
+- `deploy/api/install_vigex_api.sh`
 
 ### Proxy
 
@@ -174,8 +174,8 @@ Permite comprobar que un backup está listo para restaurarse sin modificar todav
 | Comprobar `config.env` real y permisos | Pendiente |
 | Comprobar hash de contraseña admin | Pendiente |
 | Instalar DB desde cero | Pendiente |
-| Comprobar usuario `dasc_backup` | Pendiente |
-| Comprobar usuario `dasc_restore` | Pendiente |
+| Comprobar usuario `vigex_backup` | Pendiente |
+| Comprobar usuario `vigex_restore` | Pendiente |
 | Instalar backup-services desde cero | Pendiente |
 | Comprobar instalación de scripts en `/usr/local/bin` | Pendiente |
 | Comprobar clave SSH dedicada | Pendiente |
@@ -212,4 +212,4 @@ El producto pasa de tener backups funcionales a tener un flujo más defendible:
 6. Restaurar de forma controlada.
 7. Registrar resultado.
 
-Esto acerca DASC Server Manager a una versión más seria como producto/servicio para PYMES.
+Esto acerca Vigex a una versión más seria como producto/servicio para PYMES.

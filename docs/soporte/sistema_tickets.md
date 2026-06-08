@@ -18,7 +18,7 @@ No se considera un sistema real de ticketing para clientes.
 
 Una PyME no usará GitHub para pedir soporte.
 
-GitHub queda reservado para el equipo de DASC.
+GitHub queda reservado para el equipo de Vigex.
 
 ## Canal real para clientes
 
@@ -33,7 +33,7 @@ El cliente deberá poder comunicarse por canales sencillos:
 ## Flujo previsto
 
 1. El cliente avisa por un canal sencillo.
-2. El equipo de DASC recoge la información.
+2. El equipo de Vigex recoge la información.
 3. El equipo crea un ticket interno en GitHub Issues.
 4. Se clasifica por prioridad.
 5. Se resuelve.
@@ -53,7 +53,7 @@ GitHub Issues puede usarse para:
 
 ## Qué no se debe afirmar
 
-No se debe afirmar todavía que DASC dispone de:
+No se debe afirmar todavía que Vigex dispone de:
 
 - Portal comercial de soporte.
 - Sistema profesional de ticketing.

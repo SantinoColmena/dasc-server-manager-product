@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Durante la Fase 6 se ha empezado a preparar el sistema de soporte y tickets de DASC Server Manager.
+Durante la Fase 6 se ha empezado a preparar el sistema de soporte y tickets de Vigex.
 
 Se detecta una diferencia importante:
 
@@ -26,7 +26,7 @@ Una pequeña empresa normalmente no quiere ni debe:
 - Exponer información sensible en un repositorio.
 - Gestionar incidencias como si fuera un equipo técnico.
 
-DASC debe vender simplicidad, no trasladar complejidad al cliente.
+Vigex debe vender simplicidad, no trasladar complejidad al cliente.
 
 ## Enfoque correcto
 
@@ -35,10 +35,10 @@ El cliente usará canales sencillos:
 - Email de soporte.
 - Formulario web.
 - WhatsApp o teléfono en planes que lo incluyan.
-- Panel de ayuda dentro de DASC en una fase futura.
+- Panel de ayuda dentro de Vigex en una fase futura.
 - Portal de cliente en una fase posterior si el producto crece.
 
-El equipo de DASC será quien registre internamente la incidencia en GitHub Issues o en la herramienta que se use en ese momento.
+El equipo de Vigex será quien registre internamente la incidencia en GitHub Issues o en la herramienta que se use en ese momento.
 
 ## Flujo correcto de soporte
 
@@ -81,6 +81,6 @@ La Fase 6 continúa siguiendo el tracker, pero con esta corrección:
 
 ## Conclusión
 
-DASC Server Manager debe mantener GitHub como herramienta interna del equipo.
+Vigex debe mantener GitHub como herramienta interna del equipo.
 
 El cliente final debe ver una experiencia sencilla, guiada y cercana.

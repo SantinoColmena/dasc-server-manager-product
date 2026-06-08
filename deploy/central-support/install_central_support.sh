@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="dasc-central-support"
-INSTALL_DIR="${INSTALL_DIR:-/opt/dasc/central-support}"
+SERVICE_NAME="vigex-central"
+INSTALL_DIR="${INSTALL_DIR:-/opt/vigex/central-support}"
 INSTALL_PARENT="${INSTALL_PARENT:-$(dirname "${INSTALL_DIR}")}"
-APP_USER="${APP_USER:-dasc}"
-APP_GROUP="${APP_GROUP:-dasc}"
+APP_USER="${APP_USER:-vigex}"
+APP_GROUP="${APP_GROUP:-vigex}"
 APP_HOST="${APP_HOST:-0.0.0.0}"
 APP_PORT="${APP_PORT:-8010}"
 SOURCE_DIR="${SOURCE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/package" && pwd)}"
 ENV_FILE="${INSTALL_DIR}/config.env"
 
-echo "==> Instalando DASC Central Support"
+echo "==> Instalando Vigex Central"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "ERROR: ejecuta este instalador con sudo."
@@ -24,7 +24,7 @@ apt-get install -y python3 python3-venv python3-pip rsync curl
 
 echo "==> Preparando usuario ${APP_USER}"
 if ! id "${APP_USER}" >/dev/null 2>&1; then
-  useradd --system --home /opt/dasc --shell /usr/sbin/nologin "${APP_USER}"
+  useradd --system --home /opt/vigex --shell /usr/sbin/nologin "${APP_USER}"
 fi
 
 echo "==> Creando directorios"
@@ -55,7 +55,7 @@ if [ ! -f "${ENV_FILE}" ]; then
   CONFIG_NEEDS_INIT="true"
 elif [ ! -s "${ENV_FILE}" ]; then
   CONFIG_NEEDS_INIT="true"
-elif ! grep -q '^DASC_CENTRAL_SECRET_KEY=' "${ENV_FILE}"; then
+elif ! grep -q '^Vigex_CENTRAL_SECRET_KEY=' "${ENV_FILE}"; then
   CONFIG_NEEDS_INIT="true"
 fi
 
@@ -66,19 +66,19 @@ print(secrets.token_urlsafe(48))
 PY
 )"
 
-  CENTRAL_ADMIN_PASSWORD_VALUE="${DASC_CENTRAL_ADMIN_PASSWORD:-$(python3 - <<'PY'
+  CENTRAL_ADMIN_PASSWORD_VALUE="${Vigex_CENTRAL_ADMIN_PASSWORD:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(24))
 PY
 )}"
 
-  CENTRAL_TECH_PASSWORD_VALUE="${DASC_CENTRAL_TECH_PASSWORD:-$(python3 - <<'PY'
+  CENTRAL_TECH_PASSWORD_VALUE="${Vigex_CENTRAL_TECH_PASSWORD:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(24))
 PY
 )}"
 
-  CENTRAL_DEMO_TOKEN_VALUE="${DASC_CENTRAL_DEMO_TOKEN:-$(python3 - <<'PY'
+  CENTRAL_DEMO_TOKEN_VALUE="${Vigex_CENTRAL_DEMO_TOKEN:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(32))
 PY
@@ -99,34 +99,34 @@ PY
   CENTRAL_TECH_PASSWORD_HASH_VALUE="$(hash_central_password "${CENTRAL_TECH_PASSWORD_VALUE}")"
 
   cat > "${ENV_FILE}" <<EOF
-# DASC Central Support
-DASC_CENTRAL_AUTH_ENABLED=true
-DASC_CENTRAL_LAB_MODE=false
-DASC_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
+# Vigex Central
+Vigex_CENTRAL_AUTH_ENABLED=true
+Vigex_CENTRAL_LAB_MODE=false
+Vigex_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
 
 # Usuarios centrales. Contraseñas almacenadas como hash PBKDF2 (M-4).
-DASC_CENTRAL_ADMIN_USER=${DASC_CENTRAL_ADMIN_USER:-admin}
-DASC_CENTRAL_ADMIN_PASSWORD_HASH=${CENTRAL_ADMIN_PASSWORD_HASH_VALUE}
-DASC_CENTRAL_TECH_USER=${DASC_CENTRAL_TECH_USER:-tecnico}
-DASC_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
+Vigex_CENTRAL_ADMIN_USER=${Vigex_CENTRAL_ADMIN_USER:-admin}
+Vigex_CENTRAL_ADMIN_PASSWORD_HASH=${CENTRAL_ADMIN_PASSWORD_HASH_VALUE}
+Vigex_CENTRAL_TECH_USER=${Vigex_CENTRAL_TECH_USER:-tecnico}
+Vigex_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
 
 # Cliente demo para integración local-central
-DASC_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
-DASC_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
-DASC_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
+Vigex_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
+Vigex_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
+Vigex_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
 EOF
 
   chmod 600 "${ENV_FILE}"
 
   echo "==> config.env inicializado. Contraseñas almacenadas como hash PBKDF2."
   echo "==> Estas credenciales se muestran SOLO UNA VEZ. Guárdalas en un lugar seguro:"
-  echo "    Admin: ${DASC_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
-  echo "    Técnico: ${DASC_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
+  echo "    Admin: ${Vigex_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
+  echo "    Técnico: ${Vigex_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
 else
   echo "==> config.env ya existe, se conserva"
 
-  if ! grep -q '^DASC_CENTRAL_LAB_MODE=' "${ENV_FILE}"; then
-    echo "DASC_CENTRAL_LAB_MODE=false" >> "${ENV_FILE}"
+  if ! grep -q '^Vigex_CENTRAL_LAB_MODE=' "${ENV_FILE}"; then
+    echo "Vigex_CENTRAL_LAB_MODE=false" >> "${ENV_FILE}"
   fi
 fi
 echo "==> Ajustando permisos"
@@ -142,7 +142,7 @@ chmod 600 "${ENV_FILE}"
 echo "==> Creando servicio systemd"
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
 [Unit]
-Description=DASC Central Support (FastAPI/Uvicorn)
+Description=Vigex Central (FastAPI/Uvicorn)
 After=network.target
 
 [Service]
@@ -175,7 +175,7 @@ curl -s "http://127.0.0.1:${APP_PORT}/health" || true
 echo
 
 echo
-echo "OK: DASC Central Support instalado."
+echo "OK: Vigex Central instalado."
 echo "URL local: http://127.0.0.1:${APP_PORT}"
 echo "Servicio: ${SERVICE_NAME}"
 echo "Directorio: ${INSTALL_DIR}"

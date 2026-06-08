@@ -2,20 +2,20 @@
 
 ## Objetivo
 
-Documentar cómo ejecutar el informe operativo cuando DASC Server Manager ya está instalado en un servidor API.
+Documentar cómo ejecutar el informe operativo cuando Vigex ya está instalado en un servidor API.
 
 ## Ruta esperada
 
 En una instalación real, el generador queda en:
 
 ~~~text
-/opt/dasc/api/tools/generate_operational_report.py
+/opt/vigex/api/tools/generate_operational_report.py
 ~~~
 
 También existe un wrapper cómodo:
 
 ~~~text
-/opt/dasc/api/tools/generate_operational_report.sh
+/opt/vigex/api/tools/generate_operational_report.sh
 ~~~
 
 ## Ejecución recomendada
@@ -23,7 +23,7 @@ También existe un wrapper cómodo:
 Desde el servidor API:
 
 ~~~bash
-cd /opt/dasc/api
+cd /opt/vigex/api
 ./tools/generate_operational_report.sh "Cliente demo" "2026-05"
 ~~~
 
@@ -32,7 +32,7 @@ cd /opt/dasc/api
 El informe se genera en:
 
 ~~~text
-/opt/dasc/api/reports/informe_operativo_2026-05.md
+/opt/vigex/api/reports/informe_operativo_2026-05.md
 ~~~
 
 ## Ejecución manual alternativa
@@ -40,8 +40,8 @@ El informe se genera en:
 También se puede ejecutar directamente con Python del entorno virtual:
 
 ~~~bash
-cd /opt/dasc/api
-./venv/bin/python tools/generate_operational_report.py --root /opt/dasc/api --client "Cliente demo" --period "2026-05"
+cd /opt/vigex/api
+./venv/bin/python tools/generate_operational_report.py --root /opt/vigex/api --client "Cliente demo" --period "2026-05"
 ~~~
 
 ## Qué revisa actualmente
@@ -71,4 +71,4 @@ Todavía no incluye:
 
 ## Conclusión
 
-El informe operativo ya está preparado para ejecutarse desde una instalación real de DASC, no solo desde GitHub.
+El informe operativo ya está preparado para ejecutarse desde una instalación real de Vigex, no solo desde GitHub.

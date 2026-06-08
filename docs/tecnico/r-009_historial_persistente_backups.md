@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es definir un historial persistente para las copias de seguridad de DASC Server Manager.
+El objetivo de esta tarea es definir un historial persistente para las copias de seguridad de Vigex.
 
 Actualmente el sistema puede ejecutar backups desde el panel, pero para evolucionar hacia un producto real es necesario guardar información estructurada de cada copia realizada.
 
@@ -95,10 +95,10 @@ CREATE TABLE IF NOT EXISTS backup_history (
 Para mantener coherencia con el sistema actual de logs, el historial puede guardarse en la misma base de datos de auditoría:
 
 ~~~text
-dasc_logs
+vigex_logs
 ~~~
 
-Esto permite separar los datos funcionales del cliente de los datos de control de DASC.
+Esto permite separar los datos funcionales del cliente de los datos de control de Vigex.
 
 La base de datos principal del cliente no debe llenarse con información interna del panel.
 
@@ -131,7 +131,7 @@ El historial responde a la pregunta:
 Ejemplo:
 
 ~~~text
-Backup full de employees creado en /home/dasc/backups/backup-20260522.sql.gz.
+Backup full de employees creado en /home/vigex/backups/backup-20260522.sql.gz.
 ~~~
 
 Ambos sistemas se complementan.
@@ -233,7 +233,7 @@ Para mantener estabilidad, la primera versión del historial debe ser sencilla.
 
 Decisión recomendada:
 
-- Guardar el historial en la base `dasc_logs`.
+- Guardar el historial en la base `vigex_logs`.
 - Crear una tabla `backup_history`.
 - Registrar backups manuales primero.
 - Añadir backups programados después en R-010.

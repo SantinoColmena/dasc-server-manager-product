@@ -14,13 +14,13 @@ No se requiere instalar ningún programa adicional.
 
 ## 1. Dirección de acceso (URL)
 
-El técnico que instaló DASC te habrá indicado una URL de acceso. Las formas habituales son:
+El técnico que instaló Vigex te habrá indicado una URL de acceso. Las formas habituales son:
 
 | Tipo de instalación | URL de ejemplo |
 |---|---|
 | Solo IP, HTTP (lab/pruebas) | `http://192.168.1.50:8000` |
 | Solo IP, HTTPS (producción) | `https://192.168.1.50` |
-| Con nombre de dominio | `https://dasc.tuempresa.com` |
+| Con nombre de dominio | `https://vigex.tuempresa.com` |
 
 > Si no sabes la URL, contacta con el responsable técnico.
 
@@ -82,7 +82,7 @@ Los administradores además ven la sección **Administración** (usuarios, logs 
 El panel web cubre el uso diario. Hay acciones que requieren intervención técnica (SSH al servidor):
 
 - Modificar la configuración del sistema (`config.env`).
-- Actualizar DASC a una nueva versión.
+- Actualizar Vigex a una nueva versión.
 - Cambiar la arquitectura de servidores (Lite / Standard / Pro).
 - Acceder directamente a los archivos de backup en el servidor.
 - Configurar UFW, fail2ban o el certificado HTTPS.

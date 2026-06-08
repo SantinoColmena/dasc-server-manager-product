@@ -7,14 +7,14 @@ DEST_CONFIG="${DEST_CONFIG:-${ROOT_DIR}/config.env}"
 
 print_menu() {
   echo "============================================"
-  echo "DASC Server Manager - Asistente de perfil"
+  echo "Vigex - Asistente de perfil"
   echo "============================================"
   echo
   echo "Selecciona el perfil de despliegue:"
   echo
-  echo "1) single      - DASC Lite / 1 servidor"
-  echo "2) dual        - DASC PyME / 2 servidores"
-  echo "3) distributed - DASC Pro / 3 servidores"
+  echo "1) single      - Vigex Lite / 1 servidor"
+  echo "2) dual        - Vigex PyME / 2 servidores"
+  echo "3) distributed - Vigex Pro / 3 servidores"
   echo
 }
 

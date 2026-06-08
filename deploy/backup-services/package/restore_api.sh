@@ -3,14 +3,14 @@ set -euo pipefail
 shopt -s extglob
 
 BACKUP_ID="${1:-}"
-BACKUP_ROOT="${2:-/home/dasc/backups}"
+BACKUP_ROOT="${2:-/home/vigex/backups}"
 CONFIRM="${3:-}"
 
-HISTORY_FILE="${BACKUP_ROOT}/.dasc/history.tsv"
-CHECKSUM_FILE="${BACKUP_ROOT}/.dasc/checksums.sha256"
-RESTORE_LOG="${BACKUP_ROOT}/.dasc/restore.log"
-AUDIT_LOG="${BACKUP_ROOT}/.dasc/audit.log"
-RESTORE_CNF="/home/dasc/.my_restore.cnf"
+HISTORY_FILE="${BACKUP_ROOT}/.vigex/history.tsv"
+CHECKSUM_FILE="${BACKUP_ROOT}/.vigex/checksums.sha256"
+RESTORE_LOG="${BACKUP_ROOT}/.vigex/restore.log"
+AUDIT_LOG="${BACKUP_ROOT}/.vigex/audit.log"
+RESTORE_CNF="/home/vigex/.my_restore.cnf"
 
 
 audit_log() {
@@ -49,7 +49,7 @@ if [[ "$BACKUP_ID" != +([0-9]) ]]; then
   exit 1
 fi
 
-if [[ "$BACKUP_ROOT" != /home/dasc/backups* ]]; then
+if [[ "$BACKUP_ROOT" != /home/vigex/backups* ]]; then
   echo "ERROR: directorio de backups no permitido"
   exit 1
 fi

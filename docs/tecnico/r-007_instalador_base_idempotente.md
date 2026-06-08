@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es preparar un instalador base más limpio, reutilizable e idempotente para DASC Server Manager.
+El objetivo de esta tarea es preparar un instalador base más limpio, reutilizable e idempotente para Vigex.
 
 Un instalador idempotente significa que se puede ejecutar más de una vez sin romper la instalación existente, sin duplicar configuraciones y sin dejar el sistema en un estado incoherente.
 
-Esta mejora es importante porque DASC Server Manager debe poder instalarse en diferentes escenarios:
+Esta mejora es importante porque Vigex debe poder instalarse en diferentes escenarios:
 
 - Laboratorio académico.
 - Demo interna.
@@ -69,9 +69,9 @@ Debe instalar o verificar las dependencias mínimas:
 Debe preparar la estructura estándar:
 
 ~~~text
-/opt/dasc/
-/opt/dasc/api/
-/opt/dasc/api/venv/
+/opt/vigex/
+/opt/vigex/api/
+/opt/vigex/api/venv/
 ~~~
 
 ### 4. Copia de archivos
@@ -85,7 +85,7 @@ La copia debe hacerse de forma controlada, evitando borrar configuraciones impor
 Si ya existe un archivo:
 
 ~~~text
-/opt/dasc/api/config.env
+/opt/vigex/api/config.env
 ~~~
 
 el instalador no debe sobrescribirlo directamente sin crear copia de seguridad.
@@ -117,13 +117,13 @@ requirements.txt
 Debe crear o actualizar el servicio:
 
 ~~~text
-dasc-api.service
+vigex-api.service
 ~~~
 
 El servicio debe apuntar a:
 
 ~~~text
-/opt/dasc/api
+/opt/vigex/api
 ~~~
 
 y ejecutar Uvicorn usando el entorno virtual.
@@ -134,8 +134,8 @@ Debe ejecutar:
 
 ~~~bash
 systemctl daemon-reload
-systemctl enable dasc-api
-systemctl restart dasc-api
+systemctl enable vigex-api
+systemctl restart vigex-api
 ~~~
 
 ### 10. Validación final
@@ -155,7 +155,7 @@ El instalador será considerado idempotente si:
 - Se puede ejecutar dos veces seguidas sin romper la instalación.
 - No duplica líneas en ficheros de configuración.
 - No borra `config.env` sin copia.
-- No falla si `/opt/dasc/api` ya existe.
+- No falla si `/opt/vigex/api` ya existe.
 - No falla si el entorno virtual ya existe.
 - No falla si el servicio systemd ya existe.
 - Actualiza el código de forma controlada.

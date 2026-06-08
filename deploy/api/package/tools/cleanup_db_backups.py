@@ -59,8 +59,8 @@ def fmt_time(timestamp: float) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Aplica política de retención sobre backups completos DASC.")
-    parser.add_argument("--root", default="/opt/dasc/api", help="Ruta raíz de instalación API.")
+    parser = argparse.ArgumentParser(description="Aplica política de retención sobre backups completos Vigex.")
+    parser.add_argument("--root", default="/opt/vigex/api", help="Ruta raíz de instalación API.")
     parser.add_argument("--backup-dir", default="", help="Directorio de backups. Si se omite usa BACKUP_OUTPUT_DIR.")
     parser.add_argument("--keep", default="", help="Número de backups completos a conservar.")
     parser.add_argument("--apply", action="store_true", help="Aplica borrado real. Sin esto solo muestra lo que haría.")
@@ -71,10 +71,10 @@ def main():
     root = Path(args.root).resolve()
     env = load_env_file(root / "config.env")
 
-    backup_dir = Path(args.backup_dir or env.get("BACKUP_OUTPUT_DIR", "/var/backups/dasc/mysql/full")).resolve()
+    backup_dir = Path(args.backup_dir or env.get("BACKUP_OUTPUT_DIR", "/var/backups/vigex/mysql/full")).resolve()
     keep = parse_keep(args.keep or env.get("BACKUP_RETENTION_KEEP", "10"), default=10)
 
-    print("Política de retención de backups DASC")
+    print("Política de retención de backups Vigex")
     print(f"Root: {root}")
     print(f"Directorio: {backup_dir}")
     print(f"Conservar últimos: {keep}")

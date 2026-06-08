@@ -1,4 +1,4 @@
-# Plan de recuperación ante desastres — DASC Server Manager
+# Plan de recuperación ante desastres — Vigex
 ## R-075 / Ruta 9.5
 ## Complemento del runbook `/recuperacion` del panel
 
@@ -22,16 +22,16 @@
 
 ```bash
 # Diagnóstico (desde SSH)
-systemctl status dasc-api
-journalctl -u dasc-api -n 50
-df -h /opt/dasc
+systemctl status vigex-api
+journalctl -u vigex-api -n 50
+df -h /opt/vigex
 
 # Solución más común: reiniciar el servicio
-sudo systemctl restart dasc-api
+sudo systemctl restart vigex-api
 
 # Si el disco está lleno:
 sudo journalctl --vacuum-size=200M       # libera logs del sistema
-sudo du -sh /opt/dasc/reports/*          # revisar informes generados
+sudo du -sh /opt/vigex/reports/*          # revisar informes generados
 ```
 
 **RTO estimado**: 5-15 minutos.
@@ -45,12 +45,12 @@ sudo du -sh /opt/dasc/reports/*          # revisar informes generados
 ```bash
 # Comprobar conectividad
 ping -c 3 <IP_BACKUPS>
-ssh -i /opt/dasc/api/.ssh/id_rsa_dasc dasc@<IP_BACKUPS> hostname
+ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@<IP_BACKUPS> hostname
 
-# Si el servidor responde pero falla el SSH de DASC:
+# Si el servidor responde pero falla el SSH de Vigex:
 # Revisar authorized_keys en el servidor remoto
-ssh root@<IP_BACKUPS> "cat /home/dasc/.ssh/authorized_keys"
-# Debe contener la clave pública de /opt/dasc/api/api_panel.pub
+ssh root@<IP_BACKUPS> "cat /home/vigex/.ssh/authorized_keys"
+# Debe contener la clave pública de /opt/vigex/api/api_panel.pub
 ```
 
 **RTO estimado**: 15-30 minutos.
@@ -65,31 +65,31 @@ ssh root@<IP_BACKUPS> "cat /home/dasc/.ssh/authorized_keys"
 1. **Verificar integridad de la copia** (panel: `/copias/salud` o CLI):
 ```bash
 # Ver las últimas copias disponibles
-cat /home/dasc/backups/.dasc/history.tsv | tail -20
+cat /home/vigex/backups/.vigex/history.tsv | tail -20
 # Verificar SHA256 de la copia elegida
-sha256sum /home/dasc/backups/<nombre_copia>.sql.gz
+sha256sum /home/vigex/backups/<nombre_copia>.sql.gz
 ```
 
 2. **Parar servicios que usen la BD**:
 ```bash
-sudo systemctl stop dasc-api
+sudo systemctl stop vigex-api
 ```
 
 3. **Restaurar desde el panel** (panel → Copias → Restaurar) o CLI:
 ```bash
-sudo -u dasc bash /opt/dasc/api/deploy/backup-services/package/restore_api.sh \
+sudo -u vigex bash /opt/vigex/api/deploy/backup-services/package/restore_api.sh \
   <ID_BACKUP> <DB_NAME>
 ```
 
 4. **Verificar restauración**:
 ```bash
 # Conectar a MariaDB y comprobar tablas
-mysql -u dasc_user -p dasc_logs -e "SHOW TABLE STATUS\G"
+mysql -u vigex_user -p vigex_logs -e "SHOW TABLE STATUS\G"
 ```
 
 5. **Reiniciar servicios**:
 ```bash
-sudo systemctl start dasc-api
+sudo systemctl start vigex-api
 curl -I http://localhost:8000
 ```
 
@@ -102,20 +102,20 @@ curl -I http://localhost:8000
 ### Escenario D — Reinstalación completa del panel
 **Cuándo**: El servidor del panel se ha perdido completamente (fallo de hardware, migración).
 
-**Prerrequisito**: Tener el backup del panel (`backup_dasc_api.sh`) en un almacenamiento externo.
+**Prerrequisito**: Tener el backup del panel (`backup_vigex_api.sh`) en un almacenamiento externo.
 
 ```bash
 # En el nuevo servidor Ubuntu 22.04
 # 1. Copiar el backup desde el almacenamiento externo
-scp admin@<origen>:/backups/dasc_panel_backup_<ts>.tar.gz /tmp/
+scp admin@<origen>:/backups/vigex_panel_backup_<ts>.tar.gz /tmp/
 
-# 2. Instalar DASC desde cero con el nuevo instalador
-sudo bash deploy/api/install_dasc_api.sh
+# 2. Instalar Vigex desde cero con el nuevo instalador
+sudo bash deploy/api/install_vigex_api.sh
 
 # 3. Restaurar datos y configuración sobre la instalación nueva
-sudo systemctl stop dasc-api
-sudo tar -xzf /tmp/dasc_panel_backup_<ts>.tar.gz -C /opt/dasc/
-sudo systemctl start dasc-api
+sudo systemctl stop vigex-api
+sudo tar -xzf /tmp/vigex_panel_backup_<ts>.tar.gz -C /opt/vigex/
+sudo systemctl start vigex-api
 ```
 
 **RTO estimado**: 30-90 minutos.
@@ -142,7 +142,7 @@ Para validar que el plan funciona, realizar trimestralmente:
 | Rol | Nombre | Teléfono | Email |
 |-----|--------|----------|-------|
 | Administrador principal | — | — | — |
-| Proveedor DASC | — | — | soporte@dascpyme.es |
+| Proveedor Vigex | — | — | soporte@vigexpyme.es |
 | Proveedor de hosting/VPS | — | — | — |
 
 ---

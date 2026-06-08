@@ -3,14 +3,14 @@ set -euo pipefail
 
 TYPE="${1:-}"
 DB="${2:-employees}"
-DEST="${3:-/home/dasc/backups}"
+DEST="${3:-/home/vigex/backups}"
 NAME="${4:-}"
 COMPRESS="${5:-gzip}"
 RETENTION="${6:-30}"
 BASE_REF="${7:-manual}"
 NOTES="${8:-manual}"
 
-HISTORY_DIR="${DEST}/.dasc"
+HISTORY_DIR="${DEST}/.vigex"
 HISTORY_FILE="${HISTORY_DIR}/history.tsv"
 CHECKSUM_FILE="${HISTORY_DIR}/checksums.sha256"
 AUDIT_LOG="${HISTORY_DIR}/audit.log"
@@ -50,7 +50,7 @@ safe_retention_cleanup() {
     return 0
   fi
 
-  if [[ "$dest" != /home/dasc/backups* ]]; then
+  if [[ "$dest" != /home/vigex/backups* ]]; then
     echo "ERROR: retención cancelada, destino no permitido: $dest"
     return 1
   fi
@@ -179,7 +179,7 @@ case "$TYPE" in
     ;;
 esac
 
-if [[ "$DEST" != /home/dasc/backups* ]]; then
+if [[ "$DEST" != /home/vigex/backups* ]]; then
   echo "ERROR: destino no permitido"
   exit 1
 fi
@@ -229,7 +229,7 @@ if [[ "$TMP_SQL" == *.gz ]]; then
   TMP_SQL="${TMP_SQL%.gz}"
 fi
 
-mysqldump --defaults-extra-file="/home/dasc/.my.cnf" \
+mysqldump --defaults-extra-file="/home/vigex/.my.cnf" \
   --protocol=tcp \
   --single-transaction \
   --routines \

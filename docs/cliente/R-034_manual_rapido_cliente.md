@@ -2,13 +2,13 @@
 
 ## Objetivo
 
-Crear un manual sencillo para que un cliente pueda entender cómo usar DASC Server Manager sin conocimientos técnicos avanzados.
+Crear un manual sencillo para que un cliente pueda entender cómo usar Vigex sin conocimientos técnicos avanzados.
 
 Este documento está pensado para una PyME o usuario final que necesita realizar acciones básicas como consultar el estado del sistema, revisar copias de seguridad, comprobar logs y entender cuándo debe contactar con soporte.
 
-## ¿Qué es DASC Server Manager?
+## ¿Qué es Vigex?
 
-DASC Server Manager es un panel web pensado para ayudar a pequeñas y medianas empresas a controlar copias de seguridad, logs, servicios y alertas desde una interfaz sencilla.
+Vigex es un panel web pensado para ayudar a pequeñas y medianas empresas a controlar copias de seguridad, logs, servicios y alertas desde una interfaz sencilla.
 
 El objetivo principal no es que el cliente tenga que administrar servidores complejos, sino que pueda comprobar de forma rápida si sus datos están protegidos y si el sistema está funcionando correctamente.
 
@@ -46,7 +46,7 @@ La sección de copias permite ejecutar o revisar backups de la base de datos.
 
 ### Tipos de copia
 
-DASC puede trabajar con tres tipos de copias:
+Vigex puede trabajar con tres tipos de copias:
 
 - Copia completa: guarda todos los datos.
 - Copia incremental: guarda cambios desde la última copia realizada.
@@ -91,7 +91,7 @@ En un cliente real, las restauraciones críticas deben validarse con soporte té
 
 ## Logs del sistema
 
-La sección de logs muestra eventos registrados por DASC.
+La sección de logs muestra eventos registrados por Vigex.
 
 Los logs ayudan a saber:
 
@@ -195,7 +195,7 @@ El cliente debe encargarse de:
 
 ## Resumen rápido
 
-DASC Server Manager permite controlar desde un panel:
+Vigex permite controlar desde un panel:
 
 - Copias de seguridad.
 - Restauraciones.

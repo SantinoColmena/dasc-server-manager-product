@@ -1,16 +1,16 @@
-# Modelo de soporte al cliente - DASC Server Manager
+# Modelo de soporte al cliente - Vigex
 
 ## Objetivo
 
 Definir un modelo de soporte realista para clientes PyME sin obligarles a usar GitHub.
 
-DASC Server Manager se vende como servicio gestionado, no como una simple licencia técnica.
+Vigex se vende como servicio gestionado, no como una simple licencia técnica.
 
 Por tanto, el cliente debe tener canales simples para pedir ayuda, reportar incidencias o solicitar cambios.
 
 ## Principio general
 
-GitHub es una herramienta interna del equipo DASC.
+GitHub es una herramienta interna del equipo Vigex.
 
 El cliente no debe usar GitHub Issues, Pull Requests ni repositorios para pedir soporte.
 
@@ -31,7 +31,7 @@ Uso previsto:
 Ejemplo:
 
 ~~~text
-soporte@dasc.local
+soporte@vigex.local
 ~~~
 
 En una versión real se sustituirá por un dominio comercial.
@@ -79,21 +79,21 @@ Uso previsto:
 
 ## Registro interno
 
-Aunque el cliente contacte por email, formulario, WhatsApp o teléfono, el equipo DASC debe registrar internamente la incidencia.
+Aunque el cliente contacte por email, formulario, WhatsApp o teléfono, el equipo Vigex debe registrar internamente la incidencia.
 
 El registro interno puede estar en:
 
 - GitHub Issues privado.
 - Hoja de cálculo interna.
 - Sistema de tickets futuro.
-- Panel interno DASC.
+- Panel interno Vigex.
 
 ## Flujo de soporte
 
 ~~~text
 Cliente contacta por canal simple
         ↓
-Equipo DASC revisa solicitud
+Equipo Vigex revisa solicitud
         ↓
 Se registra ticket interno
         ↓
@@ -148,9 +148,9 @@ El cliente no debe:
 - Cambiar contraseñas internas sin avisar.
 - Modificar permisos de MariaDB o SSH.
 
-## Qué debe hacer el equipo DASC
+## Qué debe hacer el equipo Vigex
 
-El equipo DASC debe:
+El equipo Vigex debe:
 
 - Recibir solicitudes por canales simples.
 - Registrar internamente cada caso.
@@ -176,8 +176,8 @@ No se presenta como canal de atención al cliente.
 
 ## Conclusión
 
-DASC Server Manager debe ofrecer soporte humano y cercano.
+Vigex debe ofrecer soporte humano y cercano.
 
 El cliente usa canales simples.
 
-El equipo DASC traduce esas solicitudes a trabajo técnico interno.
+El equipo Vigex traduce esas solicitudes a trabajo técnico interno.

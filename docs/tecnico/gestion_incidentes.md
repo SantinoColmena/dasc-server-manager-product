@@ -1,7 +1,7 @@
-# Gestión de incidentes — DASC Server Manager
+# Gestión de incidentes — Vigex
 ## R-075 / Ruta 9.5
 
-Protocolo para gestionar incidentes de forma ordenada, tanto del propio software DASC
+Protocolo para gestionar incidentes de forma ordenada, tanto del propio software Vigex
 como de la infraestructura del cliente.
 
 ---
@@ -23,9 +23,9 @@ como de la infraestructura del cliente.
 Cliente detecta el problema
         ↓
 Abre ticket en el panel (FAB → Reportar problema)
-  o envía email a soporte@dascpyme.es
+  o envía email a soporte@vigexpyme.es
         ↓
-Proveedor DASC recibe notificación
+Proveedor Vigex recibe notificación
         ↓
 Clasifica severidad (P1–P4)
         ↓
@@ -46,29 +46,29 @@ Post-mortem si P1 (qué falló, cómo evitarlo)
 
 ### Panel no responde
 ```bash
-systemctl status dasc-api
-journalctl -u dasc-api -n 100
+systemctl status vigex-api
+journalctl -u vigex-api -n 100
 df -h   # disco lleno?
 free -m # RAM?
 ```
 
 ### Backups fallan
 ```bash
-tail -50 /home/dasc/backups/.dasc/history.tsv
+tail -50 /home/vigex/backups/.vigex/history.tsv
 # Buscar líneas con estado distinto de OK
-ssh -i /opt/dasc/api/.ssh/id_rsa_dasc dasc@<BACKUP_HOST> "df -h && ls -la /home/dasc/backups/"
+ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@<BACKUP_HOST> "df -h && ls -la /home/vigex/backups/"
 ```
 
 ### Alertas no se reciben
 ```bash
 # Probar envío manual desde el panel: Alertas → Probar alertas
 # Revisar config.env
-grep "NOTIF_" /opt/dasc/api/config.env
+grep "NOTIF_" /opt/vigex/api/config.env
 # Probar SMTP manualmente
 python3 -c "import smtplib; s=smtplib.SMTP('smtp.gmail.com',587); s.starttls(); s.login('user','pass'); print('OK')"
 ```
 
-### Servicio caído detectado por DASC
+### Servicio caído detectado por Vigex
 ```bash
 # Ver qué servicio y cuándo
 systemctl status <nombre-servicio>

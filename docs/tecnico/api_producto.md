@@ -1,7 +1,7 @@
-# API de producto — DASC Server Manager
+# API de producto — Vigex
 ## R-086 / Ruta 12.2
 
-Documentación de los endpoints de la API del panel DASC disponibles para
+Documentación de los endpoints de la API del panel Vigex disponibles para
 integraciones externas. La API sigue convenciones REST estándar y responde en JSON.
 
 > **Autenticación:** Los endpoints marcados como (autenticado) requieren una sesión
@@ -25,7 +25,7 @@ Host: panel.cliente.local
 ```json
 {
     "status": "ok",
-    "app": "DASC Server Manager"
+    "app": "Vigex"
 }
 ```
 
@@ -33,7 +33,7 @@ Host: panel.cliente.local
 
 ### `GET /api/v1/info`
 
-Información de la instalación DASC. Para verificar versión y compatibilidad.
+Información de la instalación Vigex. Para verificar versión y compatibilidad.
 
 ```http
 GET /api/v1/info HTTP/1.1
@@ -42,7 +42,7 @@ GET /api/v1/info HTTP/1.1
 **Respuesta:**
 ```json
 {
-    "producto": "DASC Server Manager",
+    "producto": "Vigex",
     "api_version": "1.0",
     "panel_version": "1.0-rc1",
     "build_date": "2026-06-08",
@@ -56,7 +56,7 @@ GET /api/v1/info HTTP/1.1
 
 ### `GET /api/v1/heartbeat`
 
-Métricas de salud del servidor en tiempo real. Usado por DASC Central Support
+Métricas de salud del servidor en tiempo real. Usado por Vigex Central
 para el dashboard de salud global.
 
 ```http
@@ -174,7 +174,7 @@ Cookie: session=<cookie>
 
 ## Códigos de estado HTTP
 
-| Código | Significado en DASC |
+| Código | Significado en Vigex |
 |--------|---------------------|
 | 200 | Operación exitosa |
 | 303 | Redirección (respuestas de formularios) |
@@ -198,7 +198,7 @@ El panel expone automáticamente la documentación interactiva generada por Fast
 ## Versioning de la API
 
 La API sigue versionado semántico en la URL (`/api/v1/`).
-La versión `v1` es la actual y se mantendrá compatible hasta que DASC llegue a v2.0.
+La versión `v1` es la actual y se mantendrá compatible hasta que Vigex llegue a v2.0.
 Los cambios que rompen la compatibilidad hacia atrás siempre suben la versión mayor.
 
 ---
@@ -207,7 +207,7 @@ Los cambios que rompen la compatibilidad hacia atrás siempre suben la versión 
 
 | Sistema | Integración | Configuración |
 |---------|-------------|---------------|
-| DASC Central Support | Push de tickets + heartbeat | `CENTRAL_SUPPORT_*` en `config.env` |
+| Vigex Central | Push de tickets + heartbeat | `CENTRAL_SUPPORT_*` en `config.env` |
 | Jira / GitHub Issues | Webhook POST al crear ticket | `JIRA_WEBHOOK_URL` en `config.env` |
 | Grafana | Iframe embed del dashboard | `GRAFANA_URL` en `config.env` |
 | Cacti | Iframe del gráfico de red | `CACTI_URL` en `config.env` |

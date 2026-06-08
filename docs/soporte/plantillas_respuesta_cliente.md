@@ -1,4 +1,4 @@
-# Plantillas de respuesta al cliente - DASC Server Manager
+# Plantillas de respuesta al cliente - Vigex
 
 ## Objetivo
 
@@ -36,7 +36,7 @@ La hemos registrado internamente y vamos a revisarla según la prioridad indicad
 Te informaremos cuando tengamos un diagnóstico o si necesitamos más información.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 2 - Solicitud de más información
@@ -61,14 +61,14 @@ Para poder revisar la incidencia necesitamos algunos datos adicionales:
 Con esa información podremos continuar el diagnóstico.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 3 - Incidencia en análisis
 
 ### Uso
 
-Cuando el equipo DASC ya está investigando.
+Cuando el equipo Vigex ya está investigando.
 
 ### Respuesta
 
@@ -82,7 +82,7 @@ De momento el caso queda en análisis técnico. Estamos comprobando el estado de
 Te informaremos con el resultado o con el siguiente paso necesario.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 4 - Servicio operativo
@@ -108,7 +108,7 @@ Si el problema continúa desde tu equipo o red, indícanos por favor:
 - Navegador utilizado.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 5 - Incidencia resuelta
@@ -135,7 +135,7 @@ Resumen:
 Damos el ticket por cerrado. Si vuelve a ocurrir, puedes responder a este mismo hilo o abrir una nueva solicitud.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 6 - Cambio planificado
@@ -156,7 +156,7 @@ Para evitar impacto en el servicio, proponemos realizarla en una ventana de mant
 Por favor, indícanos qué horario sería más adecuado para vuestra empresa.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 7 - Restauración de backup solicitada
@@ -182,7 +182,7 @@ Antes de ejecutar la restauración necesitamos confirmar:
 Cuando tengamos esta confirmación, planificaremos la restauración y os informaremos del resultado.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 8 - Incidencia crítica recibida
@@ -203,7 +203,7 @@ Vamos a priorizar la revisión de este caso y comprobar el estado de los servici
 Te informaremos lo antes posible con el diagnóstico inicial y las acciones necesarias.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 9 - Cierre sin reproducción del problema
@@ -224,7 +224,7 @@ Las comprobaciones actuales indican que el servicio responde correctamente.
 Dejamos el caso cerrado como no reproducible. Si vuelve a ocurrir, por favor envíanos una captura y la hora exacta del fallo para poder investigarlo con más detalle.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 10 - Confirmación por WhatsApp
@@ -256,12 +256,12 @@ Hemos registrado tu solicitud en nuestro sistema interno de soporte.
 
 Referencia interna:
 
-DASC-YYYY-NNN
+Vigex-YYYY-NNN
 
 Usaremos esta referencia para hacer seguimiento del caso.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Plantilla 12 - Comunicación de mantenimiento
@@ -287,11 +287,11 @@ Durante la intervención puede haber una interrupción temporal o degradación d
 Te confirmaremos cuando el mantenimiento finalice.
 
 Un saludo,
-Equipo DASC
+Equipo Vigex
 ~~~
 
 ## Conclusión
 
 Estas plantillas permiten responder de forma consistente sin obligar al cliente a entender detalles técnicos internos.
 
-El equipo DASC puede adaptarlas según el canal, la prioridad y el tipo de solicitud.
+El equipo Vigex puede adaptarlas según el canal, la prioridad y el tipo de solicitud.

@@ -3,12 +3,12 @@ set -euo pipefail
 shopt -s extglob
 
 BACKUP_ID="${1:-}"
-BACKUP_ROOT="${2:-/home/dasc/backups}"
+BACKUP_ROOT="${2:-/home/vigex/backups}"
 
-HISTORY_FILE="${BACKUP_ROOT}/.dasc/history.tsv"
-CHECKSUM_FILE="${BACKUP_ROOT}/.dasc/checksums.sha256"
-AUDIT_LOG="${BACKUP_ROOT}/.dasc/audit.log"
-DRILL_LOG="${BACKUP_ROOT}/.dasc/restore_drill.log"
+HISTORY_FILE="${BACKUP_ROOT}/.vigex/history.tsv"
+CHECKSUM_FILE="${BACKUP_ROOT}/.vigex/checksums.sha256"
+AUDIT_LOG="${BACKUP_ROOT}/.vigex/audit.log"
+DRILL_LOG="${BACKUP_ROOT}/.vigex/restore_drill.log"
 
 audit_log() {
   local action="$1"
@@ -47,7 +47,7 @@ if [[ "$BACKUP_ID" != +([0-9]) ]]; then
   fail "ID de backup no válido"
 fi
 
-if [[ "$BACKUP_ROOT" != /home/dasc/backups* ]]; then
+if [[ "$BACKUP_ROOT" != /home/vigex/backups* ]]; then
   fail "directorio de backups no permitido"
 fi
 

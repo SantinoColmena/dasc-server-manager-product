@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/dasc/api}"
-SERVICE_NAME="${SERVICE_NAME:-dasc-api}"
-CLIENT="${1:-DASC validacion}"
+APP_DIR="${APP_DIR:-/opt/vigex/api}"
+SERVICE_NAME="${SERVICE_NAME:-vigex-api}"
+CLIENT="${1:-Vigex validacion}"
 PERIOD="${2:-$(date +%Y-%m)}"
 
 REPORT_DIR="${APP_DIR}/reports"
@@ -55,17 +55,17 @@ check_command() {
   local name="$1"
   local command="$2"
 
-  if bash -c "${command}" >/tmp/dasc_validation_check.out 2>/tmp/dasc_validation_check.err; then
+  if bash -c "${command}" >/tmp/vigex_validation_check.out 2>/tmp/vigex_validation_check.err; then
     check_ok "${name}" "Comando correcto: ${command}"
   else
     local err
-    err="$(cat /tmp/dasc_validation_check.err 2>/dev/null | head -n 3 | tr '\n' ' ')"
+    err="$(cat /tmp/vigex_validation_check.err 2>/dev/null | head -n 3 | tr '\n' ' ')"
     check_fail "${name}" "Comando fallido: ${command}. ${err}"
   fi
 }
 
 cat > "${REPORT_FILE}" <<EOF
-# Validación post-instalación API DASC
+# Validación post-instalación API Vigex
 
 ## Datos generales
 

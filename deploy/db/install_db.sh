@@ -5,20 +5,20 @@ DB_BIND_ADDRESS="${DB_BIND_ADDRESS:-0.0.0.0}"
 DB_NAME="${DB_NAME:-employees}"
 TEST_TABLE="${TEST_TABLE:-empleados_demo}"
 
-BACKUP_USER="${BACKUP_USER:-dasc_backup}"
+BACKUP_USER="${BACKUP_USER:-vigex_backup}"
 BACKUP_PASS="${BACKUP_PASS:-}"
 BACKUP_ALLOWED_HOST="${BACKUP_ALLOWED_HOST:-}"
-RESTORE_USER="${RESTORE_USER:-dasc_restore}"
+RESTORE_USER="${RESTORE_USER:-vigex_restore}"
 RESTORE_PASS="${RESTORE_PASS:-}"
-LOGS_DB_NAME="${LOGS_DB_NAME:-dasc_logs}"
-LOGS_DB_USER="${LOGS_DB_USER:-dasc_logs}"
+LOGS_DB_NAME="${LOGS_DB_NAME:-vigex_logs}"
+LOGS_DB_USER="${LOGS_DB_USER:-vigex_logs}"
 LOGS_DB_PASS="${LOGS_DB_PASS:-}"
 LOGS_ALLOWED_HOST="${LOGS_ALLOWED_HOST:-}"
 
 MARIADB_CNF="/etc/mysql/mariadb.conf.d/50-server.cnf"
 
 # Usuario SSH usado por la API/Terminal para entrar en esta máquina DB
-APP_USER="${APP_USER:-dasc}"
+APP_USER="${APP_USER:-vigex}"
 APP_GROUP="${APP_GROUP:-$APP_USER}"
 APP_HOME="/home/${APP_USER}"
 SSHD_CONFIG="/etc/ssh/sshd_config"
@@ -27,7 +27,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OPTIONAL_API_PUBKEY="$SCRIPT_DIR/api_panel.pub"
 
 DB_SERVER_ID="${DB_SERVER_ID:-}"
-BINLOG_BASENAME="${BINLOG_BASENAME:-/var/log/mysql/dasc-bin}"
+BINLOG_BASENAME="${BINLOG_BASENAME:-/var/log/mysql/vigex-bin}"
 BINLOG_FORMAT="${BINLOG_FORMAT:-ROW}"
 BINLOG_EXPIRE_DAYS="${BINLOG_EXPIRE_DAYS:-14}"
 BINLOG_MAX_SIZE="${BINLOG_MAX_SIZE:-100M}"
@@ -63,9 +63,9 @@ is_empty_or_placeholder() {
   [[ -z "$value" ||
      "$value" == CAMBIAR_* ||
      "$value" == "NO_GUARDAR_EN_GIT" ||
-     "$value" == "dasc_backup_2026" ||
-     "$value" == "dasc_restore_2026" ||
-     "$value" == "dasc_logs_2026" ||
+     "$value" == "vigex_backup_2026" ||
+     "$value" == "vigex_restore_2026" ||
+     "$value" == "vigex_logs_2026" ||
      "$value" == "<IP_SERVIDOR_API>" ||
      "$value" == "<IP_SERVIDOR_DB>" ||
      "$value" == "<IP_SERVIDOR_BACKUPS>" ||
@@ -91,22 +91,22 @@ resolve_secret_var() {
   fi
 }
 
-DASC_PROFILE_VALUE="${DASC_PROFILE:-custom}"
-DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+VIGEX_PROFILE_VALUE="${VIGEX_PROFILE:-custom}"
+VIGEX_PROFILE_VALUE="$(echo "$VIGEX_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
 
-case "$DASC_PROFILE_VALUE" in
+case "$VIGEX_PROFILE_VALUE" in
   lite|standard|pro|custom)
     ;;
   *)
-    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    echo "ERROR: VIGEX_PROFILE debe ser lite, standard, pro o custom."
     exit 1
     ;;
 esac
 
-echo "==> Perfil DASC DB seleccionado: ${DASC_PROFILE_VALUE}"
+echo "==> Perfil Vigex DB seleccionado: ${VIGEX_PROFILE_VALUE}"
 
 if is_empty_or_placeholder "$DB_SERVER_ID"; then
-  case "$DASC_PROFILE_VALUE" in
+  case "$VIGEX_PROFILE_VALUE" in
     lite)
       DB_SERVER_ID="10"
       ;;
@@ -140,7 +140,7 @@ echo "==> Instalando MariaDB, SSH y sudo"
 apt update
 DEBIAN_FRONTEND=noninteractive apt install -y mariadb-server mariadb-client openssh-server sudo
 
-echo "==> Preparando SSH para la terminal remota de DASC"
+echo "==> Preparando SSH para la terminal remota de Vigex"
 systemctl enable --now ssh
 
 if [[ -f "$SSHD_CONFIG" ]]; then
@@ -160,15 +160,15 @@ if [[ -f "$SSHD_CONFIG" ]]; then
 
   # R-053A/B3: las imagenes cloud de Ubuntu traen un drop-in
   # (60-cloudimg-settings.conf) con PasswordAuthentication no que, al leerse antes
-  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-dasc
+  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-vigex
   # que se lee el primero para garantizar la auth por contrasena del bootstrap.
   SSHD_DROPIN_DIR="/etc/ssh/sshd_config.d"
   if [[ -d "$SSHD_DROPIN_DIR" ]]; then
-    cat > "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf" <<'SSHDROP'
+    cat > "${SSHD_DROPIN_DIR}/00-vigex-ssh.conf" <<'SSHDROP'
 PasswordAuthentication yes
 PubkeyAuthentication yes
 SSHDROP
-    chmod 644 "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf"
+    chmod 644 "${SSHD_DROPIN_DIR}/00-vigex-ssh.conf"
   fi
 
   systemctl restart ssh
@@ -215,7 +215,7 @@ if [[ -f "${OPTIONAL_API_PUBKEY}" ]]; then
   chmod 600 "${APP_HOME}/.ssh/authorized_keys"
 else
   echo "==> No se encontró api_panel.pub junto al instalador DB."
-  echo "==> La API podrá copiar su clave automáticamente con sshpass durante install_dasc_api.sh."
+  echo "==> La API podrá copiar su clave automáticamente con sshpass durante install_vigex_api.sh."
 fi
 
 echo "==> Configurando bind-address y binary logs en ${MARIADB_CNF}"
@@ -231,10 +231,10 @@ if grep -qE '^[#[:space:]]*bind-address' "$MARIADB_CNF"; then
 else
   cat >> "$MARIADB_CNF" <<EOF
 
-# DASC NETWORK START
+# Vigex NETWORK START
 [mysqld]
 bind-address = ${DB_BIND_ADDRESS}
-# DASC NETWORK END
+# Vigex NETWORK END
 EOF
 fi
 
@@ -244,17 +244,17 @@ chown mysql:adm /var/log/mysql
 chmod 750 /var/log/mysql
 
 # Evita duplicados si el instalador se ejecuta varias veces
-sed -i '/# DASC BINLOG START/,/# DASC BINLOG END/d' "$MARIADB_CNF"
+sed -i '/# Vigex BINLOG START/,/# Vigex BINLOG END/d' "$MARIADB_CNF"
 
 cat >> "$MARIADB_CNF" <<EOF
 
-# DASC BINLOG START
+# Vigex BINLOG START
 server_id = ${DB_SERVER_ID}
 log_bin = ${BINLOG_BASENAME}
 binlog_format = ${BINLOG_FORMAT}
 expire_logs_days = ${BINLOG_EXPIRE_DAYS}
 max_binlog_size = ${BINLOG_MAX_SIZE}
-# DASC BINLOG END
+# Vigex BINLOG END
 EOF
 
 echo "==> Habilitando y reiniciando MariaDB"
@@ -308,7 +308,7 @@ GRANT ALL PRIVILEGES ON \`${LOGS_DB_NAME}\`.* TO '${LOGS_DB_USER}'@'${LOGS_ALLOW
 CREATE TABLE IF NOT EXISTS \`${LOGS_DB_NAME}\`.\`eventos\` (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  origen VARCHAR(100) NOT NULL DEFAULT 'dasc-api',
+  origen VARCHAR(100) NOT NULL DEFAULT 'vigex-api',
   tipo VARCHAR(100) NOT NULL,
   usuario VARCHAR(100) NULL,
   ip_origen VARCHAR(45) NULL,
@@ -348,10 +348,10 @@ echo "Base de datos instalada correctamente"
 # R-051E - EXPORTAR SECRETOS DB PARA SIGUIENTE INSTALADOR
 # =====================
 
-DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/dasc-db-install-secrets.env}"
+DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/vigex-db-install-secrets.env}"
 
 cat > "$DB_SECRETS_FILE" <<EOF
-# DASC DB install secrets
+# Vigex DB install secrets
 # No copiar este archivo al repositorio.
 DB_NAME=${DB_NAME}
 DB_SERVER_ID=${DB_SERVER_ID}

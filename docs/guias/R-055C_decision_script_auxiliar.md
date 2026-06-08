@@ -19,7 +19,7 @@
 ## Criterio de decisión
 
 **El técnico objetivo** (reseller o administrador de sistemas PyME) ya sabe usar SSH.
-El despliegue de DASC requiere tomar decisiones contextuales durante la instalación
+El despliegue de Vigex requiere tomar decisiones contextuales durante la instalación
 (IPs, contraseñas, perfil), que un script debe hardcodear o preguntar interactivamente.
 
 Un script PowerShell de despliegue:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R-054B — Reverse proxy HTTPS para DASC Server Manager.
+# R-054B — Reverse proxy HTTPS para Vigex.
 # Soporta dos modos de certificado:
 #
 #   CERT_TYPE=selfsigned (por defecto) — certificado autofirmado RSA-4096,
@@ -15,7 +15,7 @@
 #   sudo bash install_reverse_proxy.sh
 #
 #   # Let's Encrypt (producción con dominio real):
-#   sudo CERT_TYPE=certbot DOMAIN=dasc.ejemplo.com \
+#   sudo CERT_TYPE=certbot DOMAIN=vigex.ejemplo.com \
 #        CERTBOT_EMAIL=admin@ejemplo.com bash install_reverse_proxy.sh
 #
 # Variables de entorno:
@@ -25,24 +25,24 @@
 #   SERVER_NAME      Nombre nginx server_name (default: _)
 #   UPSTREAM_HOST    Host del backend (default: 127.0.0.1)
 #   UPSTREAM_PORT    Puerto del backend (default: 8000)
-#   API_CONFIG_FILE  config.env del panel para activar HTTPS_ONLY (default: /opt/dasc/api/config.env)
+#   API_CONFIG_FILE  config.env del panel para activar HTTPS_ONLY (default: /opt/vigex/api/config.env)
 set -euo pipefail
 
-APP_NAME="DASC Server Manager"
+APP_NAME="Vigex"
 CERT_TYPE="${CERT_TYPE:-selfsigned}"
 DOMAIN="${DOMAIN:-}"
 CERTBOT_EMAIL="${CERTBOT_EMAIL:-}"
 SERVER_NAME="${SERVER_NAME:-_}"
 UPSTREAM_HOST="${UPSTREAM_HOST:-127.0.0.1}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8000}"
-API_CONFIG_FILE="${API_CONFIG_FILE:-/opt/dasc/api/config.env}"
+API_CONFIG_FILE="${API_CONFIG_FILE:-/opt/vigex/api/config.env}"
 
-NGINX_SITE_AVAILABLE="/etc/nginx/sites-available/dasc-api"
-NGINX_SITE_ENABLED="/etc/nginx/sites-enabled/dasc-api"
+NGINX_SITE_AVAILABLE="/etc/nginx/sites-available/vigex-api"
+NGINX_SITE_ENABLED="/etc/nginx/sites-enabled/vigex-api"
 
-SSL_DIR="/etc/ssl/dasc"
-SSL_CERT="${SSL_DIR}/dasc-selfsigned.crt"
-SSL_KEY="${SSL_DIR}/dasc-selfsigned.key"
+SSL_DIR="/etc/ssl/vigex"
+SSL_CERT="${SSL_DIR}/vigex-selfsigned.crt"
+SSL_KEY="${SSL_DIR}/vigex-selfsigned.key"
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: ejecuta este script con sudo."
@@ -84,7 +84,7 @@ if [[ "$CERT_TYPE" == "selfsigned" ]]; then
       -newkey rsa:4096 \
       -keyout "$SSL_KEY" \
       -out "$SSL_CERT" \
-      -subj "/C=ES/ST=Lab/L=Lab/O=DASC/OU=Proyecto/CN=${SERVER_NAME}"
+      -subj "/C=ES/ST=Lab/L=Lab/O=Vigex/OU=Proyecto/CN=${SERVER_NAME}"
 
     chmod 600 "$SSL_KEY"
     chmod 644 "$SSL_CERT"
@@ -188,25 +188,25 @@ if [[ "$CERT_TYPE" == "certbot" ]]; then
   systemctl reload nginx
 fi
 
-# ── Activar DASC_SESSION_HTTPS_ONLY en config.env del panel ──────────────────
-echo "==> Activando DASC_SESSION_HTTPS_ONLY=true en el panel"
+# ── Activar VIGEX_SESSION_HTTPS_ONLY en config.env del panel ──────────────────
+echo "==> Activando VIGEX_SESSION_HTTPS_ONLY=true en el panel"
 if [[ -f "${API_CONFIG_FILE}" ]]; then
-  if grep -qE "^DASC_SESSION_HTTPS_ONLY=" "${API_CONFIG_FILE}"; then
-    sed -i -E "s|^DASC_SESSION_HTTPS_ONLY=.*|DASC_SESSION_HTTPS_ONLY=true|" "${API_CONFIG_FILE}"
-    echo "==> DASC_SESSION_HTTPS_ONLY actualizado a true en ${API_CONFIG_FILE}"
+  if grep -qE "^VIGEX_SESSION_HTTPS_ONLY=" "${API_CONFIG_FILE}"; then
+    sed -i -E "s|^VIGEX_SESSION_HTTPS_ONLY=.*|VIGEX_SESSION_HTTPS_ONLY=true|" "${API_CONFIG_FILE}"
+    echo "==> VIGEX_SESSION_HTTPS_ONLY actualizado a true en ${API_CONFIG_FILE}"
   else
-    echo "DASC_SESSION_HTTPS_ONLY=true" >> "${API_CONFIG_FILE}"
-    echo "==> DASC_SESSION_HTTPS_ONLY=true añadido a ${API_CONFIG_FILE}"
+    echo "VIGEX_SESSION_HTTPS_ONLY=true" >> "${API_CONFIG_FILE}"
+    echo "==> VIGEX_SESSION_HTTPS_ONLY=true añadido a ${API_CONFIG_FILE}"
   fi
   # Reiniciar el servicio para que tome el cambio
-  if systemctl is-active --quiet dasc-api 2>/dev/null; then
-    systemctl restart dasc-api
-    echo "==> dasc-api reiniciado para aplicar HTTPS_ONLY"
+  if systemctl is-active --quiet vigex-api 2>/dev/null; then
+    systemctl restart vigex-api
+    echo "==> vigex-api reiniciado para aplicar HTTPS_ONLY"
   fi
 else
   echo "AVISO: ${API_CONFIG_FILE} no encontrado."
-  echo "       Añade manualmente: DASC_SESSION_HTTPS_ONLY=true"
-  echo "       Y reinicia dasc-api: sudo systemctl restart dasc-api"
+  echo "       Añade manualmente: VIGEX_SESSION_HTTPS_ONLY=true"
+  echo "       Y reinicia vigex-api: sudo systemctl restart vigex-api"
 fi
 
 # ── Comprobación local ────────────────────────────────────────────────────────
@@ -230,5 +230,5 @@ else
   echo "Certificado: Let's Encrypt / ${DOMAIN}"
 fi
 echo "Sitio nginx: ${NGINX_SITE_AVAILABLE}"
-echo "HTTPS_ONLY : activado en el panel DASC"
+echo "HTTPS_ONLY : activado en el panel Vigex"
 echo "============================================"

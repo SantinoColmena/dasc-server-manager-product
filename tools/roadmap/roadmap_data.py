@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Datos estructurados del roadmap de DASC Server Manager.
+"""Datos estructurados del roadmap de Vigex.
 
 Esta es la cara ESTRUCTURADA del roadmap; su equivalente narrativo para leer
 es ``docs/ROADMAP.md``. Ambos describen el mismo plan y se editan juntos.
 
-El Excel ``docs/roadmap/DASC_Roadmap.xlsx`` se genera SIEMPRE desde aquí con
+El Excel ``docs/roadmap/Vigex_Roadmap.xlsx`` se genera SIEMPRE desde aquí con
 ``generar_roadmap_xlsx.py`` y NUNCA se edita a mano (se regenera).
 
 Convenciones:
@@ -17,7 +17,7 @@ Convenciones:
 """
 
 META = {
-    "producto": "DASC Server Manager",
+    "producto": "Vigex",
     "version": "v1.0-rc1",
     "fase_actual": "Fase 6 - Endurecimiento y producto vendible",
     "actualizado": "2026-06-06",
@@ -97,7 +97,7 @@ ROADMAP = [
 
     # Ruta 6.8 - Endurecimiento infraestructura
     fila("Fase 6", "6.8 Endurecimiento de infraestructura", "R-054", "Cierre de endurecimiento de infraestructura", "Tarea", "Planificada", "Siguiente",
-         "F6-GATE-06", "Pendientes de R-052H y de la auditoría. Al activar HTTPS: DASC_SESSION_HTTPS_ONLY=true.", ""),
+         "F6-GATE-06", "Pendientes de R-052H y de la auditoría. Al activar HTTPS: VIGEX_SESSION_HTTPS_ONLY=true.", ""),
     fila("Fase 6", "6.8 Endurecimiento de infraestructura", "R-054A", "UFW (firewall) por host", "Subtarea", "Planificada", "Siguiente", "F6-GATE-06", "", ""),
     fila("Fase 6", "6.8 Endurecimiento de infraestructura", "R-054B", "HTTPS real / certbot + sesión https_only", "Subtarea", "Planificada", "Siguiente", "F6-GATE-06", "", ""),
     fila("Fase 6", "6.8 Endurecimiento de infraestructura", "R-054C", "fail2ban sobre el log de login", "Subtarea", "Planificada", "Siguiente", "F6-GATE-06", "", ""),
@@ -130,12 +130,12 @@ ROADMAP = [
 
     # ------------------------------------------------------------------ Fase 7 (planificada, detalle medio)
     fila("Fase 7", "", "R-058 -> R-070 (aprox.)", "Central cloud y multi-cliente", "Fase", "Planificada", "Siguiente",
-         "F7-GATE", "Convertir DASC en producto multi-cliente: una Central propia (VPS DASC) que agregue el estado de todas las instalaciones.", ""),
+         "F7-GATE", "Convertir Vigex en producto multi-cliente: una Central propia (VPS Vigex) que agregue el estado de todas las instalaciones.", ""),
     fila("Fase 7", "7.1 Diseño central cloud", "", "Arquitectura de la Central (VPS, HTTPS, topología)", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
     fila("Fase 7", "7.2 Central VPS + HTTPS productivo", "", "Despliegue real de Central Support con dominio + TLS + Nginx", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
     fila("Fase 7", "7.3 Panel multi-cliente", "", "Gestión de clientes, tokens por cliente, rotación y revocación", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
     fila("Fase 7", "7.4 Dashboard de salud", "", "Heartbeat de instalaciones: último backup, alertas, soporte, último contacto", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
-    fila("Fase 7", "7.5 Seguridad central", "", "2FA del equipo DASC, backup de la Central, auditoría de login central", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
+    fila("Fase 7", "7.5 Seguridad central", "", "2FA del equipo Vigex, backup de la Central, auditoría de login central", "Ruta", "Planificada", "Siguiente", "F7-GATE", "", ""),
 
     # ------------------------------------------------------------------ Fase 8 (backlog grueso)
     fila("Fase 8", "", "(se numera al planificar)", "Comercial y escalado", "Fase", "Backlog", "Después",
@@ -196,7 +196,7 @@ PERFILES = [
      "Perfil objetivo de las primeras ventas."),
     ("Pro", "3 servidores (API / DB-logs / backups)", "Cliente con más criticidad",
      "No priorizar antes de Standard estable."),
-    ("Central DASC", "VPS propio del equipo DASC", "Equipo DASC (multi-cliente)",
+    ("Central Vigex", "VPS propio del equipo Vigex", "Equipo Vigex (multi-cliente)",
      "Clave para producto real (Fase 7)."),
 ]
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="${SERVICE_NAME:-dasc-api}"
-NGINX_SITE_NAME="${NGINX_SITE_NAME:-dasc-api-local}"
+SERVICE_NAME="${SERVICE_NAME:-vigex-api}"
+NGINX_SITE_NAME="${NGINX_SITE_NAME:-vigex-api-local}"
 NGINX_SITE_FILE="/etc/nginx/sites-available/${NGINX_SITE_NAME}"
 NGINX_SITE_LINK="/etc/nginx/sites-enabled/${NGINX_SITE_NAME}"
 
@@ -19,7 +19,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> Instalando Nginx para DASC API / panel local cliente"
+echo "==> Instalando Nginx para Vigex API / panel local cliente"
 
 echo "==> Instalando paquete nginx"
 apt-get update
@@ -38,8 +38,8 @@ server {
     listen ${PUBLIC_PORT};
     server_name ${SERVER_NAME};
 
-    access_log /var/log/nginx/dasc-api-local.access.log;
-    error_log  /var/log/nginx/dasc-api-local.error.log;
+    access_log /var/log/nginx/vigex-api-local.access.log;
+    error_log  /var/log/nginx/vigex-api-local.error.log;
 
     client_max_body_size 20M;
 
@@ -84,7 +84,7 @@ echo "==> Prueba local proxy"
 curl -I "http://127.0.0.1:${PUBLIC_PORT}/" || true
 
 echo
-echo "OK: Nginx configurado como reverse proxy para DASC API / panel local."
+echo "OK: Nginx configurado como reverse proxy para Vigex API / panel local."
 echo "URL local: http://127.0.0.1:${PUBLIC_PORT}/"
 echo "Backend:   http://${APP_HOST}:${APP_PORT}"
 echo

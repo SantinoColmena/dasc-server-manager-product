@@ -1,8 +1,8 @@
-# Herramientas gratuitas de ticketing para soporte DASC
+# Herramientas gratuitas de ticketing para soporte Vigex
 
 ## Objetivo
 
-Definir qué herramientas de ticketing puede usar DASC Server Manager sin depender inicialmente de planes de pago.
+Definir qué herramientas de ticketing puede usar Vigex sin depender inicialmente de planes de pago.
 
 ## Principio
 
@@ -32,7 +32,7 @@ Las herramientas de ticketing se usan internamente para organizar, clasificar y 
 
 ## Uso recomendado
 
-Opción inicial recomendada para DASC.
+Opción inicial recomendada para Vigex.
 
 Motivos:
 
@@ -43,16 +43,16 @@ Motivos:
 - Permite formularios, colas y estados.
 - Permite trabajar con tickets sin exponer GitHub al cliente.
 
-## Encaje con DASC
+## Encaje con Vigex
 
 ~~~text
 Cliente envía email o formulario
         ↓
 Jira crea o centraliza la solicitud
         ↓
-Equipo DASC clasifica el ticket
+Equipo Vigex clasifica el ticket
         ↓
-Equipo DASC trabaja internamente
+Equipo Vigex trabaja internamente
         ↓
 Cliente recibe respuesta clara
         ↓
@@ -61,13 +61,13 @@ Ticket se cierra con evidencia
 
 ## Uso con 1-2 agentes
 
-Para el estado actual de DASC, Jira Free encaja porque el equipo de soporte inicial sería pequeño.
+Para el estado actual de Vigex, Jira Free encaja porque el equipo de soporte inicial sería pequeño.
 
 Ejemplo:
 
 ~~~text
 Agente 1: Santino
-Agente 2: colaborador DASC
+Agente 2: colaborador Vigex
 ~~~
 
 ## Ventajas
@@ -86,7 +86,7 @@ Agente 2: colaborador DASC
 
 ## Decisión
 
-Jira Service Management Free queda como opción recomendada inicial para gestionar tickets de soporte DASC.
+Jira Service Management Free queda como opción recomendada inicial para gestionar tickets de soporte Vigex.
 
 ## Opción 2 - Zammad self-hosted
 
@@ -102,14 +102,14 @@ Motivos:
 - Permite gestionar tickets de soporte.
 - Permite mantener más control sobre datos e infraestructura.
 
-## Encaje con DASC
+## Encaje con Vigex
 
 ~~~text
 Cliente contacta por email o formulario
         ↓
 Zammad centraliza la incidencia
         ↓
-Equipo DASC gestiona el ticket
+Equipo Vigex gestiona el ticket
         ↓
 Se responde y documenta
         ↓
@@ -148,7 +148,7 @@ Se reserva para una fase comercial real.
 
 ## Motivo
 
-Freshdesk puede ser útil para aprovechar un periodo gratuito cuando DASC esté cerca de vender o pilotar con clientes reales.
+Freshdesk puede ser útil para aprovechar un periodo gratuito cuando Vigex esté cerca de vender o pilotar con clientes reales.
 
 ## Decisión
 
@@ -164,13 +164,13 @@ Razones:
 
 - No se quiere añadir complejidad antes de tiempo.
 - No se ha validado coste operativo real.
-- DASC todavía está priorizando soporte simple y ticketing básico.
+- Vigex todavía está priorizando soporte simple y ticketing básico.
 
 ## Decisión
 
 GLPI queda descartado temporalmente.
 
-Podrá reevaluarse si DASC necesita inventario IT, CMDB o gestión más avanzada de activos.
+Podrá reevaluarse si Vigex necesita inventario IT, CMDB o gestión más avanzada de activos.
 
 ## Estrategia recomendada
 
@@ -197,7 +197,7 @@ Valorar Zammad si se quiere autogestión
 
 ## Conclusión
 
-DASC puede mantener canales sencillos para clientes y usar herramientas gratuitas o sin coste inicial para organizar soporte internamente.
+Vigex puede mantener canales sencillos para clientes y usar herramientas gratuitas o sin coste inicial para organizar soporte internamente.
 
 La opción inicial más recomendable es Jira Service Management Free.
 

@@ -1,8 +1,8 @@
-﻿# Propuesta de valor comercial - DASC Server Manager
+﻿# Propuesta de valor comercial - Vigex
 
-## 1. Qué es DASC Server Manager
+## 1. Qué es Vigex
 
-DASC Server Manager es una herramienta local pensada para pequeñas y medianas empresas que necesitan controlar sus copias de seguridad, servicios, logs y alertas desde un panel web sencillo.
+Vigex es una herramienta local pensada para pequeñas y medianas empresas que necesitan controlar sus copias de seguridad, servicios, logs y alertas desde un panel web sencillo.
 
 El producto permite centralizar tareas básicas de administración de servidores sin depender completamente de soluciones externas, servicios cloud complejos o procesos manuales difíciles de controlar.
 
@@ -16,7 +16,7 @@ Muchas pequeñas empresas tienen bases de datos, servidores o servicios internos
 
 En muchos casos, los backups se realizan de forma manual, no se comprueban con frecuencia o dependen de una única persona técnica. Esto puede generar riesgos importantes para la empresa.
 
-Los problemas principales que resuelve DASC Server Manager son:
+Los problemas principales que resuelve Vigex son:
 
 - Falta de control sobre las copias de seguridad.
 - Riesgo de pérdida de datos.
@@ -31,7 +31,7 @@ Los problemas principales que resuelve DASC Server Manager son:
 
 ## 3. Cliente objetivo
 
-DASC Server Manager está pensado principalmente para pequeñas y medianas empresas que trabajan con servidores propios, bases de datos locales o servicios internos.
+Vigex está pensado principalmente para pequeñas y medianas empresas que trabajan con servidores propios, bases de datos locales o servicios internos.
 
 El cliente ideal no necesariamente dispone de un gran departamento técnico, pero sí necesita proteger sus datos y tener una forma sencilla de revisar el estado de sus sistemas.
 
@@ -50,7 +50,7 @@ Ejemplos de clientes objetivo:
 
 ## 4. Propuesta de valor
 
-DASC Server Manager permite a una empresa controlar sus backups, logs, servicios y alertas desde un único panel local, reduciendo errores humanos y mejorando la visibilidad sobre las operaciones del servidor.
+Vigex permite a una empresa controlar sus backups, logs, servicios y alertas desde un único panel local, reduciendo errores humanos y mejorando la visibilidad sobre las operaciones del servidor.
 
 La propuesta de valor se basa en cuatro ideas principales:
 
@@ -96,7 +96,7 @@ Los beneficios principales para el cliente son:
 
 Existen soluciones de backup, monitorización y administración más avanzadas, pero muchas veces están pensadas para empresas grandes, requieren conocimientos técnicos elevados o tienen costes recurrentes altos.
 
-DASC Server Manager se diferencia porque busca ser:
+Vigex se diferencia porque busca ser:
 
 - Más sencillo de entender.
 - Más directo para una PyME.
@@ -112,13 +112,13 @@ No pretende sustituir herramientas empresariales avanzadas de ciberseguridad, si
 
 ## 7. Mensaje comercial corto
 
-DASC Server Manager ayuda a pequeñas y medianas empresas a proteger sus datos y controlar sus servidores mediante un panel local sencillo para backups, logs, servicios y alertas.
+Vigex ayuda a pequeñas y medianas empresas a proteger sus datos y controlar sus servidores mediante un panel local sencillo para backups, logs, servicios y alertas.
 
 ---
 
 ## 8. Pitch breve
 
-Con DASC Server Manager, una PyME puede saber si sus backups se están realizando correctamente, revisar el historial de acciones, controlar servicios básicos y recibir alertas desde un único panel local, sin depender de soluciones complejas ni de procesos manuales poco fiables.
+Con Vigex, una PyME puede saber si sus backups se están realizando correctamente, revisar el historial de acciones, controlar servicios básicos y recibir alertas desde un único panel local, sin depender de soluciones complejas ni de procesos manuales poco fiables.
 
 ---
 

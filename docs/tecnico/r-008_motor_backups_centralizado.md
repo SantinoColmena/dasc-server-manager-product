@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es centralizar la lógica de backups de DASC Server Manager en un único motor claro, mantenible y preparado para crecer.
+El objetivo de esta tarea es centralizar la lógica de backups de Vigex en un único motor claro, mantenible y preparado para crecer.
 
 Actualmente el proyecto ya permite ejecutar backups desde el panel web mediante FastAPI y un script Bash remoto. Esta solución funciona para el MVP, pero de cara a convertir el proyecto en producto es necesario ordenar mejor la lógica de copias.
 
@@ -40,7 +40,7 @@ Ejemplo de petición:
 ~~~text
 tipo: full
 base_datos: employees
-destino: /home/dasc/backups
+destino: /home/vigex/backups
 nombre: backup-YYYYMMDD-HHMM.sql.gz
 compresion: gzip
 retencion: 30
@@ -53,7 +53,7 @@ Ejemplo de resultado:
 ~~~text
 estado: OK
 tipo: full
-archivo: /home/dasc/backups/backup-20260522-1830.sql.gz
+archivo: /home/vigex/backups/backup-20260522-1830.sql.gz
 fecha: 2026-05-22 18:30
 mensaje: Backup completo creado correctamente
 ~~~

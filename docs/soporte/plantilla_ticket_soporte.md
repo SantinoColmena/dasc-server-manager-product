@@ -4,13 +4,13 @@
 
 | Campo | Valor |
 |---|---|
-| ID ticket | DASC-YYYY-NNN |
+| ID ticket | Vigex-YYYY-NNN |
 | Fecha apertura |  |
 | Cliente |  |
 | Persona contacto |  |
 | Canal entrada | Email / Formulario / WhatsApp / Teléfono / Otro |
 | Plan | Lite / PyME / Pro |
-| Responsable DASC |  |
+| Responsable Vigex |  |
 | Estado | Abierto / En análisis / En curso / Esperando cliente / Cerrado |
 
 ## Clasificación

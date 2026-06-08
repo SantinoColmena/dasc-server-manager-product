@@ -1,4 +1,4 @@
-# Onboarding de nuevo cliente — DASC Server Manager
+# Onboarding de nuevo cliente — Vigex
 ## R-084 / Ruta 11.1
 
 Checklist completo para activar un nuevo cliente desde el primer contacto
@@ -10,10 +10,10 @@ hasta que el panel esté funcionando en producción y el cliente lo use con auto
 
 | # | Tarea | Responsable | Estado |
 |---|-------|-------------|--------|
-| A1 | Enviar propuesta comercial (`docs/comercial/plantilla_propuesta.md`) | DASC | ☐ |
-| A2 | Clarificar perfil: número de servidores, servicios monitorizados, BD | DASC | ☐ |
-| A3 | Confirmar plan (Lite / Standard / Pro) y precio mensual | DASC + Cliente | ☐ |
-| A4 | Acordar fecha de instalación (recomendar: martes-jueves, horario de menos actividad) | DASC + Cliente | ☐ |
+| A1 | Enviar propuesta comercial (`docs/comercial/plantilla_propuesta.md`) | Vigex | ☐ |
+| A2 | Clarificar perfil: número de servidores, servicios monitorizados, BD | Vigex | ☐ |
+| A3 | Confirmar plan (Lite / Standard / Pro) y precio mensual | Vigex + Cliente | ☐ |
+| A4 | Acordar fecha de instalación (recomendar: martes-jueves, horario de menos actividad) | Vigex + Cliente | ☐ |
 | A5 | Obtener datos técnicos: IPs de los servidores, OS, acceso SSH root/sudo | Cliente | ☐ |
 | A6 | Cliente acepta términos y política de privacidad | Cliente | ☐ |
 | A7 | Configurar método de pago (Stripe Payment Link o transferencia + factura) | Cliente | ☐ |
@@ -42,24 +42,24 @@ notepad /tmp/config_cliente_EMPRESA.env
 
 ```powershell
 # Usar el asistente Windows (Ruta 8.2):
-.\tools\windows\instalar_dasc_windows.ps1
+.\tools\windows\instalar_vigex_windows.ps1
 ```
 
 O desde SSH directamente:
 ```bash
 # Copiar el repo y ejecutar el instalador en el servidor API del cliente
 ssh admin@IP_SERVIDOR_CLIENTE
-sudo bash /tmp/deploy/api/install_dasc_api.sh
+sudo bash /tmp/deploy/api/install_vigex_api.sh
 ```
 
 ### B3 — Verificación técnica post-instalación
 
 | Check | Comando | Esperado |
 |-------|---------|---------|
-| Servicio activo | `systemctl status dasc-api` | `Active: active (running)` |
+| Servicio activo | `systemctl status vigex-api` | `Active: active (running)` |
 | Panel accesible | `curl -I http://localhost:8000` | `HTTP/1.1 200 OK` |
 | HTTPS (si nginx instalado) | `curl -I https://IP_CLIENTE` | `HTTP/2 200` |
-| SSH al servidor DB | `ssh dasc@IP_DB hostname` | hostname sin contraseña |
+| SSH al servidor DB | `ssh vigex@IP_DB hostname` | hostname sin contraseña |
 | Backup de prueba | Panel → Copias → Ejecutar ahora | Estado `OK` en historial |
 | Alerta de prueba | Panel → Alertas → Probar alertas | Email/Telegram recibido |
 | Heartbeat Central | Central → Salud global | Cliente aparece en 🟢 verde |
@@ -86,7 +86,7 @@ sudo bash /tmp/deploy/api/install_dasc_api.sh
 - [ ] URL del panel con HTTPS
 - [ ] Usuario y contraseña admin (en papel o gestor de contraseñas)
 - [ ] Guía rápida PDF: `deploy/api/package/static/docs/guia_alertas_telegram.pdf`
-- [ ] Contacto de soporte: `soporte@dascpyme.es` y cómo abrir ticket desde el panel
+- [ ] Contacto de soporte: `soporte@vigexpyme.es` y cómo abrir ticket desde el panel
 
 ---
 
@@ -102,7 +102,7 @@ sudo bash /tmp/deploy/api/install_dasc_api.sh
 
 ---
 
-## Fase E — Alta en sistemas DASC
+## Fase E — Alta en sistemas Vigex
 
 | Acción | Herramienta | Notas |
 |--------|-------------|-------|

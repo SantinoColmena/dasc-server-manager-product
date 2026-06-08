@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="dasc-api"
-PADRE_DIR="/opt/dasc"
-INSTALL_DIR="/opt/dasc/api"
+SERVICE_NAME="vigex-api"
+PADRE_DIR="/opt/vigex"
+INSTALL_DIR="/opt/vigex/api"
 DATA_DIR="${INSTALL_DIR}/data"
 ALERTS_DB="${DATA_DIR}/alerts.db"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
@@ -13,7 +13,7 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 1
 fi
 
-echo "Vas a desinstalar el panel DASC de esta máquina."
+echo "Vas a desinstalar el panel Vigex de esta máquina."
 echo "Se eliminarán:"
 echo "  - $INSTALL_DIR"
 echo "  - $DATA_DIR"

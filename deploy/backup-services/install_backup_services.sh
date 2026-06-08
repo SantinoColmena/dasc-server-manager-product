@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_USER="${APP_USER:-dasc}"
+APP_USER="${APP_USER:-vigex}"
 APP_GROUP="${APP_GROUP:-$APP_USER}"
 APP_HOME="/home/${APP_USER}"
 BACKUP_DIR="${BACKUP_DIR:-${APP_HOME}/backups}"
 
 DB_HOST="${DB_HOST:-}"
 DB_NAME="${DB_NAME:-employees}"
-DB_BACKUP_USER="${DB_BACKUP_USER:-dasc_backup}"
+DB_BACKUP_USER="${DB_BACKUP_USER:-vigex_backup}"
 DB_BACKUP_PASS="${DB_BACKUP_PASS:-}"
-DB_RESTORE_USER="${DB_RESTORE_USER:-dasc_restore}"
+DB_RESTORE_USER="${DB_RESTORE_USER:-vigex_restore}"
 DB_RESTORE_PASS="${DB_RESTORE_PASS:-}"
 
 INSTALL_BACKUP_SCRIPT="/usr/local/bin/backups_api.sh"
@@ -18,7 +18,7 @@ INSTALL_SERVICES_SCRIPT="/usr/local/bin/servicios_api.sh"
 INSTALL_EXTERNAL_SYNC_SCRIPT="/usr/local/bin/sync_external_backup.sh"
 INSTALL_RESTORE_SCRIPT="/usr/local/bin/restore_api.sh"
 INSTALL_RESTORE_DRILL_SCRIPT="/usr/local/bin/restore_drill_api.sh"
-SUDOERS_FILE="/etc/sudoers.d/dasc-servicios"
+SUDOERS_FILE="/etc/sudoers.d/vigex-servicios"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -87,8 +87,8 @@ is_empty_or_placeholder() {
   [[ -z "$value" ||
      "$value" == CAMBIAR_* ||
      "$value" == "NO_GUARDAR_EN_GIT" ||
-     "$value" == "dasc_backup_2026" ||
-     "$value" == "dasc_restore_2026" ||
+     "$value" == "vigex_backup_2026" ||
+     "$value" == "vigex_restore_2026" ||
      "$value" == "<IP_SERVIDOR_DB>" ||
      "$value" == "<IP_SERVIDOR_BACKUPS>" ||
      "$value" == "<IP_SERVIDOR_DB_BACKUPS>" ]]
@@ -125,21 +125,21 @@ prompt_secret_var() {
   echo "==> ${key} configurado manualmente (no se muestra)"
 }
 
-DASC_PROFILE_VALUE="${DASC_PROFILE:-custom}"
-DASC_PROFILE_VALUE="$(echo "$DASC_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
+VIGEX_PROFILE_VALUE="${VIGEX_PROFILE:-custom}"
+VIGEX_PROFILE_VALUE="$(echo "$VIGEX_PROFILE_VALUE" | tr '[:upper:]' '[:lower:]')"
 
-case "$DASC_PROFILE_VALUE" in
+case "$VIGEX_PROFILE_VALUE" in
   lite|standard|pro|custom)
     ;;
   *)
-    echo "ERROR: DASC_PROFILE debe ser lite, standard, pro o custom."
+    echo "ERROR: VIGEX_PROFILE debe ser lite, standard, pro o custom."
     exit 1
     ;;
 esac
 
-echo "==> Perfil DASC backup-services seleccionado: ${DASC_PROFILE_VALUE}"
+echo "==> Perfil Vigex backup-services seleccionado: ${VIGEX_PROFILE_VALUE}"
 
-DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/dasc-db-install-secrets.env}"
+DB_SECRETS_FILE="${DB_SECRETS_FILE:-/root/vigex-db-install-secrets.env}"
 
 if [[ -f "$DB_SECRETS_FILE" ]]; then
   echo "==> Cargando secretos DB desde ${DB_SECRETS_FILE}"
@@ -173,7 +173,7 @@ else
   echo "==> No se encontró ${DB_SECRETS_FILE}. Se usarán variables de entorno o entrada manual."
 fi
 
-case "$DASC_PROFILE_VALUE" in
+case "$VIGEX_PROFILE_VALUE" in
   lite)
     if is_empty_or_placeholder "$DB_HOST"; then
       DB_HOST="127.0.0.1"
@@ -182,7 +182,7 @@ case "$DASC_PROFILE_VALUE" in
     ;;
 
   standard|pro|custom)
-    echo "==> DB_HOST se validará/pedirá para perfil ${DASC_PROFILE_VALUE}"
+    echo "==> DB_HOST se validará/pedirá para perfil ${VIGEX_PROFILE_VALUE}"
     ;;
 esac
 
@@ -280,15 +280,15 @@ if [[ -f "$SSHD_CONFIG" ]]; then
 
   # R-053A/B3: las imagenes cloud de Ubuntu traen un drop-in
   # (60-cloudimg-settings.conf) con PasswordAuthentication no que, al leerse antes
-  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-dasc
+  # que sshd_config, gana (SSH usa el primer valor). Escribimos un drop-in 00-vigex
   # que se lee el primero para garantizar la auth por contrasena del bootstrap.
   SSHD_DROPIN_DIR="/etc/ssh/sshd_config.d"
   if [[ -d "$SSHD_DROPIN_DIR" ]]; then
-    cat > "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf" <<'SSHDROP'
+    cat > "${SSHD_DROPIN_DIR}/00-vigex-ssh.conf" <<'SSHDROP'
 PasswordAuthentication yes
 PubkeyAuthentication yes
 SSHDROP
-    chmod 644 "${SSHD_DROPIN_DIR}/00-dasc-ssh.conf"
+    chmod 644 "${SSHD_DROPIN_DIR}/00-vigex-ssh.conf"
   fi
 
   systemctl restart ssh

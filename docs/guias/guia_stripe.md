@@ -33,9 +33,9 @@ Stripe necesita estos datos para activar los cobros reales:
 En el panel de Stripe → **Catálogo de productos**:
 
 1. **Crear producto** por cada plan:
-   - DASC Lite — €15/mes (tipo: recurrente, mensual)
-   - DASC Standard — €35/mes
-   - DASC Pro — €65/mes
+   - Vigex Lite — €15/mes (tipo: recurrente, mensual)
+   - Vigex Standard — €35/mes
+   - Vigex Pro — €65/mes
    - Añadir opción anual con descuento a cada producto.
 
 2. Stripe generará un **Price ID** por cada variante (p.ej. `price_1AbCdEfGhIjKlMnO`).
@@ -47,7 +47,7 @@ En el panel de Stripe → **Catálogo de productos**:
 Para empezar sin integrar código en la web:
 
 1. Panel Stripe → **Payment Links** → **Crear enlace**.
-2. Selecciona el producto (p.ej. DASC Standard mensual).
+2. Selecciona el producto (p.ej. Vigex Standard mensual).
 3. Activa: "Recopilar dirección de facturación" + "Número fiscal del cliente".
 4. Copia el enlace generado y pégalo en el botón "Empezar con Standard" de `web/index.html`.
 
@@ -76,7 +76,7 @@ Para clientes empresariales que necesiten factura proforma:
 
 ---
 
-## Configuración SMTP para DASC (una vez tengas email profesional)
+## Configuración SMTP para Vigex (una vez tengas email profesional)
 
 Cuando hayas activado el email profesional (ver `guia_dominio_email.md`), actualiza
 `config.env` en el servidor del cliente con los datos SMTP correspondientes:
@@ -85,16 +85,16 @@ Cuando hayas activado el email profesional (ver `guia_dominio_email.md`), actual
 # Para Google Workspace (Gmail empresarial)
 NOTIF_SMTP_HOST=smtp.gmail.com
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@dascpyme.es
+NOTIF_SMTP_USER=soporte@vigexpyme.es
 NOTIF_SMTP_PASS=<contraseña_de_aplicación_de_google>
-NOTIF_EMAIL_FROM=soporte@dascpyme.es
+NOTIF_EMAIL_FROM=soporte@vigexpyme.es
 NOTIF_EMAIL_TO=admin@clienteempresa.com
 
 # Para Zoho Mail (alternativa más barata)
 NOTIF_SMTP_HOST=smtp.zoho.eu
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@dascpyme.es
+NOTIF_SMTP_USER=soporte@vigexpyme.es
 NOTIF_SMTP_PASS=<contraseña_zoho>
 ```
 
-Reinicia el servicio tras el cambio: `sudo systemctl restart dasc-api`
+Reinicia el servicio tras el cambio: `sudo systemctl restart vigex-api`

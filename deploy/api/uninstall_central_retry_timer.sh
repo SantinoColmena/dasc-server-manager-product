@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="dasc-central-retry"
-TIMER_NAME="dasc-central-retry"
-APP_DIR="${APP_DIR:-/opt/dasc/api}"
+SERVICE_NAME="vigex-central-retry"
+TIMER_NAME="vigex-central-retry"
+APP_DIR="${APP_DIR:-/opt/vigex/api}"
 INSTALLED_SCRIPT="${APP_DIR}/scripts/retry_central_pending.py"
 
-echo "==> Desinstalando timer de reintento central DASC"
+echo "==> Desinstalando timer de reintento central Vigex"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "ERROR: ejecuta este desinstalador con sudo."

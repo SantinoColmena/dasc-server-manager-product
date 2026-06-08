@@ -1,8 +1,8 @@
-﻿# Inventario del estado actual del código - DASC Server Manager
+﻿# Inventario del estado actual del código - Vigex
 
 ## 1. Objetivo del inventario
 
-Este documento recoge el estado actual del código heredado del proyecto académico de DASC Server Manager.
+Este documento recoge el estado actual del código heredado del proyecto académico de Vigex.
 
 El objetivo no es copiar todo directamente al repositorio producto, sino analizar qué partes del MVP son útiles, qué partes necesitan limpieza y qué elementos deben descartarse o rehacerse antes de convertir el proyecto en un producto más serio.
 
@@ -336,7 +336,7 @@ Limitaciones:
 
 - Integración más visual que funcional.
 - No hay métricas propias de Cacti integradas dentro del panel.
-- No hay correlación directa entre eventos de DASC y métricas de Cacti.
+- No hay correlación directa entre eventos de Vigex y métricas de Cacti.
 - Puede ser complejo para clientes pequeños.
 
 Valor para el producto:
@@ -345,7 +345,7 @@ Medio.
 
 Decisión inicial:
 
-Mantener como módulo opcional, especialmente para DASC Pro.
+Mantener como módulo opcional, especialmente para Vigex Pro.
 
 Prioridad de mejora:
 
@@ -396,8 +396,8 @@ Estado: funcionales para laboratorio.
 
 Scripts identificados:
 
-- install_dasc_api.sh.
-- uninstall_dasc_api.sh.
+- install_vigex_api.sh.
+- uninstall_vigex_api.sh.
 - install_db.sh.
 - uninstall_db.sh.
 - install_backup_services.sh.
@@ -539,8 +539,8 @@ Archivos o carpetas candidatas:
 - requirements.txt.
 - templates.
 - static.
-- install_dasc_api.sh.
-- uninstall_dasc_api.sh.
+- install_vigex_api.sh.
+- uninstall_vigex_api.sh.
 - install_db.sh.
 - uninstall_db.sh.
 - install_backup_services.sh.
@@ -689,7 +689,7 @@ R-004 se considera finalizada cuando:
 
 ## 10. Conclusión
 
-El MVP académico de DASC Server Manager demuestra que la idea principal funciona: centralizar backups, logs, servicios y administración básica desde un panel web.
+El MVP académico de Vigex demuestra que la idea principal funciona: centralizar backups, logs, servicios y administración básica desde un panel web.
 
 Sin embargo, para evolucionar hacia un producto real, es necesario realizar una fase de limpieza, endurecimiento, validación y documentación.
 

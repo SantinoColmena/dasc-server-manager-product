@@ -59,7 +59,7 @@ Este nivel es válido para el equipo, pero no para cliente final.
 Una herramienta pasa a producto validado cuando:
 
 - Funciona fuera de una prueba puramente documental.
-- Está integrada con instaladores, scripts reales o el panel DASC.
+- Está integrada con instaladores, scripts reales o el panel Vigex.
 - Usa datos reales o simulados de forma representativa.
 - Tiene documentación técnica clara.
 - Se ha probado en entorno de laboratorio o piloto.
@@ -162,6 +162,6 @@ Antes de vender a una PyME debe cumplirse:
 
 ## Conclusión
 
-DASC puede seguir avanzando por la Fase 6, pero no debe interpretar cada herramienta interna como una herramienta final de cliente.
+Vigex puede seguir avanzando por la Fase 6, pero no debe interpretar cada herramienta interna como una herramienta final de cliente.
 
 La venta empieza cuando el producto sea instalable, entendible, mantenible y usable por una PyME sin pasar por GitHub.

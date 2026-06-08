@@ -1,7 +1,7 @@
-# Hoja de ruta — DASC Server Manager
+# Hoja de ruta — Vigex
 
 > **Fuente de verdad única.** Este documento es el roadmap canónico del producto.
-> El Excel (`docs/roadmap/DASC_Roadmap.xlsx`) es una **vista derivada** que se
+> El Excel (`docs/roadmap/Vigex_Roadmap.xlsx`) es una **vista derivada** que se
 > genera a partir de esta información; nunca al revés. Si algo cambia, se cambia
 > aquí, en el mismo commit que el trabajo, para que el plan no vuelva a
 > desincronizarse del código.
@@ -62,7 +62,7 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 
 1. ~~**R-053 → R-057** — Fases de validación, hardening, guías y freeze.~~ ✅ Todas cerradas 2026-06-07.
 2. **Ahora — Fase 7:** Madurez del producto (UI/UX, dashboard, informes, monitorización, notificaciones).
-3. **Siguiente — Fase 8:** Madurez operacional (instalador v2, actualizador, backup de DASC, soporte real, IA triage).
+3. **Siguiente — Fase 8:** Madurez operacional (instalador v2, actualizador, backup de Vigex, soporte real, IA triage).
 4. **Siguiente — Fase 9:** Infraestructura de negocio (dominio, web, planes, pagos, legal).
 5. **Gate F9-GATE superado → R-048:** Primer cliente de pago real.
 6. **Después — Fase 10:** Central cloud, multi-idioma, IA avanzada (financiado por ingresos).
@@ -145,7 +145,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 > surgiendo sin romper la numeración ni inflar el roadmap por adelantado.
 
 #### Ruta 6.7 — Validación de instalación desde cero · ✅ Cerrada (Lite ✅ Standard ✅ Pro ✅)
-- **R-053** ✅ — Instalar DASC en VM limpia por cada perfil, sin pasos manuales
+- **R-053** ✅ — Instalar Vigex en VM limpia por cada perfil, sin pasos manuales
   ocultos, partiendo del repo/tag. *Depende de:* H-1 y M/L de la auditoría (✅).
   **Cerrada 2026-06-07** — los 3 perfiles validados en VMs limpias, 5 defectos
   corregidos (B1-B5). Evidencia en `docs/validaciones/R-053A/B/C/D_*`.
@@ -158,16 +158,16 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
     con `sync_external_backup.sh` tipo `local`, exit 0. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053A_validacion_lite.md`.
   - `R-053B` ✅ — Validación perfil **Standard** (2 servidores).
-    Instalación desde cero en 2 VMs limpias (dasc-std-db + dasc-std-api) completamente
+    Instalación desde cero en 2 VMs limpias (vigex-std-db + vigex-std-api) completamente
     funcional tras corregir 2 defectos: **B4** (`mysqlbinlog` ausente en host backup
-    Standard/Pro — convertido a AVISO no bloqueante) y **B5** (`unset DASC_PASS`
+    Standard/Pro — convertido a AVISO no bloqueante) y **B5** (`unset Vigex_PASS`
     dentro del bucle SSH multi-host causaba salida silenciosa del installer con
     `set -euo pipefail`). SSH sin contraseña panel→DB, BD logs, backup real vía red
     y HTTP 200 verificados. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053B_validacion_standard.md`.
   - `R-053C` ✅ — Validación perfil **Pro** (3 servidores).
-    Instalación desde cero en 3 VMs limpias (dasc-pro-db + dasc-pro-backup +
-    dasc-pro-api) completamente funcional sin defectos nuevos. Los fixes B4 y B5
+    Instalación desde cero en 3 VMs limpias (vigex-pro-db + vigex-pro-backup +
+    vigex-pro-api) completamente funcional sin defectos nuevos. Los fixes B4 y B5
     de R-053B cubren también el perfil Pro. SSH sin contraseña a 2 hosts remotos,
     backup real vía SSH panel→backup→db y HTTP 200 verificados. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053C_validacion_pro.md`.
@@ -179,8 +179,8 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 - **R-054** ✅ — Endurecimiento de infraestructura completado. **CERRADO 2026-06-07**.
   Evidencia: `docs/validaciones/R-054_validacion_endurecimiento.md`.
   - `R-054A` ✅ — **UFW** por host: `harden_ufw_api.sh`, `harden_ufw_db.sh`, `harden_ufw_backup.sh`.
-  - `R-054B` ✅ — **HTTPS** (autofirmado) + certbot (opcional) + `DASC_SESSION_HTTPS_ONLY=true` activado.
-  - `R-054C` ✅ — **fail2ban**: jaulas `sshd` + `dasc-auth`; filtro DASC validado con `fail2ban-regex`.
+  - `R-054B` ✅ — **HTTPS** (autofirmado) + certbot (opcional) + `VIGEX_SESSION_HTTPS_ONLY=true` activado.
+  - `R-054C` ✅ — **fail2ban**: jaulas `sshd` + `vigex-auth`; filtro Vigex validado con `fail2ban-regex`.
   - `R-054D` ✅ — **`pip-audit`**: `starlette→1.0.1`, `python-multipart→0.0.27`; ambos paquetes limpios.
 
 #### Ruta 6.9 — Experiencia Windows y limpieza final · 🟡 En curso
@@ -252,21 +252,21 @@ activo ✅ (Telegram + email); informes configurables y enviados en prueba ✅; 
 
 ## 6. Fase 8 — Madurez operacional · ✅ CERRADA 2026-06-08
 
-> **Objetivo:** que instalar, actualizar y operar DASC en producción sea seguro
+> **Objetivo:** que instalar, actualizar y operar Vigex en producción sea seguro
 > y esté documentado. Sin esta fase, un cliente real sería un riesgo operacional.
 
 | Ruta | Contenido | Coste estimado |
 |---|---|---|
-| ✅ 8.1+8.3 Actualizador DASC | `update_dasc_api.sh`: actualiza código preservando config.env, .ssh/, data/ y reports/. Copia de seguridad automática del código anterior. Modo no interactivo para CI/CD. ✅ Cerrado 2026-06-08 (R-065). | $0 |
-| ✅ 8.2 Compatibilidad Windows | `tools/windows/instalar_dasc_windows.ps1`: asistente PowerShell que verifica SSH, recopila datos, copia archivos vía SCP y ejecuta el instalador remoto con env vars. ✅ Cerrado 2026-06-08 (R-067). | $0 |
-| ✅ 8.4 Backup de DASC | `backup_dasc_api.sh`: empaqueta config.env, data/, .ssh/ y código en tar.gz con timestamp. Limpieza automática de las 10 copias más recientes. Instrucciones de restauración en la salida. ✅ Cerrado 2026-06-08 (R-066). | $0 |
+| ✅ 8.1+8.3 Actualizador Vigex | `update_vigex_api.sh`: actualiza código preservando config.env, .ssh/, data/ y reports/. Copia de seguridad automática del código anterior. Modo no interactivo para CI/CD. ✅ Cerrado 2026-06-08 (R-065). | $0 |
+| ✅ 8.2 Compatibilidad Windows | `tools/windows/instalar_vigex_windows.ps1`: asistente PowerShell que verifica SSH, recopila datos, copia archivos vía SCP y ejecuta el instalador remoto con env vars. ✅ Cerrado 2026-06-08 (R-067). | $0 |
+| ✅ 8.4 Backup de Vigex | `backup_vigex_api.sh`: empaqueta config.env, data/, .ssh/ y código en tar.gz con timestamp. Limpieza automática de las 10 copias más recientes. Instrucciones de restauración en la salida. ✅ Cerrado 2026-06-08 (R-066). | $0 |
 | ✅ 8.5 Soporte de producción | Webhook Jira configurable (`JIRA_WEBHOOK_URL` en config.env): POST fire-and-forget al crear cualquier ticket desde el panel. Compatible con Jira, GitHub Issues y cualquier webhook JSON. ✅ Cerrado 2026-06-08 (R-068). | $0 |
 | ✅ 8.6 IA de triage | FAQ con búsqueda por palabras clave en `/soporte/faq`: 8 preguntas sobre backups, disco, servicios, Telegram, SSH, actualización y contraseñas. API `/api/soporte/faq?q=` para AJAX. ✅ Cerrado 2026-06-08 (R-069). | $0 |
 | ✅ 8.7 DRO | Runbook `/recuperacion`: 6 pasos guiados (verificar → integridad → restaurar → servicios → alertas → documentar). Estado actual del servidor (disco, última copia, alertas) en tiempo real. ✅ Cerrado 2026-06-08 (R-070). | $0 |
 
 **Gate de salida `F8-GATE` "Operación sin riesgos":** ✅ Superado 2026-06-08.
-proceso de instalación, actualización y recuperación documentado ✅; backup de DASC
-restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ responde
+proceso de instalación, actualización y recuperación documentado ✅; backup de Vigex
+restaurable ✅ (backup_vigex_api.sh); Jira recibe tickets via webhook ✅; FAQ responde
 8 preguntas sin intervención humana ✅ (búsqueda por palabras clave).
 
 ---
@@ -303,13 +303,13 @@ restaurable ✅ (backup_dasc_api.sh); Jira recibe tickets via webhook ✅; FAQ r
 
 ## 8. Fase 10 — Central cloud y multi-cliente · 🟡 EN CURSO (acción pendiente del usuario)
 
-> **Objetivo:** convertir DASC en producto multi-cliente de verdad — una Central
+> **Objetivo:** convertir Vigex en producto multi-cliente de verdad — una Central
 > propia en VPS que agregue el estado de todas las instalaciones.
 > Se financia con los ingresos de los primeros clientes.
 
 | Ruta | Contenido | Estado |
 |---|---|---|
-| ✅ 10.1 Diseño central cloud | Arquitectura del VPS DASC, modelo HTTPS productivo, topología multi-cliente. ✅ Entregado 2026-06-08 (R-077). `docs/tecnico/arquitectura_central_cloud.md` | ✅ |
+| ✅ 10.1 Diseño central cloud | Arquitectura del VPS Vigex, modelo HTTPS productivo, topología multi-cliente. ✅ Entregado 2026-06-08 (R-077). `docs/tecnico/arquitectura_central_cloud.md` | ✅ |
 | 10.2 Central VPS + HTTPS productivo | Despliegue real con dominio propio, TLS válido, nginx. Guía completa en `docs/guias/guia_central_vps.md`. ✅ Guía entregada 2026-06-08 (R-078). ⏳ **Pendiente: contratar VPS y ejecutar la guía.** | 🟡 |
 | ✅ 10.3 Panel multi-cliente | Gestión de clientes: alta, baja, rotación de tokens. Panel admin `/clientes` en Central Support. ✅ Entregado 2026-06-08 (R-079). | ✅ |
 | ✅ 10.4 Dashboard de salud global | Heartbeat cada 5 min desde paneles clientes. Endpoint `POST /api/v1/heartbeat` en Central. Dashboard `/salud` con semáforos. ✅ Entregado 2026-06-08 (R-080). | ✅ |
@@ -374,7 +374,7 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | **Lite** | 1 servidor + copia externa **obligatoria** | PyME muy pequeña / laboratorio | No vender sin copia externa real |
 | **Standard** | 2 servidores (panel/API + DB/backups) | **Objetivo inicial** PyME | Perfil objetivo de las primeras ventas |
 | **Pro** | 3 servidores (API / DB-logs / backups) | Cliente con más criticidad | No priorizar antes de Standard estable |
-| **Central DASC** | VPS propio del equipo DASC | Equipo DASC (multi-cliente) | Clave para producto real (Fase 7) |
+| **Central Vigex** | VPS propio del equipo Vigex | Equipo Vigex (multi-cliente) | Clave para producto real (Fase 7) |
 
 ---
 
@@ -396,6 +396,6 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 ---
 
 > **Origen.** Este roadmap consolida y reemplaza a los tres Excel previos
-> (`DASC_Roadmap_Producto_Tracker`, `DASC_Roadmap_Fase6_v2`,
-> `DASC_Roadmap_Integral_R001_R140`), tomando de cada uno lo válido y anclándolo
+> (`Vigex_Roadmap_Producto_Tracker`, `Vigex_Roadmap_Fase6_v2`,
+> `Vigex_Roadmap_Integral_R001_R140`), tomando de cada uno lo válido y anclándolo
 > al estado real del repositorio.

@@ -1,4 +1,4 @@
-# Changelog — DASC Server Manager
+# Changelog — Vigex
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 Versiones en `MAJOR.MINOR-STAGE` según el ciclo del producto.
@@ -18,12 +18,12 @@ Versiones en `MAJOR.MINOR-STAGE` según el ciclo del producto.
 - Vista interna de tickets con filtros por estado y prioridad.
 - Gestión de estados (Abierto → En progreso → Resuelto → Cerrado) y prioridades.
 - Plantillas de respuesta configurables para el técnico.
-- Separación de roles: vista cliente / acceso técnico DASC.
+- Separación de roles: vista cliente / acceso técnico Vigex.
 
-### DASC Central Support (R-049)
+### Vigex Central (R-049)
 
 - Nueva aplicación independiente (`deploy/central-support/`) — agregador multi-cliente.
-- API REST con autenticación por `X-DASC-Client-Token` por cliente.
+- API REST con autenticación por `X-Vigex-Client-Token` por cliente.
 - Panel web propio con login, lista de tickets y gestión de estado/prioridad.
 - Sincronización bidireccional: el panel local envía tickets al central; el estado
   actualizado en el central se sincroniza de vuelta al panel local.
@@ -48,13 +48,13 @@ Versiones en `MAJOR.MINOR-STAGE` según el ciclo del producto.
 
 ### Instaladores adaptables por perfil (R-036 / R-047)
 
-- `install_dasc_api.sh`, `install_db.sh`, `install_backup_services.sh` adaptan
-  su comportamiento según `DASC_PROFILE` (lite / standard / pro / custom).
+- `install_vigex_api.sh`, `install_db.sh`, `install_backup_services.sh` adaptan
+  su comportamiento según `VIGEX_PROFILE` (lite / standard / pro / custom).
 - Plantillas de `config.env` por perfil en `config/perfiles/`.
 - `scripts/generar_config_perfil.sh` genera `config.env` a partir de la plantilla.
 - Parámetros de host (DB, backup) completamente parametrizados; sin IPs de
   laboratorio en los instaladores de producción.
-- Generación de fichero de secretos `/root/dasc-db-install-secrets.env` por el
+- Generación de fichero de secretos `/root/vigex-db-install-secrets.env` por el
   instalador de DB para coordinar instalaciones multi-host.
 
 ### Hardening de seguridad — auditoría interna
@@ -89,8 +89,8 @@ Hallazgos corregidos durante la auditoría de Fase 6 (antes de R-053):
   con política `deny incoming / allow outgoing` y apertura mínima por host.
 - **HTTPS**: `install_reverse_proxy.sh` actualizado con soporte `CERT_TYPE=selfsigned`
   (autofirmado RSA-4096) y `CERT_TYPE=certbot` (Let's Encrypt). Activa automáticamente
-  `DASC_SESSION_HTTPS_ONLY=true` en `config.env` y reinicia el servicio.
-- **fail2ban**: `harden_fail2ban_api.sh` — jaulas `sshd` + `dasc-auth`; filtro
+  `VIGEX_SESSION_HTTPS_ONLY=true` en `config.env` y reinicia el servicio.
+- **fail2ban**: `harden_fail2ban_api.sh` — jaulas `sshd` + `vigex-auth`; filtro
   personalizado que detecta `GET /login?error=[12]` en el log de nginx.
 - **pip-audit**: dependencias API auditadas; vulnerabilidades corregidas:
   - `starlette` 0.52.1 → 1.0.1 (PYSEC-2026-161)
@@ -137,5 +137,5 @@ pilotos reales, SLA, costes y la base de documentación comercial.
 
 ---
 
-[v1.0-rc1]: https://github.com/colme/dasc-server-manager-product/releases/tag/v1.0-rc1
-[v0.1-interna]: https://github.com/colme/dasc-server-manager-product/releases/tag/v0.1-interna
+[v1.0-rc1]: https://github.com/colme/vigex-server-manager-product/releases/tag/v1.0-rc1
+[v0.1-interna]: https://github.com/colme/vigex-server-manager-product/releases/tag/v0.1-interna

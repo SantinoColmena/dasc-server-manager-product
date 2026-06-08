@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/dasc/api}"
-SERVICE_NAME="${SERVICE_NAME:-dasc-api}"
+APP_DIR="${APP_DIR:-/opt/vigex/api}"
+SERVICE_NAME="${SERVICE_NAME:-vigex-api}"
 SERVICE_FILE="${SERVICE_FILE:-/etc/systemd/system/${SERVICE_NAME}.service}"
-APP_USER="${APP_USER:-dasc-api}"
-APP_GROUP="${APP_GROUP:-dasc-api}"
+APP_USER="${APP_USER:-vigex-api}"
+APP_GROUP="${APP_GROUP:-vigex-api}"
 TEST_USER="${TEST_USER:-santino}"
 
 CONFIG_FILE="${APP_DIR}/config.env"
@@ -18,7 +18,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> R-052E - Endureciendo DASC API local"
+echo "==> R-052E - Endureciendo Vigex API local"
 
 if [ ! -d "$APP_DIR" ]; then
   echo "ERROR: no existe $APP_DIR"
@@ -144,7 +144,7 @@ echo "==> Validación permisos config.env"
 ls -l "$CONFIG_FILE"
 
 if id -u "$TEST_USER" >/dev/null 2>&1; then
-  if sudo -u "$TEST_USER" cat "$CONFIG_FILE" >/tmp/dasc-api-config-read-test.txt 2>/tmp/dasc-api-config-read-test.err; then
+  if sudo -u "$TEST_USER" cat "$CONFIG_FILE" >/tmp/vigex-api-config-read-test.txt 2>/tmp/vigex-api-config-read-test.err; then
     echo "AVISO: ${TEST_USER} todavía puede leer ${CONFIG_FILE}"
   else
     echo "OK: ${TEST_USER} no puede leer ${CONFIG_FILE}"

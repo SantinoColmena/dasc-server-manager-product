@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Crear una base de conocimiento inicial para DASC Server Manager que sirva como referencia para soporte, mantenimiento, demostraciones, resolución de dudas y futuras integraciones con ayuda guiada o IA.
+Crear una base de conocimiento inicial para Vigex que sirva como referencia para soporte, mantenimiento, demostraciones, resolución de dudas y futuras integraciones con ayuda guiada o IA.
 
 Esta base de conocimiento recoge preguntas frecuentes, errores habituales, procedimientos básicos y criterios de actuación.
 
@@ -19,15 +19,15 @@ Este documento puede usarse para:
 
 ## 1. Conceptos básicos
 
-### ¿Qué es DASC Server Manager?
+### ¿Qué es Vigex?
 
-DASC Server Manager es un panel web orientado a pequeñas y medianas empresas que permite centralizar tareas relacionadas con copias de seguridad, logs, servicios, alertas y usuarios.
+Vigex es un panel web orientado a pequeñas y medianas empresas que permite centralizar tareas relacionadas con copias de seguridad, logs, servicios, alertas y usuarios.
 
 Su objetivo es facilitar el control del estado del sistema sin obligar al cliente a manejar directamente comandos complejos.
 
 ### ¿Qué problema resuelve?
 
-DASC ayuda a resolver problemas habituales como:
+Vigex ayuda a resolver problemas habituales como:
 
 - Backups realizados manualmente.
 - Falta de comprobación de copias.
@@ -36,9 +36,9 @@ DASC ayuda a resolver problemas habituales como:
 - Falta de alertas ante errores.
 - Dificultad para saber si una restauración es posible.
 
-### ¿DASC es solo un software?
+### ¿Vigex es solo un software?
 
-No. La visión recomendada es ofrecer DASC como producto-servicio: instalación, configuración, revisión, soporte, alertas, pruebas de restauración e informes.
+No. La visión recomendada es ofrecer Vigex como producto-servicio: instalación, configuración, revisión, soporte, alertas, pruebas de restauración e informes.
 
 ## 2. Módulos principales
 
@@ -80,13 +80,13 @@ Permite limitar qué puede ver o hacer cada usuario dentro del panel.
 
 ## 3. Preguntas frecuentes
 
-### ¿Puedo usar DASC sin conocimientos técnicos?
+### ¿Puedo usar Vigex sin conocimientos técnicos?
 
 Sí, el panel está pensado para simplificar tareas. Aun así, acciones delicadas como restauraciones o cambios de servicios deberían realizarse con soporte técnico.
 
 ### ¿Dónde se guardan las copias?
 
-Depende de la instalación. En laboratorio pueden guardarse en una ruta local como `/home/dasc/backups`. En cliente real debe definirse una ubicación segura y, si es posible, una copia externa.
+Depende de la instalación. En laboratorio pueden guardarse en una ruta local como `/home/vigex/backups`. En cliente real debe definirse una ubicación segura y, si es posible, una copia externa.
 
 ### ¿Qué tipo de backup debo usar?
 
@@ -98,17 +98,17 @@ Depende de la instalación. En laboratorio pueden guardarse en una ruta local co
 
 El error debe quedar registrado en logs y, si las alertas están configuradas, debe enviarse un aviso.
 
-### ¿Puede DASC restaurar datos?
+### ¿Puede Vigex restaurar datos?
 
 Sí, pero la restauración debe hacerse con cuidado. En entornos reales se recomienda validar primero en un entorno seguro.
 
-### ¿DASC sustituye a un administrador de sistemas?
+### ¿Vigex sustituye a un administrador de sistemas?
 
-No completamente. DASC ayuda a centralizar y automatizar tareas, pero no sustituye la revisión técnica en situaciones críticas.
+No completamente. Vigex ayuda a centralizar y automatizar tareas, pero no sustituye la revisión técnica en situaciones críticas.
 
 ### ¿Los datos salen a la nube?
 
-No obligatoriamente. DASC está pensado para funcionar en local. Puede añadirse copia externa si el cliente lo necesita.
+No obligatoriamente. Vigex está pensado para funcionar en local. Puede añadirse copia externa si el cliente lo necesita.
 
 ## 4. Errores habituales y actuación
 
@@ -117,7 +117,7 @@ No obligatoriamente. DASC está pensado para funcionar en local. Puede añadirse
 Comprobar:
 
 1. Que el servidor está encendido.
-2. Que el servicio `dasc-api` está activo.
+2. Que el servicio `vigex-api` está activo.
 3. Que la URL es correcta.
 4. Que el puerto 8000 está accesible.
 5. Que el usuario y contraseña son correctos.
@@ -171,7 +171,7 @@ Posibles causas:
 Actuación:
 
 1. Comprobar servicio de base de datos.
-2. Validar conexión a `dasc_logs`.
+2. Validar conexión a `vigex_logs`.
 3. Revisar configuración `LOGS_DB_HOST`.
 4. Comprobar tabla `eventos`.
 

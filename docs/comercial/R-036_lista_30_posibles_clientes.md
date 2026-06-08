@@ -2,13 +2,13 @@
 
 ## Objetivo
 
-Crear una lista inicial de posibles clientes o perfiles de cliente para DASC Server Manager.
+Crear una lista inicial de posibles clientes o perfiles de cliente para Vigex.
 
-Esta lista no contiene datos reales de empresas ni información personal. Se plantea como una base comercial inicial para identificar sectores donde DASC podría aportar valor.
+Esta lista no contiene datos reales de empresas ni información personal. Se plantea como una base comercial inicial para identificar sectores donde Vigex podría aportar valor.
 
 ## Enfoque
 
-DASC Server Manager está pensado principalmente para microempresas y PYMES que:
+Vigex está pensado principalmente para microempresas y PYMES que:
 
 - Tienen datos importantes.
 - Usan bases de datos o aplicaciones internas.
@@ -32,38 +32,38 @@ Un posible cliente encaja bien si cumple varios de estos criterios:
 
 ## Lista de 30 posibles clientes o sectores objetivo
 
-| Nº | Perfil de cliente | Motivo por el que puede necesitar DASC | Paquete recomendado |
+| Nº | Perfil de cliente | Motivo por el que puede necesitar Vigex | Paquete recomendado |
 |---|---|---|---|
-| 1 | Gestoría pequeña | Gestiona datos fiscales y documentación sensible de clientes | DASC PyME |
-| 2 | Asesoría laboral | Trabaja con nóminas, contratos y datos personales | DASC PyME |
-| 3 | Academia de formación | Guarda datos de alumnos, pagos y asistencia | DASC Lite o PyME |
-| 4 | Clínica dental pequeña | Maneja agenda, historial de pacientes y facturación | DASC PyME |
-| 5 | Centro médico privado pequeño | Trata datos sensibles y necesita trazabilidad | DASC PyME o Pro |
-| 6 | Taller mecánico | Usa software de clientes, vehículos, facturas y stock | DASC Lite o PyME |
-| 7 | Tienda con TPV local | Depende de ventas, stock y facturación diaria | DASC Lite |
-| 8 | Restaurante con sistema de reservas | Puede perder reservas, proveedores o facturación | DASC Lite |
-| 9 | Empresa de distribución local | Gestiona pedidos, inventario y clientes | DASC PyME |
-| 10 | Empresa de logística pequeña | Necesita continuidad en datos de entregas y clientes | DASC PyME |
-| 11 | Inmobiliaria local | Guarda contactos, contratos, inmuebles y documentación | DASC PyME |
-| 12 | Despacho de abogados pequeño | Maneja expedientes y documentación crítica | DASC PyME |
-| 13 | Administración de fincas | Gestiona comunidades, recibos, incidencias y propietarios | DASC PyME |
-| 14 | Comercio mayorista pequeño | Tiene base de productos, clientes y pedidos | DASC PyME |
-| 15 | Empresa de mantenimiento | Usa software de partes, clientes y servicios | DASC Lite o PyME |
-| 16 | Centro de estética | Guarda citas, clientes, pagos y tratamientos | DASC Lite |
-| 17 | Gimnasio local | Gestiona socios, pagos, accesos y horarios | DASC Lite |
-| 18 | Autoescuela | Maneja alumnos, prácticas, pagos y documentación | DASC Lite o PyME |
-| 19 | Empresa de reformas | Gestiona presupuestos, clientes y facturación | DASC Lite |
-| 20 | Pequeño hotel o hostal | Depende de reservas, clientes y facturación | DASC PyME |
-| 21 | Camping o alojamiento rural | Necesita proteger reservas y datos de clientes | DASC Lite o PyME |
-| 22 | Empresa de eventos | Trabaja con reservas, clientes, proveedores y pagos | DASC Lite |
-| 23 | Consultora pequeña | Maneja documentación y datos de clientes | DASC PyME |
-| 24 | Empresa de soporte informático local | Puede usar DASC para ofrecerlo a sus propios clientes | DASC Managed |
-| 25 | Proveedor IT pequeño | Puede actuar como partner o instalador | DASC Managed |
-| 26 | Tienda online pequeña con servidor propio | Necesita proteger pedidos, usuarios y stock | DASC PyME |
-| 27 | Empresa con ERP local | Depende de una base de datos central para operar | DASC PyME o Pro |
-| 28 | Empresa con servidor MariaDB/MySQL propio | Encaja directamente con el enfoque técnico actual | DASC PyME |
-| 29 | Asociación o entidad local | Puede tener datos de socios, cuotas y documentación | DASC Lite |
-| 30 | Centro educativo privado pequeño | Gestiona alumnos, pagos, comunicaciones y registros | DASC PyME |
+| 1 | Gestoría pequeña | Gestiona datos fiscales y documentación sensible de clientes | Vigex PyME |
+| 2 | Asesoría laboral | Trabaja con nóminas, contratos y datos personales | Vigex PyME |
+| 3 | Academia de formación | Guarda datos de alumnos, pagos y asistencia | Vigex Lite o PyME |
+| 4 | Clínica dental pequeña | Maneja agenda, historial de pacientes y facturación | Vigex PyME |
+| 5 | Centro médico privado pequeño | Trata datos sensibles y necesita trazabilidad | Vigex PyME o Pro |
+| 6 | Taller mecánico | Usa software de clientes, vehículos, facturas y stock | Vigex Lite o PyME |
+| 7 | Tienda con TPV local | Depende de ventas, stock y facturación diaria | Vigex Lite |
+| 8 | Restaurante con sistema de reservas | Puede perder reservas, proveedores o facturación | Vigex Lite |
+| 9 | Empresa de distribución local | Gestiona pedidos, inventario y clientes | Vigex PyME |
+| 10 | Empresa de logística pequeña | Necesita continuidad en datos de entregas y clientes | Vigex PyME |
+| 11 | Inmobiliaria local | Guarda contactos, contratos, inmuebles y documentación | Vigex PyME |
+| 12 | Despacho de abogados pequeño | Maneja expedientes y documentación crítica | Vigex PyME |
+| 13 | Administración de fincas | Gestiona comunidades, recibos, incidencias y propietarios | Vigex PyME |
+| 14 | Comercio mayorista pequeño | Tiene base de productos, clientes y pedidos | Vigex PyME |
+| 15 | Empresa de mantenimiento | Usa software de partes, clientes y servicios | Vigex Lite o PyME |
+| 16 | Centro de estética | Guarda citas, clientes, pagos y tratamientos | Vigex Lite |
+| 17 | Gimnasio local | Gestiona socios, pagos, accesos y horarios | Vigex Lite |
+| 18 | Autoescuela | Maneja alumnos, prácticas, pagos y documentación | Vigex Lite o PyME |
+| 19 | Empresa de reformas | Gestiona presupuestos, clientes y facturación | Vigex Lite |
+| 20 | Pequeño hotel o hostal | Depende de reservas, clientes y facturación | Vigex PyME |
+| 21 | Camping o alojamiento rural | Necesita proteger reservas y datos de clientes | Vigex Lite o PyME |
+| 22 | Empresa de eventos | Trabaja con reservas, clientes, proveedores y pagos | Vigex Lite |
+| 23 | Consultora pequeña | Maneja documentación y datos de clientes | Vigex PyME |
+| 24 | Empresa de soporte informático local | Puede usar Vigex para ofrecerlo a sus propios clientes | Vigex Managed |
+| 25 | Proveedor IT pequeño | Puede actuar como partner o instalador | Vigex Managed |
+| 26 | Tienda online pequeña con servidor propio | Necesita proteger pedidos, usuarios y stock | Vigex PyME |
+| 27 | Empresa con ERP local | Depende de una base de datos central para operar | Vigex PyME o Pro |
+| 28 | Empresa con servidor MariaDB/MySQL propio | Encaja directamente con el enfoque técnico actual | Vigex PyME |
+| 29 | Asociación o entidad local | Puede tener datos de socios, cuotas y documentación | Vigex Lite |
+| 30 | Centro educativo privado pequeño | Gestiona alumnos, pagos, comunicaciones y registros | Vigex PyME |
 
 ## Priorización inicial
 
@@ -102,7 +102,7 @@ Para las primeras pruebas se recomienda evitar:
 
 ## Mensaje comercial base
 
-DASC Server Manager está pensado para empresas pequeñas que quieren saber si sus copias de seguridad funcionan, tener registros claros de actividad y recibir avisos cuando algo falla, sin tener que montar herramientas complejas ni depender de procesos manuales.
+Vigex está pensado para empresas pequeñas que quieren saber si sus copias de seguridad funcionan, tener registros claros de actividad y recibir avisos cuando algo falla, sin tener que montar herramientas complejas ni depender de procesos manuales.
 
 ## Resultado esperado
 

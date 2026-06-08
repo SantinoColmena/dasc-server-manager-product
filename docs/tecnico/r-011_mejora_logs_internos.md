@@ -2,11 +2,11 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es mejorar el sistema de logs internos de DASC Server Manager para que sea más útil, más claro y más preparado para un entorno real de producto.
+El objetivo de esta tarea es mejorar el sistema de logs internos de Vigex para que sea más útil, más claro y más preparado para un entorno real de producto.
 
 Actualmente el sistema ya registra eventos básicos del panel, accesos, rutas visitadas y resultados HTTP. Esta base es correcta para el MVP, pero debe evolucionar para ofrecer mejor trazabilidad, diagnóstico y soporte.
 
-R-011 busca ordenar qué debe registrar DASC, cómo debe registrarlo y cómo debe mostrarse después al usuario o al técnico.
+R-011 busca ordenar qué debe registrar Vigex, cómo debe registrarlo y cómo debe mostrarse después al usuario o al técnico.
 
 ## Situación actual
 

@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Definir cómo debe actuar el equipo DASC según el canal por el que entra una solicitud de cliente.
+Definir cómo debe actuar el equipo Vigex según el canal por el que entra una solicitud de cliente.
 
 ## Canal: Email
 
@@ -75,7 +75,7 @@ Cuando exista, será el canal más completo.
 
 1. Cliente abre ticket.
 2. Sistema registra datos.
-3. Equipo DASC clasifica.
+3. Equipo Vigex clasifica.
 4. Cliente consulta estado.
 5. Equipo cierra con evidencia.
 
@@ -91,10 +91,10 @@ Toda solicitud debe terminar registrada internamente.
 
 Los canales externos deben ser simples para el cliente.
 
-La trazabilidad y gestión técnica se mantienen dentro del equipo DASC.
+La trazabilidad y gestión técnica se mantienen dentro del equipo Vigex.
 ## Relación con Jira o Zammad
 
-Si DASC adopta una herramienta de ticketing, el protocolo no cambia para el cliente.
+Si Vigex adopta una herramienta de ticketing, el protocolo no cambia para el cliente.
 
 El cambio está en la gestión interna:
 

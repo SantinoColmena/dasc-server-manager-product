@@ -1,8 +1,8 @@
-# Separación entre panel cliente y soporte técnico - DASC Server Manager
+# Separación entre panel cliente y soporte técnico - Vigex
 
 ## Objetivo
 
-Definir claramente qué debe ver un cliente y qué debe quedar reservado al equipo técnico DASC.
+Definir claramente qué debe ver un cliente y qué debe quedar reservado al equipo técnico Vigex.
 
 ## Decisión principal
 
@@ -21,9 +21,9 @@ Tickets de otros clientes
 Herramientas administrativas
 ~~~
 
-## Acceso técnico DASC
+## Acceso técnico Vigex
 
-El equipo técnico DASC puede acceder a:
+El equipo técnico Vigex puede acceder a:
 
 ~~~text
 /soporte
@@ -61,7 +61,7 @@ Debe ser una vista limitada y segura, por ejemplo:
 /cliente/soporte/mis-tickets
 ~~~
 
-## Panel técnico DASC
+## Panel técnico Vigex
 
 El panel técnico puede mantener:
 
@@ -106,9 +106,9 @@ Portal cliente limitado
 
 ## Conclusión
 
-DASC Server Manager debe separar claramente cliente y equipo técnico.
+Vigex debe separar claramente cliente y equipo técnico.
 
-La zona de soporte implementada hasta ahora queda reservada al equipo DASC.
+La zona de soporte implementada hasta ahora queda reservada al equipo Vigex.
 
 ## Aclaración de roles para producto real
 
@@ -119,14 +119,14 @@ Esta decisión es válida para laboratorio, pero no representa el modelo final d
 ## Diferencia importante
 
 ~~~text
-admin actual del panel != técnico DASC definitivo
+admin actual del panel != técnico Vigex definitivo
 ~~~
 
 En un producto real deben separarse claramente:
 
 ~~~text
 cliente_admin
-dasc_tecnico
+vigex_tecnico
 ~~~
 
 ## cliente_admin
@@ -148,18 +148,18 @@ Pero no debe acceder a:
 
 ~~~text
 Tickets internos de todos los clientes
-Historial técnico DASC
+Historial técnico Vigex
 Resumen Jira/Zammad
 Notas internas
 Prioridades internas globales
-Herramientas de soporte DASC
+Herramientas de soporte Vigex
 ~~~
 
-## dasc_tecnico
+## vigex_tecnico
 
-El `dasc_tecnico` pertenece al equipo DASC.
+El `vigex_tecnico` pertenece al equipo Vigex.
 
-Debe trabajar desde un panel central DASC, no entrando manualmente al panel de cada cliente para revisar incidencias.
+Debe trabajar desde un panel central Vigex, no entrando manualmente al panel de cada cliente para revisar incidencias.
 
 Puede acceder a:
 
@@ -188,13 +188,13 @@ La arquitectura final debe evolucionar hacia:
 ~~~text
 Panel local del cliente
         ↓
-API central DASC
+API central Vigex
         ↓
-Panel central DASC
+Panel central Vigex
         ↓
-Equipo técnico DASC
+Equipo técnico Vigex
 ~~~
 
-El técnico DASC no debería depender de entrar en cada panel local de cliente para ver incidencias.
+El técnico Vigex no debería depender de entrar en cada panel local de cliente para ver incidencias.
 
-Las incidencias deben centralizarse en un sistema propio de DASC.
+Las incidencias deben centralizarse en un sistema propio de Vigex.

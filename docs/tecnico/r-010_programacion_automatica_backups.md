@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es definir el sistema de programación automática de backups de DASC Server Manager.
+El objetivo de esta tarea es definir el sistema de programación automática de backups de Vigex.
 
 Hasta ahora, el sistema permite ejecutar backups manuales desde el panel. Esto es útil, pero para un producto real no es suficiente. Una empresa necesita que las copias se ejecuten de forma automática, con una planificación clara y sin depender de que un usuario recuerde pulsar un botón.
 
@@ -21,7 +21,7 @@ Esto tiene varias limitaciones:
 - No se puede ofrecer fácilmente como servicio gestionado.
 - No se puede diferenciar entre backup manual y backup automático.
 
-Para convertir DASC en un producto más serio, debe existir una capa de programación automática.
+Para convertir Vigex en un producto más serio, debe existir una capa de programación automática.
 
 ## Relación con R-008 y R-009
 
@@ -170,10 +170,10 @@ CREATE TABLE IF NOT EXISTS backup_schedules (
 La tabla de programaciones puede guardarse en la misma base de control del sistema:
 
 ~~~text
-dasc_logs
+vigex_logs
 ~~~
 
-Aunque el nombre sea `dasc_logs`, esta base ya actúa como base interna de control de DASC.
+Aunque el nombre sea `vigex_logs`, esta base ya actúa como base interna de control de Vigex.
 
 Puede contener:
 

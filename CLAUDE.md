@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-DASC Server Manager is a self-hosted FastAPI web panel for SMEs to centralize backups, services, logs, restoration, alerts and monitoring across one or more Linux servers. This is the **product** repo (evolved from an academic MVP), currently at `v1.0-rc1` (Fase 6 — first sales). Code, comments, UI text and commit messages are in **Spanish** — match that convention.
+Vigex is a self-hosted FastAPI web panel for SMEs to centralize backups, services, logs, restoration, alerts and monitoring across one or more Linux servers. This is the **product** repo (evolved from an academic MVP), currently at `v1.0-rc1` (Fase 6 — first sales). Code, comments, UI text and commit messages are in **Spanish** — match that convention.
 
 ## Repository layout — read this first
 
 The top-level `app/` directory is an **empty legacy placeholder** (only stub subdirs, no source). All real, deployable code lives under `deploy/`, shipped as self-contained "packages" installed on Ubuntu servers via bash + systemd:
 
-- `deploy/api/package/` — **the client panel/API** (`main.py`, single ~5000-line file). Installed to `/opt/dasc/api`, systemd service `dasc-api`, Uvicorn on port `8000`.
-- `deploy/central-support/package/` — **DASC Central Support** (`main.py`, ~870 lines), a multi-client ticket aggregator. Installed to `/opt/dasc/central-support`, service `dasc-central-support`, port `8010`. SQLite-backed.
+- `deploy/api/package/` — **the client panel/API** (`main.py`, single ~5000-line file). Installed to `/opt/vigex/api`, systemd service `vigex-api`, Uvicorn on port `8000`.
+- `deploy/central-support/package/` — **Vigex Central** (`main.py`, ~870 lines), a multi-client ticket aggregator. Installed to `/opt/vigex/central-support`, service `vigex-central`, port `8010`. SQLite-backed.
 - `deploy/backup-services/package/` — bash scripts (`backups_api.sh`, `restore_api.sh`, `servicios_api.sh`, `sync_external_backup.sh`) that run on the backup/services host and are invoked **remotely over SSH** by the panel.
 - `deploy/db/`, `deploy/proxy/` — installers for the MariaDB host and the HTTPS reverse proxy (nginx).
 - `config/perfiles/` — deployment-profile config templates. `scripts/generar_config_perfil.sh` copies one to `config.env`.
@@ -22,20 +22,20 @@ The top-level `app/` directory is an **empty legacy placeholder** (only stub sub
 
 **Multi-server topology.** A deployment is split across up to three hosts: API/panel, DB/logs (MariaDB), and backups/services. The panel reaches the other hosts **only over hardened SSH** — it never touches their databases or filesystems directly except the logs DB (via `pymysql`).
 
-**Deployment profiles** drive how many hosts are used. `DASC_PROFILE` (or the profile templates) selects:
+**Deployment profiles** drive how many hosts are used. `VIGEX_PROFILE` (or the profile templates) selects:
 - `lite`/`single` — everything on one host (requires external backup copy).
 - `standard`/`dual` — panel+backups on one host, DB/logs on another (recommended for PyME).
 - `pro`/`distributed` — three separate hosts.
 - `custom` — prompt for each host.
-`install_dasc_api.sh` prompts for the relevant hosts based on the profile and writes them into `config.env`.
+`install_vigex_api.sh` prompts for the relevant hosts based on the profile and writes them into `config.env`.
 
-**Local panel ↔ Central Support.** The client panel's support module creates tickets locally (SQLite) and pushes them to a remote Central Support instance over HTTP (`POST /api/v1/support/tickets`), authenticated with a per-client `X-DASC-Client-Token`. Key behaviors:
+**Local panel ↔ Central Support.** The client panel's support module creates tickets locally (SQLite) and pushes them to a remote Central Support instance over HTTP (`POST /api/v1/support/tickets`), authenticated with a per-client `X-Vigex-Client-Token`. Key behaviors:
 - Offline queue + retry: failed pushes are queued and retried by `scripts/retry_central_pending.py`, run on a systemd timer (`deploy/api/install_central_retry_timer.sh`).
 - State sync is bidirectional: ticket status set in Central Support is synced back down to the local panel.
 - Controlled by `CENTRAL_SUPPORT_ENABLED` / `_URL` / `_CLIENT_ID` / `_TOKEN` in `config.env`. The support code in `main.py` is organized into sections tagged `R-049x`.
 
 **Security model — understand before editing `main.py`:**
-- All remote command execution goes through `validate_ssh_run()` + `is_allowed_ssh_host()`. Both the **target host** (`DASC_SSH_ALLOWED_HOSTS`) and the **script/command** (a hardcoded allowlist incl. `servicios_api.sh`, `backups_api.sh`, `restore_api.sh`, plus tightly constrained `cat`/`crontab -l`/`/bin/bash -lc "hostname && date"`) are allowlisted. Adding a new remote operation means extending this allowlist deliberately — do not bypass it with raw `subprocess`/`ssh`.
+- All remote command execution goes through `validate_ssh_run()` + `is_allowed_ssh_host()`. Both the **target host** (`VIGEX_SSH_ALLOWED_HOSTS`) and the **script/command** (a hardcoded allowlist incl. `servicios_api.sh`, `backups_api.sh`, `restore_api.sh`, plus tightly constrained `cat`/`crontab -l`/`/bin/bash -lc "hostname && date"`) are allowlisted. Adding a new remote operation means extending this allowlist deliberately — do not bypass it with raw `subprocess`/`ssh`.
 - SSH uses a dedicated ed25519 key, `BatchMode=yes`, `StrictHostKeyChecking=yes` and a dedicated `known_hosts` file, all generated by the installer.
 - Panel passwords are bcrypt-hashed (passlib); `verify_password` keeps temporary plaintext compatibility for legacy users.
 - Per-module permissions: `logs`, `backups`, `servicios`, `alertas`, `terminal` (see `AVAILABLE_PERMISSIONS`).
@@ -52,7 +52,7 @@ cp config.env.example config.env   # then edit values (API package only; central
 ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000   # central uses 8010
 ```
 
-`main.py` calls `load_dotenv("config.env")`, so it must be run with the package dir as CWD. The full server install is done on Linux via `sudo deploy/api/install_dasc_api.sh` (and the matching `install_*` / `uninstall_*` / `harden_*` scripts per host).
+`main.py` calls `load_dotenv("config.env")`, so it must be run with the package dir as CWD. The full server install is done on Linux via `sudo deploy/api/install_vigex_api.sh` (and the matching `install_*` / `uninstall_*` / `harden_*` scripts per host).
 
 ## Validation (instead of unit tests)
 

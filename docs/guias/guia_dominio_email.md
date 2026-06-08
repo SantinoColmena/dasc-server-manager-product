@@ -8,11 +8,11 @@ Tiempo: 30-60 minutos para tenerlo todo activo.
 
 ## Paso 1 — Registrar el dominio
 
-### Opción recomendada: dascpyme.es (mercado español, cercano al cliente)
+### Opción recomendada: vigexpyme.es (mercado español, cercano al cliente)
 Alternativas según disponibilidad:
-- `dascservermanager.es`
-- `dascmanager.es`
-- `dasc.es` (si está libre, muy corto)
+- `vigexservermanager.es`
+- `vigexmanager.es`
+- `vigex.es` (si está libre, muy corto)
 
 ### Dónde registrarlo (opciones ordenadas por precio)
 
@@ -26,7 +26,7 @@ Alternativas según disponibilidad:
 > **Recomendación**: Porkbun para el precio, OVH si prefieres proveedor europeo con factura en euros.
 
 ### Cómo registrar (pasos en Porkbun)
-1. Ve a porkbun.com → busca `dascpyme.es`.
+1. Ve a porkbun.com → busca `vigexpyme.es`.
 2. Añade al carrito → crea cuenta.
 3. Paga con tarjeta. Recibirás email de confirmación.
 4. El dominio queda activo en 15–30 minutos.
@@ -37,7 +37,7 @@ Alternativas según disponibilidad:
 
 ### Opción A: Zoho Mail (gratuito para 1 usuario, €1/mes para más)
 1. Ve a [zoho.com/es/mail](https://zoho.com/es/mail) → **Free plan** (hasta 5GB, 1 cuenta).
-2. Introduce tu dominio (`dascpyme.es`).
+2. Introduce tu dominio (`vigexpyme.es`).
 3. Zoho te dará registros DNS que debes añadir en el panel del registrador:
    - Registro MX (para recibir correo)
    - Registro TXT SPF (para no caer en spam)
@@ -52,7 +52,7 @@ Alternativas según disponibilidad:
 4. Ventaja: integración perfecta con Gmail/Calendar/Drive.
 
 ### Opción C: Resend (para solo envío de emails transaccionales, gratuito 3.000/mes)
-- No incluye buzón de correo. Solo sirve para enviar notificaciones desde DASC.
+- No incluye buzón de correo. Solo sirve para enviar notificaciones desde Vigex.
 - Útil si ya tienes otro email y solo necesitas el SMTP.
 - Configuración: [resend.com](https://resend.com) → crear dominio → añadir registros DNS.
 
@@ -68,7 +68,7 @@ TXT  @   "v=spf1 include:_spf.zoho.eu ~all"
          (ajusta según proveedor: Google = _spf.google.com)
 
 # DMARC — política ante fallos de autenticación
-TXT  _dmarc   "v=DMARC1; p=quarantine; rua=mailto:soporte@dascpyme.es"
+TXT  _dmarc   "v=DMARC1; p=quarantine; rua=mailto:soporte@vigexpyme.es"
 
 # CNAME para web (si usas Netlify/Vercel)
 CNAME  www   <subdomain>.netlify.app.
@@ -79,19 +79,19 @@ A      @     <IP de tu servidor de landing>
 
 ## Paso 4 — Actualizar la landing page y el panel
 
-1. En `web/index.html` busca todos los `TODO` con referencias a `dascpyme.es`
+1. En `web/index.html` busca todos los `TODO` con referencias a `vigexpyme.es`
    y sustituye por el dominio real que hayas registrado.
 
-2. En el servidor DASC, actualiza `config.env`:
+2. En el servidor Vigex, actualiza `config.env`:
 ```bash
 NOTIF_SMTP_HOST=smtp.zoho.eu       # o smtp.gmail.com para Google Workspace
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@dascpyme.es
+NOTIF_SMTP_USER=soporte@vigexpyme.es
 NOTIF_SMTP_PASS=<tu_contraseña>
-NOTIF_EMAIL_FROM=soporte@dascpyme.es
+NOTIF_EMAIL_FROM=soporte@vigexpyme.es
 ```
 
-3. Reinicia el servicio: `sudo systemctl restart dasc-api`
+3. Reinicia el servicio: `sudo systemctl restart vigex-api`
 
 4. Prueba enviando un informe manual desde el panel → **Informes** → **Enviar ahora**.
 
@@ -113,22 +113,22 @@ NOTIF_EMAIL_FROM=soporte@dascpyme.es
 
 ### Opción C: VPS propio (nginx)
 ```bash
-# En el servidor donde tienes instalado DASC (o uno separado)
-sudo cp -r /ruta/repo/web /var/www/dascpyme
-sudo nano /etc/nginx/sites-available/dascpyme
+# En el servidor donde tienes instalado Vigex (o uno separado)
+sudo cp -r /ruta/repo/web /var/www/vigexpyme
+sudo nano /etc/nginx/sites-available/vigexpyme
 ```
 ```nginx
 server {
     listen 80;
-    server_name dascpyme.es www.dascpyme.es;
-    root /var/www/dascpyme;
+    server_name vigexpyme.es www.vigexpyme.es;
+    root /var/www/vigexpyme;
     index index.html;
     location / { try_files $uri $uri/ =404; }
 }
 ```
 ```bash
-sudo ln -s /etc/nginx/sites-available/dascpyme /etc/nginx/sites-enabled/
-sudo certbot --nginx -d dascpyme.es -d www.dascpyme.es  # HTTPS gratis con Let's Encrypt
+sudo ln -s /etc/nginx/sites-available/vigexpyme /etc/nginx/sites-enabled/
+sudo certbot --nginx -d vigexpyme.es -d www.vigexpyme.es  # HTTPS gratis con Let's Encrypt
 sudo systemctl reload nginx
 ```
 
@@ -137,9 +137,9 @@ sudo systemctl reload nginx
 ## Checklist de activación
 
 - [ ] Dominio registrado
-- [ ] Email profesional `soporte@dascpyme.es` funcionando
+- [ ] Email profesional `soporte@vigexpyme.es` funcionando
 - [ ] Registros MX, SPF, DKIM y DMARC configurados
 - [ ] Landing page publicada con dominio personalizado y HTTPS
-- [ ] config.env del servidor DASC actualizado con SMTP real
+- [ ] config.env del servidor Vigex actualizado con SMTP real
 - [ ] Formulario de contacto enviando emails correctamente
 - [ ] TODOs de `web/index.html` y `web/legal/terminos.html` completados

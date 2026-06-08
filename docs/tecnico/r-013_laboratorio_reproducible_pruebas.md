@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es definir un laboratorio reproducible para probar DASC Server Manager de forma controlada.
+El objetivo de esta tarea es definir un laboratorio reproducible para probar Vigex de forma controlada.
 
 El proyecto ya dispone de un MVP funcional y de una arquitectura basada en varias máquinas, pero para evolucionar hacia producto es necesario poder repetir pruebas sin depender de configuraciones manuales difíciles de reconstruir.
 
@@ -84,7 +84,7 @@ Limitaciones:
 
 ## 3. Laboratorio cloud
 
-El laboratorio cloud permite probar DASC en una máquina externa.
+El laboratorio cloud permite probar Vigex en una máquina externa.
 
 Puede usarse:
 
@@ -149,7 +149,7 @@ Servidor único
 o bien:
 
 ~~~text
-Servidor principal + servidor DASC/backups
+Servidor principal + servidor Vigex/backups
 ~~~
 
 Esto conecta con los perfiles definidos en R-006:
@@ -164,7 +164,7 @@ Esto conecta con los perfiles definidos en R-006:
 
 Objetivo:
 
-Comprobar que DASC puede instalarse desde cero.
+Comprobar que Vigex puede instalarse desde cero.
 
 Debe validarse:
 
@@ -184,7 +184,7 @@ Comprobar que el instalador puede ejecutarse más de una vez.
 
 Debe validarse:
 
-- No se rompe `/opt/dasc/api`.
+- No se rompe `/opt/vigex/api`.
 - No se pierde `config.env`.
 - No se duplica configuración.
 - El servicio sigue arrancando.
@@ -200,7 +200,7 @@ Debe validarse:
 
 - Se detiene el servicio.
 - Se elimina systemd.
-- Se elimina `/opt/dasc/api`.
+- Se elimina `/opt/vigex/api`.
 - Se ejecuta `daemon-reload`.
 - No quedan errores graves.
 
@@ -327,7 +327,7 @@ Servidor del panel:
 Comprobar servicio:
 
 ~~~bash
-systemctl status dasc-api --no-pager
+systemctl status vigex-api --no-pager
 ~~~
 
 Comprobar puerto:
@@ -339,22 +339,22 @@ curl -I http://127.0.0.1:8000
 Comprobar estructura:
 
 ~~~bash
-ls -ld /opt/dasc
-ls -ld /opt/dasc/api
-ls -l /opt/dasc/api/main.py
-ls -l /opt/dasc/api/config.env
+ls -ld /opt/vigex
+ls -ld /opt/vigex/api
+ls -l /opt/vigex/api/main.py
+ls -l /opt/vigex/api/config.env
 ~~~
 
 Comprobar SSH:
 
 ~~~bash
-ssh dasc@192.168.60.30 hostname
+ssh vigex@192.168.60.30 hostname
 ~~~
 
 Comprobar script de backups:
 
 ~~~bash
-ssh dasc@192.168.60.30 /usr/local/bin/backups_api.sh full employees /home/dasc/backups prueba-YYYYMMDD-HHMM.sql gzip 30 manual prueba
+ssh vigex@192.168.60.30 /usr/local/bin/backups_api.sh full employees /home/vigex/backups prueba-YYYYMMDD-HHMM.sql gzip 30 manual prueba
 ~~~
 
 Comprobar logs en base de datos:

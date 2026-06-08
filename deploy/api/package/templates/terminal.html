@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Terminal — DASC{% endblock %}
+{% block title %}Terminal — Vigex{% endblock %}
 
 {% block extra_head %}
 <!-- Token CSRF para fetch API de la terminal -->
@@ -79,7 +79,7 @@
         <div class="terminal-meta">Host: {{ selected_machine.host }} · Modo: {{ selected_machine.mode }}</div>
     </div>
     <div class="terminal-body">
-        <div id="terminalOutput" class="terminal-output">DASC Terminal preparada.
+        <div id="terminalOutput" class="terminal-output">Vigex Terminal preparada.
 Máquina seleccionada: {{ selected_machine.label }}
 Host: {{ selected_machine.host }}
 Escribe un comando y pulsa Enter.

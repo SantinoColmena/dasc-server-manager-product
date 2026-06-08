@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-El objetivo de esta tarea es definir la publicación de una primera versión interna de DASC Server Manager como producto.
+El objetivo de esta tarea es definir la publicación de una primera versión interna de Vigex como producto.
 
 Esta versión no representa todavía una versión comercial ni una versión final para clientes reales. Su función es cerrar la Fase 1 con una base estable, documentada y preparada para seguir evolucionando.
 
@@ -128,7 +128,7 @@ git push origin v0.1-interna
 Nombre recomendado:
 
 ~~~text
-DASC Server Manager v0.1 interna - Núcleo estable
+Vigex v0.1 interna - Núcleo estable
 ~~~
 
 ## Descripción recomendada de la release
@@ -136,7 +136,7 @@ DASC Server Manager v0.1 interna - Núcleo estable
 Texto recomendado:
 
 ~~~text
-Primera versión interna del repositorio de producto DASC Server Manager.
+Primera versión interna del repositorio de producto Vigex.
 
 Esta versión cierra la Fase 1 - Núcleo estable e incluye documentación técnica, criterios de validación y estructura inicial para convertir el MVP académico en un producto-servicio orientado a PYMES.
 

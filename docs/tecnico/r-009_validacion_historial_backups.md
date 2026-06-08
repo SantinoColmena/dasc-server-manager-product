@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar el historial persistente de backups de DASC Server Manager.
+Este documento define cómo validar el historial persistente de backups de Vigex.
 
 La validación busca comprobar que cada copia de seguridad queda registrada de forma estructurada y que el sistema no depende únicamente de mensajes temporales o de listar archivos en una carpeta.
 
@@ -42,7 +42,7 @@ El historial registra una copia concreta.
 Ejemplo:
 
 ~~~text
-Backup full de employees creado en /home/dasc/backups/backup-20260522.sql.gz.
+Backup full de employees creado en /home/vigex/backups/backup-20260522.sql.gz.
 ~~~
 
 Ambos datos son útiles, pero no sustituyen uno al otro.
@@ -110,7 +110,7 @@ Caso de prueba:
 ~~~text
 tipo: full
 base_datos: employees
-archivo: /home/dasc/backups/backup-20260522.sql.gz
+archivo: /home/vigex/backups/backup-20260522.sql.gz
 resultado: OK
 usuario: admin
 origen: manual

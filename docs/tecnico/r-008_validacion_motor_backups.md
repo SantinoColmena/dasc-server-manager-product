@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar que la futura centralización del motor de backups de DASC Server Manager tiene sentido y no rompe el funcionamiento actual del MVP.
+Este documento define cómo validar que la futura centralización del motor de backups de Vigex tiene sentido y no rompe el funcionamiento actual del MVP.
 
 La validación se centra en comprobar que la lógica de backups queda mejor organizada, que los datos necesarios están claros y que el sistema queda preparado para historial, programación automática y restauración futura.
 
@@ -106,7 +106,7 @@ El script debe seguir siendo el encargado de ejecutar la operación real.
 Debe comprobarse que puede recibir parámetros como:
 
 ~~~bash
-backups_api.sh full employees /home/dasc/backups backup-YYYYMMDD-HHMM.sql gzip 30 manual prueba
+backups_api.sh full employees /home/vigex/backups backup-YYYYMMDD-HHMM.sql gzip 30 manual prueba
 ~~~
 
 Resultado esperado:
@@ -125,7 +125,7 @@ Ejemplo de resultado correcto:
 estado: OK
 tipo: full
 base_datos: employees
-archivo: /home/dasc/backups/backup-20260522-1830.sql.gz
+archivo: /home/vigex/backups/backup-20260522-1830.sql.gz
 mensaje: Backup creado correctamente
 ~~~
 
@@ -183,7 +183,7 @@ Entrada:
 ~~~text
 tipo: full
 base_datos: employees
-destino: /home/dasc/backups
+destino: /home/vigex/backups
 nombre: backup-YYYYMMDD-HHMM.sql
 compresion: gzip
 retencion: 30

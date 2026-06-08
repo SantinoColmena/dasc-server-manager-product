@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar la publicación de la versión interna 0.1 de DASC Server Manager.
+Este documento define cómo validar la publicación de la versión interna 0.1 de Vigex.
 
 La validación busca comprobar que la Fase 1 - Núcleo estable queda cerrada correctamente y que el repositorio tiene un punto de control claro para continuar el desarrollo del producto.
 
@@ -71,7 +71,7 @@ r-006_configuracion_por_perfiles.md
 r-006_validacion_perfiles.md
 r-007_instalador_base_idempotente.md
 r-007_validacion_instalador.md
-r-007_mejoras_install_dasc_api.md
+r-007_mejoras_install_vigex_api.md
 r-008_motor_backups_centralizado.md
 r-008_validacion_motor_backups.md
 r-009_historial_persistente_backups.md
@@ -120,13 +120,13 @@ v0.1-interna
 Nombre recomendado:
 
 ~~~text
-DASC Server Manager v0.1 interna - Núcleo estable
+Vigex v0.1 interna - Núcleo estable
 ~~~
 
 Descripción recomendada:
 
 ~~~text
-Primera versión interna del repositorio de producto DASC Server Manager.
+Primera versión interna del repositorio de producto Vigex.
 
 Esta versión cierra la Fase 1 - Núcleo estable e incluye documentación técnica, criterios de validación y estructura inicial para convertir el MVP académico en un producto-servicio orientado a PYMES.
 
@@ -160,7 +160,7 @@ La Fase 1 puede cerrarse si se cumple:
 La frase recomendada para documentar el cierre es:
 
 ~~~text
-La Fase 1 - Núcleo estable queda cerrada con la versión interna 0.1, que actúa como punto de control documental y técnico para continuar la evolución de DASC Server Manager como producto-servicio.
+La Fase 1 - Núcleo estable queda cerrada con la versión interna 0.1, que actúa como punto de control documental y técnico para continuar la evolución de Vigex como producto-servicio.
 ~~~
 
 ## Estado final

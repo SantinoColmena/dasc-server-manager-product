@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="dasc-central-support"
-NGINX_SITE_NAME="${NGINX_SITE_NAME:-dasc-central-support}"
+SERVICE_NAME="vigex-central"
+NGINX_SITE_NAME="${NGINX_SITE_NAME:-vigex-central}"
 NGINX_SITE_FILE="/etc/nginx/sites-available/${NGINX_SITE_NAME}"
 NGINX_SITE_LINK="/etc/nginx/sites-enabled/${NGINX_SITE_NAME}"
 APP_HOST="${APP_HOST:-127.0.0.1}"
@@ -14,7 +14,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> Instalando Nginx para DASC Central Support"
+echo "==> Instalando Nginx para Vigex Central"
 
 echo "==> Instalando paquete nginx"
 apt-get update
@@ -33,8 +33,8 @@ server {
     listen 80;
     server_name ${SERVER_NAME};
 
-    access_log /var/log/nginx/dasc-central-support.access.log;
-    error_log  /var/log/nginx/dasc-central-support.error.log;
+    access_log /var/log/nginx/vigex-central.access.log;
+    error_log  /var/log/nginx/vigex-central.error.log;
 
     client_max_body_size 10M;
 
@@ -79,7 +79,7 @@ echo "==> Prueba local proxy"
 curl -I "http://127.0.0.1/" || true
 
 echo
-echo "OK: Nginx configurado como reverse proxy para DASC Central Support."
+echo "OK: Nginx configurado como reverse proxy para Vigex Central."
 echo "URL local: http://127.0.0.1/"
 echo "URL red:   http://<IP_DEL_SERVIDOR>/"
 echo "Backend:  http://${APP_HOST}:${APP_PORT}"

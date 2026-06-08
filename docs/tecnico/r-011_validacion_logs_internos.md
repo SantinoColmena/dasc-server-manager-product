@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define cómo validar la mejora del sistema de logs internos de DASC Server Manager.
+Este documento define cómo validar la mejora del sistema de logs internos de Vigex.
 
 La validación busca comprobar que los eventos registrados por el sistema son útiles, claros, consultables y preparados para soporte, auditoría y futuras alertas.
 
@@ -236,7 +236,7 @@ El usuario admin ejecutó un backup con resultado OK.
 ### Registro en historial
 
 ~~~text
-Backup full de employees guardado en /home/dasc/backups/backup-20260522.sql.gz.
+Backup full de employees guardado en /home/vigex/backups/backup-20260522.sql.gz.
 ~~~
 
 Resultado esperado:

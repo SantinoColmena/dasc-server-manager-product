@@ -79,10 +79,10 @@ def validate_backup(path: Path) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Genera backup completo de base de datos remota para DASC.")
-    parser.add_argument("--root", default="/opt/dasc/api", help="Ruta raíz de la instalación API.")
+    parser = argparse.ArgumentParser(description="Genera backup completo de base de datos remota para Vigex.")
+    parser.add_argument("--root", default="/opt/vigex/api", help="Ruta raíz de la instalación API.")
     parser.add_argument("--database", default="", help="Base de datos a copiar. Si se omite, usa BACKUP_DB_NAME o LOGS_DB_NAME.")
-    parser.add_argument("--output-dir", default="", help="Directorio de salida. Si se omite, usa BACKUP_OUTPUT_DIR o /var/backups/dasc/mysql/full.")
+    parser.add_argument("--output-dir", default="", help="Directorio de salida. Si se omite, usa BACKUP_OUTPUT_DIR o /var/backups/vigex/mysql/full.")
     parser.add_argument("--label", default="manual", help="Etiqueta opcional para identificar el backup.")
 
     args = parser.parse_args()
@@ -95,7 +95,7 @@ def main():
     db_name = args.database or get_config_value(env, "BACKUP_DB_NAME", "LOGS_DB_NAME")
     db_user = get_config_value(env, "BACKUP_DB_USER", "LOGS_DB_USER")
     db_pass = get_config_value(env, "BACKUP_DB_PASS", "LOGS_DB_PASS")
-    output_dir = Path(args.output_dir or get_config_value(env, "BACKUP_OUTPUT_DIR", default="/var/backups/dasc/mysql/full")).resolve()
+    output_dir = Path(args.output_dir or get_config_value(env, "BACKUP_OUTPUT_DIR", default="/var/backups/vigex/mysql/full")).resolve()
 
     missing = []
     for key, value in [
@@ -124,7 +124,7 @@ def main():
     sha_path = Path(str(backup_path) + ".sha256")
     meta_path = Path(str(backup_path) + ".meta.json")
 
-    fd, tmp_config_name = tempfile.mkstemp(prefix="dasc_backup_", suffix=".cnf")
+    fd, tmp_config_name = tempfile.mkstemp(prefix="vigex_backup_", suffix=".cnf")
     tmp_config = Path(tmp_config_name)
 
     try:

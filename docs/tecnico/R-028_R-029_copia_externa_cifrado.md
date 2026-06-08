@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Preparar DASC Server Manager para poder enviar copias de seguridad a un destino externo.
+Preparar Vigex para poder enviar copias de seguridad a un destino externo.
 
 Esta mejora forma parte de la Fase 3 porque permite que los perfiles de despliegue sean adaptables:
 
@@ -66,7 +66,7 @@ Valores soportados:
 ~~~text
 EXTERNAL_BACKUP_ENABLED=no
 EXTERNAL_BACKUP_TYPE=none
-EXTERNAL_BACKUP_PATH=/mnt/dasc-external
+EXTERNAL_BACKUP_PATH=/mnt/vigex-external
 EXTERNAL_SYNC_DELETE=no
 EXTERNAL_BACKUP_ENCRYPTION=none
 EXTERNAL_GPG_PASSPHRASE=
@@ -81,16 +81,16 @@ EXTERNAL_SFTP_REMOTE_PATH=
 Antes de usar NAS o SFTP real, se debe probar con un destino local temporal:
 
 ~~~bash
-mkdir -p /tmp/dasc-backups-test
-mkdir -p /tmp/dasc-external-test
+mkdir -p /tmp/vigex-backups-test
+mkdir -p /tmp/vigex-external-test
 
-echo "backup de prueba" > /tmp/dasc-backups-test/backup-demo.sql
+echo "backup de prueba" > /tmp/vigex-backups-test/backup-demo.sql
 
 EXTERNAL_BACKUP_ENABLED=yes \
 EXTERNAL_BACKUP_TYPE=local \
-EXTERNAL_BACKUP_PATH=/tmp/dasc-external-test \
+EXTERNAL_BACKUP_PATH=/tmp/vigex-external-test \
 EXTERNAL_BACKUP_ENCRYPTION=none \
-bash /usr/local/bin/sync_external_backup.sh /tmp/dasc-backups-test
+bash /usr/local/bin/sync_external_backup.sh /tmp/vigex-backups-test
 ~~~
 
 ## Resultado esperado
@@ -102,7 +102,7 @@ OK: sincronización externa completada correctamente
 Y debe existir el archivo:
 
 ~~~text
-/tmp/dasc-external-test/backup-demo.sql
+/tmp/vigex-external-test/backup-demo.sql
 ~~~
 
 ## Decisión de seguridad

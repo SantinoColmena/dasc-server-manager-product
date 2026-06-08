@@ -23,7 +23,7 @@ deploy/api/package/tools/generate_operational_report.py
 En una instalación real quedaría disponible en:
 
 ~~~text
-/opt/dasc/api/tools/generate_operational_report.py
+/opt/vigex/api/tools/generate_operational_report.py
 ~~~
 
 ## Qué aporta este cambio
@@ -33,7 +33,7 @@ Este cambio acerca la herramienta al producto real porque:
 - Ya no depende de que el cliente entre a GitHub.
 - Viaja dentro del paquete instalable de la API.
 - Puede ejecutarse desde el servidor instalado.
-- Lee configuración del entorno DASC.
+- Lee configuración del entorno Vigex.
 - Enmascara valores sensibles.
 - Puede consultar la base de datos de logs si está disponible.
 - Genera informes dentro de la propia instalación.
@@ -43,14 +43,14 @@ Este cambio acerca la herramienta al producto real porque:
 Ejemplo en servidor API:
 
 ~~~bash
-cd /opt/dasc/api
-./venv/bin/python tools/generate_operational_report.py --root /opt/dasc/api --client "Cliente demo" --period "2026-05"
+cd /opt/vigex/api
+./venv/bin/python tools/generate_operational_report.py --root /opt/vigex/api --client "Cliente demo" --period "2026-05"
 ~~~
 
 Salida esperada:
 
 ~~~text
-/opt/dasc/api/reports/informe_operativo_2026-05.md
+/opt/vigex/api/reports/informe_operativo_2026-05.md
 ~~~
 
 ## Estado de madurez

@@ -1,7 +1,7 @@
-# Arquitectura Central Cloud — DASC Server Manager
+# Arquitectura Central Cloud — Vigex
 ## R-077 / Ruta 10.1
 
-Diseño técnico del sistema DASC Central Cloud: el VPS propio del equipo DASC
+Diseño técnico del sistema Vigex Central Cloud: el VPS propio del equipo Vigex
 que agrega el estado de todas las instalaciones de clientes.
 
 ---
@@ -14,11 +14,11 @@ que agrega el estado de todas las instalaciones de clientes.
 └──────────────┬───────────────────────────────────────┬─────────────┘
                │                                       │
        ┌───────▼────────┐                   ┌──────────▼──────────┐
-       │  VPS DASC      │                   │  Navegador (admin)  │
-       │  central.dasc  │◄──────────────────│  Equipo DASC        │
+       │  VPS Vigex      │                   │  Navegador (admin)  │
+       │  central.vigex  │◄──────────────────│  Equipo Vigex        │
        │  port 443      │  HTTPS+Token      └─────────────────────┘
        │                │
-       │  dasc-central  │ ←─── POST /api/v1/support/tickets  (push de tickets)
+       │  vigex-central  │ ←─── POST /api/v1/support/tickets  (push de tickets)
        │  -support      │ ←─── POST /api/v1/heartbeat        (heartbeat cada 5 min)
        │  :8010         │ ──── GET  /api/v1/support/tickets/{id} (sync estado)
        └────────────────┘
@@ -38,24 +38,24 @@ que agrega el estado de todas las instalaciones de clientes.
 
 ## Componentes
 
-### 1. VPS DASC (equipo)
+### 1. VPS Vigex (equipo)
 
 - **Host:** VPS externo (Hetzner CX21, DigitalOcean Droplet, o similar)
 - **SO:** Ubuntu 22.04 LTS
-- **Dominio:** `central.dascpyme.es` (o el dominio que se registre)
+- **Dominio:** `central.vigexpyme.es` (o el dominio que se registre)
 - **HTTPS:** Let's Encrypt via certbot + nginx reverse proxy
-- **Puerto:** 443 → nginx → 127.0.0.1:8010 (dasc-central-support)
+- **Puerto:** 443 → nginx → 127.0.0.1:8010 (vigex-central)
 - **Firewall:** UFW, solo 22/tcp, 80/tcp y 443/tcp
 
-### 2. DASC Central Support (`dasc-central-support`)
+### 2. Vigex Central (`vigex-central`)
 
 Servicio FastAPI ya implementado en `deploy/central-support/`. Recibe:
 - Tickets de soporte de paneles de clientes
 - Heartbeats periódicos (salud de cada instalación)
 
-Base de datos: SQLite local (`/opt/dasc/central-support/data/central_support.db`)
+Base de datos: SQLite local (`/opt/vigex/central-support/data/central_support.db`)
 
-### 3. Paneles de clientes (`dasc-api`)
+### 3. Paneles de clientes (`vigex-api`)
 
 Cada instalación de cliente envía:
 - Tickets cuando el usuario reporta un problema (push inmediato)
@@ -64,9 +64,9 @@ Cada instalación de cliente envía:
 Configuración en `config.env` de cada cliente:
 ```bash
 CENTRAL_SUPPORT_ENABLED=true
-CENTRAL_SUPPORT_URL=https://central.dascpyme.es
+CENTRAL_SUPPORT_URL=https://central.vigexpyme.es
 CENTRAL_SUPPORT_CLIENT_ID=cliente-empresa-a
-CENTRAL_SUPPORT_TOKEN=dasc-token-xxxxxxxxxxxxxxxxx
+CENTRAL_SUPPORT_TOKEN=vigex-token-xxxxxxxxxxxxxxxxx
 ```
 
 ---
@@ -77,10 +77,10 @@ CENTRAL_SUPPORT_TOKEN=dasc-token-xxxxxxxxxxxxxxxxx
 ```
 Usuario abre ticket (panel cliente)
     → Panel guarda ticket en SQLite local
-    → Panel hace POST /api/v1/support/tickets a la Central (con X-DASC-Client-Token)
+    → Panel hace POST /api/v1/support/tickets a la Central (con X-Vigex-Client-Token)
     → Central guarda ticket con su propio ID (CENTRAL-YYYY-NNNN)
     → Si falla el push → cola de reintentos (scripts/retry_central_pending.py)
-    → Equipo DASC ve el ticket en /tickets del panel central
+    → Equipo Vigex ve el ticket en /tickets del panel central
     → Equipo actualiza estado en Central
     → Panel cliente sincroniza estado via GET /api/v1/support/tickets/{id}
 ```
@@ -89,7 +89,7 @@ Usuario abre ticket (panel cliente)
 ```
 Panel cliente (cada 5 min, daemon thread)
     → GET /api/v1/heartbeat (datos locales del servidor)
-    → POST /api/v1/heartbeat a Central (con X-DASC-Client-Token)
+    → POST /api/v1/heartbeat a Central (con X-Vigex-Client-Token)
     → Central registra en tabla central_heartbeats
     → Dashboard central muestra semáforo por cliente:
         🟢 verde  → último heartbeat < 10 min
@@ -103,11 +103,11 @@ Panel cliente (cada 5 min, daemon thread)
 
 | Control | Implementación |
 |---------|---------------|
-| Autenticación API | Header `X-DASC-Client-Token` (token único por cliente, SHA256-comparable) |
+| Autenticación API | Header `X-Vigex-Client-Token` (token único por cliente, SHA256-comparable) |
 | Acceso panel central | Login con usuario/contraseña (admin + tecnico), sesión con cookie firmada |
 | HTTPS | TLS 1.2+, certificado Let's Encrypt, HSTS |
 | Firewall VPS | UFW: solo 22/tcp (SSH restringido a IP fija), 80/tcp, 443/tcp |
-| fail2ban | Jaula sshd activa, jaula dasc-auth para el panel central |
+| fail2ban | Jaula sshd activa, jaula vigex-auth para el panel central |
 | Rotación de tokens | `/clientes/{id}/rotar` en el panel central; token nuevo comunicado al cliente manualmente |
 | Aislamiento de datos | Cada cliente solo ve sus propios tickets (validación `cliente_id` en cada request) |
 
@@ -138,10 +138,10 @@ Para escala mayor → migración de SQLite a MariaDB (Fase 12).
 
 ## Proceso de alta de nuevo cliente
 
-1. Instalar DASC en el servidor del cliente (perfiles existentes).
+1. Instalar Vigex en el servidor del cliente (perfiles existentes).
 2. En panel central: **Clientes → Nuevo cliente** → copiar token generado.
 3. En `config.env` del cliente: configurar `CENTRAL_SUPPORT_*` con la URL y el token.
-4. Reiniciar `dasc-api` en el servidor del cliente.
+4. Reiniciar `vigex-api` en el servidor del cliente.
 5. Verificar: el cliente debe aparecer en verde en el Dashboard de Salud.
 
 ---
@@ -154,4 +154,4 @@ Para escala mayor → migración de SQLite a MariaDB (Fase 12).
 | Token en header HTTP (no OAuth) | Simplicidad: el panel cliente solo necesita `urllib.request` sin dependencias |
 | Heartbeat pull (panel envía → Central recibe) | No requiere que Central tenga acceso SSH a los clientes; funciona detrás de NAT |
 | Rotación manual de tokens | Suficiente para <50 clientes; no justifica automatismo hasta Fase 12 |
-| Separación Central / panel cliente | Central es el CRM del equipo DASC; el panel es la herramienta del cliente |
+| Separación Central / panel cliente | Central es el CRM del equipo Vigex; el panel es la herramienta del cliente |

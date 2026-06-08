@@ -1,12 +1,12 @@
-# Arquitectura soporte central/local DASC
+# Arquitectura soporte central/local Vigex
 
 ## Resumen
 
 La arquitectura de soporte central/local se divide en tres capas:
 
 - Cliente.
-- Panel local DASC.
-- Panel central DASC.
+- Panel local Vigex.
+- Panel central Vigex.
 
 ## Diagrama lógico textual
 
@@ -14,15 +14,15 @@ Cliente PyME
     |
     | crea solicitud
     v
-Panel local DASC del cliente
+Panel local Vigex del cliente
     |
     | guarda ticket local
     |
     | intenta enviar a central
     v
-Panel central DASC
+Panel central Vigex
     |
-    | equipo DASC gestiona
+    | equipo Vigex gestiona
     v
 Estado central actualizado
     |
@@ -45,7 +45,7 @@ Uso:
 - Consultar estado.
 - Ver seguimiento básico.
 
-### Técnico local DASC
+### Técnico local Vigex
 
 Rutas:
 
@@ -62,7 +62,7 @@ Uso:
 - Plantillas.
 - Resumen técnico.
 
-### Equipo central DASC
+### Equipo central Vigex
 
 Rutas:
 
@@ -81,7 +81,7 @@ Uso:
 En lab-pruebas:
 
 - Panel local cliente: http://192.168.1.250:8000
-- Panel central DASC por Nginx: http://192.168.1.250
+- Panel central Vigex por Nginx: http://192.168.1.250
 - Backend central directo: http://192.168.1.250:8010
 
 ## Despliegue objetivo
@@ -89,13 +89,13 @@ En lab-pruebas:
 En producto real:
 
 - Panel local cliente: servidor local o cloud del cliente.
-- Panel central DASC: VPS/servidor propio.
-- Dominio central: central.dasc.es o soporte.dasc.es.
+- Panel central Vigex: VPS/servidor propio.
+- Dominio central: central.vigex.es o soporte.vigex.es.
 - Comunicación: HTTPS + token de cliente.
 
 ## Decisión sobre DNS local
 
-DASC puede preparar Nginx local, pero no debe asumir control del DNS del cliente.
+Vigex puede preparar Nginx local, pero no debe asumir control del DNS del cliente.
 
 Modo básico:
 
@@ -108,4 +108,4 @@ Modo recomendado:
 
 ## Conclusión
 
-La arquitectura permite operar DASC como servicio gestionado: cada cliente conserva su panel local y DASC mantiene una central propia para soporte multi-cliente.
+La arquitectura permite operar Vigex como servicio gestionado: cada cliente conserva su panel local y Vigex mantiene una central propia para soporte multi-cliente.

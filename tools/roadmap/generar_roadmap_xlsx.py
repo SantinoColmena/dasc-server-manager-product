@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Genera el Excel derivado del roadmap de DASC Server Manager.
+"""Genera el Excel derivado del roadmap de Vigex.
 
 Uso (desde la raíz del repo o desde cualquier sitio):
 
     python tools/roadmap/generar_roadmap_xlsx.py
 
 Lee los datos de ``roadmap_data.py`` y escribe
-``docs/roadmap/DASC_Roadmap.xlsx``. El Excel es una VISTA DERIVADA: no se edita
+``docs/roadmap/Vigex_Roadmap.xlsx``. El Excel es una VISTA DERIVADA: no se edita
 a mano, se regenera. La fuente de verdad narrativa es ``docs/ROADMAP.md``.
 """
 
@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import roadmap_data as data  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SALIDA = REPO_ROOT / "docs" / "roadmap" / "DASC_Roadmap.xlsx"
+SALIDA = REPO_ROOT / "docs" / "roadmap" / "Vigex_Roadmap.xlsx"
 
 # ----------------------------------------------------------------------- estilo
 AZUL = "1F3864"

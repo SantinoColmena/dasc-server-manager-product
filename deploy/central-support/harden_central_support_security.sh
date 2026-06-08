@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="${SERVICE_NAME:-dasc-central-support}"
+SERVICE_NAME="${SERVICE_NAME:-vigex-central}"
 SERVICE_FILE="${SERVICE_FILE:-/etc/systemd/system/${SERVICE_NAME}.service}"
-APP_DIR="${APP_DIR:-/opt/dasc/central-support}"
+APP_DIR="${APP_DIR:-/opt/vigex/central-support}"
 CONFIG_FILE="${CONFIG_FILE:-${APP_DIR}/config.env}"
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -11,7 +11,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> R-052F - Endureciendo DASC Central Support"
+echo "==> R-052F - Endureciendo Vigex Central"
 
 if [ ! -f "$SERVICE_FILE" ]; then
   echo "ERROR: no existe $SERVICE_FILE"
@@ -57,8 +57,8 @@ systemctl --no-pager --full status "$SERVICE_NAME" || true
 echo
 echo "==> Health local central"
 for i in {1..30}; do
-  if curl -fsS http://127.0.0.1:8010/health >/tmp/dasc-central-health.json 2>/tmp/dasc-central-health.err; then
-    python3 -m json.tool /tmp/dasc-central-health.json
+  if curl -fsS http://127.0.0.1:8010/health >/tmp/vigex-central-health.json 2>/tmp/vigex-central-health.err; then
+    python3 -m json.tool /tmp/vigex-central-health.json
     break
   fi
 
@@ -66,7 +66,7 @@ for i in {1..30}; do
 
   if [ "$i" -eq 30 ]; then
     echo "ERROR: central-support no responde en /health tras 30 segundos"
-    cat /tmp/dasc-central-health.err || true
+    cat /tmp/vigex-central-health.err || true
     exit 1
   fi
 done

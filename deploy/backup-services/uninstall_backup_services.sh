@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_USER="${APP_USER:-dasc}"
+APP_USER="${APP_USER:-vigex}"
 APP_HOME="/home/${APP_USER}"
 INSTALL_BACKUP_SCRIPT="/usr/local/bin/backups_api.sh"
 INSTALL_SERVICES_SCRIPT="/usr/local/bin/servicios_api.sh"
-SUDOERS_FILE="/etc/sudoers.d/dasc-servicios"
+SUDOERS_FILE="/etc/sudoers.d/vigex-servicios"
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: ejecuta este script con sudo."

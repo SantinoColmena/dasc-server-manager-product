@@ -1,7 +1,7 @@
-# Guía anti-hackeo para servidores DASC
+# Guía anti-hackeo para servidores Vigex
 ## R-075 / Ruta 9.5
 
-Checklist de seguridad básica para un servidor con DASC instalado.
+Checklist de seguridad básica para un servidor con Vigex instalado.
 No sustituye una auditoría profesional, pero elimina el 90% del riesgo habitual en PYMES.
 
 ---
@@ -17,14 +17,14 @@ sudo nano /etc/ssh/sshd_config
 sudo systemctl restart sshd
 
 # Verificar que el acceso con clave funciona antes de cerrar la sesión actual
-ssh -i ~/.ssh/tu_clave dasc@<IP>
+ssh -i ~/.ssh/tu_clave vigex@<IP>
 ```
 
-**Comprueba que la clave pública de DASC está en `/home/dasc/.ssh/authorized_keys`**
+**Comprueba que la clave pública de Vigex está en `/home/vigex/.ssh/authorized_keys`**
 y que los permisos son correctos:
 ```bash
-chmod 700 /home/dasc/.ssh
-chmod 600 /home/dasc/.ssh/authorized_keys
+chmod 700 /home/vigex/.ssh
+chmod 600 /home/vigex/.ssh/authorized_keys
 ```
 
 ---
@@ -74,7 +74,7 @@ bantime  = 3600   ; 1 hora bloqueado tras 5 fallos
 
 ---
 
-## 4. Contraseñas del panel DASC
+## 4. Contraseñas del panel Vigex
 
 - Usa contraseñas de al menos 16 caracteres con mayúsculas, números y símbolos.
 - **Nunca** reutilices la contraseña del panel con otros sistemas.
@@ -83,11 +83,11 @@ bantime  = 3600   ; 1 hora bloqueado tras 5 fallos
 
 ```bash
 # Cambiar contraseña de admin desde CLI si necesario
-cd /opt/dasc/api
+cd /opt/vigex/api
 source venv/bin/activate
 python3 -c "from passlib.context import CryptContext; print(CryptContext(['bcrypt']).hash('NUEVA_CLAVE'))"
 # Copia el hash en config.env como ADMIN_PASSWORD=<hash>
-sudo systemctl restart dasc-api
+sudo systemctl restart vigex-api
 ```
 
 ---
@@ -111,7 +111,7 @@ sudo dpkg-reconfigure -plow unattended-upgrades
 # Comprobar que logrotate está configurado
 cat /etc/logrotate.d/syslog
 
-# Si los logs de DASC crecen demasiado:
+# Si los logs de Vigex crecen demasiado:
 sudo journalctl --vacuum-size=500M
 sudo journalctl --vacuum-time=30d
 ```
@@ -121,18 +121,18 @@ sudo journalctl --vacuum-time=30d
 ## 7. Seguridad de config.env
 
 ```bash
-# config.env solo debe ser legible por el usuario dasc
-ls -la /opt/dasc/api/config.env
-# Debe mostrar: -rw-r----- ... dasc dasc ...
+# config.env solo debe ser legible por el usuario vigex
+ls -la /opt/vigex/api/config.env
+# Debe mostrar: -rw-r----- ... vigex vigex ...
 
 # Corregir si es necesario:
-sudo chmod 640 /opt/dasc/api/config.env
-sudo chown dasc:dasc /opt/dasc/api/config.env
+sudo chmod 640 /opt/vigex/api/config.env
+sudo chown vigex:vigex /opt/vigex/api/config.env
 ```
 
 Verifica que `config.env` no está en el repositorio git:
 ```bash
-git -C /opt/dasc/api log --all --full-history -- config.env
+git -C /opt/vigex/api log --all --full-history -- config.env
 # No debe aparecer ningún commit con ese fichero
 ```
 
@@ -140,7 +140,7 @@ git -C /opt/dasc/api log --all --full-history -- config.env
 
 ## 8. Monitoreo de accesos sospechosos
 
-El panel DASC registra todos los intentos de login. Revísalos periódicamente:
+El panel Vigex registra todos los intentos de login. Revísalos periódicamente:
 - Panel → Admin → Accesos.
 - Busca IPs desconocidas o intentos fallidos repetidos.
 
@@ -162,11 +162,11 @@ Configura sincronización a almacenamiento externo (mínimo):
 
 ```bash
 # Opción simple: rsync a otro servidor o NAS
-rsync -avz --delete /home/dasc/backups/ user@servidor-externo:/backups/dasc/
+rsync -avz --delete /home/vigex/backups/ user@servidor-externo:/backups/vigex/
 
 # Añadir como cron job (diario a las 03:00)
 crontab -e
-# 0 3 * * * rsync -az /home/dasc/backups/ user@servidor-externo:/backups/dasc/
+# 0 3 * * * rsync -az /home/vigex/backups/ user@servidor-externo:/backups/vigex/
 ```
 
 ---

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Copias de seguridad — DASC{% endblock %}
+{% block title %}Copias de seguridad — Vigex{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
@@ -168,7 +168,7 @@
 
                 <label class="field">
                     <span>Carpeta destino</span>
-                    <input name="dest" value="/home/dasc/backups" required>
+                    <input name="dest" value="/home/vigex/backups" required>
                 </label>
 
                 <label class="field">
@@ -248,7 +248,7 @@
             <div class="help-box automation-help">
                 <h4><i class="fa-solid fa-file-lines"></i> Log de CRON</h4>
                 <p>Las ejecuciones automáticas escriben su salida en:</p>
-                <code>/home/dasc/backups/.dasc/cron.log</code>
+                <code>/home/vigex/backups/.vigex/cron.log</code>
             </div>
         </div>
     </div>
@@ -370,7 +370,7 @@
             <input type="hidden" name="type" value="full">
             <div class="form-grid">
                 <label class="field"><span>Base de datos</span><input name="db" placeholder="Ej: employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
                 <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-completo-YYYYMMDD-HHMM.sql" required></label>
                 <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
                 <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14">14 días</option><option value="30" selected>30 días</option><option value="0">No borrar</option></select></label>
@@ -400,7 +400,7 @@
             <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>Incremental real:</strong> se genera a partir de los binary logs desde el último backup registrado.</div></div>
             <div class="form-grid">
                 <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
                 <label class="field"><span>Base de referencia</span><select name="base_ref"><option value="latest" selected>Último backup disponible</option><option value="manual">Manual</option></select></label>
                 <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-inc-YYYYMMDD-HHMM.sql" required></label>
                 <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
@@ -429,7 +429,7 @@
             <input type="hidden" name="type" value="differential">
             <div class="form-grid">
                 <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/dasc/backups" required></label>
+                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
                 <label class="field"><span>Referencia</span><select name="base_ref"><option value="last_full" selected>Último backup completo</option><option value="manual">Manual</option></select></label>
                 <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-diff-YYYYMMDD-HHMM.sql" required></label>
                 <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>

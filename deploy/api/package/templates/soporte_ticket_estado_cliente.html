@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ ticket.id }} - Estado de solicitud DASC</title>
+    <title>{{ ticket.id }} - Estado de solicitud Vigex</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -194,7 +194,7 @@
 
         <section class="client-card hero">
             <h1>{{ ticket.id }}</h1>
-            <p class="muted">Seguimiento de la solicitud registrada en el panel DASC.</p>
+            <p class="muted">Seguimiento de la solicitud registrada en el panel Vigex.</p>
 
             <div class="badge-row">
                 <span class="badge state">{{ ticket.estado }}</span>
@@ -257,7 +257,7 @@
                 <div class="timeline-item">
                     <strong>Solicitud registrada</strong>
                     <div class="muted">{{ ticket.fecha_apertura }}</div>
-                    <div>El equipo DASC ha recibido la solicitud.</div>
+                    <div>El equipo Vigex ha recibido la solicitud.</div>
                 </div>
                 <div class="timeline-item">
                     <strong>Estado actual: {{ ticket.estado }}</strong>
@@ -270,7 +270,7 @@
         {% if ticket.estado == "Pendiente cliente" %}
         <section class="client-card">
             <div class="notice">
-                El equipo DASC necesita información adicional para continuar con la solicitud.
+                El equipo Vigex necesita información adicional para continuar con la solicitud.
             </div>
         </section>
         {% endif %}
@@ -279,11 +279,11 @@
             <h2>Información para el cliente</h2>
             <p>
                 Esta vista muestra el estado actual de la solicitud. Para añadir información adicional,
-                responde por el canal acordado con el equipo DASC indicando la referencia
+                responde por el canal acordado con el equipo Vigex indicando la referencia
                 <strong>{{ ticket.id }}</strong>.
             </p>
             <p class="muted">
-                La gestión técnica interna, plantillas de respuesta y sincronización central están reservadas al equipo DASC.
+                La gestión técnica interna, plantillas de respuesta y sincronización central están reservadas al equipo Vigex.
             </p>
         </section>
     </div>

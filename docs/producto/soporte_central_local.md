@@ -1,33 +1,33 @@
-# Soporte central/local DASC Server Manager
+# Soporte central/local Vigex
 
 ## 1. Objetivo del módulo
 
-El módulo de soporte central/local permite que DASC Server Manager funcione como un servicio gestionado para PYMES.
+El módulo de soporte central/local permite que Vigex funcione como un servicio gestionado para PYMES.
 
 Su objetivo es separar claramente:
 
 - Lo que ve el cliente.
 - Lo que gestiona el técnico desde el panel local.
-- Lo que gestiona el equipo DASC desde un panel central.
-- La sincronización entre instalaciones locales y la central DASC.
+- Lo que gestiona el equipo Vigex desde un panel central.
+- La sincronización entre instalaciones locales y la central Vigex.
 
 Este módulo evita que el cliente tenga que usar GitHub, herramientas técnicas o canales complejos para abrir incidencias.
 
 ## 2. Idea general
 
-Cada cliente tiene su propio panel local DASC instalado en su infraestructura.
+Cada cliente tiene su propio panel local Vigex instalado en su infraestructura.
 
-El equipo DASC tiene un panel central propio donde recibe y gestiona solicitudes de todos los clientes.
+El equipo Vigex tiene un panel central propio donde recibe y gestiona solicitudes de todos los clientes.
 
 El flujo general es:
 
 - El cliente crea una solicitud desde su panel local.
 - El panel local guarda el ticket en SQLite local.
-- El panel local intenta enviarlo al panel central DASC.
+- El panel local intenta enviarlo al panel central Vigex.
 - Si la central responde, se guarda la referencia central.
 - Si la central no responde, el ticket queda localmente como pendiente/error.
 - Un timer de systemd reintenta el envío automáticamente.
-- El equipo DASC gestiona la incidencia desde el panel central.
+- El equipo Vigex gestiona la incidencia desde el panel central.
 - El panel local puede sincronizar el estado actualizado desde la central.
 - El cliente puede ver una vista limpia del estado del ticket.
 
@@ -44,7 +44,7 @@ Funciones principales:
 - Vista limpia del estado del ticket para cliente.
 - Cola de sincronización local-central.
 - Reintentos automáticos si la central no está disponible.
-- Vista técnica interna para el equipo DASC si está activada.
+- Vista técnica interna para el equipo Vigex si está activada.
 
 Ejemplos de rutas locales:
 
@@ -54,11 +54,11 @@ Ejemplos de rutas locales:
 - /soporte/tickets/{ticket_id}
 - /soporte/sincronizacion
 
-### 3.2 Panel central DASC
+### 3.2 Panel central Vigex
 
 El panel central no se instala en cada cliente.
 
-Debe estar en un servidor propio de DASC, idealmente un VPS o servidor cloud.
+Debe estar en un servidor propio de Vigex, idealmente un VPS o servidor cloud.
 
 Funciones principales:
 
@@ -66,7 +66,7 @@ Funciones principales:
 - Mostrar tickets centralizados.
 - Gestionar estado y prioridad.
 - Registrar historial central.
-- Servir como herramienta interna del equipo DASC.
+- Servir como herramienta interna del equipo Vigex.
 - Preparar una visión multi-cliente del soporte.
 
 Ejemplos de rutas centrales:
@@ -98,7 +98,7 @@ El cliente no debe ver:
 - Errores internos.
 - Tokens.
 - Configuración.
-- Gestión interna del equipo DASC.
+- Gestión interna del equipo Vigex.
 
 ## 4. Rutas principales
 
@@ -151,7 +151,7 @@ Vista interna de tickets locales.
 
 Uso recomendado:
 
-- Equipo DASC.
+- Equipo Vigex.
 - Técnico autorizado.
 - Validaciones internas.
 - Diagnóstico del soporte local.
@@ -209,7 +209,7 @@ Permite reintentar pendientes si existen.
 
 ### /
 
-Dashboard central del equipo DASC.
+Dashboard central del equipo Vigex.
 
 Muestra:
 
@@ -233,7 +233,7 @@ Permite:
 - Cambiar estado central.
 - Cambiar prioridad.
 - Registrar historial central.
-- Preparar la gestión interna del equipo DASC.
+- Preparar la gestión interna del equipo Vigex.
 
 ### /api/v1/support/tickets
 
@@ -252,7 +252,7 @@ El flujo de alta es:
 1. El usuario entra al panel local.
 2. Abre /soporte.
 3. Rellena el formulario.
-4. El panel local crea un ticket local tipo DASC-YYYY-NNN.
+4. El panel local crea un ticket local tipo Vigex-YYYY-NNN.
 5. El ticket se guarda en SQLite local.
 6. El panel local intenta enviarlo al panel central.
 7. Si el envío funciona:
@@ -278,7 +278,7 @@ El comportamiento esperado es:
 - Se marca como error de sincronización.
 - Se muestra como pendiente/error en /soporte/sincronizacion.
 - El botón de reintento manual puede reenviarlo.
-- El timer systemd dasc-central-retry.timer intenta reenviarlo periódicamente.
+- El timer systemd vigex-central-retry.timer intenta reenviarlo periódicamente.
 - Cuando la central vuelve a estar disponible, el ticket se envía.
 - Se guarda la referencia central.
 - El estado pasa a sent.
@@ -287,7 +287,7 @@ Esto permite tolerar caídas temporales del servidor central.
 
 ## 7. Flujo de sincronización central hacia local
 
-Una vez que el equipo DASC gestiona el ticket en el panel central, el panel local puede consultar el estado actualizado.
+Una vez que el equipo Vigex gestiona el ticket en el panel central, el panel local puede consultar el estado actualizado.
 
 El flujo es:
 
@@ -313,8 +313,8 @@ Estados habituales:
 Interpretación para cliente:
 
 - Abierto: solicitud registrada.
-- En análisis: el equipo DASC está revisando el caso.
-- En curso: el equipo DASC está trabajando en la incidencia.
+- En análisis: el equipo Vigex está revisando el caso.
+- En curso: el equipo Vigex está trabajando en la incidencia.
 - Pendiente cliente: se necesita información adicional.
 - Resuelto: el caso está solucionado.
 - Cerrado: el caso se da por finalizado.
@@ -330,7 +330,7 @@ Prioridades habituales:
 
 La prioridad del cliente se registra como prioridad percibida.
 
-El equipo DASC puede ajustar la prioridad real durante la gestión interna.
+El equipo Vigex puede ajustar la prioridad real durante la gestión interna.
 
 ## 10. Seguridad aplicada
 
@@ -338,10 +338,10 @@ Medidas actuales:
 
 - Separación de vista cliente y vista técnica.
 - Vista técnica local protegida por usuario administrador.
-- Activación explícita mediante DASC_LOCAL_INTERNAL_SUPPORT_ENABLED.
+- Activación explícita mediante VIGEX_LOCAL_INTERNAL_SUPPORT_ENABLED.
 - Panel central con login propio.
 - Credenciales centrales gestionadas mediante variables de entorno.
-- Bloqueo de credenciales de laboratorio si DASC_CENTRAL_LAB_MODE=false.
+- Bloqueo de credenciales de laboratorio si Vigex_CENTRAL_LAB_MODE=false.
 - config.env del panel central protegido como root:root 600.
 - Panel central servido mediante Nginx.
 - Tokens para comunicación local-central.
@@ -376,11 +376,11 @@ Flujo:
 - http://192.168.1.250/
 - Nginx
 - http://127.0.0.1:8010
-- DASC Central Support
+- Vigex Central
 
 En producción, el objetivo sería:
 
-- https://central.dasc.es
+- https://central.vigex.es
 - Nginx con HTTPS
 - Backend central-support en 127.0.0.1:8010
 - Firewall evitando exponer 8010 directamente
@@ -402,54 +402,54 @@ Modo recomendado:
 Ejemplos:
 
 - http://panel.empresa.lan
-- http://dasc.empresa.lan
+- http://vigex.empresa.lan
 - http://soporte.empresa.lan
 
-DASC no debe modificar automáticamente el DNS de la empresa salvo que tenga autorización y acceso al sistema DNS del cliente.
+Vigex no debe modificar automáticamente el DNS de la empresa salvo que tenga autorización y acceso al sistema DNS del cliente.
 
 ## 14. Arquitectura objetivo futura
 
 En producto real:
 
 - Cada cliente tiene su panel local.
-- DASC tiene un panel central único.
+- Vigex tiene un panel central único.
 - Los paneles locales envían tickets al panel central.
-- El panel central se aloja en un VPS o cloud propio de DASC.
+- El panel central se aloja en un VPS o cloud propio de Vigex.
 - El acceso central se hace por dominio público y HTTPS.
 - El cliente solo consulta su panel local.
-- El equipo DASC gestiona todo desde el panel central.
+- El equipo Vigex gestiona todo desde el panel central.
 
 Flujo objetivo:
 
-- Cliente A local -> central.dasc.es
-- Cliente B local -> central.dasc.es
-- Cliente C local -> central.dasc.es
-- Equipo DASC -> central.dasc.es
+- Cliente A local -> central.vigex.es
+- Cliente B local -> central.vigex.es
+- Cliente C local -> central.vigex.es
+- Equipo Vigex -> central.vigex.es
 
 ## 15. Variables relevantes
 
 Variables locales habituales:
 
-- DASC_LOCAL_INTERNAL_SUPPORT_ENABLED
-- DASC_CENTRAL_SUPPORT_ENABLED
-- DASC_CENTRAL_SUPPORT_URL
-- DASC_CENTRAL_SUPPORT_TOKEN
-- DASC_CLIENT_ID
-- DASC_CLIENT_NAME
-- DASC_LOCAL_PANEL_VERSION
+- VIGEX_LOCAL_INTERNAL_SUPPORT_ENABLED
+- Vigex_CENTRAL_SUPPORT_ENABLED
+- Vigex_CENTRAL_SUPPORT_URL
+- Vigex_CENTRAL_SUPPORT_TOKEN
+- VIGEX_CLIENT_ID
+- Vigex_CLIENT_NAME
+- Vigex_LOCAL_PANEL_VERSION
 
 Variables centrales habituales:
 
-- DASC_CENTRAL_AUTH_ENABLED
-- DASC_CENTRAL_LAB_MODE
-- DASC_CENTRAL_SECRET_KEY
-- DASC_CENTRAL_ADMIN_USER
-- DASC_CENTRAL_ADMIN_PASSWORD
-- DASC_CENTRAL_TECH_USER
-- DASC_CENTRAL_TECH_PASSWORD
-- DASC_CENTRAL_DEMO_CLIENT_ID
-- DASC_CENTRAL_DEMO_CLIENT_NAME
-- DASC_CENTRAL_DEMO_TOKEN
+- Vigex_CENTRAL_AUTH_ENABLED
+- Vigex_CENTRAL_LAB_MODE
+- Vigex_CENTRAL_SECRET_KEY
+- Vigex_CENTRAL_ADMIN_USER
+- Vigex_CENTRAL_ADMIN_PASSWORD
+- Vigex_CENTRAL_TECH_USER
+- Vigex_CENTRAL_TECH_PASSWORD
+- Vigex_CENTRAL_DEMO_CLIENT_ID
+- Vigex_CENTRAL_DEMO_CLIENT_NAME
+- Vigex_CENTRAL_DEMO_TOKEN
 
 ## 16. Base de datos local de soporte
 
@@ -457,7 +457,7 @@ La base local de soporte usa SQLite.
 
 Ruta habitual:
 
-- /opt/dasc/api/data/support_tickets.db
+- /opt/vigex/api/data/support_tickets.db
 
 Contiene tickets locales y campos de sincronización central.
 
@@ -487,7 +487,7 @@ La base central usa SQLite en la validación actual.
 
 Ruta habitual:
 
-- /opt/dasc/central-support/data/central_support.db
+- /opt/vigex/central-support/data/central_support.db
 
 Contiene:
 
@@ -523,7 +523,7 @@ Durante las tareas R-049L a R-049W se validó:
 
 El módulo aún no incluye:
 
-- Comentarios bidireccionales cliente-DASC.
+- Comentarios bidireccionales cliente-Vigex.
 - Adjuntos reales subidos por formulario.
 - Portal público sin login por código seguro.
 - Notificaciones automáticas por email.
@@ -540,8 +540,8 @@ El módulo aún no incluye:
 
 ## 20. Conclusión
 
-El módulo de soporte central/local convierte DASC Server Manager en una base más cercana a producto-servicio.
+El módulo de soporte central/local convierte Vigex en una base más cercana a producto-servicio.
 
-Permite que cada cliente tenga un canal simple para comunicar incidencias y que el equipo DASC tenga herramientas internas para gestionarlas, sincronizarlas y centralizarlas.
+Permite que cada cliente tenga un canal simple para comunicar incidencias y que el equipo Vigex tenga herramientas internas para gestionarlas, sincronizarlas y centralizarlas.
 
 La separación entre vista cliente, vista técnica local y panel central evita mezclar experiencia de usuario con herramientas internas.

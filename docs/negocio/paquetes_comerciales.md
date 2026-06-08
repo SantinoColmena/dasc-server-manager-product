@@ -1,12 +1,12 @@
-﻿# Paquetes comerciales - DASC Server Manager
+﻿# Paquetes comerciales - Vigex
 
 ## 1. Objetivo de los paquetes
 
-DASC Server Manager se plantea como un producto adaptable a diferentes tipos de empresa. No todos los clientes tienen los mismos recursos, presupuesto o nivel de necesidad técnica, por eso el producto se divide inicialmente en tres paquetes comerciales:
+Vigex se plantea como un producto adaptable a diferentes tipos de empresa. No todos los clientes tienen los mismos recursos, presupuesto o nivel de necesidad técnica, por eso el producto se divide inicialmente en tres paquetes comerciales:
 
-- DASC Lite.
-- DASC PyME.
-- DASC Pro.
+- Vigex Lite.
+- Vigex PyME.
+- Vigex Pro.
 
 La idea es que el mismo producto pueda instalarse en escenarios distintos, desde una empresa pequeña con un único servidor hasta una empresa que necesite separar responsabilidades entre panel, base de datos y backups.
 
@@ -16,25 +16,25 @@ La idea es que el mismo producto pueda instalarse en escenarios distintos, desde
 
 | Paquete | Cliente objetivo | Arquitectura recomendada | Nivel de protección | Precio orientativo |
 |---|---|---|---|---|
-| DASC Lite | Autónomos, microempresas o pruebas internas | 1 servidor | Básico | 299 € - 499 € |
-| DASC PyME | Pequeñas empresas con datos importantes | 2 servidores | Medio | 799 € - 1.200 € |
-| DASC Pro | Empresas con mayor necesidad de control | 3 servidores | Alto | 1.500 € - 3.000 € |
+| Vigex Lite | Autónomos, microempresas o pruebas internas | 1 servidor | Básico | 299 € - 499 € |
+| Vigex PyME | Pequeñas empresas con datos importantes | 2 servidores | Medio | 799 € - 1.200 € |
+| Vigex Pro | Empresas con mayor necesidad de control | 3 servidores | Alto | 1.500 € - 3.000 € |
 
 Los precios son orientativos y pueden cambiar según el alcance real, horas de instalación, soporte contratado y personalizaciones necesarias.
 
 ---
 
-## 3. DASC Lite
+## 3. Vigex Lite
 
 ### Descripción
 
-DASC Lite es la versión más sencilla del producto. Está pensada para clientes pequeños que quieren empezar a controlar sus copias de seguridad y operaciones básicas sin invertir en varios servidores.
+Vigex Lite es la versión más sencilla del producto. Está pensada para clientes pequeños que quieren empezar a controlar sus copias de seguridad y operaciones básicas sin invertir en varios servidores.
 
 En esta versión, el panel, la base de datos y las copias pueden convivir en una misma máquina. No es la opción más segura, pero permite ofrecer una entrada económica al producto.
 
 ### Cliente objetivo
 
-DASC Lite está pensado para:
+Vigex Lite está pensado para:
 
 - Autónomos.
 - Microempresas.
@@ -48,7 +48,7 @@ DASC Lite está pensado para:
 
 **Servidor único:**
 
-- Panel DASC.
+- Panel Vigex.
 - Base de datos MySQL/MariaDB.
 - Backups locales.
 - Logs.
@@ -56,7 +56,7 @@ DASC Lite está pensado para:
 
 ### Funcionalidades incluidas
 
-- Instalación del panel DASC en un servidor.
+- Instalación del panel Vigex en un servidor.
 - Panel web local.
 - Login de administrador.
 - Gestión básica de usuarios.
@@ -101,11 +101,11 @@ Este precio puede incluir instalación inicial, configuración básica y una peq
 
 ---
 
-## 4. DASC PyME
+## 4. Vigex PyME
 
 ### Descripción
 
-DASC PyME es el paquete recomendado para la mayoría de pequeñas empresas. Busca un equilibrio entre coste, seguridad y facilidad de implantación.
+Vigex PyME es el paquete recomendado para la mayoría de pequeñas empresas. Busca un equilibrio entre coste, seguridad y facilidad de implantación.
 
 En este escenario se utilizan dos servidores. Uno ejecuta el panel y la base de datos principal, mientras que el segundo se encarga de almacenar backups y ejecutar servicios auxiliares.
 
@@ -113,7 +113,7 @@ Esta opción mejora mucho la seguridad respecto al paquete Lite, porque las copi
 
 ### Cliente objetivo
 
-DASC PyME está pensado para:
+Vigex PyME está pensado para:
 
 - Pequeñas empresas.
 - Gestorías.
@@ -126,7 +126,7 @@ DASC PyME está pensado para:
 
 **Servidor 1 - Principal:**
 
-- Panel DASC.
+- Panel Vigex.
 - Base de datos MySQL/MariaDB.
 - Logs.
 - Aplicación principal.
@@ -140,7 +140,7 @@ DASC PyME está pensado para:
 
 ### Funcionalidades incluidas
 
-- Instalación del panel DASC.
+- Instalación del panel Vigex.
 - Configuración de conexión con servidor de backups.
 - Backups completos.
 - Backups incrementales.
@@ -169,7 +169,7 @@ DASC PyME está pensado para:
 - Mejor equilibrio entre precio y seguridad.
 - Backups separados del servidor principal.
 - Adecuado para la mayoría de PyMEs.
-- Permite crecimiento futuro hacia DASC Pro.
+- Permite crecimiento futuro hacia Vigex Pro.
 - Reduce el riesgo de perder los backups si falla el servidor principal.
 
 ### Limitaciones
@@ -187,11 +187,11 @@ Este precio puede incluir instalación, configuración, pruebas iniciales, docum
 
 ---
 
-## 5. DASC Pro
+## 5. Vigex Pro
 
 ### Descripción
 
-DASC Pro es la versión más completa del producto. Está pensada para empresas que necesitan mayor separación, más seguridad y mejor trazabilidad.
+Vigex Pro es la versión más completa del producto. Está pensada para empresas que necesitan mayor separación, más seguridad y mejor trazabilidad.
 
 En este escenario se utilizan tres servidores, separando claramente el panel, la base de datos y el servidor de backups, servicios auxiliares y monitorización.
 
@@ -199,7 +199,7 @@ Es la arquitectura más parecida a la planteada en el entorno técnico original 
 
 ### Cliente objetivo
 
-DASC Pro está pensado para:
+Vigex Pro está pensado para:
 
 - Empresas con datos críticos.
 - Empresas con mayor volumen de información.
@@ -212,7 +212,7 @@ DASC Pro está pensado para:
 
 **Servidor 1 - Panel/API:**
 
-- Panel DASC.
+- Panel Vigex.
 - Backend FastAPI.
 - Gestión de usuarios.
 - Interfaz web.
@@ -321,7 +321,7 @@ Uno de los puntos clave del producto es que puede adaptarse a los recursos del c
 
 ### Instalación en 1 servidor
 
-Adecuada para DASC Lite.
+Adecuada para Vigex Lite.
 
 Ventajas:
 
@@ -337,7 +337,7 @@ Desventajas:
 
 ### Instalación en 2 servidores
 
-Adecuada para DASC PyME.
+Adecuada para Vigex PyME.
 
 Ventajas:
 
@@ -353,7 +353,7 @@ Desventajas:
 
 ### Instalación en 3 servidores
 
-Adecuada para DASC Pro.
+Adecuada para Vigex Pro.
 
 Ventajas:
 
@@ -373,7 +373,7 @@ Desventajas:
 
 ## 8. Recomendación comercial inicial
 
-La opción recomendada para vender primero sería DASC PyME.
+La opción recomendada para vender primero sería Vigex PyME.
 
 Motivos:
 
@@ -384,9 +384,9 @@ Motivos:
 - Tiene margen para ofrecer mantenimiento posterior.
 - Puede evolucionar a Pro si el cliente crece.
 
-DASC Lite puede usarse como entrada económica o piloto.
+Vigex Lite puede usarse como entrada económica o piloto.
 
-DASC Pro puede reservarse para clientes con mayor presupuesto o mayor necesidad de seguridad.
+Vigex Pro puede reservarse para clientes con mayor presupuesto o mayor necesidad de seguridad.
 
 ---
 
@@ -411,7 +411,7 @@ Estos servicios permitirían pasar de una venta única a un modelo con ingresos 
 
 ## 10. Conclusión
 
-Los paquetes Lite, PyME y Pro permiten convertir DASC Server Manager en un producto más flexible y comercial.
+Los paquetes Lite, PyME y Pro permiten convertir Vigex en un producto más flexible y comercial.
 
 La división por paquetes facilita adaptar la solución al presupuesto y necesidades de cada cliente, evitando ofrecer una única instalación demasiado grande o demasiado cara.
 

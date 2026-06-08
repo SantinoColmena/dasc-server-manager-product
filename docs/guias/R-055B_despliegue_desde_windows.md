@@ -1,6 +1,6 @@
-# R-055B — Despliegue de DASC desde un PC Windows
+# R-055B — Despliegue de Vigex desde un PC Windows
 
-> **Destinatario:** técnico o reseller que instala DASC en servidores Linux
+> **Destinatario:** técnico o reseller que instala Vigex en servidores Linux
 > desde un PC de desarrollo o administración con Windows 10/11.
 >
 > Para la guía del usuario final, ver [`R-055A`](R-055A_acceso_navegador_windows.md).
@@ -28,15 +28,15 @@ Windows 11 incluyen de serie todo lo necesario:
 
 ## Qué ocurre en cada servidor
 
-DASC se instala íntegramente en el/los servidores Linux mediante scripts bash.
+Vigex se instala íntegramente en el/los servidores Linux mediante scripts bash.
 Desde Windows solo necesitas:
 
 1. **Conectarte por SSH** a cada servidor.
-2. **Copiar el repositorio** DASC al servidor (una sola vez).
+2. **Copiar el repositorio** Vigex al servidor (una sola vez).
 3. **Ejecutar los instaladores** con los parámetros del entorno.
 
 Todo el software (Python, MariaDB, nginx, fail2ban, etc.) lo instalan los propios
-scripts de DASC en el servidor Linux. El PC Windows solo actúa de terminal remota.
+scripts de Vigex en el servidor Linux. El PC Windows solo actúa de terminal remota.
 
 ---
 
@@ -53,7 +53,7 @@ Si el servidor Linux usa autenticación por clave (recomendado), genera un par d
 si aún no tienes:
 
 ```powershell
-ssh-keygen -t ed25519 -C "tecnico-dasc"
+ssh-keygen -t ed25519 -C "tecnico-vigex"
 # Guarda la clave en la ruta por defecto (Enter) y define una passphrase
 ```
 
@@ -68,7 +68,7 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh ubuntu@192.168.1.50 "cat >> ~/.s
 
 ---
 
-## 2. Descargar / obtener el repositorio DASC
+## 2. Descargar / obtener el repositorio Vigex
 
 Tienes dos opciones para llevar el código al servidor:
 
@@ -79,9 +79,9 @@ Tienes dos opciones para llevar el código al servidor:
 ssh ubuntu@192.168.1.50
 
 # En el servidor Linux:
-git clone https://github.com/<tu-org>/dasc-server-manager-product.git ~/dasc
+git clone https://github.com/<tu-org>/vigex-server-manager-product.git ~/vigex
 # O usa el tag/commit específico de la release:
-git -C ~/dasc checkout v1.0-rc1
+git -C ~/vigex checkout v1.0-rc1
 ```
 
 ### Opción B — Transferir el archivo desde Windows con SCP (red sin acceso a Internet)
@@ -90,13 +90,13 @@ En Windows, desde el directorio local del repo:
 
 ```powershell
 # Crear un tarball del repo (sin git archive para incluir ficheros no commiteados si fuera necesario):
-git archive --format=tar.gz -o C:\Temp\dasc-src.tgz HEAD
+git archive --format=tar.gz -o C:\Temp\vigex-src.tgz HEAD
 
 # Copiar al servidor
-scp C:\Temp\dasc-src.tgz ubuntu@192.168.1.50:/home/ubuntu/dasc-src.tgz
+scp C:\Temp\vigex-src.tgz ubuntu@192.168.1.50:/home/ubuntu/vigex-src.tgz
 
 # En el servidor (via SSH):
-ssh ubuntu@192.168.1.50 "mkdir -p ~/dasc && tar xzf ~/dasc-src.tgz -C ~/dasc"
+ssh ubuntu@192.168.1.50 "mkdir -p ~/vigex && tar xzf ~/vigex-src.tgz -C ~/vigex"
 ```
 
 ---
@@ -117,22 +117,22 @@ Desde Windows Terminal, abres **dos pestañas SSH** — una por servidor:
 **Pestaña 1 — servidor DB (`192.168.1.51`):**
 ```bash
 ssh ubuntu@192.168.1.51
-cd ~/dasc/deploy/db
-sudo -E DASC_PROFILE=standard APP_PASSWORD='<pass-dasc>' \
+cd ~/vigex/deploy/db
+sudo -E VIGEX_PROFILE=standard APP_PASSWORD='<pass-vigex>' \
     BACKUP_ALLOWED_HOST=192.168.1.50 LOGS_ALLOWED_HOST=192.168.1.50 \
     bash install_db.sh
-# Cuando termine: anota las credenciales de /root/dasc-db-install-secrets.env
+# Cuando termine: anota las credenciales de /root/vigex-db-install-secrets.env
 ```
 
 **Pestaña 2 — servidor panel+backup (`192.168.1.50`):**
 ```bash
 ssh ubuntu@192.168.1.50
-cd ~/dasc/deploy/backup-services
-sudo -E DASC_PROFILE=standard APP_PASSWORD='<pass-dasc>' \
+cd ~/vigex/deploy/backup-services
+sudo -E VIGEX_PROFILE=standard APP_PASSWORD='<pass-vigex>' \
     DB_HOST=192.168.1.51 ... bash install_backup_services.sh
 
-cd ~/dasc/deploy/api
-sudo -E DASC_PROFILE=standard ... bash install_dasc_api.sh </dev/null
+cd ~/vigex/deploy/api
+sudo -E VIGEX_PROFILE=standard ... bash install_vigex_api.sh </dev/null
 ```
 
 ---
@@ -140,47 +140,47 @@ sudo -E DASC_PROFILE=standard ... bash install_dasc_api.sh </dev/null
 ## 4. Transferir secretos entre servidores (si necesario)
 
 En despliegues Standard y Pro, el instalador de DB genera un fichero de secretos
-`/root/dasc-db-install-secrets.env` que los otros instaladores necesitan.
+`/root/vigex-db-install-secrets.env` que los otros instaladores necesitan.
 Para copiarlo entre servidores **desde Windows** como intermediario:
 
 ```powershell
 # 1. En el servidor DB: copiar el fichero a /home/ubuntu/ (accesible por SCP)
-ssh ubuntu@192.168.1.51 "sudo cp /root/dasc-db-install-secrets.env /home/ubuntu/ && sudo chown ubuntu: /home/ubuntu/dasc-db-install-secrets.env"
+ssh ubuntu@192.168.1.51 "sudo cp /root/vigex-db-install-secrets.env /home/ubuntu/ && sudo chown ubuntu: /home/ubuntu/vigex-db-install-secrets.env"
 
 # 2. Desde Windows: descargarlo
-scp ubuntu@192.168.1.51:/home/ubuntu/dasc-db-install-secrets.env C:\Temp\dasc-db-secrets.env
+scp ubuntu@192.168.1.51:/home/ubuntu/vigex-db-install-secrets.env C:\Temp\vigex-db-secrets.env
 
 # 3. Subirlo al servidor de panel/backup
-scp C:\Temp\dasc-db-secrets.env ubuntu@192.168.1.50:/home/ubuntu/dasc-db-install-secrets.env
+scp C:\Temp\vigex-db-secrets.env ubuntu@192.168.1.50:/home/ubuntu/vigex-db-install-secrets.env
 
 # 4. En el servidor de panel: moverlo a /root/ para que el instalador lo encuentre
-ssh ubuntu@192.168.1.50 "sudo mv /home/ubuntu/dasc-db-install-secrets.env /root/"
+ssh ubuntu@192.168.1.50 "sudo mv /home/ubuntu/vigex-db-install-secrets.env /root/"
 
 # 5. Eliminar la copia local (contiene credenciales)
-Remove-Item C:\Temp\dasc-db-secrets.env
+Remove-Item C:\Temp\vigex-db-secrets.env
 ```
 
 ---
 
 ## 5. Endurecimiento post-instalación (R-054)
 
-Una vez instalado DASC, aplica los scripts de hardening desde cada servidor:
+Una vez instalado Vigex, aplica los scripts de hardening desde cada servidor:
 
 ```bash
 # En el servidor del panel (API host):
-cd ~/dasc/deploy/proxy
+cd ~/vigex/deploy/proxy
 sudo bash install_reverse_proxy.sh          # HTTPS + activa HTTPS_ONLY
 
-cd ~/dasc/deploy/api
+cd ~/vigex/deploy/api
 sudo bash harden_ufw_api.sh                 # UFW: 22/80/443
-sudo bash harden_fail2ban_api.sh            # fail2ban: sshd + dasc-auth
+sudo bash harden_fail2ban_api.sh            # fail2ban: sshd + vigex-auth
 
 # En el servidor DB:
-cd ~/dasc/deploy/db
+cd ~/vigex/deploy/db
 sudo MARIADB_ALLOWED_HOSTS="192.168.1.50" bash harden_ufw_db.sh
 
 # En el servidor de backup (si es separado — perfil Pro):
-cd ~/dasc/deploy/backup-services
+cd ~/vigex/deploy/backup-services
 sudo bash harden_ufw_backup.sh
 ```
 
@@ -200,20 +200,20 @@ Tras instalar, comprueba que el panel responde:
 
 ## 7. Actualizaciones futuras
 
-Para actualizar DASC a una nueva versión desde Windows:
+Para actualizar Vigex a una nueva versión desde Windows:
 
 ```powershell
 # 1. Crear tarball del nuevo código:
-git archive --format=tar.gz -o C:\Temp\dasc-src-nuevo.tgz HEAD
+git archive --format=tar.gz -o C:\Temp\vigex-src-nuevo.tgz HEAD
 
 # 2. Subir al servidor:
-scp C:\Temp\dasc-src-nuevo.tgz ubuntu@192.168.1.50:/home/ubuntu/
+scp C:\Temp\vigex-src-nuevo.tgz ubuntu@192.168.1.50:/home/ubuntu/
 
 # 3. En el servidor: extraer, hacer backup de config.env, re-ejecutar instalador
 ssh ubuntu@192.168.1.50
-#   cp /opt/dasc/api/config.env ~/config.env.bak
-#   mkdir -p ~/dasc-nuevo && tar xzf ~/dasc-src-nuevo.tgz -C ~/dasc-nuevo
-#   cd ~/dasc-nuevo/deploy/api && sudo bash install_dasc_api.sh </dev/null
+#   cp /opt/vigex/api/config.env ~/config.env.bak
+#   mkdir -p ~/vigex-nuevo && tar xzf ~/vigex-src-nuevo.tgz -C ~/vigex-nuevo
+#   cd ~/vigex-nuevo/deploy/api && sudo bash install_vigex_api.sh </dev/null
 ```
 
 > El instalador es idempotente: conserva `config.env`, `SECRET_KEY` y

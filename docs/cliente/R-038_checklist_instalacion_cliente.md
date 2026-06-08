@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Definir una lista de comprobación para instalar DASC Server Manager en un entorno de cliente de forma ordenada, segura y repetible.
+Definir una lista de comprobación para instalar Vigex en un entorno de cliente de forma ordenada, segura y repetible.
 
 Este checklist sirve como guía previa, durante y posterior a la instalación.
 
@@ -10,14 +10,14 @@ Este checklist sirve como guía previa, durante y posterior a la instalación.
 
 Este checklist está pensado para instalaciones tipo:
 
-- DASC Lite: 1 servidor + copia externa obligatoria.
-- DASC PyME: 2 servidores.
-- DASC Pro: 3 servidores separados.
+- Vigex Lite: 1 servidor + copia externa obligatoria.
+- Vigex PyME: 2 servidores.
+- Vigex Pro: 3 servidores separados.
 
 La arquitectura recomendada para una PyME es la instalación con 2 servidores:
 
 - Servidor principal del cliente.
-- Servidor DASC/backups/logs o nodo de copias separado.
+- Servidor Vigex/backups/logs o nodo de copias separado.
 
 ## 1. Información previa del cliente
 
@@ -98,7 +98,7 @@ Comprobar:
 
 | Paso | Estado |
 |---|---|
-| Crear usuario de servicio dasc | Pendiente |
+| Crear usuario de servicio vigex | Pendiente |
 | Instalar openssh-server | Pendiente |
 | Instalar cliente MariaDB/MySQL | Pendiente |
 | Instalar script backups_api.sh | Pendiente |
@@ -109,17 +109,17 @@ Comprobar:
 | Validar ejecución manual de backup | Pendiente |
 | Validar listado de servicios | Pendiente |
 
-## 7. Instalación del panel DASC
+## 7. Instalación del panel Vigex
 
 Comprobar:
 
 | Paso | Estado |
 |---|---|
 | Copiar paquete de instalación | Pendiente |
-| Ejecutar install_dasc_api.sh | Pendiente |
+| Ejecutar install_vigex_api.sh | Pendiente |
 | Crear entorno virtual Python | Pendiente |
 | Instalar requirements.txt | Pendiente |
-| Crear servicio systemd dasc-api | Pendiente |
+| Crear servicio systemd vigex-api | Pendiente |
 | Configurar config.env | Pendiente |
 | Configurar clave SSH hacia servidor de backups | Pendiente |
 | Validar arranque del servicio | Pendiente |
@@ -179,7 +179,7 @@ Guardar evidencias en la documentación del cliente o en carpeta de validación:
 - Captura de backup ejecutado.
 - Captura de archivo generado.
 - Captura de logs.
-- Captura de servicio dasc-api activo.
+- Captura de servicio vigex-api activo.
 - Captura de conexión SSH validada.
 - Captura de prueba de restauración.
 - Captura de copia externa, si aplica.
@@ -215,4 +215,4 @@ La instalación se considera cerrada cuando:
 
 ## Resultado esperado
 
-DASC Server Manager queda instalado de forma controlada, con backups funcionales, logs activos, permisos definidos y documentación básica entregada al cliente.
+Vigex queda instalado de forma controlada, con backups funcionales, logs activos, permisos definidos y documentación básica entregada al cliente.
