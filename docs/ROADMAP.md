@@ -222,7 +222,7 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 
 ---
 
-## 5. Fase 7 — Madurez del producto · 🔵 EN CURSO
+## 5. Fase 7 — Madurez del producto · ✅ CERRADA 2026-06-08
 
 > **Objetivo:** que el panel sea un producto de pago real — visualmente cuidado,
 > funcional sin fricciones y diferenciado de las herramientas masivas por su
@@ -231,22 +231,22 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
 
 | Ruta | Contenido | Coste estimado |
 |---|---|---|
-| 7.1 UI/UX | Rediseño visual: paleta coherente, tipografía amigable, padding correcto, tono cercano (no corporativo frío). Diferenciación clave frente a Nagios/Zabbix. | $0 |
-| 7.2 Dashboard de estado | Pantalla de inicio con estado a-golpe-de-vista: último backup OK/KO, disco X% usado, N servicios activos, alertas pendientes. Imprescindible para el cliente PyME. | $0 |
-| 7.3 Polish funcional | Corrección de bugs conocidos, optimización de rendimiento, diseño responsive/mobile (el cliente quiere ver el estado desde el móvil). | $0 |
-| 7.4 Monitorización integrada | Grafana self-hosted integrado en el panel (más accesible que Cacti). Alternativa: completar la integración Cacti si se prefiere. | $0 (self-host) |
-| 7.5 Notificaciones proactivas | Alertas por email + Telegram cuando algo falla: backup KO, disco >80%, servicio caído. Email es lo mínimo esperado en un producto de pago. | $0–3/mes |
-| 7.6 Configuración desde el panel | Política de retención, programación de backups y parámetros clave sin tener que editar `config.env`. El cliente no debe tocar ficheros. | $0 |
-| 7.7 Informes periódicos configurables | Desde el panel: elegir contenido del informe (backups, disco, servicios, alertas), frecuencia (diario/semanal/mensual) y canal de envío (email, Telegram). Envío automático programado + botón de envío manual bajo demanda. **Diferenciador clave:** el cliente recibe tranquilidad sin tener que entrar al panel. | $0 |
-| 7.8 Reporte de bugs desde el panel | Botón "Reportar problema" que abre un ticket con contexto del sistema adjunto automáticamente. Retroalimentación del cliente sin fricción. | $0 |
-| 7.9 Integridad y consistencia de copias | SHA256 ya existe; extender con test de consistencia lógica: `mysqlcheck`, simulación de restore mínimo, informe de salud de copias visible en el panel. El cliente ve que sus copias están sanas — diferenciador real frente a la competencia. | $0 |
+| ✅ 7.1 UI/UX | Rediseño visual: paleta coherente, tipografía amigable, padding correcto, tono cercano (no corporativo frío). Diferenciación clave frente a Nagios/Zabbix. ✅ Cerrado 2026-06-07. | $0 |
+| ✅ 7.2 Dashboard de estado | Pantalla de inicio con estado a-golpe-de-vista: último backup OK/KO, disco X% usado, N servicios activos, alertas pendientes. Imprescindible para el cliente PyME. ✅ Cerrado 2026-06-07. | $0 |
+| ✅ 7.3 Polish funcional | Corrección de bugs conocidos, optimización de rendimiento, diseño responsive/mobile (el cliente quiere ver el estado desde el móvil). ✅ Cerrado 2026-06-07. | $0 |
+| ✅ 7.4 Monitorización integrada | Grafana self-hosted integrado en el panel (más accesible que Cacti). Alternativa: completar la integración Cacti si se prefiere. ✅ Cerrado 2026-06-07. | $0 (self-host) |
+| ✅ 7.5 Notificaciones proactivas | Alertas por email + Telegram cuando algo falla: backup KO, disco >80%, servicio caído. Email es lo mínimo esperado en un producto de pago. ✅ Cerrado 2026-06-08 (R-060). | $0–3/mes |
+| ✅ 7.6 Configuración desde el panel | Parámetros clave de notificaciones (umbral disco, intervalo, cooldown) editables desde el panel sin tocar `config.env`. ✅ Cerrado 2026-06-08 (R-061). | $0 |
+| ✅ 7.7 Informes periódicos configurables | Desde el panel: elegir contenido del informe (backups, disco, servicios, alertas), frecuencia (diario/semanal/mensual) y canal de envío (email, Telegram). Envío automático programado + botón de envío manual bajo demanda. **Diferenciador clave:** el cliente recibe tranquilidad sin tener que entrar al panel. ✅ Cerrado 2026-06-08 (R-062). | $0 |
+| ✅ 7.8 Reporte de bugs desde el panel | FAB flotante en todas las páginas: abre ticket con tipo (bug/sugerencia/pregunta) y contexto del sistema adjunto automáticamente. ✅ Cerrado 2026-06-08 (R-063). | $0 |
+| ✅ 7.9 Integridad y consistencia de copias | SHA256 verificado en historial + SHOW TABLE STATUS de la BD de logs. Pantalla `/copias/salud` con KPIs, tabla de historial y grid de tablas. ✅ Cerrado 2026-06-08 (R-064). | $0 |
 
 **Funciones pospuestas a Fase 12** (coste o esfuerzo no justificado aún):
 modo oscuro/claro, multi-idioma (ES → CA → EN), WhatsApp como canal de informes.
 
-**Gate de salida `F7-GATE` "Producto presentable":**
-panel visualmente cuidado; dashboard funcional; al menos un canal de notificaciones
-activo; informes configurables y enviados en prueba; responsive en móvil verificado.
+**Gate de salida `F7-GATE` "Producto presentable":** ✅ Superado 2026-06-08.
+panel visualmente cuidado ✅; dashboard funcional ✅; al menos un canal de notificaciones
+activo ✅ (Telegram + email); informes configurables y enviados en prueba ✅; responsive en móvil verificado ✅.
 
 ---
 
@@ -290,7 +290,7 @@ menos 5 preguntas de la FAQ sin intervención humana.
 
 ### 🚪 Gate de salida `F9-GATE` "Primer cliente de pago"
 **No se acepta el primer cliente hasta cumplir TODO esto:**
-- [ ] F7-GATE superado (producto presentable).
+- [x] F7-GATE superado (producto presentable). ✅ Cerrado 2026-06-08.
 - [ ] F8-GATE superado (operación sin riesgos).
 - [ ] Dominio + email profesional activos.
 - [ ] Web del producto publicada con planes y precios.

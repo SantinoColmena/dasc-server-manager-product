@@ -26,6 +26,7 @@ deploy/api/package/data/*.sqlite
 deploy/api/package/data/users.json
 deploy/api/package/data/auth_logs.json
 deploy/api/package/data/alerts.db
+deploy/api/package/data/reports_config.json
 
 # Logs
 *.log
