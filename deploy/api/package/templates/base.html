@@ -92,8 +92,16 @@
             </a>
             {% endif %}
 
-            <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') else '' }}">
+            <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') else '' }}">
                 <i class="fa-solid fa-headset"></i> Soporte
+            </a>
+
+            <a href="/soporte/faq" class="{{ 'active' if current_path.startswith('/soporte/faq') else '' }}">
+                <i class="fa-solid fa-circle-question"></i> FAQ
+            </a>
+
+            <a href="/recuperacion" class="{{ 'active' if current_path == '/recuperacion' else '' }}">
+                <i class="fa-solid fa-shield-halved"></i> Recuperación
             </a>
 
             {% if is_admin %}

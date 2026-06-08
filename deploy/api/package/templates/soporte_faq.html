@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    /* ── FAQ / IA de triage (Ruta 8.6) ── */
+    .faq-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: .75rem; margin-bottom: 1.75rem;
+    }
+    .faq-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
+    .faq-subtitle { color: #6b7280; font-size: .95rem; margin: .25rem 0 0; }
+
+    /* ── Buscador ── */
+    .faq-search-wrap {
+        position: relative; max-width: 480px;
+    }
+    .faq-search-icon {
+        position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+        color: #9ca3af; font-size: .9rem; pointer-events: none;
+    }
+    .faq-search {
+        width: 100%; padding: .6rem 1rem .6rem 2.4rem;
+        border: 1.5px solid #d1d5db; border-radius: 10px;
+        font-size: .9rem; font-family: inherit; color: #1e1b4b;
+        background: #fff; transition: border-color .15s;
+        box-sizing: border-box;
+    }
+    .faq-search:focus { outline: none; border-color: #4f46e5; }
+
+    /* ── Estado de búsqueda ── */
+    .faq-search-info {
+        font-size: .8rem; color: #6b7280; margin: .5rem 0 1.25rem;
+    }
+    .faq-search-info strong { color: #4f46e5; }
+
+    /* ── Acordeón de preguntas ── */
+    .faq-list { display: flex; flex-direction: column; gap: .75rem; }
+
+    .faq-item {
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        overflow: hidden; transition: border-color .15s, box-shadow .15s;
+    }
+    .faq-item:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,.07); }
+    .faq-item.open  { border-color: #6366f1; }
+
+    .faq-q {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.25rem; cursor: pointer; gap: .75rem;
+        user-select: none;
+    }
+    .faq-q-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: #eef2ff; color: #4f46e5;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .82rem; flex-shrink: 0;
+    }
+    .faq-q-text {
+        flex: 1; font-size: .92rem; font-weight: 600; color: #1e1b4b;
+    }
+    .faq-q-chevron {
+        color: #9ca3af; font-size: .8rem; flex-shrink: 0;
+        transition: transform .2s;
+    }
+    .faq-item.open .faq-q-chevron { transform: rotate(180deg); }
+
+    .faq-a {
+        max-height: 0; overflow: hidden; transition: max-height .25s ease;
+    }
+    .faq-item.open .faq-a { max-height: 800px; }
+    .faq-a-inner {
+        padding: 0 1.25rem 1.1rem 4rem;
+        font-size: .87rem; color: #374151; line-height: 1.65;
+    }
+    .faq-a-inner code {
+        background: #f3f4f6; padding: .1rem .35rem; border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #4f46e5;
+    }
+    .faq-a-inner strong { color: #1e1b4b; }
+
+    /* ── Vacío ── */
+    .faq-empty {
+        text-align: center; padding: 3rem 1rem; color: #9ca3af;
+    }
+    .faq-empty i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
+    .faq-empty p { font-size: .9rem; margin: 0; }
+    .faq-empty a { color: #4f46e5; }
+
+    /* ── Panel de categorías (sidebar rápido) ── */
+    .faq-cat-badge {
+        display: inline-flex; align-items: center; gap: .3rem;
+        background: #f3f4f6; color: #6b7280;
+        padding: .25rem .65rem; border-radius: 99px;
+        font-size: .72rem; font-weight: 600; white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+        .faq-header { flex-direction: column; }
+        .faq-search-wrap { max-width: 100%; }
+        .faq-a-inner { padding-left: 1.25rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="faq-header">
+    <div>
+        <h1 class="faq-title">Preguntas frecuentes</h1>
+        <p class="faq-subtitle">Encuentra respuesta rápida a los problemas más habituales de DASC.</p>
+    </div>
+    <a href="/soporte" class="btn" style="font-size:.85rem;">
+        <i class="fa-solid fa-headset"></i> Abrir ticket
+    </a>
+</div>
+
+<!-- ── Buscador ── -->
+<form method="get" action="/soporte/faq" id="faq-form">
+    <div class="faq-search-wrap">
+        <i class="fa-solid fa-magnifying-glass faq-search-icon"></i>
+        <input
+            type="search"
+            name="q"
+            id="faq-search-input"
+            class="faq-search"
+            placeholder="Busca por palabras clave: backup, disco, telegram, SSH…"
+            value="{{ faq_query | e }}"
+            autocomplete="off"
+        >
+    </div>
+</form>
+
+{% if faq_query %}
+<p class="faq-search-info">
+    <strong>{{ faq_entries | length }}</strong> resultado(s) para
+    "<strong>{{ faq_query | e }}</strong>".
+    <a href="/soporte/faq">Ver todas</a>
+</p>
+{% else %}
+<p class="faq-search-info">{{ faq_entries | length }} preguntas disponibles.</p>
+{% endif %}
+
+<!-- ── Lista de preguntas ── -->
+<div class="faq-list" id="faq-list">
+    {% if faq_entries %}
+        {% for entry in faq_entries %}
+        <div class="faq-item" id="faq-{{ entry.id }}">
+            <div class="faq-q" onclick="toggleFaq('{{ entry.id }}')">
+                <div class="faq-q-icon"><i class="fa-solid fa-circle-question"></i></div>
+                <span class="faq-q-text">{{ entry.pregunta }}</span>
+                <i class="fa-solid fa-chevron-down faq-q-chevron"></i>
+            </div>
+            <div class="faq-a" id="faq-a-{{ entry.id }}">
+                <div class="faq-a-inner">
+                    {{ entry.respuesta
+                        | replace('**', '<strong>', 1)
+                        | replace('**', '</strong>', 1)
+                        | replace('**', '<strong>', 1)
+                        | replace('**', '</strong>', 1)
+                        | replace('**', '<strong>', 1)
+                        | replace('**', '</strong>', 1)
+                        | replace('`', '<code>', 1)
+                        | replace('`', '</code>', 1)
+                        | replace('`', '<code>', 1)
+                        | replace('`', '</code>', 1)
+                        | replace('`', '<code>', 1)
+                        | replace('`', '</code>', 1)
+                        | replace('`', '<code>', 1)
+                        | replace('`', '</code>', 1)
+                    }}
+                    <br>
+                    <div style="margin-top:.65rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+                        {% for kw in entry.palabras_clave[:4] %}
+                        <span class="faq-cat-badge"><i class="fa-solid fa-tag"></i>{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="faq-empty">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>No se encontraron resultados para "<strong>{{ faq_query | e }}</strong>".</p>
+        <p style="margin-top:.5rem;">
+            <a href="/soporte/faq">Ver todas las preguntas</a> o
+            <a href="/soporte">abrir un ticket</a> si no encuentras respuesta.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block sidebar_info %}
+<div class="sidebar-info-block">
+    <span class="sidebar-info-label">Preguntas</span>
+    <span>{{ faq_todos | length }}</span>
+</div>
+<div class="sidebar-info-block">
+    <span class="sidebar-info-label">Resultados</span>
+    <span>{{ faq_entries | length }}</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // ── Acordeón ──────────────────────────────────────────────────────────────
+    function toggleFaq(id) {
+        var item = document.getElementById('faq-' + id);
+        if (!item) return;
+        var open = item.classList.toggle('open');
+
+        // Cerrar los demás (comportamiento acordeón)
+        document.querySelectorAll('.faq-item.open').forEach(function (el) {
+            if (el.id !== 'faq-' + id) el.classList.remove('open');
+        });
+        if (open) {
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+    window.toggleFaq = toggleFaq;
+
+    // ── Búsqueda en tiempo real (debounce 350 ms) ─────────────────────────────
+    var searchInput = document.getElementById('faq-search-input');
+    var faqForm     = document.getElementById('faq-form');
+    var debounceTimer;
+
+    if (searchInput && faqForm) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                faqForm.submit();
+            }, 350);
+        });
+    }
+
+    // ── Abrir la primera si hay búsqueda activa y solo hay un resultado ───────
+    var items = document.querySelectorAll('.faq-item');
+    var query = {{ ('true' if faq_query else 'false') }};
+    if (query && items.length === 1) {
+        items[0].classList.add('open');
+    }
+}());
+</script>
+{% endblock %}
