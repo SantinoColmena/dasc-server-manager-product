@@ -7,8 +7,9 @@
 > desincronizarse del código.
 
 - **Versión actual:** `v1.0-rc1`
-- **Fase actual:** Fase 10 — Central cloud y multi-cliente (Fases 7+8 cerradas, 9 en curso)
-- **Última actualización:** 2026-06-08
+- **Fase actual:** Fase 13 — Cumplimiento y evidencias automáticas (nueva dirección
+  estratégica; Fases 7+8 cerradas, 9–12 con acción pendiente del usuario)
+- **Última actualización:** 2026-06-11
 
 ---
 
@@ -55,17 +56,22 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | **8** | **Madurez operacional** | **R-065 → R-071 (aprox.)** | ▶️ Siguiente | Siguiente |
 | **9** | **Infraestructura de negocio** | **R-072 → R-078 (aprox.)** | ▶️ Siguiente | Siguiente |
 | **10** | **Central cloud y multi-cliente** | **R-077 → R-083 (aprox.)** | 🟡 **En curso (acción pendiente del usuario)** | **Ahora** |
-| 11 | Comercial y escalado | (se numera al planificar) | 📦 Backlog | Después |
-| 12 | Evolución (IA avanzada, Windows GUI, refactor) | (se numera al planificar) | 📦 Backlog | Después |
+| 11 | Comercial y escalado | (se numera al planificar) | 🟡 En curso (acción pendiente del usuario) | Después |
+| 12 | Evolución (IA avanzada, Windows GUI, refactor) | (se numera al planificar) | 🟡 En curso (parcial) | Después |
+| **13** | **Cumplimiento y evidencias automáticas (NIS2/ENS/ISO 27001)** | **R-091 → R-096 (aprox.)** | ▶️ **Siguiente (nueva dirección)** | **Ahora** |
 
 **Próximos objetivos concretos** (lo que dicta el propio repo, en orden):
 
 1. ~~**R-053 → R-057** — Fases de validación, hardening, guías y freeze.~~ ✅ Todas cerradas 2026-06-07.
-2. **Ahora — Fase 7:** Madurez del producto (UI/UX, dashboard, informes, monitorización, notificaciones).
-3. **Siguiente — Fase 8:** Madurez operacional (instalador v2, actualizador, backup de Vigex, soporte real, IA triage).
-4. **Siguiente — Fase 9:** Infraestructura de negocio (dominio, web, planes, pagos, legal).
-5. **Gate F9-GATE superado → R-048:** Primer cliente de pago real.
-6. **Después — Fase 10:** Central cloud, multi-idioma, IA avanzada (financiado por ingresos).
+2. ~~**Fase 7** — Madurez del producto.~~ ✅ Cerrada 2026-06-08.
+3. ~~**Fase 8** — Madurez operacional.~~ ✅ Cerrada 2026-06-08.
+4. **Ahora — Fase 13 (nueva dirección):** Cumplimiento y evidencias automáticas
+   (NIS2/ENS/ISO 27001) como diferenciador comercial. Ancla estratégica en
+   [`docs/estrategia/direccion_cumplimiento_nis2.md`](estrategia/direccion_cumplimiento_nis2.md).
+5. **En paralelo (acción del usuario) — Fases 9–11:** dominio + email, web/precios,
+   Stripe y legal. Prerrequisito de cualquier venta, con cumplimiento o sin él.
+6. **Gate F9-GATE + F13-GATE superados → R-048:** Primer cliente de pago real,
+   ya con el diferenciador de cumplimiento.
 
 ---
 
@@ -281,21 +287,26 @@ restaurable ✅ (backup_vigex_api.sh); Jira recibe tickets via webhook ✅; FAQ 
 
 | Ruta | Contenido | Coste estimado |
 |---|---|---|
-| ✅ 9.1 Dominio + email | Guía paso a paso en `docs/guias/guia_dominio_email.md`: registradores .es, Zoho Mail/Google Workspace, DNS SPF/DKIM/DMARC, despliegue Netlify. ✅ Código entregado 2026-06-08 (R-076). ⏳ **Pendiente: comprar dominio y activar email.** | ~€1/año + €0–6/mes |
-| ✅ 9.2 Web del producto | Landing page completa en `web/`: hero, funcionalidades, precios, FAQ, formulario (Formspree), footer legal. Responsive. Lista para desplegar en Netlify/GitHub Pages. ✅ Entregado 2026-06-08 (R-072). ⏳ **Pendiente: rellenar TODOs (dominio, datos fiscales) y desplegar.** | hosting gratuito |
-| ✅ 9.3 Planes y precios | Precios definidos (Lite €15 / Standard €35 / Pro €65 / Managed consultar). Guía Stripe, Payment Links y política de piloto en `docs/comercial/planes_precios.md`. ✅ Entregado 2026-06-08 (R-074). ⏳ **Pendiente: crear cuenta Stripe y activar cobros.** | variable |
-| ✅ 9.4 Legal | `web/legal/terminos.html` y `web/legal/privacidad.html` (RGPD + LOPDGDD). Referencias al doc existente `docs/legal/limites_responsabilidad.md`. ✅ Entregado 2026-06-08 (R-073). ⏳ **Pendiente: completar datos fiscales y revisar antes de publicar.** | €0 |
+| ✅ 9.1 Dominio + email | Guía en `docs/guias/guia_dominio_email.md` (R-076). **Dominio `vigex.es` activo y accesible**; **email profesional activo** (confirmado por el usuario 2026-06-11). | ~€1/año + €0–6/mes |
+| ✅ 9.2 Web del producto | Landing en `web/` (R-072). **Desplegada y accesible en `vigex.es`** (Netlify, `netlify.toml`): formulario **Formspree real**, **analítica Plausible** en todas las páginas, favicon, página post-pago `gracias.html`. Responsive. Falta solo el NIF en legal (ver 9.4). | hosting gratuito |
+| ✅ 9.3 Planes y precios | Precios definidos (Lite €15 / Standard €35 / Pro €65 / Managed consultar) — `docs/comercial/planes_precios.md` (R-074). **Payment Links de Stripe en modo live** enlazados en los botones de precios (confirmado por el usuario 2026-06-11). | variable |
+| ✅ 9.4 Legal | `web/legal/terminos.html` y `web/legal/privacidad.html` (RGPD + LOPDGDD) **publicadas con datos fiscales reales** (R-073). ⏳ **Pendiente único: NIF** (`[NIF_PENDIENTE]` en `terminos.html:53` y `privacidad.html:55`) — se completa al alta de autónomo. | €0 |
 | ✅ 9.5 Docs operacionales | `docs/tecnico/plan_recuperacion.md` (RTO/RPO, 4 escenarios), `guia_antihackeo.md` (10 controles), `gestion_incidentes.md` (P1-P4, post-mortem). ✅ Entregado 2026-06-08 (R-075). | €0 |
 
 ### 🚪 Gate de salida `F9-GATE` "Primer cliente de pago"
 **No se acepta el primer cliente hasta cumplir TODO esto:**
 - [x] F7-GATE superado (producto presentable). ✅ Cerrado 2026-06-08.
 - [x] F8-GATE superado (operación sin riesgos). ✅ Cerrado 2026-06-08.
-- [ ] Dominio + email profesional activos. *(guía lista, falta comprar dominio y activar email)*
-- [ ] Web del producto publicada con planes y precios. *(landing lista en `web/`, falta desplegar y rellenar TODOs)*
-- [ ] Método de cobro operativo. *(guía Stripe lista, falta crear cuenta y activar cobros)*
-- [ ] Términos de servicio y privacidad publicados. *(plantillas listas, faltan datos fiscales y publicación)*
+- [x] Web del producto publicada con planes y precios. ✅ Desplegada y accesible en `vigex.es` (Netlify + Formspree + Plausible, 2026-06-11).
+- [x] Dominio + email profesional activos. ✅ `vigex.es` accesible y email operativo (confirmado por el usuario 2026-06-11).
+- [x] Método de cobro operativo. ✅ Payment Links de Stripe en **modo live** (confirmado por el usuario 2026-06-11).
+- 🟡 Términos de servicio y privacidad publicados. *(publicados con datos reales; **falta solo el NIF** — alta de autónomo)*
 - [ ] Plan de recuperación documentado y probado. *(documentado en `docs/tecnico/`, falta prueba trimestral)*
+
+> **Estado del gate (2026-06-11):** a **un paso de superarse**. Dominio, email,
+> web y cobro en live ya están confirmados. Solo restan **dos acciones**: (1) el
+> **NIF** en las páginas legales (al alta de autónomo) y (2) una **prueba real del
+> plan de recuperación**. El producto, la web y el cobro están operativos.
 
 **→ R-048: Primer cliente de pago real** (se activa al superar F9-GATE)
 
@@ -340,7 +351,7 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 |---|---|---|
 | ✅ 11.1 Onboarding sistematizado | Checklist completo (`onboarding_cliente.md`), script bash (`onboarding_nuevo_cliente.sh`), plantilla de propuesta (`plantilla_propuesta.md`), checklist de primera venta (`checklist_primera_venta.md`). ✅ Entregado 2026-06-08 (R-084). | ✅ |
 | 11.2 SLA y legal definitivos | Requiere asesor legal real para revisión de los términos y adaptación al perfil fiscal exacto. ⏳ **Pendiente: revisar `web/legal/` con asesor y completar datos fiscales.** | ⏳ |
-| 11.3 Marketing y casos de éxito | Web ya lista (`web/`). Casos de éxito y testimoniales requieren clientes reales. ⏳ **Pendiente: actualizar web con primer cliente de referencia (con su permiso).** | ⏳ |
+| 🟡 11.3 Marketing y casos de éxito | Web **desplegada** con **analítica Plausible** (tracking de eventos y enlaces salientes) — base de medición lista. Casos de éxito y testimoniales requieren clientes reales. ⏳ **Pendiente: primer cliente de referencia (con su permiso).** | 🟡 |
 | 11.4 Release v1.0 comercial | Solo tras pilotos pagados y feedback aplicado. ⏳ **Pendiente: primer cliente de pago real (R-048).** | ⏳ |
 | 11.5 Decisión Go/No-Go de escalado | Requiere datos reales de MRR, churn y feedback. ⏳ **Pendiente: datos reales de al menos 3 meses de operación.** | ⏳ |
 
@@ -359,11 +370,62 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | ✅ 12.1 IA básica de soporte mejorada | FAQ ampliado: 16 entradas (era 8). Algoritmo con sinónimos, normalización, boost contextual. `_normalizar_palabras`, `_FAQ_SINONIMOS`. ✅ Entregado 2026-06-08 (R-085). | ✅ |
 | ✅ 12.2 API de producto documentada | Endpoint `GET /api/v1/info` con metadatos de versión. Documento `docs/tecnico/api_producto.md` con todos los endpoints, códigos HTTP e integraciones. ✅ Entregado 2026-06-08 (R-086). | ✅ |
 | ✅ 12.4 Preparación migración SQLite → MariaDB | Script `deploy/db/migrate_sqlite_to_mariadb.sh`: crea schema MariaDB, exporta CSVs, carga datos, verifica recuentos. Listo para cuando haga falta. ✅ Entregado 2026-06-08 (R-087). | ✅ |
-| 12.3 IA avanzada (RAG) | Análisis de logs con LLM, sugerencias proactivas. Requiere presupuesto para API OpenAI/Anthropic y base de clientes que lo justifique. ⏳ Backlog. | 🕓 |
+| 🔵 12.9 Asistente IA del panel (RAG) | Chat IA integrado: ruta `/asistente` + API `/api/asistente/chat`, RAG sobre la documentación del producto (TOP-K configurable), **5 proveedores LLM** (Ollama local **coste €0** / Anthropic / Gemini / OpenAI / Groq), rate limiting por usuario (R-090-sec), permiso nuevo `asistente`. Por defecto Ollama. ✅ Construido 2026-06-11 (**R-090**) — ⚠️ **sin commitear aún** (~2.600 líneas en `main.py` + `asistente.html`). | 🔵 |
+| 12.3 IA avanzada (RAG) — fase proactiva | La **base RAG ya existe** (R-090, ver 12.9). Falta la parte proactiva: análisis de logs con LLM y sugerencias automáticas. Requiere base de clientes que lo justifique. ⏳ Backlog. | 🕓 |
 | 12.5 Instalador gráfico Windows | GUI completo (WPF/Electron). Requiere tiempo significativo y base de clientes no técnicos. ⏳ Backlog. | 🕓 |
 | 12.6 WhatsApp Business API | Canal adicional de notificaciones. Requiere cuenta Meta/Twilio (~€0,05/mensaje). ⏳ Backlog. | 🕓 |
 | 12.7 Refactor de `main.py` | Deuda técnica L-6: ~7000 líneas en un fichero. 🕓 Diferida conscientemente hasta que la funcionalidad esté estable. | 🕓 |
 | 12.8 Alta disponibilidad | Failover automático, replicación MariaDB. Solo se justifica con clientes de alta criticidad e ingresos consolidados. ⏳ Backlog. | 🕓 |
+
+---
+
+## 10bis. Fase 13 — Cumplimiento y evidencias automáticas · ▶️ SIGUIENTE (nueva dirección)
+
+> **Objetivo:** convertir la evidencia técnica que Vigex ya genera (backups,
+> monitorización, alertas, `auth_logs`, informes) en **evidencias auditables**
+> mapeadas a controles de NIS2/ENS/ISO 27001, presentadas en un panel de
+> cumplimiento con dossier exportable. Es el **diferenciador comercial** que separa
+> a Vigex de "otro panel de backups" y lo posiciona como la *fuente de evidencias
+> técnicas automáticas* que los GRC piden y el cliente hoy rellena a mano.
+>
+> **Por qué (ancla estratégica):**
+> [`docs/estrategia/direccion_cumplimiento_nis2.md`](estrategia/direccion_cumplimiento_nis2.md)
+> — NIS2 ya obligatoria en España (RD-ley 7/2025, en vigor abril 2026, 9 meses para
+> adaptarse; sanciones hasta 10 M€ / 2 % y responsabilidad personal del administrador).
+>
+> **Qué (detalle técnico, control por control):**
+> [`docs/cumplimiento/mapa_controles_evidencias.md`](cumplimiento/mapa_controles_evidencias.md).
+>
+> **Alcance:** Camino A (módulo dentro de Vigex). El Camino B (SaaS de evidencias
+> independiente) se escinde **solo si A valida que el cliente paga por la evidencia
+> más que por el backup**. Esta fase **extiende**, no sustituye, lo construido.
+>
+> **Restricción rectora:** calidad real "al milímetro" por encima de velocidad.
+> Ninguna afirmación de cobertura se vende sin validarla contra el texto normativo
+> real (R-096). Vigex **aporta evidencia, no certifica** cumplimiento.
+
+| Ruta | Contenido | Tarea | Estado |
+|---|---|---|---|
+| 13.1 Mapa control→evidencia | Modelo de datos versionado que vincula cada control normativo (NIS2 21.2 / ENS / ISO Annex A) a la evidencia que Vigex produce. Catálogo inicial de las familias ✅/🟡 (filas 1–7 del mapa). | `R-091` | 🗓️ Planificada |
+| 13.2 Motor de evidencias datadas e inmutables | Snapshot de evidencia con timestamp + hash SHA256 + origen, almacenamiento append-only. Reutiliza `_reports_worker` y el SHA256 ya implementado (R-064). | `R-092` | 🗓️ Planificada |
+| 13.3 Panel "Cumplimiento" | Pantalla semáforo de cobertura por norma: % de controles con evidencia fresca, qué caduca. Permiso nuevo `cumplimiento` en `AVAILABLE_PERMISSIONS`. | `R-093` | 🗓️ Planificada |
+| 13.4 Dossier exportable | Generación de dossier (PDF/Markdown) de evidencias para auditor, datado, con **declaración de conformidad parcial** (nunca "cumplimiento total"). | `R-094` | 🗓️ Planificada |
+| 13.5 Notificación de incidentes NIS2 24 h/72 h | Ciclo de vida del incidente + plantilla de notificación al CSIRT. Cierra la fila 3 del mapa (la obligación estrella de NIS2). | `R-095` | 🗓️ Planificada |
+| 13.6 Validación contra texto normativo real | Contrastar el mapa control→evidencia con el texto real (ISO 27001:2022 Annex A / ENS RD 311/2022 / NIS2 art. 21) — con consultor o fuente primaria — para que la cobertura sea **defendible ante auditor**. | `R-096` | 🗓️ Planificada |
+
+### 🚪 Gate de salida `F13-GATE` "Evidencias auditables"
+**No se vende el módulo de cumplimiento hasta cumplir TODO esto:**
+- [ ] Mapa control→evidencia poblado y **revisado contra el texto normativo** (R-091 + R-096).
+- [ ] Cada evidencia **datada + hash verificable** (R-092).
+- [ ] Panel de cumplimiento muestra **cobertura real por norma** (R-093).
+- [ ] **Dossier exportable** generado en prueba con datos reales (R-094).
+- [ ] **Notificación de incidente 24 h/72 h** documentada y probada (R-095).
+- [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
+- [ ] Sin promesas de cobertura no validada (coherencia con `docs/legal/limites_responsabilidad.md`).
+
+> **Nota de numeración.** `R-091` es el siguiente identificador libre: el máximo en
+> uso real en el repo es `R-090` (permiso Asistente IA), por encima de lo que la
+> sección 3–10 documentaba (R-087). Verificado 2026-06-11.
 
 ---
 
@@ -392,6 +454,13 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | 2026-06-07 | F9-GATE "Primer cliente de pago" reemplaza a F6-GATE-06 como gate comercial real | F6-GATE-06 se cerró prematuramente; el nuevo gate exige Fases 7+8+9 completas |
 | 2026-06-08 | Añadidas 7.9 (Integridad y consistencia de copias) y 8.7 (DRO) al roadmap | Propuesta del desarrollador: checksums + consistencia lógica son diferenciador inmediato; DRO orquestado es diferenciador enterprise sin coste. Alta disponibilidad registrada en Fase 12 — scope demasiado amplio para justificarse antes de tener base de clientes. |
 | 2026-06-08 | Fase 10 iniciada con 6 de 7 rutas completadas en código (10.2 y 10.6 quedan pendientes de acción externa) | El VPS y el dominio requieren pago real; multi-idioma requiere base de usuarios. Todo el código necesario entregado, incluyendo guía VPS. |
+| 2026-06-11 | **Nueva dirección estratégica: Fase 13 — Cumplimiento y evidencias automáticas** (NIS2/ENS/ISO 27001), tareas `R-091 → R-096`. Vigex se reposiciona como *fuente de evidencias técnicas automáticas*, no como "otro panel de backups" | Análisis de mercado + competencia: el nicho de backup se aplana y compite contra gratis; la categoría GRC está madura (Vanta/Drata arriba, Mencar/RiskRegister abajo) pero **todos piden la evidencia técnica a mano** — justo lo que Vigex ya genera (70–80 % del mapa). NIS2 ya obligatoria en España (RD-ley 7/2025) crea la palanca de compra. Camino A (módulo) primero; B (SaaS aparte) condicionado a validación. Extiende, no sustituye. Ancla: `docs/estrategia/direccion_cumplimiento_nis2.md` |
+| 2026-06-11 | Se confirma que el mayor `R-xxx` real es `R-090` (no R-087 como sugería el roadmap); Fase 13 arranca en `R-091`. `R-088` y `R-089` quedan como **huecos no asignados** (gap permitido por la regla de unicidad monótona) | El código referencia R-090 (Asistente IA) por encima de lo documentado en secciones 3–10. R-090 ocupa el medio, así que Fase 13 se numera contigua a partir de R-091. |
+| 2026-06-11 | **Puesta al día del roadmap** tras 12 commits + trabajo sin commitear no reflejados (el roadmap llevaba sin tocarse desde 2026-06-08, commit `49ca9bd`). Reconciliado contra git + estado real del repo | El plan se había desincronizado del código, justo lo que el roadmap canónico debe evitar. Cambios principales registrados abajo. |
+| 2026-06-11 | **Rebrand completo DASC → Vigex** (commit `69e21bd`): scripts renombrados (`install_vigex_api.sh`, `backup_vigex_api.sh`…), `main.py`, todas las plantillas, perfiles, logo (`logo-vigex.png`/SVG), README, CHANGELOG y CLAUDE.md | El nombre comercial del producto es Vigex; se elimina la herencia "DASC" del MVP académico en todo el repo. |
+| 2026-06-11 | **Web del producto activada en real** (Fase 9.2/9.3 pasan de "código listo" a **desplegado**): Netlify (`netlify.toml`), Formspree con ID real, **Payment Links de Stripe** en los botones de precios, **Plausible Analytics**, favicon y `gracias.html` post-pago | El bloqueo de F9-GATE ya no es de producto sino administrativo (NIF, email, modo live de Stripe). |
+| 2026-06-11 | **R-090 — Asistente IA (RAG) construido** (sin commitear): chat en el panel con 5 proveedores LLM (Ollama por defecto, coste €0), rate limiting y permiso `asistente`. Adelanta la base de la Ruta 12.3 que estaba en backlog | Diferenciador de producto entregado antes de lo planificado. Pendiente de commit y validación. |
+| 2026-06-11 | **Modo oscuro extendido a todo el panel** (`dark-overrides.css`, R-083): cubre `estilo.css`, plantillas del panel API y Central Support. Sin commitear | La Ruta 10.7 inicial era el toggle; este trabajo corrige el contraste en todas las pantallas. |
 
 ---
 
