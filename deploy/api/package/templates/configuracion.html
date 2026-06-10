@@ -263,7 +263,109 @@
     </div>
 </div>
 
-<!-- ── Sección: solo lectura ── -->
+<!-- ── Sección: Email / SMTP (editable desde el panel) ── -->
+<div class="cfg-section">
+    <p class="cfg-section-title">Correo electrónico — SMTP</p>
+    <div class="cfg-card">
+        <div class="cfg-card-header">
+            <div class="cfg-card-icon amber"><i class="fa-solid fa-envelope"></i></div>
+            <div>
+                <p class="cfg-card-title">Configuración de correo saliente</p>
+                <p class="cfg-card-desc">
+                    Usado para alertas, informes periódicos y notificaciones a
+                    <strong>soporte@vigex.es</strong>. Compatible con Gmail, Outlook u otro SMTP con STARTTLS.
+                </p>
+            </div>
+        </div>
+
+        <form id="smtp-form" autocomplete="off" onsubmit="return false;">
+            <div class="cfg-fields">
+
+                <div class="cfg-field" style="grid-column: span 2;">
+                    <label for="f-smtp-host">Servidor SMTP</label>
+                    <input type="text" id="f-smtp-host" name="smtp_host"
+                           value="{{ smtp_host }}" placeholder="smtp.gmail.com">
+                    <div class="field-hint">Host del servidor de correo saliente (p.ej. smtp.gmail.com).</div>
+                </div>
+
+                <div class="cfg-field">
+                    <label for="f-smtp-port">Puerto</label>
+                    <input type="number" id="f-smtp-port" name="smtp_port"
+                           value="{{ smtp_port }}" min="1" max="65535" placeholder="587">
+                    <div class="field-hint">Normalmente 587 (STARTTLS) o 465 (SSL).</div>
+                </div>
+
+                <div class="cfg-field">
+                    <label for="f-smtp-user">Usuario SMTP</label>
+                    <input type="text" id="f-smtp-user" name="smtp_user"
+                           value="{{ smtp_user }}" placeholder="tu@email.com">
+                    <div class="field-hint">Cuenta que autenticará el envío.</div>
+                </div>
+
+                <div class="cfg-field">
+                    <label for="f-smtp-pass">
+                        Contraseña SMTP
+                        {% if smtp_pass_set %}<span class="pill-ok" style="font-size:.7rem;vertical-align:middle;">Configurada</span>{% endif %}
+                    </label>
+                    <input type="password" id="f-smtp-pass" name="smtp_pass"
+                           placeholder="{% if smtp_pass_set %}Dejar vacío para no cambiar{% else %}Contraseña de app{% endif %}">
+                    <div class="field-hint">Para Gmail usa una «contraseña de aplicación» con 2FA activo.</div>
+                </div>
+
+                <div class="cfg-field">
+                    <label for="f-email-from">Remitente (FROM)</label>
+                    <input type="email" id="f-email-from" name="email_from"
+                           value="{{ smtp_email_from }}" placeholder="vigex@tudominio.com">
+                    <div class="field-hint">Dirección que aparece como emisor en los emails.</div>
+                </div>
+
+                <div class="cfg-field">
+                    <label for="f-email-to">Destinatario de alertas</label>
+                    <input type="email" id="f-email-to" name="email_to"
+                           value="{{ smtp_email_to }}" placeholder="admin@tudominio.com">
+                    <div class="field-hint">Recibe alertas proactivas e informes periódicos.</div>
+                </div>
+
+            </div><!-- cfg-fields -->
+
+            <div class="cfg-actions">
+                <button class="btn-cfg-save" id="btn-save-smtp" type="button" onclick="guardarSmtp()">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar configuración email
+                </button>
+                <span class="cfg-feedback" id="smtp-feedback"></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Sección: Seguridad de sesión ── -->
+<div class="cfg-section">
+    <p class="cfg-section-title">Seguridad de sesión</p>
+    <div class="cfg-card">
+        <div class="cfg-card-header">
+            <div class="cfg-card-icon indigo"><i class="fa-solid fa-clock"></i></div>
+            <div>
+                <div class="cfg-card-title">Auto-logout por inactividad</div>
+                <div class="cfg-card-desc">Si el usuario no interactúa durante este tiempo, la sesión se cierra automáticamente. Pon 0 para desactivarlo.</div>
+            </div>
+        </div>
+        <div class="cfg-field" style="max-width:220px;margin-top:14px;">
+            <label for="f-auto-logout">Tiempo de inactividad (minutos)</label>
+            <input type="number" id="f-auto-logout" name="auto_logout_minutes"
+                   value="{{ auto_logout_minutes }}" min="0" max="1440" step="5"
+                   placeholder="60">
+            <div class="field-hint">0 = desactivado · máximo 1440 (24 h)</div>
+        </div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
+            <button class="btn primary" id="btn-save-autologout" type="button" onclick="guardarAutoLogout()">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+            <span class="cfg-feedback" id="autologout-feedback"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ── Sección: solo lectura (SSH, Telegram, estado) ── -->
 <div class="cfg-section">
     <p class="cfg-section-title">Configuración de conexiones (solo lectura)</p>
     <div class="cfg-card">
@@ -271,7 +373,7 @@
             <div class="cfg-card-icon slate"><i class="fa-solid fa-lock"></i></div>
             <div>
                 <p class="cfg-card-title">Credenciales y hosts</p>
-                <p class="cfg-card-desc">Estos valores solo pueden cambiarse editando <code>config.env</code> y reiniciando el panel.</p>
+                <p class="cfg-card-desc">Estos valores se cambian editando <code>config.env</code> y reiniciando el panel.</p>
             </div>
         </div>
         <div class="cfg-readonly-grid">
@@ -286,7 +388,7 @@
                 </div>
             </div>
             <div class="cfg-readonly-item">
-                <div class="ro-label">Servidor SMTP</div>
+                <div class="ro-label">Correo SMTP</div>
                 <div class="ro-value">
                     {% if smtp_host %}
                         <span class="pill-ok"><i class="fa-solid fa-envelope"></i> {{ smtp_host }}</span>
@@ -386,6 +488,10 @@
 
     function mostrarFeedback(ok, msg) {
         const fb = document.getElementById('cfg-feedback');
+        _mostrarFb(fb, ok, msg);
+    }
+
+    function _mostrarFb(fb, ok, msg) {
         fb.textContent = '';
         const icon = document.createElement('i');
         icon.className = ok ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
@@ -394,8 +500,76 @@
         fb.className = 'cfg-feedback visible ' + (ok ? 'ok' : 'error');
     }
 
-    // Exponer para el onclick del botón
-    window.guardarConfig = guardarConfig;
+    // ── Guardar SMTP ──────────────────────────────────────────────────────────
+    function guardarSmtp() {
+        const form = document.getElementById('smtp-form');
+        const btn  = document.getElementById('btn-save-smtp');
+        const fb   = document.getElementById('smtp-feedback');
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        const payload = {
+            smtp_host:  form.querySelector('#f-smtp-host').value.trim(),
+            smtp_port:  parseInt(form.querySelector('#f-smtp-port').value, 10) || 587,
+            smtp_user:  form.querySelector('#f-smtp-user').value.trim(),
+            smtp_pass:  form.querySelector('#f-smtp-pass').value,
+            email_from: form.querySelector('#f-email-from').value.trim(),
+            email_to:   form.querySelector('#f-email-to').value.trim(),
+        };
+
+        if (!payload.smtp_host) {
+            _mostrarFb(fb, false, 'El servidor SMTP es obligatorio.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
+        fb.className  = 'cfg-feedback';
+
+        fetch('/configuracion/smtp', {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(data => _mostrarFb(fb, data.ok, data.msg || (data.ok ? 'Guardado.' : 'Error.')))
+        .catch(() => _mostrarFb(fb, false, 'Error de red.'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar configuración email';
+        });
+    }
+
+    // ── Guardar auto-logout ───────────────────────────────────────────────────
+    function guardarAutoLogout() {
+        const input = document.getElementById('f-auto-logout');
+        const btn   = document.getElementById('btn-save-autologout');
+        const fb    = document.getElementById('autologout-feedback');
+        const csrf  = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+        const minutos = parseInt(input.value, 10);
+
+        if (isNaN(minutos) || minutos < 0 || minutos > 1440) {
+            _mostrarFb(fb, false, 'Valor entre 0 y 1440 minutos.');
+            return;
+        }
+
+        btn.disabled = true;
+        fetch('/configuracion/auto-logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify({ minutos }),
+        })
+        .then(r => r.json())
+        .then(d => { _mostrarFb(fb, d.ok, d.msg); btn.disabled = false; })
+        .catch(() => { _mostrarFb(fb, false, 'Error de red.'); btn.disabled = false; });
+    }
+
+    // Exponer para los onclick
+    window.guardarConfig     = guardarConfig;
+    window.guardarSmtp       = guardarSmtp;
+    window.guardarAutoLogout = guardarAutoLogout;
 }());
 </script>
 {% endblock %}

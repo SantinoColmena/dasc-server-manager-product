@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Vigex Central</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text y='24' x='4' font-size='22' font-family='sans-serif' fill='white' font-weight='bold'>V</text></svg>" type="image/svg+xml">
     <style>
         :root {
             --bg: #f4f7fb;
@@ -238,11 +239,53 @@
             color: #92400e;
         }
 
+        /* Prioridades faltantes — R-083-fix-7 */
+        .badge.priority-media {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge.priority-baja {
+            background: #dcfce7;
+            color: #166534;
+        }
+
         .badge.status-cerrado,
         .badge.status-resuelto {
             background: var(--green-soft);
             color: #166534;
         }
+
+        /* ── Dark mode (R-083-fix-5) ── */
+        [data-theme="dark"] body       { background: #0f172a; color: #e2e8f0; }
+        [data-theme="dark"] .hero      { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: #334155; }
+        [data-theme="dark"] .hero h1   { color: #e2e8f0; }
+        [data-theme="dark"] .hero p    { color: #94a3b8; }
+        [data-theme="dark"] .summary-card { background: #1e293b; border-color: #334155; color: #94a3b8; }
+        [data-theme="dark"] .summary-card strong { color: #e2e8f0; }
+        [data-theme="dark"] .table-card { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .table-card h2 { color: #e2e8f0; }
+        [data-theme="dark"] table thead th { background: #0f172a; color: #94a3b8; border-bottom-color: #334155; }
+        [data-theme="dark"] table tbody td { color: #e2e8f0; border-bottom-color: #1e293b; }
+        [data-theme="dark"] table tbody tr:hover td { background: #1e293b; }
+        [data-theme="dark"] .filters   { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .filters label { color: #94a3b8; }
+        [data-theme="dark"] .filters input,
+        [data-theme="dark"] .filters select { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+        [data-theme="dark"] .nav-item  { background: #1e293b; color: #94a3b8; border-color: #334155; }
+        [data-theme="dark"] .nav-item:hover { background: #334155; color: #e2e8f0; }
+        [data-theme="dark"] .nav-item.active { background: #1e1542; color: #a5b4fc; border-color: #4f46e5; }
+        [data-theme="dark"] .session-pill { background: #1e1542; border-color: #4f46e5; color: #a5b4fc; }
+        [data-theme="dark"] .button.secondary { background: #334155; color: #e2e8f0; border-color: #475569; }
+        [data-theme="dark"] .empty     { background: #1e293b; border-color: #334155; color: #64748b; }
+        [data-theme="dark"] .ticket-id a { color: #a5b4fc; }
+        /* toggle botón */
+        .dark-toggle {
+            background: none; border: 1.5px solid #c7d2fe; border-radius: 999px;
+            padding: 6px 12px; cursor: pointer; font-size: 14px; color: #3730a3;
+            margin-left: auto; align-self: flex-start;
+        }
+        [data-theme="dark"] .dark-toggle { color: #a5b4fc; border-color: #4f46e5; }
 
         .empty {
             padding: 34px;
@@ -321,6 +364,7 @@
                 <a href="/clientes" class="nav-item">🏢 Clientes</a>
                 <a href="/auditoria" class="nav-item">🔍 Auditoría</a>
             {% endif %}
+            <button class="dark-toggle" id="central-dark-toggle" title="Cambiar modo claro/oscuro">🌙</button>
         </nav>
 
         <section class="summary">
@@ -443,5 +487,35 @@
             {% endif %}
         </section>
     </div>
+
+<!-- Dark mode toggle JS — R-083-fix-5 -->
+<script>
+(function () {
+    'use strict';
+    var btn  = document.getElementById('central-dark-toggle');
+    var html = document.documentElement;
+
+    function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+
+    function applyTheme(dark) {
+        if (dark) {
+            html.setAttribute('data-theme', 'dark');
+            if (btn) btn.textContent = '☀️';
+        } else {
+            html.removeAttribute('data-theme');
+            if (btn) btn.textContent = '🌙';
+        }
+        try { localStorage.setItem('vigex-central-theme', dark ? 'dark' : 'light'); } catch(e) {}
+    }
+
+    // Restaurar preferencia guardada o del sistema
+    var saved = '';
+    try { saved = localStorage.getItem('vigex-central-theme') || ''; } catch(e) {}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved === 'dark' || (!saved && prefersDark));
+
+    if (btn) btn.addEventListener('click', function () { applyTheme(!isDark()); });
+}());
+</script>
 </body>
 </html>

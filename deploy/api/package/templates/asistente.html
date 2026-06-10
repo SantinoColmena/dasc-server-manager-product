@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+{% block title %}Asistente IA — Vigex{% endblock %}
+
+{% block extra_head %}
+<!-- marked.js para renderizar Markdown en las respuestas del asistente -->
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<style>
+/* ── Override del contenedor padre para chat full-height ────────────── */
+.main {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--header-h));
+    overflow: hidden;
+}
+
+/* ── Layout principal ───────────────────────────────────────────────── */
+.asistente-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ── Cabecera ───────────────────────────────────────────────────────── */
+.asistente-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.asistente-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.asistente-title h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+}
+.asistente-title p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+.rag-model-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #c4b5fd;
+}
+.rag-model-badge.anthropic { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.rag-status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 2px #dcfce7;
+}
+.rag-status-dot.off { background: #94a3b8; box-shadow: 0 0 0 2px #e2e8f0; }
+.rag-status-dot.warn { background: #f59e0b; box-shadow: 0 0 0 2px #fef3c7; }
+
+/* ── Área de mensajes ───────────────────────────────────────────────── */
+.asistente-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.asistente-messages::-webkit-scrollbar { width: 6px; }
+.asistente-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Estado vacío ───────────────────────────────────────────────────── */
+.chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 40px 20px;
+    text-align: center;
+}
+.chat-empty-icon {
+    width: 64px; height: 64px; border-radius: 20px;
+    background: #ede9fe;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+}
+.chat-empty h3 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text); }
+.chat-empty p  { margin: 0; color: var(--muted); font-size: 14px; max-width: 420px; }
+.suggestion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+}
+.suggestion-chip {
+    background: var(--bg, #f8fafc);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: background .15s, border-color .15s, transform .1s;
+}
+.suggestion-chip:hover {
+    background: #ede9fe;
+    border-color: #a5b4fc;
+    color: #4f46e5;
+    transform: translateY(-1px);
+}
+.suggestion-chip .chip-icon { display: block; font-size: 18px; margin-bottom: 6px; }
+
+/* ── Burbujas de mensaje ─────────────────────────────────────────────── */
+.msg-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: msgIn .2s ease;
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+@keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-avatar {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.msg-row.user     .msg-avatar { background: var(--primary); color: #fff; }
+.msg-row.assistant .msg-avatar { background: #ede9fe; color: #4f46e5; font-size: 16px; }
+
+.msg-bubble {
+    max-width: 78%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-break: break-word;
+}
+.msg-row.user .msg-bubble {
+    background: var(--primary);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+.msg-row.assistant .msg-bubble {
+    background: var(--panel, #fff);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+}
+
+/* Markdown dentro de las burbujas */
+.msg-bubble p { margin: 0 0 8px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble ul, .msg-bubble ol { margin: 6px 0; padding-left: 20px; }
+.msg-bubble li { margin-bottom: 4px; }
+.msg-bubble code {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 12.5px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(0,0,0,0.08);
+}
+.msg-row.user .msg-bubble code { background: rgba(255,255,255,0.2); }
+.msg-bubble pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+.msg-bubble pre code { background: transparent; padding: 0; color: inherit; }
+.msg-bubble strong { font-weight: 700; }
+.msg-bubble a { color: #6366f1; text-decoration: underline; }
+.msg-row.user .msg-bubble a { color: #c7d2fe; }
+
+/* Indicador pensando */
+.msg-thinking .msg-bubble {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted); font-style: italic; font-size: 13px;
+}
+.thinking-dots { display: flex; gap: 4px; }
+.thinking-dots span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--primary); opacity: .4;
+    animation: blink 1.2s infinite;
+}
+.thinking-dots span:nth-child(2) { animation-delay: .2s; }
+.thinking-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+
+/* Timestamp */
+.msg-time {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    padding: 0 4px;
+    opacity: .7;
+}
+.msg-row.user .msg-time { text-align: right; }
+
+/* ── Aviso Ollama no disponible ─────────────────────────────────────── */
+.ollama-warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #92400e;
+    margin: 0 0 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.ollama-warning code {
+    background: rgba(0,0,0,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* ── Área de entrada ────────────────────────────────────────────────── */
+.asistente-input-area {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px 18px;
+    flex-shrink: 0;
+}
+.input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--panel, #fff);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 12px;
+    transition: border-color .15s;
+}
+.input-row:focus-within { border-color: var(--primary); }
+.input-row textarea {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    min-height: 22px;
+    max-height: 140px;
+    line-height: 1.5;
+    overflow-y: auto;
+}
+.input-row textarea::placeholder { color: var(--muted); }
+.btn-send {
+    width: 36px; height: 36px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    transition: background .15s, transform .1s;
+    flex-shrink: 0;
+}
+.btn-send:hover:not(:disabled) { background: var(--primaryHover, #4338ca); transform: scale(1.05); }
+.btn-send:disabled { background: var(--border); cursor: default; }
+.input-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: center;
+}
+
+/* ── Dark mode overrides ────────────────────────────────────────────── */
+[data-theme="dark"] .chat-empty-icon { background: #1e1542; }
+[data-theme="dark"] .suggestion-chip { background: #1e293b; }
+[data-theme="dark"] .suggestion-chip:hover { background: #1e1542; border-color: #4f46e5; color: #a5b4fc; }
+[data-theme="dark"] .rag-model-badge { background: #1e1542; color: #a5b4fc; border-color: #4f46e5; }
+[data-theme="dark"] .msg-row.assistant .msg-bubble { background: #1e293b; }
+[data-theme="dark"] .input-row { background: #1e293b; }
+[data-theme="dark"] .ollama-warning { background: #2a1c06; border-color: #92400e; color: #fde68a; }
+
+@media (max-width: 640px) {
+    .suggestion-grid { grid-template-columns: 1fr; }
+    .msg-bubble { max-width: 92%; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="asistente-shell">
+
+    <!-- Cabecera -->
+    <div class="asistente-header">
+        <div class="asistente-title">
+            <div>
+                <h2><i class="fa-solid fa-robot" style="color:#6366f1;margin-right:8px;"></i>Asistente Vigex</h2>
+                <p>{{ rag_faq_total }} documentos indexados</p>
+            </div>
+            {% set _cloud = rag_provider in ('anthropic', 'gemini', 'openai', 'groq') %}
+            <span class="rag-model-badge {% if _cloud %}anthropic{% endif %}">
+                {% if rag_provider == 'anthropic' %}
+                    <span class="rag-status-dot"></span> Claude · {{ rag_model }}
+                {% elif rag_provider == 'gemini' %}
+                    <span class="rag-status-dot"></span> Gemini · {{ rag_model }}
+                {% elif rag_provider == 'openai' %}
+                    <span class="rag-status-dot"></span> OpenAI · {{ rag_model }}
+                {% elif rag_provider == 'groq' %}
+                    <span class="rag-status-dot"></span> Groq · {{ rag_model }}
+                {% else %}
+                    <span class="rag-status-dot {% if not rag_status.disponible %}off{% elif not rag_status.modelo_ok %}warn{% endif %}"></span>
+                    Ollama · {{ rag_model }}
+                {% endif %}
+            </span>
+        </div>
+        <button class="btn" onclick="limpiarChat()" title="Borrar conversación">
+            <i class="fa-solid fa-trash-can"></i> Limpiar
+        </button>
+    </div>
+
+    <!-- Aviso si Ollama no está disponible -->
+    {% if rag_provider == 'ollama' and not rag_status.disponible %}
+    <div style="padding:12px 20px 0;">
+        <div class="ollama-warning">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;"></i>
+            <div>
+                <strong>Ollama no detectado.</strong>
+                Instálalo en el servidor del panel y lanza el modelo:<br>
+                <code>curl -fsSL https://ollama.com/install.sh | sh</code> &nbsp;·&nbsp;
+                <code>ollama pull {{ rag_model }}</code> &nbsp;·&nbsp;
+                <code>ollama serve</code>
+            </div>
+        </div>
+    </div>
+    {% elif rag_provider == 'ollama' and rag_status.disponible and not rag_status.modelo_ok %}
+    <div style="padding:12px 20px 0;">
+        <div class="ollama-warning">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;"></i>
+            <div>
+                <strong>Modelo <code>{{ rag_model }}</code> no descargado.</strong>
+                Ejecuta: <code>ollama pull {{ rag_model }}</code><br>
+                Modelos disponibles: {{ rag_status.modelos | join(', ') or 'ninguno' }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Área de mensajes -->
+    <div class="asistente-messages" id="chat-messages">
+        <!-- Estado vacío — se oculta en cuanto hay mensajes -->
+        <div class="chat-empty" id="chat-empty">
+            <div class="chat-empty-icon">🤖</div>
+            <h3>¿En qué puedo ayudarte?</h3>
+            <p>Pregúntame sobre backups, servicios, alertas, logs, monitoreo o recuperación ante desastres.</p>
+            <div class="suggestion-grid">
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">💾</span>¿Qué hago si una copia de seguridad falló?
+                </button>
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">💿</span>El disco está al 90%, ¿qué hago?
+                </button>
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">🔄</span>¿Cómo restauro una copia de seguridad?
+                </button>
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">⚙️</span>Un servicio aparece como caído, ¿cómo lo reinicio?
+                </button>
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">🔔</span>¿Qué significan las alertas de Vigex?
+                </button>
+                <button class="suggestion-chip" onclick="usarSugerencia(this)">
+                    <span class="chip-icon">🛡️</span>¿Cómo funciona la recuperación ante desastres?
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entrada de texto -->
+    <div class="asistente-input-area">
+        <div class="input-row">
+            <textarea
+                id="chat-input"
+                placeholder="Escribe tu pregunta… (Enter para enviar, Shift+Enter para nueva línea)"
+                rows="1"
+                maxlength="2000"
+            ></textarea>
+            <button class="btn-send" id="btn-send" title="Enviar" disabled>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="input-hint">
+            Respuestas basadas en la documentación de Vigex · Modelo: <strong>{{ rag_model }}</strong>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    /* Configuración de marked.js */
+    if (window.marked) {
+        marked.setOptions({ breaks: true, gfm: true });
+    }
+
+    const CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    const messagesEl = document.getElementById('chat-messages');
+    const emptyEl    = document.getElementById('chat-empty');
+    const inputEl    = document.getElementById('chat-input');
+    const btnSend    = document.getElementById('btn-send');
+
+    /* Historial en memoria (no persistido — privacidad) */
+    let historial = [];
+    let esperando = false;
+
+    /* ── Auto-resize del textarea ─────────────────────────────────────── */
+    inputEl.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+        btnSend.disabled = !this.value.trim() || esperando;
+    });
+
+    /* ── Enviar con Enter (Shift+Enter = nueva línea) ─────────────────── */
+    inputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!btnSend.disabled) enviar();
+        }
+    });
+
+    btnSend.addEventListener('click', enviar);
+
+    /* ── Sugerencias rápidas ──────────────────────────────────────────── */
+    window.usarSugerencia = function (btn) {
+        const texto = btn.innerText.replace(/^[^\w¿]+/, '').trim();
+        inputEl.value = texto;
+        inputEl.dispatchEvent(new Event('input'));
+        inputEl.focus();
+    };
+
+    /* ── Limpiar conversación ─────────────────────────────────────────── */
+    window.limpiarChat = function () {
+        historial = [];
+        /* Eliminar mensajes pero dejar el estado vacío */
+        Array.from(messagesEl.children).forEach(el => {
+            if (el !== emptyEl) el.remove();
+        });
+        emptyEl.style.display = '';
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        btnSend.disabled = true;
+    };
+
+    /* ── Formatear hora ───────────────────────────────────────────────── */
+    function horaActual() {
+        const d = new Date();
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+
+    /* ── Añadir mensaje al DOM ────────────────────────────────────────── */
+    function addMessage(role, content, id) {
+        /* Ocultar estado vacío al primer mensaje */
+        emptyEl.style.display = 'none';
+
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + role;
+        if (id) row.id = id;
+
+        const initial = role === 'user'
+            ? (('{{ user }}' || 'U')[0].toUpperCase())
+            : '🤖';
+
+        const avatarHtml = `<div class="msg-avatar">${initial}</div>`;
+
+        let bubbleContent;
+        if (role === 'thinking') {
+            row.className = 'msg-row assistant msg-thinking';
+            bubbleContent = `
+                <div class="thinking-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                Pensando…`;
+        } else {
+            const md = window.marked ? marked.parse(content) : content.replace(/\n/g, '<br>');
+            bubbleContent = md;
+        }
+
+        row.innerHTML = `
+            ${avatarHtml}
+            <div>
+                <div class="msg-bubble">${bubbleContent}</div>
+                ${role !== 'thinking' ? `<div class="msg-time">${horaActual()}</div>` : ''}
+            </div>`;
+
+        messagesEl.appendChild(row);
+        row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        return row;
+    }
+
+    /* ── Enviar mensaje ───────────────────────────────────────────────── */
+    function enviar() {
+        const texto = inputEl.value.trim();
+        if (!texto || esperando) return;
+
+        esperando = true;
+        btnSend.disabled = true;
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+
+        /* Añadir mensaje del usuario */
+        addMessage('user', texto);
+
+        /* Añadir indicador de pensando */
+        const thinkingRow = addMessage('thinking', '', 'msg-thinking-row');
+
+        /* Actualizar historial local */
+        historial.push({ role: 'user', content: texto });
+
+        /* Llamada al backend */
+        fetch('/api/asistente/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': CSRF,
+            },
+            body: JSON.stringify({ mensaje: texto, historial: historial.slice(0, -1) }),
+        })
+        .then(function (r) {
+            if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || r.statusText); });
+            return r.json();
+        })
+        .then(function (data) {
+            /* Eliminar indicador de pensando */
+            thinkingRow.remove();
+
+            const respuesta = data.respuesta || '(Sin respuesta)';
+            addMessage('assistant', respuesta);
+            historial.push({ role: 'assistant', content: respuesta });
+
+            /* Limitar historial en memoria (últimos 30 turnos) */
+            if (historial.length > 30) historial = historial.slice(-30);
+        })
+        .catch(function (err) {
+            thinkingRow.remove();
+            addMessage('assistant', `⚠️ Error: ${err.message}`);
+        })
+        .finally(function () {
+            esperando = false;
+            btnSend.disabled = !inputEl.value.trim();
+            inputEl.focus();
+        });
+    }
+
+    /* Foco inicial */
+    inputEl.focus();
+
+}());
+</script>
+{% endblock %}

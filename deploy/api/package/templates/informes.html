@@ -413,7 +413,10 @@
         sync();
         input.addEventListener('change', sync);
         chip.addEventListener('click', e => {
-            if (e.target !== input) { input.checked = !input.checked; sync(); }
+            /* Prevenir el toggle nativo del <label> para evitar doble inversión (R-083-fix-3) */
+            e.preventDefault();
+            input.checked = !input.checked;
+            sync();
         });
     });
 

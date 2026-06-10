@@ -119,8 +119,8 @@ class CentralTicketIn(BaseModel):
     servicio: str = Field(..., min_length=1)
     descripcion: str = Field(..., min_length=1)
     evidencia: Optional[str] = ""
-    contacto: str = Field(..., min_length=1)
-    email: str = Field(..., min_length=1)
+    contacto: str = ""
+    email: str = ""
     fecha_origen: Optional[str] = ""
     version_panel: Optional[str] = ""
     origen: Optional[str] = "panel-local"

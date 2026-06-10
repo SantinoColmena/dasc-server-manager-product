@@ -26,12 +26,22 @@
 
 <div class="topbar">
     <div>
+        {% if modo_reportes %}
+        <h2 class="page-title">Reportes del panel</h2>
+        <p class="page-subtitle">Bugs, sugerencias y preguntas enviadas desde el botón de reporte.</p>
+        {% else %}
         <h2 class="page-title">Tickets de soporte</h2>
         <p class="page-subtitle">Vista interna para el equipo Vigex.</p>
+        {% endif %}
     </div>
     <div class="topbar-actions">
+        {% if modo_reportes %}
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-headset"></i> Ver tickets</a>
+        {% else %}
         <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> Nuevo ticket</a>
+        <a href="/soporte/reportes" class="btn"><i class="fa-solid fa-flag"></i> Ver reportes</a>
         <a href="/soporte/sincronizacion" class="btn"><i class="fa-solid fa-rotate"></i> Sincronización</a>
+        {% endif %}
     </div>
 </div>
 
@@ -43,7 +53,7 @@
 </div>
 
 <div class="filter-card">
-    <form method="get" action="/soporte/tickets">
+    <form method="get" action="{{ '/soporte/reportes' if modo_reportes else '/soporte/tickets' }}">
         <div class="filter-grid">
             <div>
                 <label>Estado</label>

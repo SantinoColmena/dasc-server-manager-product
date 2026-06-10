@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" id="html-root">
 <head>
     <meta charset="UTF-8">
     <title>Clientes — Vigex Central</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text y='24' x='4' font-size='22' font-family='sans-serif' fill='white' font-weight='bold'>V</text></svg>" type="image/svg+xml">
     <style>
         :root {
             --bg: #f4f7fb;
@@ -18,6 +19,26 @@
             --shadow: 0 16px 34px rgba(15, 23, 42, .08);
             --radius: 18px;
         }
+        /* ── Modo oscuro ── */
+        [data-theme="dark"] { --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --line: #334155; }
+        [data-theme="dark"] body { background: var(--bg); color: var(--text); }
+        [data-theme="dark"] .hero { background: linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-color:#334155; }
+        [data-theme="dark"] .nav-item { background:#1e293b; color:#94a3b8; border-color:#334155; }
+        [data-theme="dark"] .nav-item:hover { background:#334155; color:var(--text); }
+        [data-theme="dark"] .nav-item.active { background:#1e1542; color:#a5b4fc; border-color:#4f46e5; }
+        [data-theme="dark"] .panel { box-shadow:none; border:1px solid #334155; }
+        [data-theme="dark"] th { background:#0f172a; color:#94a3b8; border-color:#334155; }
+        [data-theme="dark"] td { border-bottom-color:#334155; }
+        [data-theme="dark"] tr:hover td { background:#1e293b; }
+        [data-theme="dark"] .token-box { background:#1a2a0a; border-color:#4d7c0f; }
+        [data-theme="dark"] .token-box h3 { color:#d9f99d; }
+        [data-theme="dark"] .token-value { background:#0f172a; border-color:#4d7c0f; color:#d9f99d; }
+        [data-theme="dark"] .form-group input { background:#0f172a; border-color:#334155; color:var(--text); }
+        [data-theme="dark"] .form-group input:focus { background:#0f172a; border-color:#4f46e5; }
+        [data-theme="dark"] .form-group label { color:var(--muted); }
+        [data-theme="dark"] .msg { background:#1e1542; color:#a5b4fc; border-color:#4f46e5; }
+        [data-theme="dark"] .empty { background:#1e293b; border-color:#334155; }
+        [data-theme="dark"] .dark-toggle { background:#1e293b; border:1.5px solid #334155; color:var(--text); cursor:pointer; }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
         .wrapper { max-width: 1100px; margin: 34px auto; padding: 0 22px 60px; }
@@ -77,6 +98,7 @@
         <a href="/salud" class="nav-item">🟢 Salud global</a>
         <a href="/clientes" class="nav-item active">🏢 Clientes</a>
         <a href="/auditoria" class="nav-item">🔍 Auditoría</a>
+        <button class="nav-item dark-toggle" id="central-dark-toggle" style="border:1.5px solid #e2e8f0;cursor:pointer;">🌙</button>
         <a href="/logout" class="nav-item" style="margin-left:auto;">Cerrar sesión</a>
     </nav>
 
@@ -188,5 +210,21 @@
     </div>
 
 </div>
+<script>
+(function () {
+    var html = document.getElementById('html-root');
+    var btn  = document.getElementById('central-dark-toggle');
+    function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+    function applyTheme(dark) {
+        if (dark) { html.setAttribute('data-theme','dark'); btn.textContent='☀️'; }
+        else { html.removeAttribute('data-theme'); btn.textContent='🌙'; }
+        localStorage.setItem('vigex-central-theme', dark ? 'dark' : 'light');
+    }
+    var saved = localStorage.getItem('vigex-central-theme') || '';
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved === 'dark' || (!saved && prefersDark));
+    btn.addEventListener('click', function () { applyTheme(!isDark()); });
+}());
+</script>
 </body>
 </html>

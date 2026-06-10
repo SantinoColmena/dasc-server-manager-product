@@ -248,6 +248,7 @@ AVAILABLE_PERMISSIONS = {
     "servicios": "Servicios",
     "alertas": "Alertas",
     "terminal": "Terminal",
+    "asistente": "Asistente IA",   # R-090: permiso para acceder al chat IA
 }
 
 
@@ -552,6 +553,7 @@ def get_common_context(request: Request) -> dict[str, Any]:
         "can_terminal": admin or "terminal" in perms,
         "permission_labels": permission_labels_from_keys(effective_keys),
         "permissions_count": len(effective_keys),
+        "auto_logout_minutes": AUTO_LOGOUT_MINUTES,
     }
 
 
@@ -1127,6 +1129,16 @@ def cargar_historial_backups(limit: int = 50) -> list[dict[str, str]]:
 
         if item.get("start_file") and item.get("start_pos") and item.get("end_file") and item.get("end_pos"):
             item["rango"] = f"{item['start_file']}:{item['start_pos']} → {item['end_file']}:{item['end_pos']}"
+
+        # Alias: backups_api.sh escribe la columna 'timestamp'; normalizar a 'date'
+        # para que dashboard, salud e integridad no muestren '—' (R-083-fix-1)
+        if not item.get("date"):
+            item["date"] = item.get("timestamp", "")
+
+        # Alias: backups_api.sh escribe la columna 'path'; normalizar a 'file'
+        # para que la descarga no falle con "no tiene archivo asociado" (R-083-fix-5a)
+        if not item.get("file"):
+            item["file"] = item.get("path", "")
 
         history.append(item)
 
@@ -1752,6 +1764,28 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",") if o.str
 # Sesión: https_only configurable (activar cuando el proxy sirva HTTPS real).
 SESSION_HTTPS_ONLY = os.getenv("VIGEX_SESSION_HTTPS_ONLY", "false").strip().lower() in ("1", "true", "yes", "on")
 SESSION_MAX_AGE = int(os.getenv("VIGEX_SESSION_MAX_AGE", "28800"))  # 8 horas
+AUTO_LOGOUT_MINUTES = int(os.getenv("VIGEX_AUTO_LOGOUT_MINUTES", "60"))  # Inactividad JS: 0=desactivado
+
+# ── Asistente IA / RAG (R-090) ─────────────────────────────────────────────
+# Fase 1: Ollama local (sin dependencias extra, solo urllib stdlib)
+# Fase 2: cambiar VIGEX_RAG_LLM_PROVIDER=anthropic y añadir ANTHROPIC_API_KEY
+RAG_ENABLED         = os.getenv("VIGEX_RAG_ENABLED", "true").lower() in ("1", "true", "yes")
+RAG_LLM_PROVIDER    = os.getenv("VIGEX_RAG_LLM_PROVIDER", "ollama")   # "ollama" | "anthropic" | "gemini" | "openai" | "groq"
+RAG_OLLAMA_URL      = os.getenv("VIGEX_RAG_OLLAMA_URL", "http://localhost:11434")
+RAG_OLLAMA_MODEL    = os.getenv("VIGEX_RAG_OLLAMA_MODEL", "mistral")
+RAG_ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
+RAG_ANTHROPIC_MODEL = os.getenv("VIGEX_RAG_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+RAG_GEMINI_KEY      = os.getenv("GOOGLE_API_KEY", "")
+RAG_GEMINI_MODEL    = os.getenv("VIGEX_RAG_GEMINI_MODEL", "gemini-2.0-flash")
+RAG_OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
+RAG_OPENAI_MODEL    = os.getenv("VIGEX_RAG_OPENAI_MODEL", "gpt-4o-mini")
+RAG_GROQ_KEY        = os.getenv("GROQ_API_KEY", "")
+RAG_GROQ_MODEL      = os.getenv("VIGEX_RAG_GROQ_MODEL", "llama-3.3-70b-versatile")
+RAG_TOP_K           = int(os.getenv("VIGEX_RAG_TOP_K", "5"))
+RAG_MAX_TOKENS      = int(os.getenv("VIGEX_RAG_MAX_TOKENS", "700"))
+# Rate limiting del asistente IA (R-090-sec): peticiones máximas por usuario en la ventana
+RAG_RATE_LIMIT_REQS   = int(os.getenv("VIGEX_RAG_RATE_LIMIT_REQS", "30"))   # 30 req por usuario
+RAG_RATE_LIMIT_WINDOW = int(os.getenv("VIGEX_RAG_RATE_LIMIT_WINDOW", "60")) # en una ventana de 60 s
 
 app.add_middleware(AuthAndLogMiddleware)
 app.add_middleware(
@@ -2228,6 +2262,41 @@ def _send_email_alert(subject: str, body_html: str) -> bool:
             smtp.starttls()
             smtp.login(NOTIF_SMTP_USER, NOTIF_SMTP_PASS)
             smtp.sendmail(msg["From"], [NOTIF_EMAIL_TO], msg.as_string())
+        return True
+    except Exception:
+        return False
+
+
+def _send_email_bugreport(ticket_id: str, tipo: str, descripcion: str, usuario: str) -> bool:
+    """Reenvía un reporte de bug/sugerencia/pregunta a soporte@vigex.es. R-083-fix-2
+    Silencioso si SMTP no está configurado (no bloquea la respuesta al usuario).
+    """
+    if not all([NOTIF_SMTP_HOST, NOTIF_SMTP_USER, NOTIF_SMTP_PASS]):
+        return False
+    try:
+        asunto = f"[Vigex Reporte #{ticket_id}] {tipo.capitalize()} · usuario: {usuario}"
+        cuerpo_html = (
+            f"<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'></head><body>"
+            f"<div style='font-family:sans-serif;background:#f3f4f6;padding:24px;'>"
+            f"<div style='background:#fff;border-radius:14px;padding:28px 32px;max-width:580px;margin:0 auto;'>"
+            f"<h2 style='color:#4f46e5;margin:0 0 12px;'>Vigex — Reporte #{ticket_id}</h2>"
+            f"<p style='margin:0 0 6px;'><strong>Tipo:</strong> {tipo}</p>"
+            f"<p style='margin:0 0 6px;'><strong>Enviado por:</strong> {usuario}</p>"
+            f"<hr style='border:none;border-top:1px solid #e5e7eb;margin:14px 0;'>"
+            f"<pre style='background:#f8fafc;padding:14px;border-radius:8px;"
+            f"font-size:13px;white-space:pre-wrap;color:#374151;'>{descripcion}</pre>"
+            f"</div></div></body></html>"
+        )
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = asunto
+        msg["From"]    = NOTIF_EMAIL_FROM or NOTIF_SMTP_USER
+        msg["To"]      = "soporte@vigex.es"
+        msg.attach(MIMEText(cuerpo_html, "html", "utf-8"))
+        with smtplib.SMTP(NOTIF_SMTP_HOST, NOTIF_SMTP_PORT, timeout=20) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(NOTIF_SMTP_USER, NOTIF_SMTP_PASS)
+            smtp.sendmail(msg["From"], ["soporte@vigex.es"], msg.as_string())
         return True
     except Exception:
         return False
@@ -4052,6 +4121,13 @@ def ensure_support_db():
 
         conn.commit()
 
+        # Migración: añadir columna 'origen' si no existe (tablas creadas antes de R-083)
+        try:
+            conn.execute("ALTER TABLE support_tickets ADD COLUMN origen TEXT NOT NULL DEFAULT 'panel'")
+            conn.commit()
+        except Exception:
+            pass  # columna ya existe — ignorar
+
     migrate_support_json_to_sqlite()
 
 
@@ -4243,7 +4319,7 @@ def save_support_ticket(ticket):
                 ticket.get("evidencia", ""),
                 ticket["estado"],
                 ticket["creado_por"],
-                "panel",
+                ticket.get("origen", "panel"),  # R-083-fix-6c: respetar el origen del ticket
             ),
         )
         conn.commit()
@@ -4649,7 +4725,9 @@ SUPPORT_STATUSES = [
 ]
 
 
-def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
+def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100,
+                           origen="", exclude_origen=""):
+    """Busca tickets con filtros. origen/exclude_origen filtran por columna 'origen'. R-083-fix-6"""
     ensure_support_db()
 
     where = []
@@ -4659,6 +4737,8 @@ def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
     prioridad = (prioridad or "").strip()
     tipo = (tipo or "").strip()
     q = (q or "").strip()
+    origen = (origen or "").strip()
+    exclude_origen = (exclude_origen or "").strip()
 
     if estado:
         where.append("estado = ?")
@@ -4671,6 +4751,14 @@ def search_support_tickets(estado="", prioridad="", tipo="", q="", limit=100):
     if tipo:
         where.append("tipo = ?")
         params.append(tipo)
+
+    if origen:
+        where.append("origen = ?")
+        params.append(origen)
+
+    if exclude_origen:
+        where.append("origen != ?")
+        params.append(exclude_origen)
 
     if q:
         like = f"%{q}%"
@@ -4764,7 +4852,8 @@ def get_support_ticket(ticket_id):
     return support_row_to_dict(row)
 
 
-def support_ticket_counts():
+def support_ticket_counts(origen: str = "", exclude_origen: str = ""):
+    """Cuenta tickets con filtro opcional de origen. R-083-fix-6b"""
     ensure_support_db()
 
     counts = {
@@ -4773,17 +4862,31 @@ def support_ticket_counts():
         "por_prioridad": {},
     }
 
+    where_parts = []
+    params: list = []
+    if origen:
+        where_parts.append("origen = ?")
+        params.append(origen)
+    if exclude_origen:
+        where_parts.append("origen != ?")
+        params.append(exclude_origen)
+    where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+
     with support_db_connect() as conn:
-        total_row = conn.execute("SELECT COUNT(*) AS total FROM support_tickets").fetchone()
+        total_row = conn.execute(
+            f"SELECT COUNT(*) AS total FROM support_tickets {where}", params
+        ).fetchone()
         counts["total"] = total_row["total"] if total_row else 0
 
         for row in conn.execute(
-            "SELECT estado, COUNT(*) AS total FROM support_tickets GROUP BY estado ORDER BY estado"
+            f"SELECT estado, COUNT(*) AS total FROM support_tickets {where} GROUP BY estado ORDER BY estado",
+            params,
         ):
             counts["por_estado"][row["estado"]] = row["total"]
 
         for row in conn.execute(
-            "SELECT prioridad, COUNT(*) AS total FROM support_tickets GROUP BY prioridad ORDER BY prioridad"
+            f"SELECT prioridad, COUNT(*) AS total FROM support_tickets {where} GROUP BY prioridad ORDER BY prioridad",
+            params,
         ):
             counts["por_prioridad"][row["prioridad"]] = row["total"]
 
@@ -5131,16 +5234,18 @@ def soporte_tickets_page(
 
     context = get_common_context(request)
 
+    # Excluir reportes internos (bug/sugerencia/pregunta) del listado de soporte — R-083-fix-6
     tickets = search_support_tickets(
         estado=estado,
         prioridad=prioridad,
         tipo=tipo,
         q=q,
         limit=100,
+        exclude_origen="bug_report",
     )
 
     context["tickets"] = tickets
-    context["counts"] = support_ticket_counts()
+    context["counts"] = support_ticket_counts(exclude_origen="bug_report")
     context["support_statuses"] = SUPPORT_STATUSES
     context["support_priorities"] = SUPPORT_PRIORITIES
     context["support_types"] = SUPPORT_TYPES
@@ -5150,12 +5255,59 @@ def soporte_tickets_page(
         "tipo": tipo,
         "q": q,
     }
+    context["modo_reportes"] = False
 
     context["central_pending_count"] = len(get_pending_central_sync_tickets(limit=200))
     context["central_sync_summary"] = build_central_sync_summary(tickets)
 
     return templates.TemplateResponse(request, "soporte_tickets.html", context)
 
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# R-083-fix-6 — Sección "Reportes" (Bug / Sugerencia / Pregunta del panel)
+# Separada del listado de soporte al cliente.
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/soporte/reportes")
+def soporte_reportes_page(
+    request: Request,
+    estado: str = "",
+    prioridad: str = "",
+    q: str = "",
+):
+    if not is_admin(request):
+        return permission_redirect("Acceso reservado al equipo técnico Vigex.")
+
+    if not is_local_internal_support_enabled():
+        return local_internal_support_redirect()
+
+    context = get_common_context(request)
+
+    tickets = search_support_tickets(
+        estado=estado,
+        prioridad=prioridad,
+        q=q,
+        limit=200,
+        origen="bug_report",
+    )
+
+    context["tickets"] = tickets
+    context["counts"] = support_ticket_counts(origen="bug_report")
+    context["support_statuses"] = SUPPORT_STATUSES
+    context["support_priorities"] = SUPPORT_PRIORITIES
+    context["support_types"] = SUPPORT_TYPES
+    context["filters"] = {
+        "estado":    estado,
+        "prioridad": prioridad,
+        "tipo":      "",
+        "q":         q,
+    }
+    context["central_pending_count"] = 0
+    context["central_sync_summary"] = None
+    context["modo_reportes"] = True   # flag para que el template adapte título y botones
+
+    return templates.TemplateResponse(request, "soporte_tickets.html", context)
 
 
 # =====================
@@ -5566,6 +5718,7 @@ def soporte_ticket_update_status_priority(
     ticket_id: str,
     estado: str = Form(...),
     prioridad: str = Form(...),
+    nota: str = Form(""),
 ):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico Vigex.")
@@ -5575,12 +5728,29 @@ def soporte_ticket_update_status_priority(
 
     usuario = request.session.get("user", "anon")
 
+    # La nota es obligatoria para registrar un cambio de estado/prioridad — R-083-fix-8
+    nota = (nota or "").strip()
+    if not nota:
+        return RedirectResponse(
+            url=f"/soporte/tickets/{ticket_id}?ok=0&msg=Escribe+una+nota+antes+de+guardar",
+            status_code=303,
+        )
+
     ok, msg = update_support_ticket_status_priority(
         ticket_id=ticket_id,
         nuevo_estado=estado,
         nueva_prioridad=prioridad,
         usuario=usuario,
     )
+
+    # Guardar la nota en el historial del ticket
+    if ok and nota:
+        add_support_ticket_history(
+            ticket_id=ticket_id,
+            usuario=usuario,
+            accion="Nota / Respuesta",
+            detalle=nota,
+        )
 
     log_event(
         tipo="soporte",
@@ -5967,11 +6137,16 @@ def configuracion_panel(request: Request):
     }
     context["config_meta"] = _CONFIG_EDITABLE
     context["notif_enabled"] = NOTIF_ENABLED
-    context["smtp_host"] = NOTIF_SMTP_HOST or None
-    context["smtp_user"] = NOTIF_SMTP_USER or None
+    context["smtp_host"]           = NOTIF_SMTP_HOST or ""
+    context["smtp_port"]           = NOTIF_SMTP_PORT
+    context["smtp_user"]           = NOTIF_SMTP_USER or ""
+    context["smtp_pass_set"]       = bool(NOTIF_SMTP_PASS)   # no exponer la contraseña
+    context["smtp_email_from"]     = NOTIF_EMAIL_FROM or ""
+    context["smtp_email_to"]       = NOTIF_EMAIL_TO or ""
     context["telegram_ok"] = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip())
     context["ssh_key"] = SSH_KEY_PATH
     context["ssh_timeout"] = SSH_TIMEOUT
+    context["auto_logout_minutes"] = AUTO_LOGOUT_MINUTES
     return templates.TemplateResponse(request, "configuracion.html", context)
 
 
@@ -6043,6 +6218,118 @@ async def configuracion_panel_save(request: Request):
     else:
         msg = "Valores aplicados en memoria. No se pudo escribir config.env (los cambios se perderán al reiniciar)."
 
+    return JSONResponse({"ok": True, "msg": msg})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# R-061-bis — Configuración SMTP desde el panel (sin editar config.env)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/configuracion/smtp")
+async def configuracion_smtp_save(request: Request):
+    """Guarda la configuración SMTP en config.env y recarga las variables globales. R-061-bis"""
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Acceso denegado."}, status_code=403)
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Datos no válidos."}, status_code=400)
+
+    global NOTIF_SMTP_HOST, NOTIF_SMTP_PORT, NOTIF_SMTP_USER, NOTIF_SMTP_PASS
+    global NOTIF_EMAIL_FROM, NOTIF_EMAIL_TO
+
+    host      = str(data.get("smtp_host", "")).strip()
+    port_raw  = data.get("smtp_port", 587)
+    user_smtp = str(data.get("smtp_user", "")).strip()
+    password  = str(data.get("smtp_pass", "")).strip()
+    email_from = str(data.get("email_from", "")).strip()
+    email_to   = str(data.get("email_to", "")).strip()
+
+    # Validar puerto
+    try:
+        port = int(port_raw)
+        if port < 1 or port > 65535:
+            raise ValueError
+    except (ValueError, TypeError):
+        return JSONResponse({"ok": False, "msg": "Puerto SMTP inválido (1–65535)."}, status_code=400)
+
+    # Construir diccionario de cambios (no sobreescribir la contraseña si se envía vacía)
+    updates: dict[str, str] = {
+        "NOTIF_SMTP_HOST": host,
+        "NOTIF_SMTP_PORT": str(port),
+        "NOTIF_SMTP_USER": user_smtp,
+        "NOTIF_EMAIL_FROM": email_from,
+        "NOTIF_EMAIL_TO": email_to,
+    }
+    if password:
+        updates["NOTIF_SMTP_PASS"] = password
+
+    # Persistir en config.env
+    written = _update_config_env(updates)
+
+    # Recargar en memoria (efecto inmediato)
+    NOTIF_SMTP_HOST  = host
+    NOTIF_SMTP_PORT  = port
+    NOTIF_SMTP_USER  = user_smtp
+    NOTIF_EMAIL_FROM = email_from
+    NOTIF_EMAIL_TO   = email_to
+    if password:
+        NOTIF_SMTP_PASS = password
+
+    usuario = request.session.get("user", "anon")
+    log_event(
+        tipo="configuracion",
+        resultado="OK",
+        usuario=usuario,
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /configuracion/smtp",
+        detalle=f"SMTP actualizado: host={host} puerto={port} usuario={user_smtp}",
+    )
+
+    if written:
+        msg = "Configuración SMTP guardada. Activa para nuevos envíos."
+    else:
+        msg = "SMTP actualizado en memoria. No se pudo persistir en config.env."
+
+    return JSONResponse({"ok": True, "msg": msg})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Guardar tiempo de auto-logout por inactividad (R-083-fix-9)
+# ─────────────────────────────────────────────────────────────────────────────
+@app.post("/configuracion/auto-logout")
+async def configuracion_auto_logout_save(request: Request):
+    """Guarda el tiempo de auto-logout por inactividad en config.env. R-083-fix-9"""
+    global AUTO_LOGOUT_MINUTES
+
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Sin permisos."}, status_code=403)
+
+    try:
+        data = await request.json()
+        minutos = int(data.get("minutos", 60))
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Valor inválido."}, status_code=400)
+
+    if minutos < 0 or minutos > 1440:
+        return JSONResponse({"ok": False, "msg": "El valor debe estar entre 0 y 1440 minutos."}, status_code=400)
+
+    AUTO_LOGOUT_MINUTES = minutos
+    written = _update_config_env({"VIGEX_AUTO_LOGOUT_MINUTES": str(minutos)})
+
+    ip = request.client.host if request.client else None
+    usuario = request.session.get("user", "anon")
+    log_event(
+        tipo="CONFIGURACION",
+        resultado="OK",
+        usuario=usuario,
+        ip_origen=ip,
+        recurso="POST /configuracion/auto-logout",
+        detalle=f"Auto-logout por inactividad: {minutos} min (0=desactivado)",
+    )
+
+    msg = f"Auto-logout configurado a {minutos} minuto(s)." if minutos > 0 else "Auto-logout desactivado."
     return JSONResponse({"ok": True, "msg": msg})
 
 
@@ -6446,9 +6733,10 @@ def informes_enviar(request: Request):
 # Crea un ticket de soporte con contexto del sistema adjunto automáticamente.
 
 _REPORT_TIPOS_MAP = {
-    "bug":        ("Incidencia", "Alta",  "Panel Vigex"),
-    "sugerencia": ("Cambio",     "Baja",  "Panel Vigex"),
-    "pregunta":   ("Consulta",   "Media", "Panel Vigex"),
+    # tipos propios — aparecen en sección "Reportes", NO en tickets de soporte
+    "bug":        ("Bug",        "Alta",  "Panel Vigex"),
+    "sugerencia": ("Sugerencia", "Baja",  "Panel Vigex"),
+    "pregunta":   ("Pregunta",   "Media", "Panel Vigex"),
 }
 
 
@@ -6525,19 +6813,34 @@ async def reportar_problema(request: Request):
     except Exception as e:
         return JSONResponse({"ok": False, "msg": f"Error al crear el ticket: {e}"}, status_code=500)
 
+    # Enviar a Vigex Central (si está habilitado) — R-083-fix-2
+    _central_result = send_support_ticket_to_central(ticket)
+    if not _central_result.get("sent") and not _central_result.get("skipped"):
+        log_event(
+            tipo="bug_report",
+            resultado="WARN",
+            usuario=usuario,
+            ip_origen=request.client.host if request.client else None,
+            recurso="POST /reportar-problema",
+            detalle=f"ticket={ticket_id} — fallo push Central: {_central_result.get('detail', '')}",
+        )
+
+    # Notificar por email a soporte@vigex.es (silencioso si SMTP no configurado)
+    _send_email_bugreport(ticket_id, tipo_raw, descripcion_completa, usuario)
+
     log_event(
         tipo="bug_report",
         resultado="OK",
         usuario=usuario,
         ip_origen=request.client.host if request.client else None,
         recurso="POST /reportar-problema",
-        detalle=f"ticket={ticket_id} tipo={tipo_raw}",
+        detalle=f"ticket={ticket_id} tipo={tipo_raw} central_sent={_central_result.get('sent', False)}",
     )
 
     return JSONResponse({
-        "ok":       True,
+        "ok":        True,
         "ticket_id": ticket_id,
-        "msg":      f"Reporte enviado. Referencia: {ticket_id}",
+        "msg":       f"Reporte enviado. Referencia: {ticket_id}",
     })
 
 
@@ -6773,207 +7076,1667 @@ def _normalizar_palabras(texto: str) -> list[str]:
 
 _FAQ_ENTRIES: list[dict] = [
     {
-        "id": "backup-fallo",
-        "pregunta": "¿Qué hago si una copia de seguridad falló?",
-        "respuesta": (
-            "Ve a **Copias** en el menú lateral y revisa el historial. "
-            "El color rojo indica error. Comprueba que el servidor de backups está activo "
-            "y que el usuario `vigex` tiene espacio en disco. "
-            "Puedes lanzar una copia manual con el botón 'Nueva copia'. "
-            "Si el error persiste, revisa el log: `journalctl -u vigex-api -n 100`."
+        "id": (
+            "vigex-que-es\n"
         ),
-        "palabras_clave": ["backup", "copia", "fallo", "error", "rojo", "historial"],
+        "pregunta": (
+            "¿Qué es Vigex y para qué sirve?\n"
+        ),
+        "respuesta": (
+            "Vigex es un **panel de gestión de servidores Linux** diseñado para pequeñas y medianas empresas (PyMEs). Es una solución auto-hospedada (self-hosted) que centraliza en una única interfaz web todas las tareas críticas: copias de seguridad, restauración, gestión de servicios systemd, logs, alertas, monitoreo y soporte técnico con tickets. No necesitas contratar servicios en la nube: Vigex se instala en tus propios servidores y tú mantienes el control total de tus datos. Está desarrollado en Python con FastAPI, servido con Uvicorn y expuesto a través de un proxy nginx con HTTPS. El panel es accesible desde cualquier navegador moderno.\n"
+        ),
+        "palabras_clave": ["vigex", "que es", "para que", "panel", "gestión", "servidores", "pyme", "producto"],
     },
     {
-        "id": "disco-lleno",
-        "pregunta": "El disco está al 90% o más. ¿Qué hago?",
-        "respuesta": (
-            "Ve a **Monitoreo** para ver el detalle de uso por partición. "
-            "Las causas más comunes son: copias de seguridad acumuladas (borra las antiguas desde "
-            "la pantalla Copias), logs sin rotar (`logrotate -f /etc/logrotate.conf`) "
-            "o el directorio `/var/log`. También puedes usar `df -h` y `du -sh /*` "
-            "para identificar qué ocupa más espacio."
+        "id": (
+            "vigex-a-quien-va-dirigido\n"
         ),
-        "palabras_clave": ["disco", "espacio", "lleno", "90", "80", "uso", "df"],
+        "pregunta": (
+            "¿A quién va dirigido Vigex? ¿Qué tipo de empresa lo usa?\n"
+        ),
+        "respuesta": (
+            "Vigex está diseñado específicamente para **PyMEs** que tienen uno o varios servidores Linux propios o en VPS y necesitan gestionarlos de forma centralizada sin depender de un equipo técnico grande. Es ideal para: empresas de 1 a 50 empleados que externalizan su IT, autónomos técnicos que gestionan servidores de varios clientes, empresas con servidores físicos en local (on-premise), y negocios que manejan datos sensibles y prefieren no subirlos a la nube pública. No requiere conocimientos avanzados de Linux para el uso diario del panel, aunque sí se necesita un técnico para la instalación inicial.\n"
+        ),
+        "palabras_clave": ["dirigido", "empresa", "pyme", "cliente", "uso", "perfil", "quien", "tamaño"],
     },
     {
-        "id": "servicio-caido",
-        "pregunta": "Un servicio aparece como caído. ¿Cómo lo reinicio?",
-        "respuesta": (
-            "Ve a **Servicios** en el menú lateral. Pulsa el botón de reinicio junto al servicio "
-            "afectado. Si no responde, usa la Terminal integrada para ejecutar "
-            "`systemctl restart <nombre-servicio>`. "
-            "Consulta el log del servicio con `journalctl -u <nombre> -n 50` para ver el motivo."
+        "id": (
+            "vigex-version-actual\n"
         ),
-        "palabras_clave": ["servicio", "caído", "caido", "reiniciar", "parado", "stopped", "failed"],
+        "pregunta": (
+            "¿Cuál es la versión actual de Vigex y qué incluye?\n"
+        ),
+        "respuesta": (
+            "La versión actual de Vigex es **v1.0-rc1** (Release Candidate 1), correspondiente a la Fase 6 del proyecto (primera fase de ventas). Esta versión incluye todas las funcionalidades core: backups automatizados, restauración con verificación SHA256, gestión de servicios systemd, logs centralizados en MariaDB, alertas por Telegram y email, monitoreo con Grafana/Cacti, informes automáticos, terminal web, soporte con tickets, Vigex Central Support para gestión multicliente, e Inteligencia Artificial integrada (Asistente IA con RAG). Puedes ver la versión instalada en el footer del panel o ejecutando en el servidor: `head -5 /opt/vigex/api/main.py`.\n"
+        ),
+        "palabras_clave": ["versión", "version", "actual", "rc1", "fase", "instalada", "numero", "incluye"],
     },
     {
-        "id": "restaurar-backup",
-        "pregunta": "¿Cómo restauro una copia de seguridad?",
-        "respuesta": (
-            "Ve a **Copias** y selecciona la copia que quieres restaurar. "
-            "Pulsa 'Restaurar' y confirma el proceso. "
-            "Vigex ejecutará `restore_api.sh` en el servidor de backups vía SSH. "
-            "Si el proceso falla, consulta **Integridad** para verificar que la copia tiene "
-            "checksum SHA256 válido. Para un desastre total, sigue los pasos del **DRO** "
-            "en el menú Recuperación."
+        "id": (
+            "vigex-self-hosted\n"
         ),
-        "palabras_clave": ["restaurar", "restore", "recuperar", "backup", "restablecer", "sha256"],
+        "pregunta": (
+            "¿Vigex está en la nube o es self-hosted? ¿Mis datos son privados?\n"
+        ),
+        "respuesta": (
+            "Vigex es **100% self-hosted**: se instala y ejecuta en tus propios servidores Linux. Tus datos (backups, logs, configuración, tickets) nunca salen de tus máquinas. No hay suscripción mensual a ningún servicio en la nube para las funciones core. La única excepción opcional es el **Asistente IA**: si eliges un proveedor externo (Groq, Gemini, OpenAI, Anthropic), las consultas al chat van a esa API. Puedes usar Ollama en local para el IA sin ningún coste ni dato externo. La instalación se hace con scripts bash: `sudo bash deploy/api/install_vigex_api.sh`.\n"
+        ),
+        "palabras_clave": ["self-hosted", "nube", "cloud", "datos", "privado", "privacidad", "seguridad", "propio"],
     },
     {
-        "id": "alerta-telegram",
-        "pregunta": "No recibo alertas por Telegram. ¿Cómo lo configuro?",
-        "respuesta": (
-            "Necesitas un bot de Telegram y el chat ID. Pasos: "
-            "1) Crea un bot con `@BotFather` → `/newbot` → copia el token. "
-            "2) Envía un mensaje al bot y obtén tu chat ID con "
-            "`https://api.telegram.org/bot<TOKEN>/getUpdates`. "
-            "3) Abre `config.env` en el servidor (`/opt/vigex/api/config.env`) y configura "
-            "`NOTIF_TELEGRAM_TOKEN` y `NOTIF_TELEGRAM_CHAT_ID`. "
-            "4) Reinicia el servicio: `systemctl restart vigex-api`."
+        "id": (
+            "vigex-modulos\n"
         ),
-        "palabras_clave": ["telegram", "alerta", "notificacion", "bot", "token", "chatid"],
+        "pregunta": (
+            "¿Qué módulos o secciones tiene el panel de Vigex?\n"
+        ),
+        "respuesta": (
+            "El panel tiene los siguientes módulos accesibles desde el menú lateral:\n"
+            "\n"
+            "• **Dashboard** — resumen del estado: disco, servicios activos, último backup.\n"
+            "• **Copias** — historial de backups, lanzar copia manual, verificar integridad.\n"
+            "• **Restauración** — restaurar desde cualquier copia con verificación SHA256 previa.\n"
+            "• **Servicios** — ver y controlar servicios systemd del servidor remoto.\n"
+            "• **Logs** — consulta de logs centralizados desde la base de datos MariaDB.\n"
+            "• **Alertas** — umbrales y canales de notificación (Telegram y/o email).\n"
+            "• **Monitoreo** — integración con Grafana o Cacti para gráficas en tiempo real.\n"
+            "• **Informes** — generación y envío automático de informes operacionales.\n"
+            "• **Terminal** — terminal web con comandos SSH controlados al servidor.\n"
+            "• **Soporte** — sistema de tickets de soporte técnico con estado y seguimiento.\n"
+            "• **Asistente IA** — chat inteligente con RAG sobre documentación Vigex.\n"
+            "• **Admin** — gestión de usuarios, permisos y configuración (solo administrador).\n"
+        ),
+        "palabras_clave": ["módulos", "secciones", "menu", "panel", "funciones", "dashboard", "partes", "copias", "logs"],
     },
     {
-        "id": "alerta-email",
-        "pregunta": "No recibo alertas por email. ¿Cómo lo configuro?",
-        "respuesta": (
-            "Necesitas una cuenta SMTP con acceso de aplicación. Configura en `config.env`: "
-            "`NOTIF_SMTP_HOST`, `NOTIF_SMTP_PORT`, `NOTIF_SMTP_USER`, `NOTIF_SMTP_PASS`, "
-            "`NOTIF_EMAIL_FROM` y `NOTIF_EMAIL_TO`. "
-            "Para Gmail: activa la verificación en dos pasos y genera una 'Contraseña de aplicación'. "
-            "Prueba el envío desde el panel: Alertas → Probar alertas."
+        "id": (
+            "vigex-precio-planes\n"
         ),
-        "palabras_clave": ["email", "correo", "smtp", "gmail", "alerta", "notificacion", "envio"],
+        "pregunta": (
+            "¿Cuánto cuesta Vigex? ¿Tiene planes o licencia?\n"
+        ),
+        "respuesta": (
+            "Vigex es un producto comercial self-hosted. Al ser auto-hospedado, pagas la licencia una sola vez (o con mantenimiento anual opcional) y lo instalas en tus propios servidores sin coste mensual adicional por el software. Los planes se adaptan al tamaño de empresa y número de servidores. Contacta con el equipo para un presupuesto personalizado.\n"
+            "\n"
+            "Respecto al **Asistente IA**, los costes aproximados por proveedor son:\n"
+            "• **Ollama (local)** — 0€, sin envío de datos a terceros.\n"
+            "• **Groq** — capa gratuita generosa (~100 req/día gratis), luego ~0,06€/M tokens.\n"
+            "• **Gemini 2.0 Flash** — ~0,22€/M tokens de entrada, muy económico.\n"
+            "• **OpenAI gpt-4o-mini** — ~0,15€/M tokens de entrada.\n"
+            "• **Anthropic claude-3-haiku** — ~0,25€/M tokens de entrada.\n"
+            "Para una PyME con uso moderado del asistente, el coste mensual en IA suele ser inferior a 1-2€.\n"
+        ),
+        "palabras_clave": ["precio", "coste", "licencia", "pagar", "gratuito", "gratis", "planes", "cuanto"],
     },
     {
-        "id": "actualizar-vigex",
-        "pregunta": "¿Cómo actualizo Vigex a una nueva versión?",
-        "respuesta": (
-            "Desde el servidor Linux, ejecuta como root: "
-            "`sudo bash /ruta/al/repo/deploy/api/update_vigex_api.sh`. "
-            "El script preserva `config.env`, las claves SSH y los datos. "
-            "Desde Windows puedes usar el asistente PowerShell: "
-            "`tools\\windows\\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar)."
+        "id": (
+            "vigex-requisitos-hardware\n"
         ),
-        "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade"],
+        "pregunta": (
+            "¿Qué requisitos de hardware necesita el servidor para instalar Vigex?\n"
+        ),
+        "respuesta": (
+            "Los requisitos dependen del perfil de despliegue:\n"
+            "\n"
+            "**Lite / todo en uno:**\n"
+            "• CPU: 2 núcleos mínimo (4 recomendado)\n"
+            "• RAM: 2 GB mínimo (4 GB recomendado)\n"
+            "• Disco: 20 GB + espacio para backups\n"
+            "\n"
+            "**Standard / 2 servidores:**\n"
+            "• Panel+backups: 2 vCPU, 2 GB RAM, 10 GB + almacenamiento backups\n"
+            "• BD+logs: 2 vCPU, 2 GB RAM, 20 GB disco\n"
+            "\n"
+            "**Pro / 3 servidores:**\n"
+            "• Panel: 2 vCPU, 2 GB RAM, 10 GB disco\n"
+            "• BD+logs: 2 vCPU, 4 GB RAM, 50 GB disco\n"
+            "• Backups: 2 vCPU, 2 GB RAM, capacidad según volumen de datos\n"
+            "\n"
+            "Si instalas el Asistente IA con **Ollama en local**, necesitas al menos 6 GB RAM adicionales para el modelo LLM (llama3.2:3b ocupa ~3 GB, mistral ~5 GB).\n"
+        ),
+        "palabras_clave": ["requisitos", "hardware", "ram", "cpu", "disco", "servidor", "mínimo", "recursos"],
     },
     {
-        "id": "password-admin",
-        "pregunta": "Olvidé la contraseña del administrador. ¿Cómo la cambio?",
-        "respuesta": (
-            "Accede al servidor por SSH y edita `config.env`: "
-            "`nano /opt/vigex/api/config.env`. "
-            "Genera un nuevo hash bcrypt con Python: "
-            '`python3 -c "from passlib.context import CryptContext; '
-            "print(CryptContext(['bcrypt']).hash('nueva_contraseña'))\"`. "
-            "Pega el hash en la línea `ADMIN_PASSWORD=`. "
-            "Reinicia: `systemctl restart vigex-api`."
+        "id": (
+            "vigex-so-compatible\n"
         ),
-        "palabras_clave": ["contraseña", "password", "olvide", "admin", "acceso", "login", "bcrypt"],
+        "pregunta": (
+            "¿En qué sistemas operativos funciona Vigex?\n"
+        ),
+        "respuesta": (
+            "Vigex está diseñado y probado para **Ubuntu 22.04 LTS** en los servidores donde se instala. También debería funcionar en Ubuntu 20.04 y Debian 11/12, aunque no están oficialmente soportados. Los scripts de instalación asumen `apt` como gestor de paquetes y `systemd` como gestor de servicios.\n"
+            "\n"
+            "El **panel web** es compatible con cualquier navegador moderno (Chrome, Firefox, Edge, Safari) desde cualquier sistema operativo: Windows, Mac o Linux. Las herramientas de validación y desarrollo (PowerShell) corren en Windows.\n"
+        ),
+        "palabras_clave": ["sistema operativo", "ubuntu", "debian", "linux", "compatible", "so", "navegador", "windows"],
     },
     {
-        "id": "ssh-fallo-conexion",
-        "pregunta": "El panel no puede conectarse al servidor de backups por SSH.",
-        "respuesta": (
-            "Comprueba: "
-            "1) Que el servidor de backups está encendido y accesible en red. "
-            "2) Que el usuario `vigex` existe en el servidor remoto. "
-            "3) Que la clave pública SSH está en `~vigex/.ssh/authorized_keys` del servidor remoto. "
-            "Puedes ver la clave pública en `/opt/vigex/api/api_panel.pub`. "
-            "Test manual: `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@<IP-backups> hostname`."
+        "id": (
+            "instalacion-pasos\n"
         ),
-        "palabras_clave": ["ssh", "conexion", "backups", "remoto", "authorized_keys", "id_rsa"],
+        "pregunta": (
+            "¿Cómo se instala Vigex paso a paso?\n"
+        ),
+        "respuesta": (
+            "Instalación general (perfil Standard recomendado):\n"
+            "\n"
+            "1. Clona el repositorio o descarga el paquete de instalación.\n"
+            "2. Selecciona el perfil: `bash scripts/generar_config_perfil.sh` y elige `standard`.\n"
+            "3. En el servidor del panel, ejecuta como root:\n"
+            "   `sudo bash deploy/api/install_vigex_api.sh`\n"
+            "   El instalador pide las IPs de los servidores, genera claves SSH y crea el servicio systemd.\n"
+            "4. En el servidor de BD (si perfil dual/pro):\n"
+            "   `sudo bash deploy/db/install_vigex_db.sh`\n"
+            "5. En el servidor de backups:\n"
+            "   `sudo bash deploy/backup-services/instalar_backup_services.sh`\n"
+            "6. Instala el proxy HTTPS:\n"
+            "   `sudo bash deploy/proxy/install_vigex_proxy.sh`\n"
+            "\n"
+            "El panel queda disponible en `https://IP_SERVIDOR`. Entra con el usuario `admin` y la contraseña que indicaste durante la instalación.\n"
+        ),
+        "palabras_clave": ["instalar", "instalación", "pasos", "script", "desplegar", "setup", "comenzar", "bash"],
     },
     {
-        "id": "panel-no-arranca",
-        "pregunta": "El panel no arranca o aparece un error 500.",
-        "respuesta": (
-            "Pasos de diagnóstico: "
-            "1) `systemctl status vigex-api` — comprueba si el servicio está activo. "
-            "2) `journalctl -u vigex-api -n 100` — busca el error concreto. "
-            "3) Comprueba que `config.env` existe y tiene SECRET_KEY y ADMIN_PASSWORD. "
-            "4) `df -h /opt/vigex` — verifica que no esté el disco lleno. "
-            "5) Si el problema persiste, abre un ticket desde el panel de soporte."
+        "id": (
+            "perfiles-despliegue\n"
         ),
-        "palabras_clave": ["panel", "arrancar", "500", "error", "caido", "blanco", "fallo", "inicio"],
+        "pregunta": (
+            "¿Qué perfiles de despliegue existen en Vigex?\n"
+        ),
+        "respuesta": (
+            "Vigex ofrece cuatro perfiles que determinan cuántos servidores se usan:\n"
+            "\n"
+            "**Lite / Single** — todo en un servidor. Ideal para pruebas o empresas muy pequeñas. Usa `127.0.0.1` para servicios locales. Requiere copia de backup a ubicación externa.\n"
+            "\n"
+            "**Standard / Dual** — 2 servidores: panel+backups y BD+logs separados. Recomendado para PyMEs. Es el perfil más habitual.\n"
+            "\n"
+            "**Pro / Distribuido** — 3 servidores: panel, BD+logs y backups por separado. Máxima separación de responsabilidades y mayor resiliencia ante fallos.\n"
+            "\n"
+            "**Custom** — el instalador pregunta host por host para configuraciones no estándar.\n"
+            "\n"
+            "El perfil se configura con `VIGEX_PROFILE` en `config.env`. Las plantillas están en `config/perfiles/`.\n"
+        ),
+        "palabras_clave": ["perfil", "despliegue", "lite", "standard", "pro", "dual", "distribuido", "servidores", "topologia"],
     },
     {
-        "id": "logs-vacios",
-        "pregunta": "Los logs aparecen vacíos o no se actualizan.",
-        "respuesta": (
-            "Los logs se leen de la base de datos MariaDB en el servidor de logs. Comprueba: "
-            "1) Conexión a la BD: `mysql -h <IP_DB> -u vigex_user -p vigex_logs` "
-            "desde el servidor del panel. "
-            "2) Que `Vigex_DB_HOST`, `DB_USER`, `DB_PASSWORD` están correctos en `config.env`. "
-            "3) Que el servicio `mysql` (o `mariadb`) está activo en el servidor de BD."
+        "id": (
+            "config-env-variables\n"
         ),
-        "palabras_clave": ["log", "logs", "vacio", "vacios", "db", "base de datos", "mariadb", "mysql"],
+        "pregunta": (
+            "¿Qué es config.env y cuáles son las variables más importantes?\n"
+        ),
+        "respuesta": (
+            "`config.env` es el **fichero de configuración principal** de Vigex, ubicado en `/opt/vigex/api/config.env`. Contiene todas las variables de entorno del panel. Nunca se sube al repositorio git. El instalador lo genera desde `config.env.example`.\n"
+            "\n"
+            "Variables clave:\n"
+            "• `SECRET_KEY` — clave secreta para cifrado de sesiones (auto-generada en instalación).\n"
+            "• `ADMIN_USER` / `ADMIN_PASSWORD` — credenciales admin (password como hash bcrypt).\n"
+            "• `SSH_USER`, `SERVICIOS_HOST`, `BACKUPS_HOST` — conexión SSH remota.\n"
+            "• `VIGEX_SSH_ALLOWED_HOSTS` — lista blanca de IPs SSH permitidas.\n"
+            "• `LOGS_DB_HOST/NAME/USER/PASS` — conexión a BD de logs MariaDB.\n"
+            "• `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` — alertas Telegram.\n"
+            "• `NOTIF_SMTP_*` — SMTP para alertas y informes por email.\n"
+            "• `VIGEX_RAG_*` — Asistente IA (proveedor, modelo, clave API).\n"
+            "• `CENTRAL_SUPPORT_*` — conexión a Vigex Central Support.\n"
+            "\n"
+            "Para editar: `nano /opt/vigex/api/config.env` y `systemctl restart vigex-api`.\n"
+        ),
+        "palabras_clave": ["config.env", "configuración", "variables", "entorno", "fichero", "settings", "secreto"],
     },
     {
-        "id": "monitoreo-grafica",
-        "pregunta": "El gráfico de monitoreo no carga o está vacío.",
-        "respuesta": (
-            "La sección Monitoreo integra Grafana (si está instalado). Si aparece vacía: "
-            "1) Comprueba que `GRAFANA_URL` está configurado en `config.env`. "
-            "2) Verifica que el servicio Grafana está activo: `systemctl status grafana-server`. "
-            "3) Si usas Cacti, configura `CACTI_URL` en lugar de `GRAFANA_URL`. "
-            "Si el monitoreo externo no está disponible, la sección muestra un mensaje "
-            "informativo. El dashboard principal siempre muestra disco y servicios."
+        "id": (
+            "primer-acceso\n"
         ),
-        "palabras_clave": ["monitoreo", "grafica", "grafico", "grafana", "cacti", "vacio", "carga"],
+        "pregunta": (
+            "¿Cómo accedo por primera vez al panel tras la instalación?\n"
+        ),
+        "respuesta": (
+            "Tras la instalación, el panel está en `https://IP_DEL_SERVIDOR` (puerto 443 con proxy) o en `http://IP:8000` directamente. El navegador puede mostrar advertencia de certificado autofirmado — haz clic en 'Avanzado' → 'Continuar' para aceptarlo.\n"
+            "\n"
+            "Credenciales de acceso:\n"
+            "• **Usuario**: valor de `ADMIN_USER` en config.env (por defecto `admin`).\n"
+            "• **Contraseña**: la que elegiste durante la instalación.\n"
+            "\n"
+            "Si olvidaste la contraseña, accede al servidor por SSH y edita el hash bcrypt en `config.env`. Genera un nuevo hash con:\n"
+            "`python3 -c \"from passlib.context import CryptContext; print(CryptContext(['bcrypt']).hash('nueva_clave'))\"`\n"
+            "Copia el resultado en la línea `ADMIN_PASSWORD=` y reinicia el servicio.\n"
+        ),
+        "palabras_clave": ["primer acceso", "login", "entrar", "acceder", "primera vez", "instalación", "https", "contraseña"],
     },
     {
-        "id": "certificado-https",
-        "pregunta": "El navegador advierte de certificado no válido o conexión no segura.",
-        "respuesta": (
-            "Si usas el certificado autofirmado que instala Vigex por defecto, el navegador "
-            "mostrará una advertencia. Es normal y seguro si conoces el servidor. "
-            "Para tener HTTPS real con certificado válido: "
-            "1) Instala certbot: `sudo apt install certbot python3-certbot-nginx`. "
-            "2) Obtén el certificado: `sudo certbot --nginx -d TU_DOMINIO`. "
-            "3) Certbot renueva automáticamente. "
-            "Ver guía completa en `docs/guias/guia_dominio_email.md`."
+        "id": (
+            "actualizar-vigex\n"
         ),
-        "palabras_clave": ["certificado", "https", "ssl", "tls", "seguro", "advertencia", "certbot"],
+        "pregunta": (
+            "¿Cómo actualizo Vigex a una nueva versión?\n"
+        ),
+        "respuesta": (
+            "Desde el servidor Linux, ejecuta como root:\n"
+            "`sudo bash /ruta/al/repo/deploy/api/update_vigex_api.sh`\n"
+            "\n"
+            "El script preserva `config.env`, las claves SSH, los datos y la base de datos. Antes de actualizar es recomendable:\n"
+            "1. Hacer una copia de seguridad manual desde el panel (Copias → Nueva copia).\n"
+            "2. Anotar la versión actual: `head -5 /opt/vigex/api/main.py`.\n"
+            "3. Revisar el CHANGELOG en `docs/ROADMAP.md` para cambios incompatibles.\n"
+            "\n"
+            "Desde Windows puedes usar: `tools\windows\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar). Si el servicio falla después, revisa los logs con `journalctl -u vigex-api -n 50`.\n"
+        ),
+        "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade", "actualización"],
     },
     {
-        "id": "informe-no-llega",
-        "pregunta": "El informe automático no llega por email.",
-        "respuesta": (
-            "Comprueba en Panel → Informes: "
-            "1) Que hay un perfil de informe configurado y activo. "
-            "2) Que la frecuencia (diario/semanal/mensual) y hora de envío son correctas. "
-            "3) Que el email configurado en el perfil es el correcto. "
-            "4) Que la configuración SMTP de `config.env` es válida "
-            "(prueba con Alertas → Probar alertas). "
-            "Puedes enviar un informe manual con el botón 'Enviar ahora'."
+        "id": (
+            "backup-fallo\n"
         ),
-        "palabras_clave": ["informe", "reporte", "email", "correo", "automatico", "llega", "envio"],
+        "pregunta": (
+            "¿Qué hago si una copia de seguridad falló?\n"
+        ),
+        "respuesta": (
+            "Ve a **Copias** en el menú lateral y revisa el historial. El color rojo indica error. Posibles causas y soluciones:\n"
+            "\n"
+            "• **Servidor de backups apagado**: comprueba que la máquina está accesible.\n"
+            "• **Sin espacio en disco**: `df -h` en el servidor de backups.\n"
+            "• **Fallo SSH**: prueba `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@IP_BACKUPS hostname`.\n"
+            "• **Error en el script**: revisa `journalctl -u vigex-api -n 100` en el panel.\n"
+            "\n"
+            "Para lanzar una copia manual: botón **Nueva copia** en la sección Copias. Si el error persiste, abre un ticket en Soporte con el mensaje de error completo.\n"
+        ),
+        "palabras_clave": ["backup", "copia", "fallo", "error", "rojo", "historial", "fallida"],
     },
     {
-        "id": "nuevo-usuario",
-        "pregunta": "¿Cómo añado un usuario al panel?",
-        "respuesta": (
-            "Ve a **Admin → Usuarios** (solo disponible para el administrador). "
-            "Pulsa 'Añadir usuario', introduce el nombre de usuario, contraseña "
-            "y selecciona los permisos que tendrá (backups, logs, servicios, alertas, terminal). "
-            "El nuevo usuario puede entrar de inmediato en `/login`."
+        "id": (
+            "backup-tipos\n"
         ),
-        "palabras_clave": ["usuario", "user", "añadir", "nuevo", "acceso", "permisos", "admin"],
+        "pregunta": (
+            "¿Qué tipos de copia de seguridad hace Vigex?\n"
+        ),
+        "respuesta": (
+            "Vigex realiza los siguientes tipos de backup:\n"
+            "\n"
+            "• **Copia de base de datos (MySQL/MariaDB)**: dump completo de la BD de logs usando `backups_api.sh` en el servidor remoto, ejecutado vía SSH desde el panel. El fichero resultante se comprime y guarda en `BACKUP_OUTPUT_DIR`.\n"
+            "\n"
+            "• **Copia de ficheros**: posible mediante extensión de `backups_api.sh` con rsync o tar. Configurable según las necesidades de cada instalación.\n"
+            "\n"
+            "• **Sincronización externa**: el script `sync_external_backup.sh` puede copiar los backups locales a un almacenamiento externo (NAS, servidor remoto) para mayor seguridad (estrategia 3-2-1).\n"
+            "\n"
+            "Todos los backups incluyen verificación SHA256 para garantizar la integridad. La retención configurable (variable `BACKUP_RETENTION_KEEP`) elimina automáticamente las copias más antiguas al superar el límite.\n"
+        ),
+        "palabras_clave": ["tipos", "backup", "copia", "bd", "base de datos", "ficheros", "rsync", "tar", "externo"],
     },
     {
-        "id": "vigex-version",
-        "pregunta": "¿Cómo sé qué versión de Vigex tengo instalada?",
-        "respuesta": (
-            "La versión aparece en el pie del panel (footer del dashboard). "
-            "También puedes verla en el servidor: "
-            "`cat /opt/vigex/api/config.env | grep VIGEX_VERSION` "
-            "o leyendo la cabecera del fichero `main.py`: "
-            "`head -5 /opt/vigex/api/main.py`. "
-            "La versión actual del producto se define en `config.env` como `VIGEX_VERSION`."
+        "id": (
+            "backup-programar\n"
         ),
-        "palabras_clave": ["version", "versión", "instalada", "vigex", "actual", "numero"],
+        "pregunta": (
+            "¿Cómo programo las copias de seguridad automáticas?\n"
+        ),
+        "respuesta": (
+            "Las copias automáticas se programan mediante **cron** en el servidor del panel. El instalador puede configurar una tarea cron por defecto. Para verla o modificarla:\n"
+            "\n"
+            "`crontab -l -u vigex`  — ver tareas actuales del usuario vigex.\n"
+            "`crontab -e -u vigex`  — editar el cron.\n"
+            "\n"
+            "Ejemplo de cron para backup diario a las 2:00 AM:\n"
+            "`0 2 * * * /opt/vigex/api/scripts/run_backup.sh >> /var/log/vigex/backup.log 2>&1`\n"
+            "\n"
+            "También puedes lanzar copias manuales desde el panel en cualquier momento: **Copias → Nueva copia**. El historial con fecha, estado e integridad queda registrado en la pantalla de Copias.\n"
+        ),
+        "palabras_clave": ["programar", "cron", "automático", "automatico", "diario", "semanal", "horario", "backup"],
+    },
+    {
+        "id": (
+            "backup-retencion\n"
+        ),
+        "pregunta": (
+            "¿Cuántas copias de seguridad se guardan? ¿Cómo funciona la retención?\n"
+        ),
+        "respuesta": (
+            "La retención de backups se controla con la variable `BACKUP_RETENTION_KEEP` en `config.env`. Su valor por defecto es **10 copias**. Cuando se supera ese número, la copia más antigua se elimina automáticamente.\n"
+            "\n"
+            "Para cambiar la retención:\n"
+            "1. Edita `config.env`: `nano /opt/vigex/api/config.env`\n"
+            "2. Modifica: `BACKUP_RETENTION_KEEP=30` (por ejemplo, para 30 copias)\n"
+            "3. Reinicia: `systemctl restart vigex-api`\n"
+            "\n"
+            "También puedes eliminar copias antiguas manualmente desde la pantalla **Copias** del panel, seleccionando la copia y pulsando el botón de eliminar. Se recomienda guardar al menos 7 copias diarias + 4 semanales para una buena política de recuperación.\n"
+        ),
+        "palabras_clave": ["retención", "retencion", "cuantas", "guardar", "eliminar", "antiguas", "limite", "keep"],
+    },
+    {
+        "id": (
+            "backup-integridad\n"
+        ),
+        "pregunta": (
+            "¿Cómo verifica Vigex la integridad de las copias de seguridad?\n"
+        ),
+        "respuesta": (
+            "Vigex calcula y almacena un **checksum SHA256** de cada copia de seguridad en el momento de su creación. Puedes verificar la integridad en cualquier momento desde:\n"
+            "\n"
+            "**Copias → Integridad** — muestra el estado de verificación de cada backup. Un check verde indica que el fichero no ha sido modificado ni corrompido. Un check rojo indica discrepancia en el hash (posible corrupción).\n"
+            "\n"
+            "Vigex verifica automáticamente el checksum antes de iniciar cualquier restauración. Si el hash no coincide, la restauración se bloquea para evitar restaurar datos corruptos. Para regenerar el checksum de una copia (si se movió el fichero), usa el botón 'Recalcular hash' en la pantalla de integridad.\n"
+        ),
+        "palabras_clave": ["integridad", "sha256", "checksum", "hash", "verificar", "corrupto", "validar"],
+    },
+    {
+        "id": (
+            "backup-externo-sync\n"
+        ),
+        "pregunta": (
+            "¿Puedo sincronizar backups a un servidor o NAS externo?\n"
+        ),
+        "respuesta": (
+            "Sí. Vigex incluye el script `sync_external_backup.sh` en `deploy/backup-services/package/` para sincronizar copias a un destino externo (NAS, servidor de almacenamiento, S3, etc.).\n"
+            "\n"
+            "Configuración típica:\n"
+            "1. El script usa `rsync` vía SSH para copiar los backups locales al destino externo.\n"
+            "2. Se ejecuta periódicamente mediante cron después de cada copia.\n"
+            "3. Las variables de conexión (host, usuario, ruta destino) se configuran en el script o en `config.env`.\n"
+            "\n"
+            "Esto implementa la estrategia de backup **3-2-1**: 3 copias, en 2 medios diferentes, con 1 copia fuera del sitio. Es especialmente importante en el perfil Lite donde el almacenamiento es local. Para configurarlo consulta la guía en `docs/guias/guia_backup_externo.md`.\n"
+        ),
+        "palabras_clave": ["externo", "nas", "sync", "sincronizar", "rsync", "s3", "offsite", "3-2-1"],
+    },
+    {
+        "id": (
+            "disco-lleno\n"
+        ),
+        "pregunta": (
+            "El disco está al 90% o más. ¿Qué hago?\n"
+        ),
+        "respuesta": (
+            "Ve a **Monitoreo** para ver el detalle de uso por partición. Las causas más comunes son: copias de seguridad acumuladas (borra las antiguas desde la pantalla Copias), logs sin rotar (`logrotate -f /etc/logrotate.conf`) o el directorio `/var/log`. También puedes usar `df -h` y `du -sh /*` para identificar qué ocupa más espacio.\n"
+            "\n"
+            "Acciones inmediatas:\n"
+            "• **Backups antiguos**: Copias → seleccionar copias antiguas → Eliminar.\n"
+            "• **Logs del sistema**: `sudo journalctl --vacuum-size=500M`.\n"
+            "• **Reducir retención**: `BACKUP_RETENTION_KEEP=5` en config.env.\n"
+            "Si el disco supera el umbral configurado en `NOTIF_DISK_THRESHOLD` (por defecto 80%), Vigex envía una alerta automática por Telegram y/o email.\n"
+        ),
+        "palabras_clave": ["disco", "espacio", "lleno", "90", "80", "uso", "df", "capacidad"],
+    },
+    {
+        "id": (
+            "restaurar-backup\n"
+        ),
+        "pregunta": (
+            "¿Cómo restauro una copia de seguridad?\n"
+        ),
+        "respuesta": (
+            "Ve a **Copias** (o al módulo **Restauración**) y selecciona la copia que quieres restaurar. Pulsa 'Restaurar' y confirma el proceso.\n"
+            "\n"
+            "Vigex ejecutará estos pasos automáticamente:\n"
+            "1. Verificación del checksum SHA256 de la copia.\n"
+            "2. Ejecución remota de `restore_api.sh` en el servidor de backups vía SSH.\n"
+            "3. Restauración de la base de datos en el destino configurado (`RESTORE_TARGET_DB` en config.env, por defecto `vigex_logs_restore_test`).\n"
+            "4. Notificación al finalizar con el resultado.\n"
+            "\n"
+            "Si el proceso falla, revisa **Copias → Integridad** para verificar que la copia tiene checksum válido. Para una restauración manual de la BD: `mysql -h IP_DB -u vigex_restore -p nombre_bd < fichero_backup.sql`.\n"
+        ),
+        "palabras_clave": ["restaurar", "restore", "recuperar", "backup", "restablecer", "sha256", "bd"],
+    },
+    {
+        "id": (
+            "recuperacion-desastre-dro\n"
+        ),
+        "pregunta": (
+            "¿Qué es el DRO y cómo funciona la recuperación ante desastres?\n"
+        ),
+        "respuesta": (
+            "El **DRO (Disaster Recovery Operation)** es el procedimiento de recuperación ante desastres totales de Vigex. Está disponible en el panel en el módulo **Recuperación**.\n"
+            "\n"
+            "El DRO cubre los escenarios más graves:\n"
+            "• Pérdida total del servidor del panel.\n"
+            "• Corrupción completa de la base de datos.\n"
+            "• Fallo simultáneo de múltiples componentes.\n"
+            "\n"
+            "El proceso de DRO guiado en el panel:\n"
+            "1. Selecciona el punto de recuperación (copia de seguridad objetivo).\n"
+            "2. Vigex verifica la integridad de la copia (SHA256).\n"
+            "3. Se restaura la BD en el servidor de BD.\n"
+            "4. Se verifica la coherencia de los datos restaurados.\n"
+            "5. El panel informa del estado final con un resumen.\n"
+            "\n"
+            "Para desastres totales donde el propio panel está caído, consulta el procedimiento manual en `docs/guias/guia_disaster_recovery.md`.\n"
+        ),
+        "palabras_clave": ["dro", "desastre", "recuperación", "disaster", "recovery", "total", "fallo", "catastrofe"],
+    },
+    {
+        "id": (
+            "restauracion-test\n"
+        ),
+        "pregunta": (
+            "¿Puedo probar una restauración sin afectar la producción?\n"
+        ),
+        "respuesta": (
+            "Sí. Vigex restaura por defecto en una **base de datos de test**, no en producción. La variable `RESTORE_TARGET_DB` en `config.env` define el destino de restauración (por defecto: `vigex_logs_restore_test`). Esto permite verificar que los datos son correctos antes de tomar cualquier decisión.\n"
+            "\n"
+            "Para hacer una prueba de restauración:\n"
+            "1. Ve a **Copias** → selecciona una copia reciente.\n"
+            "2. Pulsa 'Restaurar' — se restaurará en la BD de test.\n"
+            "3. Verifica los datos restaurados con el panel de verificación.\n"
+            "4. Si todo es correcto y necesitas promover a producción, hazlo manualmente con acceso SSH al servidor de BD.\n"
+            "\n"
+            "Se recomienda hacer una prueba de restauración mensual para garantizar que las copias son válidas y el proceso funciona correctamente.\n"
+        ),
+        "palabras_clave": ["prueba", "test", "restauración", "producción", "verificar", "probar", "sandbox"],
+    },
+    {
+        "id": (
+            "backup-no-llega\n"
+        ),
+        "pregunta": (
+            "No aparecen copias en el historial aunque el cron está configurado.\n"
+        ),
+        "respuesta": (
+            "Si el cron está activo pero no aparecen copias:\n"
+            "\n"
+            "1. **Comprueba que el cron se ejecuta**: `grep CRON /var/log/syslog | tail -20`\n"
+            "2. **Verifica logs del script de backup**: revisa el fichero de log definido en el cron.\n"
+            "3. **Comprueba la conexión SSH al servidor de backups**:\n"
+            "   `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@IP_BACKUPS hostname`\n"
+            "4. **Espacio en disco del servidor de backups**: `df -h` — si está lleno, el script falla silenciosamente.\n"
+            "5. **Usuario y permisos**: el usuario `vigex` debe tener permiso de escritura en `BACKUP_OUTPUT_DIR`.\n"
+            "6. Revisa el log del panel: `journalctl -u vigex-api -n 100`\n"
+            "\n"
+            "Si todo parece correcto, lanza una copia manual desde el panel para ver el error exacto.\n"
+        ),
+        "palabras_clave": ["cron", "historial", "no aparece", "backup", "vacio", "automatico", "falla"],
+    },
+    {
+        "id": (
+            "servicio-caido\n"
+        ),
+        "pregunta": (
+            "Un servicio aparece como caído. ¿Cómo lo reinicio?\n"
+        ),
+        "respuesta": (
+            "Ve a **Servicios** en el menú lateral. Pulsa el botón de reinicio junto al servicio afectado. Si no responde, usa la Terminal integrada para ejecutar:\n"
+            "`systemctl restart <nombre-servicio>`\n"
+            "\n"
+            "Para diagnosticar por qué cayó:\n"
+            "`journalctl -u <nombre-servicio> -n 50 --no-pager`\n"
+            "\n"
+            "Si el servicio falla repetidamente:\n"
+            "• Comprueba el estado completo: `systemctl status <nombre-servicio>`\n"
+            "• Busca errores en los logs del propio servicio (normalmente en `/var/log/`).\n"
+            "• Verifica que el binario o script que lanza el servicio existe y tiene permisos.\n"
+            "• Comprueba si hay conflictos de puertos: `ss -tlnp | grep PUERTO`\n"
+            "\n"
+            "Vigex envía una alerta automática si un servicio monitoreado cae y no se recupera en el tiempo configurado.\n"
+        ),
+        "palabras_clave": ["servicio", "caído", "caido", "reiniciar", "parado", "stopped", "failed", "systemctl"],
+    },
+    {
+        "id": (
+            "servicios-gestion\n"
+        ),
+        "pregunta": (
+            "¿Qué servicios puedo gestionar desde el panel de Vigex?\n"
+        ),
+        "respuesta": (
+            "Desde el módulo **Servicios** puedes ver y controlar todos los servicios systemd del servidor remoto (el servidor de servicios configurado en `SERVICIOS_HOST`). Las acciones disponibles son:\n"
+            "\n"
+            "• **Ver estado** — activo, inactivo, fallido, estado completo systemd.\n"
+            "• **Iniciar** — `systemctl start <servicio>`.\n"
+            "• **Detener** — `systemctl stop <servicio>`.\n"
+            "• **Reiniciar** — `systemctl restart <servicio>`.\n"
+            "• **Habilitar/deshabilitar** — activar o desactivar el inicio automático.\n"
+            "\n"
+            "Todos los comandos se ejecutan vía SSH seguro usando `servicios_api.sh` en el servidor remoto, que está en la lista blanca de comandos permitidos. No se puede ejecutar ningún comando arbitrario — hay una lista estricta de servicios y acciones permitidas por razones de seguridad.\n"
+        ),
+        "palabras_clave": ["servicios", "systemctl", "gestionar", "start", "stop", "restart", "estado"],
+    },
+    {
+        "id": (
+            "agregar-servicio-monitoreo\n"
+        ),
+        "pregunta": (
+            "¿Cómo añado un servicio para que Vigex lo monitoree y alerte?\n"
+        ),
+        "respuesta": (
+            "Para añadir un servicio al monitoreo de alertas:\n"
+            "\n"
+            "1. Ve a **Alertas** en el menú lateral.\n"
+            "2. Busca la sección 'Servicios monitoreados'.\n"
+            "3. Añade el nombre del servicio systemd (ej: `nginx`, `mysql`, `php8.1-fpm`).\n"
+            "4. Configura el umbral de tiempo de caída antes de alertar.\n"
+            "5. Activa la alerta para ese servicio.\n"
+            "\n"
+            "Vigex comprobará periódicamente (cada `NOTIF_CHECK_INTERVAL` segundos, por defecto 15 minutos) el estado del servicio y enviará alerta por Telegram y/o email si lo detecta caído. El cooldown evita spam de alertas (configurable con `NOTIF_COOLDOWN`, por defecto 4 horas).\n"
+        ),
+        "palabras_clave": ["añadir servicio", "monitoreo", "alertas", "vigilar", "notificación", "servicio"],
+    },
+    {
+        "id": (
+            "logs-vacios\n"
+        ),
+        "pregunta": (
+            "Los logs aparecen vacíos o no se actualizan.\n"
+        ),
+        "respuesta": (
+            "Los logs se leen de la base de datos MariaDB en el servidor de logs. Comprueba:\n"
+            "\n"
+            "1. **Conexión a la BD**: desde el servidor del panel:\n"
+            "   `mysql -h IP_DB -u vigex_logs -p vigex_logs`\n"
+            "   Si falla, hay un problema de red o credenciales.\n"
+            "2. **Variables correctas en config.env**: `LOGS_DB_HOST`, `LOGS_DB_NAME`, `LOGS_DB_USER`, `LOGS_DB_PASS`.\n"
+            "3. **Servicio MariaDB activo** en el servidor de BD:\n"
+            "   `systemctl status mariadb` (o `mysql`).\n"
+            "4. **Que los logs se están escribiendo**: la aplicación que genera logs debe estar configurada para escribir en la BD `vigex_logs` con origen `LOGS_ORIGIN`.\n"
+            "5. **Filtros activos**: comprueba que no tienes filtros de fecha o severidad aplicados en la pantalla de Logs que oculten entradas.\n"
+        ),
+        "palabras_clave": ["log", "logs", "vacío", "vacios", "db", "base de datos", "mariadb", "mysql", "actualizar"],
+    },
+    {
+        "id": (
+            "logs-buscar-filtrar\n"
+        ),
+        "pregunta": (
+            "¿Cómo busco o filtro los logs en el panel?\n"
+        ),
+        "respuesta": (
+            "La pantalla **Logs** ofrece varios filtros para encontrar entradas específicas:\n"
+            "\n"
+            "• **Rango de fechas** — filtra por fecha inicio y fecha fin.\n"
+            "• **Nivel de severidad** — INFO, WARNING, ERROR, CRITICAL.\n"
+            "• **Origen** — filtra por aplicación o servicio que generó el log (coincide con `LOGS_ORIGIN` configurado en cada fuente).\n"
+            "• **Búsqueda de texto** — busca en el mensaje del log.\n"
+            "\n"
+            "Los resultados se muestran paginados (50 entradas por página). Puedes exportar los logs filtrados a CSV desde el botón 'Exportar' para análisis externo. Los logs se almacenan en la tabla `logs` de la base de datos `vigex_logs` en el servidor de BD.\n"
+        ),
+        "palabras_clave": ["buscar", "filtrar", "logs", "nivel", "severidad", "fecha", "origen", "exportar"],
+    },
+    {
+        "id": (
+            "logs-base-datos-mariadb\n"
+        ),
+        "pregunta": (
+            "¿Qué base de datos usa Vigex para los logs? ¿Cómo se configura?\n"
+        ),
+        "respuesta": (
+            "Vigex usa **MariaDB** (compatible con MySQL) como base de datos centralizada para logs. El instalador `deploy/db/install_vigex_db.sh` crea la BD, el usuario y los permisos necesarios automáticamente.\n"
+            "\n"
+            "Estructura principal:\n"
+            "• **BD**: `vigex_logs` (configurable con `LOGS_DB_NAME`).\n"
+            "• **Usuario lectura**: `vigex_logs` (solo SELECT desde el panel).\n"
+            "• **Usuario backup**: `vigex_backup` (solo SELECT para dumps).\n"
+            "• **Usuario restore**: `vigex_restore` (permiso de escritura para restauración).\n"
+            "\n"
+            "Variables de conexión en `config.env`:\n"
+            "• `LOGS_DB_HOST` — IP del servidor de BD.\n"
+            "• `LOGS_DB_NAME` — nombre de la base de datos.\n"
+            "• `LOGS_DB_USER` / `LOGS_DB_PASS` — credenciales de acceso.\n"
+            "\n"
+            "El panel accede a la BD directamente con `pymysql` (no por SSH).\n"
+        ),
+        "palabras_clave": ["mariadb", "mysql", "base de datos", "bd", "logs", "instalar", "usuario", "configurar"],
+    },
+    {
+        "id": (
+            "logs-retencion-bd\n"
+        ),
+        "pregunta": (
+            "¿Los logs se borran automáticamente? ¿Cuánto tiempo se guardan?\n"
+        ),
+        "respuesta": (
+            "Por defecto Vigex no tiene un TTL (tiempo de vida) automático para los logs — se acumulan en la BD MariaDB indefinidamente. Si quieres implementar una política de retención de logs, tienes dos opciones:\n"
+            "\n"
+            "1. **Rotación manual con SQL**: conecta a la BD y elimina logs antiguos:\n"
+            "   `DELETE FROM logs WHERE fecha < DATE_SUB(NOW(), INTERVAL 90 DAY);`\n"
+            "2. **Evento MySQL automático**: crea un evento programado en MariaDB:\n"
+            "   `CREATE EVENT limpiar_logs ON SCHEDULE EVERY 1 DAY DO DELETE FROM logs WHERE fecha < DATE_SUB(NOW(), INTERVAL 90 DAY);`\n"
+            "\n"
+            "Ten en cuenta que cuantos más logs acumules, más lenta será la consulta desde el panel. Para BDs con muchos registros, añade un índice a la columna `fecha`:\n"
+            "`CREATE INDEX idx_fecha ON logs(fecha);`\n"
+        ),
+        "palabras_clave": ["retención", "logs", "borrar", "limpiar", "tiempo", "antiguo", "ttl", "mariadb"],
+    },
+    {
+        "id": (
+            "alerta-telegram\n"
+        ),
+        "pregunta": (
+            "No recibo alertas por Telegram. ¿Cómo lo configuro?\n"
+        ),
+        "respuesta": (
+            "Pasos para configurar Telegram:\n"
+            "\n"
+            "1. Crea un bot con `@BotFather` en Telegram → `/newbot` → copia el token.\n"
+            "2. Envía un mensaje al bot y obtén tu chat ID:\n"
+            "   `https://api.telegram.org/bot<TOKEN>/getUpdates`\n"
+            "   Busca `\"chat\":{\"id\":XXXXXXX}` en la respuesta.\n"
+            "3. Edita `config.env` en el servidor:\n"
+            "   `nano /opt/vigex/api/config.env`\n"
+            "   Configura: `TELEGRAM_BOT_TOKEN=tu_token` y `TELEGRAM_CHAT_ID=tu_chat_id`.\n"
+            "4. Activa las notificaciones: `NOTIF_ENABLED=true`.\n"
+            "5. Reinicia: `systemctl restart vigex-api`.\n"
+            "6. Prueba desde el panel: **Alertas → Probar alertas Telegram**.\n"
+            "\n"
+            "Si sigue sin llegar, comprueba que el bot no está bloqueado y que el token y chat ID son correctos (el chat ID puede ser negativo para grupos).\n"
+        ),
+        "palabras_clave": ["telegram", "alerta", "notificación", "bot", "token", "chatid", "configurar"],
+    },
+    {
+        "id": (
+            "alerta-email\n"
+        ),
+        "pregunta": (
+            "No recibo alertas por email. ¿Cómo lo configuro?\n"
+        ),
+        "respuesta": (
+            "Configura el SMTP en `config.env`:\n"
+            "\n"
+            "```\n"
+            "NOTIF_ENABLED=true\n"
+            "NOTIF_EMAIL_TO=destino@tuempresa.com\n"
+            "NOTIF_EMAIL_FROM=vigex@tuempresa.com\n"
+            "NOTIF_SMTP_HOST=smtp.gmail.com\n"
+            "NOTIF_SMTP_PORT=587\n"
+            "NOTIF_SMTP_USER=vigex@gmail.com\n"
+            "NOTIF_SMTP_PASS=CONTRASEÑA_DE_APLICACION\n"
+            "```\n"
+            "\n"
+            "**Para Gmail**: activa la verificación en dos pasos → 'Contraseñas de aplicación' → genera una contraseña exclusiva para Vigex (no uses tu contraseña normal).\n"
+            "\n"
+            "**Para otros proveedores**: consulta la configuración SMTP específica (Outlook usa smtp-mail.outlook.com:587, Yahoo usa smtp.mail.yahoo.com:587).\n"
+            "\n"
+            "Prueba el envío desde: **Alertas → Probar alertas → Email**. Reinicia el servicio tras cualquier cambio en config.env.\n"
+        ),
+        "palabras_clave": ["email", "correo", "smtp", "gmail", "alerta", "notificación", "envío", "configurar"],
+    },
+    {
+        "id": (
+            "alertas-tipos\n"
+        ),
+        "pregunta": (
+            "¿Qué tipos de alertas envía Vigex automáticamente?\n"
+        ),
+        "respuesta": (
+            "Vigex incluye un sistema de alertas proactivas (`NOTIF_ENABLED=true`) que envía notificaciones automáticas ante estos eventos:\n"
+            "\n"
+            "• **Disco casi lleno** — cuando el uso supera `NOTIF_DISK_THRESHOLD` (por defecto 80%).\n"
+            "• **Servicio caído** — cuando un servicio monitoreado pasa a estado `failed` o `inactive`.\n"
+            "• **Backup fallido** — cuando una copia de seguridad programada falla.\n"
+            "• **Backup no realizado** — cuando pasan más de X horas sin copia exitosa.\n"
+            "• **Alto uso de CPU o RAM** — si se configura el umbral correspondiente.\n"
+            "• **Certificado SSL próximo a expirar** — aviso con 30 y 7 días de antelación.\n"
+            "\n"
+            "Todas las alertas respetan el **cooldown** (`NOTIF_COOLDOWN`, por defecto 4 horas) para evitar spam. Los canales disponibles son Telegram y/o email, configurables con `ALERTS_DEFAULT_CHANNEL`.\n"
+        ),
+        "palabras_clave": ["tipos", "alertas", "disco", "servicio", "backup", "cpu", "ram", "ssl", "automático"],
+    },
+    {
+        "id": (
+            "alertas-cooldown\n"
+        ),
+        "pregunta": (
+            "Recibo demasiadas alertas repetidas. ¿Cómo reduzco la frecuencia?\n"
+        ),
+        "respuesta": (
+            "El sistema de alertas tiene un mecanismo de **cooldown** para evitar spam. Configura en `config.env`:\n"
+            "\n"
+            "• `NOTIF_COOLDOWN` — segundos mínimos entre dos alertas del mismo tipo. Por defecto 14400 (4 horas). Aumenta este valor para recibir menos alertas.\n"
+            "  Ejemplo: `NOTIF_COOLDOWN=86400` = máximo 1 alerta por tipo al día.\n"
+            "\n"
+            "• `NOTIF_CHECK_INTERVAL` — segundos entre comprobaciones automáticas. Por defecto 900 (15 minutos). Auméntalo para reducir la frecuencia de checks.\n"
+            "\n"
+            "• `NOTIF_DISK_THRESHOLD` — porcentaje de disco a partir del cual se alerta. Por defecto 80. Si recibes muchas alertas de disco, súbelo a 90 o 95.\n"
+            "\n"
+            "Reinicia el servicio tras modificar: `systemctl restart vigex-api`.\n"
+        ),
+        "palabras_clave": ["cooldown", "spam", "muchas alertas", "frecuencia", "repetidas", "intervalo", "reducir"],
+    },
+    {
+        "id": (
+            "monitoreo-grafica\n"
+        ),
+        "pregunta": (
+            "El gráfico de monitoreo no carga o está vacío.\n"
+        ),
+        "respuesta": (
+            "La sección **Monitoreo** integra Grafana o Cacti para gráficas en tiempo real. Si aparece vacía o no carga:\n"
+            "\n"
+            "1. **Comprueba la URL configurada**: `GRAFANA_URL` o `CACTI_URL` en `config.env`.\n"
+            "2. **Verifica que Grafana está activo**: `systemctl status grafana-server`.\n"
+            "3. **Problema de CORS o autenticación**: Grafana debe permitir embedding (desactiva la protección de embebido en Grafana: `allow_embedding = true` en `/etc/grafana/grafana.ini`).\n"
+            "4. **Sin monitoreo externo instalado**: la sección muestra un mensaje informativo si no hay URL configurada. El dashboard principal siempre muestra disco y servicios básicos sin necesidad de Grafana.\n"
+            "\n"
+            "Para instalar Grafana en el servidor de BD:\n"
+            "`sudo apt install -y grafana && sudo systemctl enable --now grafana-server`\n"
+        ),
+        "palabras_clave": ["monitoreo", "gráfica", "grafico", "grafana", "cacti", "vacío", "carga", "embedding"],
+    },
+    {
+        "id": (
+            "monitoreo-dashboard\n"
+        ),
+        "pregunta": (
+            "¿Qué información muestra el dashboard principal de Vigex?\n"
+        ),
+        "respuesta": (
+            "El **Dashboard** (página principal del panel) muestra un resumen en tiempo real:\n"
+            "\n"
+            "• **Estado del disco** — uso porcentual de la partición principal (barra de progreso con alerta visual si supera el 80%).\n"
+            "• **Servicios activos** — número de servicios systemd activos vs total monitoreados.\n"
+            "• **Último backup** — fecha y estado de la copia de seguridad más reciente.\n"
+            "• **Alertas recientes** — últimas alertas enviadas.\n"
+            "• **Estado de la conexión SSH** — indica si el servidor remoto es accesible.\n"
+            "• **Versión del panel** — versión instalada de Vigex.\n"
+            "\n"
+            "Los datos del dashboard se actualizan automáticamente cada 30 segundos (refresh automático en la página). El código de color del estado: verde = todo OK, amarillo = advertencia, rojo = crítico.\n"
+        ),
+        "palabras_clave": ["dashboard", "inicio", "pantalla principal", "resumen", "estado", "disco", "servicios"],
+    },
+    {
+        "id": (
+            "ssh-fallo-conexion\n"
+        ),
+        "pregunta": (
+            "El panel no puede conectarse al servidor de backups por SSH.\n"
+        ),
+        "respuesta": (
+            "Pasos de diagnóstico:\n"
+            "\n"
+            "1. **Servidor accesible en red**: `ping IP_BACKUPS` desde el servidor del panel.\n"
+            "2. **Usuario `vigex` existe** en el servidor remoto: `id vigex`.\n"
+            "3. **Clave pública instalada**: la clave en `/opt/vigex/api/.ssh/id_rsa_vigex.pub` debe estar en `~vigex/.ssh/authorized_keys` del servidor remoto.\n"
+            "4. **Test manual de SSH**:\n"
+            "   `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex -o StrictHostKeyChecking=yes vigex@IP_BACKUPS hostname`\n"
+            "5. **IP en la lista blanca**: `VIGEX_SSH_ALLOWED_HOSTS` en config.env debe incluir la IP del servidor de backups.\n"
+            "6. **known_hosts**: si cambió la IP del servidor, regenera el known_hosts con:\n"
+            "   `sudo bash deploy/api/install_vigex_api.sh --regenerate-keys`\n"
+            "\n"
+            "El log del panel muestra el error exacto: `journalctl -u vigex-api -n 50`.\n"
+        ),
+        "palabras_clave": ["ssh", "conexión", "backups", "remoto", "authorized_keys", "id_rsa", "fallo"],
+    },
+    {
+        "id": (
+            "seguridad-ssh-modelo\n"
+        ),
+        "pregunta": (
+            "¿Cómo funciona el modelo de seguridad SSH de Vigex?\n"
+        ),
+        "respuesta": (
+            "Vigex implementa SSH endurecido con varias capas de seguridad:\n"
+            "\n"
+            "• **Clave dedicada ed25519**: generada durante la instalación en `/opt/vigex/api/.ssh/id_rsa_vigex` (a pesar del nombre, es ed25519 por defecto).\n"
+            "• **BatchMode=yes**: nunca pide contraseñas interactivas — falla limpiamente si no hay clave válida.\n"
+            "• **StrictHostKeyChecking=yes**: solo conecta a hosts cuya huella fingerprint está en el fichero `known_hosts` dedicado (`VIGEX_SSH_KNOWN_HOSTS`).\n"
+            "• **Lista blanca de hosts** (`VIGEX_SSH_ALLOWED_HOSTS`): el panel solo puede conectarse por SSH a IPs explícitamente permitidas.\n"
+            "• **Lista blanca de comandos**: solo se pueden ejecutar los scripts específicos (`servicios_api.sh`, `backups_api.sh`, `restore_api.sh`) y comandos muy acotados (`cat`, `crontab -l`, `hostname && date`). No es posible ejecutar comandos arbitrarios — esto se valida en la función `validate_ssh_run()`.\n"
+        ),
+        "palabras_clave": ["ssh", "seguridad", "ed25519", "clave", "hardened", "stricthostkey", "whitelist", "modelo"],
+    },
+    {
+        "id": (
+            "seguridad-contrasenas\n"
+        ),
+        "pregunta": (
+            "¿Cómo se almacenan las contraseñas en Vigex? ¿Son seguras?\n"
+        ),
+        "respuesta": (
+            "Las contraseñas de usuarios del panel se almacenan como **hashes bcrypt** usando la librería `passlib`. bcrypt es el estándar actual de la industria para hashing de contraseñas: es resistente a ataques de fuerza bruta por su coste computacional configurable (factor de trabajo).\n"
+            "\n"
+            "• La contraseña nunca se almacena en texto plano — solo el hash.\n"
+            "• El hash incluye un salt aleatorio, evitando ataques de rainbow table.\n"
+            "• Vigex incluye compatibilidad temporal con texto plano para migración de usuarios legacy, pero se recomienda migrar todas las cuentas a bcrypt.\n"
+            "\n"
+            "Para cambiar la contraseña de admin:\n"
+            "`python3 -c \"from passlib.context import CryptContext; print(CryptContext(['bcrypt']).hash('nueva_clave'))\"`\n"
+            "Pega el resultado en `ADMIN_PASSWORD=` en `config.env` y reinicia.\n"
+        ),
+        "palabras_clave": ["contraseña", "password", "bcrypt", "hash", "seguridad", "almacenar", "passlib"],
+    },
+    {
+        "id": (
+            "seguridad-fuerza-bruta\n"
+        ),
+        "pregunta": (
+            "¿Vigex tiene protección contra ataques de fuerza bruta al login?\n"
+        ),
+        "respuesta": (
+            "Sí. Vigex incluye protección anti fuerza bruta en el formulario de login:\n"
+            "\n"
+            "• `VIGEX_LOGIN_MAX_ATTEMPTS` — número máximo de intentos fallidos antes de bloqueo (por defecto 5 intentos).\n"
+            "• `VIGEX_LOGIN_WINDOW_SECONDS` — ventana de tiempo en segundos para los intentos (por defecto 900 segundos = 15 minutos).\n"
+            "\n"
+            "Si se superan los intentos permitidos, la IP queda bloqueada durante la ventana de tiempo. Todos los intentos de login se registran en `auth_logs.json` (`/opt/vigex/api/auth_logs.json`) con IP, usuario y timestamp.\n"
+            "\n"
+            "Adicionalmente, el proxy nginx puede configurarse con rate limiting para una capa adicional de protección antes de que las peticiones lleguen al panel.\n"
+        ),
+        "palabras_clave": ["fuerza bruta", "brute force", "login", "bloqueo", "intentos", "seguridad", "ataque"],
+    },
+    {
+        "id": (
+            "seguridad-sesiones\n"
+        ),
+        "pregunta": (
+            "¿Cuánto dura la sesión en el panel? ¿Se puede configurar el auto-logout?\n"
+        ),
+        "respuesta": (
+            "La duración de sesión se controla con estas variables en `config.env`:\n"
+            "\n"
+            "• `VIGEX_SESSION_MAX_AGE` — duración máxima de la sesión en segundos. Por defecto 28800 (8 horas). Al expirar, el usuario debe volver a hacer login.\n"
+            "\n"
+            "• `VIGEX_AUTO_LOGOUT_MINUTES` — minutos de inactividad antes del auto-logout. Por defecto 60. Configurable también desde el panel en **Admin → Configuración**. Pon `0` para desactivar el auto-logout por inactividad.\n"
+            "\n"
+            "• `VIGEX_SESSION_HTTPS_ONLY` — activa la cookie de sesión solo por HTTPS. Recomendado `true` cuando el proxy sirve HTTPS real (dominio con certbot).\n"
+            "\n"
+            "Las sesiones usan cookies firmadas con `SECRET_KEY`. Si cambias `SECRET_KEY`, todas las sesiones activas se invalidan y los usuarios deben volver a entrar.\n"
+        ),
+        "palabras_clave": ["sesión", "session", "auto-logout", "tiempo", "duración", "inactividad", "cookie"],
+    },
+    {
+        "id": (
+            "certificado-https\n"
+        ),
+        "pregunta": (
+            "El navegador advierte de certificado no válido o conexión no segura.\n"
+        ),
+        "respuesta": (
+            "Si usas el certificado autofirmado que instala Vigex por defecto, el navegador mostrará una advertencia. Es normal y seguro si conoces el servidor. Para tener HTTPS real con certificado válido de Let's Encrypt:\n"
+            "\n"
+            "1. Asegúrate de tener un dominio apuntando a la IP del servidor.\n"
+            "2. Instala certbot: `sudo apt install certbot python3-certbot-nginx`\n"
+            "3. Obtén el certificado: `sudo certbot --nginx -d TU_DOMINIO`\n"
+            "4. Certbot configura nginx automáticamente y renueva el certificado antes de su expiración.\n"
+            "5. Activa en config.env: `VIGEX_SESSION_HTTPS_ONLY=true`\n"
+            "6. Reinicia el panel: `systemctl restart vigex-api`\n"
+            "\n"
+            "Ver guía completa en `docs/guias/guia_dominio_email.md`.\n"
+        ),
+        "palabras_clave": ["certificado", "https", "ssl", "tls", "seguro", "advertencia", "certbot", "letsencrypt"],
+    },
+    {
+        "id": (
+            "nuevo-usuario\n"
+        ),
+        "pregunta": (
+            "¿Cómo añado un usuario al panel?\n"
+        ),
+        "respuesta": (
+            "Ve a **Admin → Usuarios** (solo disponible para el administrador). Pulsa 'Añadir usuario' e introduce:\n"
+            "\n"
+            "• **Nombre de usuario** — identificador de login (sin espacios).\n"
+            "• **Contraseña** — se guarda como hash bcrypt automáticamente.\n"
+            "• **Permisos** — selecciona los módulos a los que tendrá acceso:\n"
+            "  - `backups` — acceso a Copias y Restauración.\n"
+            "  - `logs` — acceso a la sección de Logs.\n"
+            "  - `servicios` — acceso a gestión de Servicios.\n"
+            "  - `alertas` — acceso a configuración de Alertas.\n"
+            "  - `terminal` — acceso a la Terminal web (⚠️ otorgar con precaución).\n"
+            "\n"
+            "El nuevo usuario puede entrar de inmediato en `/login`. Los usuarios no-admin no pueden acceder a la sección **Admin**.\n"
+        ),
+        "palabras_clave": ["usuario", "user", "añadir", "nuevo", "acceso", "permisos", "admin", "crear"],
+    },
+    {
+        "id": (
+            "permisos-modulos\n"
+        ),
+        "pregunta": (
+            "¿Qué permisos de módulo existen y qué puede hacer cada uno?\n"
+        ),
+        "respuesta": (
+            "Vigex tiene un sistema de permisos por módulo. Los permisos disponibles son:\n"
+            "\n"
+            "• **`logs`** — puede ver y filtrar logs centralizados. Sin acceso a backups ni servicios.\n"
+            "• **`backups`** — puede ver el historial de copias, lanzar copias manuales y verificar integridad. También accede a la pantalla de Restauración.\n"
+            "• **`servicios`** — puede ver estado de servicios, iniciarlos, detenerlos y reiniciarlos en el servidor remoto.\n"
+            "• **`alertas`** — puede configurar umbrales, canales de notificación y probar el envío de alertas.\n"
+            "• **`terminal`** — accede a la Terminal web para ejecutar comandos SSH controlados. **Otorgar solo a usuarios de confianza.**\n"
+            "\n"
+            "El usuario administrador tiene acceso completo a todos los módulos más la sección Admin (gestión de usuarios y configuración del sistema).\n"
+        ),
+        "palabras_clave": ["permisos", "módulos", "roles", "acceso", "logs", "backups", "servicios", "terminal"],
+    },
+    {
+        "id": (
+            "password-admin\n"
+        ),
+        "pregunta": (
+            "Olvidé la contraseña del administrador. ¿Cómo la cambio?\n"
+        ),
+        "respuesta": (
+            "Accede al servidor por SSH y edita `config.env`:\n"
+            "`nano /opt/vigex/api/config.env`\n"
+            "\n"
+            "Genera un nuevo hash bcrypt con Python:\n"
+            "`python3 -c \"from passlib.context import CryptContext; print(CryptContext(['bcrypt']).hash('nueva_contraseña'))\"`\n"
+            "\n"
+            "Copia el hash resultante (comienza por `$2b$12$...`) y pégalo en la línea:\n"
+            "`ADMIN_PASSWORD=$2b$12$...`\n"
+            "\n"
+            "Guarda el fichero y reinicia el servicio:\n"
+            "`systemctl restart vigex-api`\n"
+            "\n"
+            "A partir de ese momento podrás entrar con la nueva contraseña. Si no tienes acceso SSH al servidor, contacta con el administrador del sistema o con el soporte de Vigex para recuperar el acceso.\n"
+        ),
+        "palabras_clave": ["contraseña", "password", "olvide", "admin", "acceso", "login", "bcrypt", "cambiar"],
+    },
+    {
+        "id": (
+            "informe-no-llega\n"
+        ),
+        "pregunta": (
+            "El informe automático no llega por email.\n"
+        ),
+        "respuesta": (
+            "Comprueba en **Informes** del panel:\n"
+            "\n"
+            "1. Que hay un perfil de informe configurado y activo.\n"
+            "2. Que la frecuencia (diario/semanal/mensual) y la hora de envío son correctas.\n"
+            "3. Que el email del perfil es el correcto.\n"
+            "4. Que la configuración SMTP en `config.env` es válida — prueba con **Alertas → Probar alertas → Email**.\n"
+            "5. Revisa si el email llegó a la carpeta de spam.\n"
+            "\n"
+            "Puedes enviar un informe manual con el botón **'Enviar ahora'** para comprobar que la entrega funciona. Los informes se generan como Markdown y se envían como texto formateado. Las copias generadas se guardan en `reports/` en el servidor del panel.\n"
+        ),
+        "palabras_clave": ["informe", "reporte", "email", "correo", "automático", "llega", "envío", "programado"],
+    },
+    {
+        "id": (
+            "informes-contenido\n"
+        ),
+        "pregunta": (
+            "¿Qué incluyen los informes automáticos de Vigex?\n"
+        ),
+        "respuesta": (
+            "Los **informes automáticos** de Vigex son resúmenes operacionales que incluyen:\n"
+            "\n"
+            "• **Resumen de backups** — número de copias realizadas, estado de cada una, espacio utilizado y tendencia de crecimiento.\n"
+            "• **Estado de servicios** — servicios monitoreados, incidencias y tiempo de caída.\n"
+            "• **Uso de disco** — evolución del espacio en disco durante el período.\n"
+            "• **Alertas enviadas** — listado de alertas generadas en el período con su causa.\n"
+            "• **Logs críticos** — resumen de entradas de log con severidad ERROR o CRITICAL.\n"
+            "• **Tickets de soporte** — tickets abiertos, resueltos y tiempo medio de respuesta.\n"
+            "\n"
+            "Los informes se pueden configurar con frecuencia **diaria, semanal o mensual** y se envían automáticamente al email configurado en el perfil de informe.\n"
+        ),
+        "palabras_clave": ["informe", "contenido", "que incluye", "semanal", "mensual", "resumen", "operacional"],
+    },
+    {
+        "id": (
+            "soporte-tickets\n"
+        ),
+        "pregunta": (
+            "¿Cómo funciona el sistema de tickets de soporte?\n"
+        ),
+        "respuesta": (
+            "El módulo **Soporte** de Vigex es un sistema de tickets integrado en el panel. Funciona así:\n"
+            "\n"
+            "1. **Crear ticket**: desde **Soporte → Nuevo ticket** describe el problema, su prioridad y el módulo afectado.\n"
+            "2. **Ticket local**: el ticket se guarda en la base de datos SQLite local del panel.\n"
+            "3. **Envío a Central Support** (si está configurado): el ticket se envía automáticamente al servidor Vigex Central del proveedor de IT, que gestiona los tickets de todos sus clientes desde un único panel.\n"
+            "4. **Seguimiento**: puedes ver el estado del ticket (Abierto, En progreso, Resuelto, Cerrado) y añadir comentarios.\n"
+            "5. **Sincronización**: los cambios de estado realizados en Central Support se sincronizan de vuelta al panel del cliente automáticamente.\n"
+            "\n"
+            "Si Central Support no está configurado, los tickets son solo locales y los gestiona el propio administrador del panel.\n"
+        ),
+        "palabras_clave": ["tickets", "soporte", "incidencia", "problema", "ayuda", "abrir ticket", "estado"],
+    },
+    {
+        "id": (
+            "soporte-offline-retry\n"
+        ),
+        "pregunta": (
+            "¿Qué pasa si el servidor Central Support no está disponible?\n"
+        ),
+        "respuesta": (
+            "Vigex tiene un mecanismo de **cola offline y reintentos** para garantizar que ningún ticket se pierda aunque Central Support no esté disponible:\n"
+            "\n"
+            "1. Si el envío al Central falla, el ticket se marca como 'pendiente de envío' en la BD local.\n"
+            "2. Un timer systemd (`vigex-central-retry.timer`) ejecuta periódicamente el script `scripts/retry_central_pending.py`, que reintenta enviar los tickets pendientes.\n"
+            "3. Una vez Central Support vuelve a estar accesible, los tickets en cola se envían automáticamente en orden.\n"
+            "\n"
+            "Puedes ver los tickets pendientes de envío en **Soporte → Pendientes de sincronización**. El timer se instala con `deploy/api/install_central_retry_timer.sh`.\n"
+        ),
+        "palabras_clave": ["offline", "central support", "falla", "cola", "retry", "reintentos", "pendiente"],
+    },
+    {
+        "id": (
+            "soporte-prioridades\n"
+        ),
+        "pregunta": (
+            "¿Cuáles son los niveles de prioridad de los tickets de soporte?\n"
+        ),
+        "respuesta": (
+            "Los tickets de soporte en Vigex tienen cuatro niveles de prioridad:\n"
+            "\n"
+            "• **Baja** — consultas generales, dudas de uso, mejoras sugeridas. Tiempo de respuesta objetivo: 72 horas.\n"
+            "• **Normal** — problemas que afectan parcialmente al funcionamiento. Tiempo de respuesta objetivo: 24 horas.\n"
+            "• **Alta** — problemas que impiden el uso de una funcionalidad importante. Tiempo de respuesta objetivo: 8 horas.\n"
+            "• **Crítica** — el panel está caído, los backups no funcionan o hay pérdida de datos. Tiempo de respuesta objetivo: 2 horas.\n"
+            "\n"
+            "Para emergencias críticas fuera del horario habitual, usa el canal de contacto urgente indicado en el contrato de soporte.\n"
+        ),
+        "palabras_clave": ["prioridad", "urgente", "critico", "ticket", "soporte", "sla", "tiempo respuesta"],
+    },
+    {
+        "id": (
+            "central-support-que-es\n"
+        ),
+        "pregunta": (
+            "¿Qué es Vigex Central Support y para qué sirve?\n"
+        ),
+        "respuesta": (
+            "**Vigex Central Support** es un componente separado diseñado para proveedores de IT y MSPs (Managed Service Providers) que gestionan Vigex en instalaciones de múltiples clientes. Es un panel centralizado que:\n"
+            "\n"
+            "• Recibe tickets de soporte de todos los paneles Vigex de sus clientes.\n"
+            "• Muestra el estado de salud global de todas las instalaciones (heartbeat).\n"
+            "• Permite gestionar el ciclo de vida de tickets: asignar, responder, escalar.\n"
+            "• Proporciona un log de auditoría de todas las acciones administrativas.\n"
+            "• Gestiona tokens de autenticación por cliente (rotación, revocación).\n"
+            "\n"
+            "Se instala por separado en `deploy/central-support/`, corre en el puerto 8010 con el servicio systemd `vigex-central`, y usa SQLite como base de datos. Es completamente independiente del panel cliente.\n"
+        ),
+        "palabras_clave": ["central support", "central", "multicliente", "msp", "proveedor", "tickets", "agregador"],
+    },
+    {
+        "id": (
+            "central-support-configurar\n"
+        ),
+        "pregunta": (
+            "¿Cómo conecto el panel de Vigex a un servidor Central Support?\n"
+        ),
+        "respuesta": (
+            "Para conectar el panel cliente a un Central Support:\n"
+            "\n"
+            "1. En el servidor Central Support, ve a **Clientes → Registrar nuevo cliente** e introduce el ID y nombre de la empresa.\n"
+            "2. Central genera un token único. **Cópialo ahora** — no se vuelve a mostrar.\n"
+            "3. En el servidor del panel cliente, edita `config.env`:\n"
+            "   ```\n"
+            "   CENTRAL_SUPPORT_ENABLED=true\n"
+            "   CENTRAL_SUPPORT_URL=https://IP_CENTRAL:8010\n"
+            "   CENTRAL_SUPPORT_CLIENT_ID=id-del-cliente\n"
+            "   CENTRAL_SUPPORT_TOKEN=token-generado\n"
+            "   CENTRAL_HEARTBEAT_INTERVAL=300\n"
+            "   ```\n"
+            "4. Reinicia el panel: `systemctl restart vigex-api`.\n"
+            "\n"
+            "El panel empezará a enviar heartbeats cada 5 minutos y a sincronizar tickets con el Central Support.\n"
+        ),
+        "palabras_clave": ["central support", "conectar", "configurar", "token", "heartbeat", "cliente"],
+    },
+    {
+        "id": (
+            "central-support-heartbeat\n"
+        ),
+        "pregunta": (
+            "¿Qué es el heartbeat de Vigex Central y cómo funciona?\n"
+        ),
+        "respuesta": (
+            "El **heartbeat** es una señal periódica que el panel cliente envía al servidor Central Support para indicar que está activo y funcionando correctamente.\n"
+            "\n"
+            "• Se envía cada `CENTRAL_HEARTBEAT_INTERVAL` segundos (por defecto 300 = 5 min).\n"
+            "• Incluye información básica: versión, estado de servicios críticos, uso de disco.\n"
+            "• Si Central no recibe heartbeat en >10 minutos, marca la instalación como 'Sin contacto' en el panel de salud global.\n"
+            "• En el Central Support, la pantalla **Salud global** muestra el estado de todas las instalaciones: verde (OK), amarillo (advertencia reciente), rojo (sin contacto).\n"
+            "\n"
+            "Para desactivar el heartbeat sin desactivar el resto del soporte central:\n"
+            "`CENTRAL_HEARTBEAT_INTERVAL=0` en config.env.\n"
+        ),
+        "palabras_clave": ["heartbeat", "latido", "central", "activo", "salud", "health", "estado", "contacto"],
+    },
+    {
+        "id": (
+            "asistente-ia-que-es\n"
+        ),
+        "pregunta": (
+            "¿Qué es el Asistente IA de Vigex y cómo funciona?\n"
+        ),
+        "respuesta": (
+            "El **Asistente IA** es un chat inteligente integrado en el panel que te ayuda a resolver dudas sobre Vigex, diagnosticar problemas y guiarte en tareas de administración. Usa tecnología **RAG (Retrieval-Augmented Generation)**:\n"
+            "\n"
+            "1. Tu pregunta se compara con una base de conocimiento interna de Vigex.\n"
+            "2. Se recuperan los fragmentos más relevantes de la documentación.\n"
+            "3. Esos fragmentos se envían junto a tu pregunta a un modelo de lenguaje (LLM).\n"
+            "4. El LLM genera una respuesta contextualizada y precisa.\n"
+            "\n"
+            "El asistente mantiene el **historial de la conversación** durante la sesión (se limpia al recargar la página o con el botón 'Nueva conversación'). Soporta formato Markdown en las respuestas (negrita, listas, código).\n"
+        ),
+        "palabras_clave": ["asistente", "ia", "chat", "rag", "inteligencia artificial", "bot", "ayuda", "preguntas"],
+    },
+    {
+        "id": (
+            "asistente-proveedores\n"
+        ),
+        "pregunta": (
+            "¿Qué proveedores de IA soporta el Asistente y cuál es el recomendado?\n"
+        ),
+        "respuesta": (
+            "El Asistente IA soporta cinco proveedores de LLM, configurados en `config.env` con `VIGEX_RAG_LLM_PROVIDER`:\n"
+            "\n"
+            "• **`ollama`** (local, por defecto) — modelo LLM corriendo en tu propio servidor. Sin coste, sin envío de datos externos. Requiere Ollama instalado y modelo descargado.\n"
+            "• **`groq`** — Groq API (llama-3.3-70b). Capa gratuita generosa, muy rápido. Recomendado para empezar con cloud.\n"
+            "• **`gemini`** — Google Gemini 2.0 Flash. ~0,22€/M tokens, muy económico y potente.\n"
+            "• **`openai`** — OpenAI GPT-4o-mini. ~0,15€/M tokens, gran calidad.\n"
+            "• **`anthropic`** — Anthropic Claude 3 Haiku. ~0,25€/M tokens.\n"
+            "\n"
+            "**Recomendación**: Groq para entornos cloud (rápido y gratuito en la mayoría de casos), Ollama para máxima privacidad. Para uso intensivo, Gemini o OpenAI ofrecen el mejor equilibrio calidad/precio.\n"
+        ),
+        "palabras_clave": ["proveedores", "ollama", "groq", "gemini", "openai", "anthropic", "ia", "modelo", "proveedor"],
+    },
+    {
+        "id": (
+            "asistente-configurar-groq\n"
+        ),
+        "pregunta": (
+            "¿Cómo configuro el Asistente IA con Groq?\n"
+        ),
+        "respuesta": (
+            "Groq ofrece una capa gratuita generosa y es el proveedor más rápido disponible. Pasos para configurarlo:\n"
+            "\n"
+            "1. Crea una cuenta en `console.groq.com` y genera una API Key.\n"
+            "2. Edita `config.env` en el servidor:\n"
+            "   ```\n"
+            "   VIGEX_RAG_LLM_PROVIDER=groq\n"
+            "   GROQ_API_KEY=gsk_tu_clave_aqui\n"
+            "   VIGEX_RAG_GROQ_MODEL=llama-3.3-70b-versatile\n"
+            "   ```\n"
+            "3. Reinicia el panel: `systemctl restart vigex-api`\n"
+            "4. Entra al Asistente IA — verás el badge 'Groq' en la esquina.\n"
+            "\n"
+            "La clave gratuita permite unas 100 peticiones/día aproximadamente, lo que es más que suficiente para uso normal de soporte. El modelo llama-3.3-70b da respuestas de alta calidad en <3 segundos.\n"
+        ),
+        "palabras_clave": ["groq", "configurar", "api key", "llama", "rápido", "gratis", "asistente"],
+    },
+    {
+        "id": (
+            "asistente-configurar-ollama\n"
+        ),
+        "pregunta": (
+            "¿Cómo configuro el Asistente IA con Ollama (modelo local)?\n"
+        ),
+        "respuesta": (
+            "Ollama permite ejecutar el modelo LLM en tu propio servidor, sin coste y sin enviar datos a terceros. Requisito: mínimo 4 GB RAM libre (6 GB recomendado).\n"
+            "\n"
+            "Pasos:\n"
+            "1. Instala Ollama en el servidor del panel:\n"
+            "   `curl -fsSL https://ollama.com/install.sh | sh`\n"
+            "2. Descarga el modelo (elige según RAM disponible):\n"
+            "   - 3 GB RAM: `ollama pull llama3.2:3b`\n"
+            "   - 5 GB RAM: `ollama pull mistral`\n"
+            "   - 8 GB RAM: `ollama pull llama3.1:8b`\n"
+            "3. Configura en `config.env`:\n"
+            "   ```\n"
+            "   VIGEX_RAG_LLM_PROVIDER=ollama\n"
+            "   VIGEX_RAG_OLLAMA_URL=http://localhost:11434\n"
+            "   VIGEX_RAG_OLLAMA_MODEL=llama3.2:3b\n"
+            "   ```\n"
+            "4. Reinicia: `systemctl restart vigex-api`\n"
+            "\n"
+            "⚠️ Con CPU (sin GPU), cada respuesta puede tardar 30-180 segundos según el modelo. Para respuestas rápidas con privacidad, combina Ollama para la BD de conocimiento local + Groq para la generación.\n"
+        ),
+        "palabras_clave": ["ollama", "local", "offline", "instalar", "modelo", "mistral", "llama", "ram"],
+    },
+    {
+        "id": (
+            "asistente-slow\n"
+        ),
+        "pregunta": (
+            "El Asistente IA tarda mucho en responder. ¿Por qué?\n"
+        ),
+        "respuesta": (
+            "La velocidad de respuesta depende del proveedor configurado:\n"
+            "\n"
+            "• **Ollama con CPU** — puede tardar 30-180 segundos. Es normal si no hay GPU. Solución: cambia a Groq o Gemini para respuestas instantáneas.\n"
+            "• **Ollama con GPU** — <10 segundos. Si tienes GPU, actívala: Ollama la usa automáticamente.\n"
+            "• **Groq** — normalmente <3 segundos. Si tarda más, puede ser rate limiting.\n"
+            "• **Gemini / OpenAI / Anthropic** — 2-10 segundos según la carga del proveedor.\n"
+            "\n"
+            "El timeout configurado es de 300 segundos para Ollama y 30 segundos para APIs cloud. Si ves 'Tiempo de espera agotado', aumenta el timeout en `config.env` o cambia de proveedor. Para uso en producción con tiempo de respuesta crítico, **Groq es la opción más rápida** actualmente.\n"
+        ),
+        "palabras_clave": ["lento", "tarda", "timeout", "lentitud", "respuesta", "asistente", "ollama", "velocidad"],
+    },
+    {
+        "id": (
+            "asistente-historial\n"
+        ),
+        "pregunta": (
+            "¿El Asistente IA recuerda conversaciones anteriores?\n"
+        ),
+        "respuesta": (
+            "El Asistente IA mantiene el **historial de la conversación actual** en la sesión del navegador (sessionStorage), no en el servidor. Esto significa:\n"
+            "\n"
+            "• ✅ Dentro de la misma sesión/pestaña, el asistente recuerda los últimos 6 turnos (12 mensajes: 6 de usuario + 6 de asistente).\n"
+            "• ❌ Si recargas la página, abres una nueva pestaña o cierras el navegador, el historial se pierde.\n"
+            "• El botón **'Nueva conversación'** limpia el historial intencionalmente.\n"
+            "\n"
+            "Esta decisión de diseño es deliberada: no se almacenan conversaciones en el servidor para proteger la privacidad. Las conversaciones nunca se guardan en ningún fichero ni base de datos del panel.\n"
+        ),
+        "palabras_clave": ["historial", "memoria", "recuerda", "conversación", "sesión", "privacidad", "limpiar"],
+    },
+    {
+        "id": (
+            "terminal-uso\n"
+        ),
+        "pregunta": (
+            "¿Cómo funciona la Terminal integrada de Vigex?\n"
+        ),
+        "respuesta": (
+            "La **Terminal** de Vigex es una terminal web que permite ejecutar comandos en el servidor remoto mediante SSH seguro. Está disponible para usuarios con el permiso `terminal` activado.\n"
+            "\n"
+            "Características:\n"
+            "• Ejecuta comandos en tiempo real en el servidor configurado (`SERVICIOS_HOST`).\n"
+            "• Usa el mismo mecanismo SSH seguro que el resto del panel (clave ed25519, BatchMode, StrictHostKeyChecking).\n"
+            "• Los comandos disponibles están limitados a una lista blanca — no es una shell arbitraria por razones de seguridad.\n"
+            "• El historial de comandos ejecutados queda registrado en el log de auditoría.\n"
+            "\n"
+            "⚠️ **Seguridad**: otorga el permiso `terminal` solo a usuarios de confianza. Aunque los comandos están limitados, la Terminal da más poder de acción que el resto de módulos.\n"
+        ),
+        "palabras_clave": ["terminal", "consola", "comandos", "ssh", "web", "ejecutar", "shell"],
+    },
+    {
+        "id": (
+            "panel-no-arranca\n"
+        ),
+        "pregunta": (
+            "El panel no arranca o aparece un error 500.\n"
+        ),
+        "respuesta": (
+            "Pasos de diagnóstico:\n"
+            "\n"
+            "1. `systemctl status vigex-api` — comprueba si el servicio está activo.\n"
+            "2. `journalctl -u vigex-api -n 100 --no-pager` — busca el error concreto.\n"
+            "3. Comprueba que `config.env` existe y tiene `SECRET_KEY` y `ADMIN_PASSWORD`:\n"
+            "   `ls -la /opt/vigex/api/config.env`\n"
+            "4. `df -h /opt/vigex` — verifica que no esté el disco lleno.\n"
+            "5. `python3 -c \"import fastapi, uvicorn, pymysql\"` — verifica dependencias.\n"
+            "6. Si el problema es de importación de Python, reinstala dependencias:\n"
+            "   `cd /opt/vigex/api && ./venv/bin/pip install -r requirements.txt`\n"
+            "\n"
+            "Si el error persiste, abre un ticket en el módulo de soporte con el texto completo del error de `journalctl`.\n"
+        ),
+        "palabras_clave": ["panel", "arrancar", "500", "error", "caído", "blanco", "fallo", "inicio", "systemctl"],
+    },
+    {
+        "id": (
+            "error-500-interno\n"
+        ),
+        "pregunta": (
+            "Aparece un error 500 en una página específica del panel.\n"
+        ),
+        "respuesta": (
+            "Un error 500 en una página concreta (no en todo el panel) suele indicar un problema de conectividad con un servicio remoto. Diagnóstico según la página:\n"
+            "\n"
+            "• **Error 500 en Copias o Restauración** → problema SSH con el servidor de backups. Prueba la conexión SSH manualmente.\n"
+            "• **Error 500 en Logs** → problema de conexión con la BD MariaDB. Comprueba variables `LOGS_DB_*` en config.env.\n"
+            "• **Error 500 en Servicios** → problema SSH con `SERVICIOS_HOST`. Verifica que el host está accesible.\n"
+            "• **Error 500 en Monitoreo** → URL de Grafana/Cacti incorrecta o servicio caído.\n"
+            "\n"
+            "Revisa los logs del panel para el error exacto:\n"
+            "`journalctl -u vigex-api -n 50 --no-pager`\n"
+        ),
+        "palabras_clave": ["500", "error interno", "página", "fallo", "specific", "roto", "interno"],
+    },
+    {
+        "id": (
+            "vigex-version-check\n"
+        ),
+        "pregunta": (
+            "¿Cómo sé qué versión de Vigex tengo instalada?\n"
+        ),
+        "respuesta": (
+            "La versión aparece en el **footer del panel** (parte inferior del dashboard). También puedes verla en el servidor:\n"
+            "\n"
+            "`head -5 /opt/vigex/api/main.py`\n"
+            "\n"
+            "o buscando en config.env:\n"
+            "`grep VIGEX_VERSION /opt/vigex/api/config.env`\n"
+            "\n"
+            "La versión actual del producto es **v1.0-rc1**. Para comparar con la última versión disponible, consulta el fichero `docs/ROADMAP.md` del repositorio o la página oficial de Vigex.\n"
+        ),
+        "palabras_clave": ["versión", "version", "instalada", "vigex", "actual", "numero", "comprobar"],
+    },
+    {
+        "id": (
+            "servicio-vigex-reiniciar\n"
+        ),
+        "pregunta": (
+            "¿Cómo reinicio el servicio de Vigex en el servidor?\n"
+        ),
+        "respuesta": (
+            "El panel Vigex corre como servicio systemd `vigex-api`. Comandos de gestión:\n"
+            "\n"
+            "• **Reiniciar** (tras cambios en config.env): `systemctl restart vigex-api`\n"
+            "• **Ver estado**: `systemctl status vigex-api`\n"
+            "• **Ver logs en tiempo real**: `journalctl -u vigex-api -f`\n"
+            "• **Detener**: `systemctl stop vigex-api`\n"
+            "• **Iniciar**: `systemctl start vigex-api`\n"
+            "• **Habilitar arranque automático**: `systemctl enable vigex-api`\n"
+            "\n"
+            "El servicio tiene `Restart=always` y `RestartSec=3`, por lo que si Uvicorn cae por cualquier motivo, systemd lo levanta automáticamente a los 3 segundos. El panel Central Support usa el servicio `vigex-central` con los mismos comandos.\n"
+        ),
+        "palabras_clave": ["reiniciar", "restart", "servicio", "systemd", "vigex-api", "uvicorn", "parar", "iniciar"],
+    },
+    {
+        "id": (
+            "debug-logs-panel\n"
+        ),
+        "pregunta": (
+            "¿Cómo veo los logs del propio panel de Vigex para diagnosticar problemas?\n"
+        ),
+        "respuesta": (
+            "Los logs del panel Vigex se gestionan con systemd journal. Comandos útiles:\n"
+            "\n"
+            "• **Últimas 100 líneas**: `journalctl -u vigex-api -n 100 --no-pager`\n"
+            "• **En tiempo real**: `journalctl -u vigex-api -f`\n"
+            "• **Logs de hoy**: `journalctl -u vigex-api --since today`\n"
+            "• **Logs con nivel de error**: `journalctl -u vigex-api -p err`\n"
+            "• **Logs del último arranque**: `journalctl -u vigex-api -b`\n"
+            "\n"
+            "Para el servicio Central Support: sustituye `vigex-api` por `vigex-central`.\n"
+            "\n"
+            "Si necesitas más detalle, puedes aumentar el nivel de log de Uvicorn añadiendo `--log-level debug` al ExecStart del servicio systemd (edita `/etc/systemd/system/vigex-api.service` y recarga con `systemctl daemon-reload && systemctl restart vigex-api`).\n"
+        ),
+        "palabras_clave": ["logs", "journal", "journalctl", "diagnóstico", "debug", "error", "panel", "ver"],
+    },
+    {
+        "id": (
+            "bd-instalar\n"
+        ),
+        "pregunta": (
+            "¿Cómo se instala y configura la base de datos de Vigex?\n"
+        ),
+        "respuesta": (
+            "La base de datos de logs usa **MariaDB**. La instalación se hace con el script incluido en el repositorio:\n"
+            "\n"
+            "`sudo bash deploy/db/install_vigex_db.sh`\n"
+            "\n"
+            "El script realiza automáticamente:\n"
+            "• Instalación de MariaDB si no está presente.\n"
+            "• Creación de la base de datos `vigex_logs`.\n"
+            "• Creación de usuarios con los permisos mínimos necesarios:\n"
+            "  - `vigex_logs` (solo SELECT para el panel).\n"
+            "  - `vigex_backup` (solo SELECT para dumps de backup).\n"
+            "  - `vigex_restore` (escritura para restauración).\n"
+            "• Creación de la tabla `logs` con los índices necesarios.\n"
+            "• Configuración del firewall para permitir acceso solo desde la IP del panel.\n"
+            "\n"
+            "La IP del servidor de BD se configura en `LOGS_DB_HOST` en `config.env` del panel.\n"
+        ),
+        "palabras_clave": ["base de datos", "mariadb", "mysql", "instalar", "bd", "logs", "script"],
+    },
+    {
+        "id": (
+            "bd-backup-mysql\n"
+        ),
+        "pregunta": (
+            "¿Cómo se hace el backup de la base de datos MariaDB?\n"
+        ),
+        "respuesta": (
+            "El backup de MariaDB se realiza mediante `mysqldump` ejecutado remotamente por el script `backups_api.sh` en el servidor de backups. El proceso:\n"
+            "\n"
+            "1. El panel envía la petición de backup al servidor de backups vía SSH.\n"
+            "2. `backups_api.sh` ejecuta:\n"
+            "   `mysqldump -h IP_DB -u vigex_backup -p vigex_logs > backup_TIMESTAMP.sql`\n"
+            "3. El fichero SQL se comprime con gzip.\n"
+            "4. Se calcula el SHA256 del archivo comprimido.\n"
+            "5. El registro del backup (ruta, fecha, tamaño, hash) se guarda en la BD de Vigex.\n"
+            "\n"
+            "Configuración en `config.env`:\n"
+            "• `BACKUP_DB_HOST` — IP del servidor de BD.\n"
+            "• `BACKUP_DB_NAME` / `BACKUP_DB_USER` / `BACKUP_DB_PASS` — acceso a la BD.\n"
+            "• `BACKUP_OUTPUT_DIR` — directorio donde se guardan los dumps.\n"
+            "• `BACKUP_RETENTION_KEEP` — número de copias a mantener.\n"
+        ),
+        "palabras_clave": ["backup", "mariadb", "mysqldump", "bd", "base de datos", "dump", "sql"],
+    },
+    {
+        "id": (
+            "proxy-nginx\n"
+        ),
+        "pregunta": (
+            "¿Cómo funciona el proxy nginx de Vigex?\n"
+        ),
+        "respuesta": (
+            "Vigex incluye un instalador de proxy nginx (`deploy/proxy/install_vigex_proxy.sh`) que configura nginx como reverse proxy delante de Uvicorn:\n"
+            "\n"
+            "• nginx escucha en el puerto 443 (HTTPS) y 80 (redirige a HTTPS).\n"
+            "• Las peticiones HTTPS se pasan al Uvicorn local en el puerto 8000.\n"
+            "• nginx gestiona la terminación TLS (certificado SSL).\n"
+            "• El certificado autofirmado se genera automáticamente durante la instalación.\n"
+            "• Para certificado válido con Let's Encrypt, instala certbot después:\n"
+            "  `sudo certbot --nginx -d tu-dominio.com`\n"
+            "\n"
+            "El fichero de configuración de nginx está en:\n"
+            "`/etc/nginx/sites-available/vigex`\n"
+            "\n"
+            "Para aplicar cambios en nginx: `sudo nginx -t && sudo systemctl reload nginx`\n"
+        ),
+        "palabras_clave": ["nginx", "proxy", "reverse proxy", "https", "puerto", "443", "80", "uvicorn"],
+    },
+    {
+        "id": (
+            "dominio-personalizado\n"
+        ),
+        "pregunta": (
+            "¿Puedo acceder a Vigex con un dominio personalizado?\n"
+        ),
+        "respuesta": (
+            "Sí. Para acceder con un dominio (ej: `vigex.tuempresa.com`):\n"
+            "\n"
+            "1. Apunta el dominio a la IP del servidor en tu proveedor DNS (registro A: `vigex.tuempresa.com → IP_SERVIDOR`).\n"
+            "2. Espera la propagación DNS (5-30 minutos).\n"
+            "3. Instala certbot para HTTPS real:\n"
+            "   `sudo apt install certbot python3-certbot-nginx`\n"
+            "   `sudo certbot --nginx -d vigex.tuempresa.com`\n"
+            "4. Certbot modifica nginx automáticamente y añade renovación automática.\n"
+            "5. Activa HTTPS estricto en `config.env`:\n"
+            "   `VIGEX_SESSION_HTTPS_ONLY=true`\n"
+            "6. Reinicia: `systemctl restart vigex-api`\n"
+            "\n"
+            "A partir de este momento puedes acceder a `https://vigex.tuempresa.com` con certificado válido y sin advertencia del navegador.\n"
+        ),
+        "palabras_clave": ["dominio", "dns", "subdominio", "personalizado", "https", "certbot", "letsencrypt", "acceso"],
+    },
+    {
+        "id": (
+            "integracion-jira\n"
+        ),
+        "pregunta": (
+            "¿Cómo integro Vigex con Jira Service Management?\n"
+        ),
+        "respuesta": (
+            "Vigex puede enviar tickets de soporte automáticamente a **Jira Service Management** (o cualquier sistema de tickets compatible con webhooks JSON) cuando se crean tickets en el panel.\n"
+            "\n"
+            "Configuración en `config.env`:\n"
+            "```\n"
+            "JIRA_WEBHOOK_URL=https://tu-instancia.atlassian.net/rest/webhooks/1.0/webhook/ID\n"
+            "JIRA_WEBHOOK_TIMEOUT=5\n"
+            "```\n"
+            "\n"
+            "Cuando dejas `JIRA_WEBHOOK_URL` en blanco, la integración está desactivada. El webhook envía un POST con JSON que incluye: ID del ticket, título, descripción, prioridad, módulo afectado y fecha de creación. Es compatible con cualquier herramienta que acepte webhooks: GitHub Issues, GitLab, Trello, Notion, Zapier, etc. Reinicia el panel tras configurar.\n"
+        ),
+        "palabras_clave": ["jira", "webhook", "integración", "tickets", "service management", "github", "zapier"],
+    },
+    {
+        "id": (
+            "uso-diario-recomendaciones\n"
+        ),
+        "pregunta": (
+            "¿Qué tareas debo revisar diariamente en el panel de Vigex?\n"
+        ),
+        "respuesta": (
+            "Checklist de revisión diaria recomendada:\n"
+            "\n"
+            "✅ **Dashboard** — comprueba que el estado general es verde.\n"
+            "✅ **Copias** — verifica que la última copia automática fue exitosa (color verde).\n"
+            "✅ **Servicios** — asegúrate de que todos los servicios críticos están activos.\n"
+            "✅ **Alertas** — revisa si hay alertas no atendidas.\n"
+            "✅ **Disco** — comprueba que el uso no supera el 80%.\n"
+            "\n"
+            "Tareas semanales recomendadas:\n"
+            "📋 Revisar los **Logs** en busca de errores o patrones inusuales.\n"
+            "📋 Revisar el **Informe semanal** cuando llegue por email.\n"
+            "📋 Verificar la integridad de los backups con **Copias → Integridad**.\n"
+            "\n"
+            "Tareas mensuales:\n"
+            "🔄 Probar una restauración en entorno de test.\n"
+            "🔄 Revisar y limpiar backups muy antiguos si el espacio es limitado.\n"
+        ),
+        "palabras_clave": ["diario", "checklist", "revisar", "tareas", "rutina", "diariamente", "semanal"],
+    },
+    {
+        "id": (
+            "login-sesion-expira\n"
+        ),
+        "pregunta": (
+            "La sesión expira constantemente y tengo que volver a hacer login.\n"
+        ),
+        "respuesta": (
+            "Si la sesión expira demasiado rápido, ajusta estos valores en `config.env`:\n"
+            "\n"
+            "• `VIGEX_SESSION_MAX_AGE=28800` — duración máxima (segundos). Por defecto 8 horas. Auméntalo si necesitas sesiones más largas (ej: 43200 = 12 horas, 86400 = 24 horas).\n"
+            "\n"
+            "• `VIGEX_AUTO_LOGOUT_MINUTES=60` — minutos de inactividad antes del logout. Auméntalo o ponlo a `0` para desactivar el auto-logout por inactividad.\n"
+            "\n"
+            "También puede ocurrir que la sesión expire si:\n"
+            "• Cambias `SECRET_KEY` en config.env (invalida todas las sesiones activas).\n"
+            "• Reinicias el servicio vigex-api (las sesiones en memoria se pierden).\n"
+            "\n"
+            "Reinicia el servicio tras modificar: `systemctl restart vigex-api`.\n"
+        ),
+        "palabras_clave": ["sesión", "expira", "logout", "login", "volver", "tiempo", "desconectar"],
+    },
+    {
+        "id": (
+            "dos-paneles-misma-cuenta\n"
+        ),
+        "pregunta": (
+            "¿Puedo abrir el panel en varios navegadores o pestañas a la vez?\n"
+        ),
+        "respuesta": (
+            "Sí. Vigex soporta varias sesiones simultáneas. Puedes:\n"
+            "\n"
+            "• Abrir el panel en diferentes pestañas del mismo navegador con la misma sesión.\n"
+            "• Abrir el panel en diferentes navegadores o dispositivos con sesiones independientes.\n"
+            "• Tener múltiples usuarios conectados simultáneamente (cada uno con su sesión).\n"
+            "\n"
+            "No hay límite técnico de sesiones simultáneas por usuario. Si usas una sesión en varios dispositivos y cierras sesión en uno, los demás siguen activos hasta que expiren por tiempo de inactividad o se haga logout explícito.\n"
+            "\n"
+            "Para cerrar todas las sesiones activas de un usuario, cambia su contraseña desde **Admin → Usuarios** — esto invalida todas las sesiones existentes.\n"
+        ),
+        "palabras_clave": ["varias pestañas", "múltiples", "sesiones", "simultáneo", "navegador", "dispositivos"],
+    },
+    {
+        "id": (
+            "modo-oscuro\n"
+        ),
+        "pregunta": (
+            "¿El panel tiene modo oscuro?\n"
+        ),
+        "respuesta": (
+            "Sí. El panel de Vigex incluye **modo oscuro** que puedes activar con el botón de luna/sol en la cabecera del panel (esquina superior derecha). La preferencia se guarda en `localStorage` del navegador, por lo que persiste entre recargas de página. También respeta automáticamente la preferencia del sistema operativo si no has seleccionado manualmente un tema.\n"
+            "\n"
+            "El modo oscuro está disponible en todas las secciones del panel, incluyendo el Asistente IA, Copias, Logs, Servicios, etc. El panel Central Support también incluye modo oscuro independiente.\n"
+        ),
+        "palabras_clave": ["modo oscuro", "dark mode", "tema", "oscuro", "claro", "apariencia", "luna"],
+    },
+    {
+        "id": (
+            "exportar-datos\n"
+        ),
+        "pregunta": (
+            "¿Puedo exportar datos del panel (logs, backups, informes)?\n"
+        ),
+        "respuesta": (
+            "Vigex ofrece varias opciones de exportación:\n"
+            "\n"
+            "• **Logs** — exporta logs filtrados a CSV desde la pantalla de Logs (botón 'Exportar CSV').\n"
+            "• **Informes** — los informes generados se guardan como Markdown en el servidor (`/opt/vigex/api/reports/`) y se envían por email en formato texto.\n"
+            "• **Lista de backups** — exporta el historial de copias a CSV desde la pantalla de Copias.\n"
+            "• **Tickets de soporte** — los tickets se pueden exportar desde el módulo de Soporte en formato CSV para análisis externo.\n"
+            "\n"
+            "Para exportación masiva de datos o integraciones con BI (Power BI, Grafana, etc.), puedes acceder directamente a la BD MariaDB con el usuario de solo lectura `vigex_logs` desde herramientas externas.\n"
+        ),
+        "palabras_clave": ["exportar", "csv", "datos", "descargar", "logs", "informes", "backup", "historial"],
+    },
+    {
+        "id": (
+            "ip-servidor-cambio\n"
+        ),
+        "pregunta": (
+            "Cambié la IP de un servidor. ¿Qué tengo que actualizar en Vigex?\n"
+        ),
+        "respuesta": (
+            "Si cambia la IP de alguno de los servidores gestionados por Vigex:\n"
+            "\n"
+            "1. **Edita `config.env`** en el servidor del panel:\n"
+            "   - Actualiza `SERVICIOS_HOST`, `BACKUPS_HOST` o `LOGS_DB_HOST` según corresponda.\n"
+            "   - Actualiza `VIGEX_SSH_ALLOWED_HOSTS` con la nueva IP.\n"
+            "\n"
+            "2. **Actualiza el known_hosts SSH**: la clave host del servidor puede haber cambiado.\n"
+            "   Elimina la entrada antigua: `ssh-keygen -R IP_ANTIGUA -f /opt/vigex/api/.ssh/known_hosts_vigex`\n"
+            "   Añade la nueva: `sudo -u vigex ssh-keyscan -H IP_NUEVA >> /opt/vigex/api/.ssh/known_hosts_vigex`\n"
+            "\n"
+            "3. **Si cambió el servidor de BD**: actualiza también el firewall en el servidor de BD para permitir conexiones desde la nueva IP del panel.\n"
+            "\n"
+            "4. **Reinicia el panel**: `systemctl restart vigex-api`\n"
+            "\n"
+            "5. **Prueba la conexión** lanzando una copia manual y verificando los logs.\n"
+        ),
+        "palabras_clave": ["ip", "cambio", "servidor", "mover", "actualizar", "known_hosts", "ip nueva"],
+    },
+    {
+        "id": (
+            "acceso-externo-red\n"
+        ),
+        "pregunta": (
+            "¿Puedo acceder al panel de Vigex desde fuera de la red local?\n"
+        ),
+        "respuesta": (
+            "Sí, pero con precauciones de seguridad. El panel escucha en el puerto 443 (HTTPS) a través de nginx. Para acceso externo:\n"
+            "\n"
+            "**Opción A — Acceso directo (menos recomendado)**:\n"
+            "• Abre el puerto 443 en el firewall del servidor y en el router.\n"
+            "• Configura un dominio con certbot para HTTPS válido.\n"
+            "• Asegúrate de tener anti-fuerza bruta activado.\n"
+            "\n"
+            "**Opción B — VPN (recomendado)**:\n"
+            "• Instala WireGuard o OpenVPN en el servidor.\n"
+            "• Accede al panel solo a través de la VPN.\n"
+            "• El panel no queda expuesto a internet directamente.\n"
+            "\n"
+            "**Opción C — Túnel SSH**:\n"
+            "• `ssh -L 8000:localhost:8000 usuario@IP_SERVIDOR`\n"
+            "• Accede a `http://localhost:8000` en tu navegador local.\n"
+            "\n"
+            "La opción VPN es la más segura para entornos empresariales.\n"
+        ),
+        "palabras_clave": ["acceso externo", "remoto", "internet", "vpn", "firewall", "red", "fuera", "exterior"],
+    },
+    {
+        "id": (
+            "desinstalar-vigex\n"
+        ),
+        "pregunta": (
+            "¿Cómo desinstalo Vigex completamente de un servidor?\n"
+        ),
+        "respuesta": (
+            "Para desinstalar Vigex completamente:\n"
+            "\n"
+            "1. **Detén y elimina el servicio systemd**:\n"
+            "   `systemctl stop vigex-api && systemctl disable vigex-api`\n"
+            "   `rm /etc/systemd/system/vigex-api.service`\n"
+            "   `systemctl daemon-reload`\n"
+            "\n"
+            "2. **Elimina los ficheros del panel**:\n"
+            "   `rm -rf /opt/vigex/api`\n"
+            "\n"
+            "3. **Elimina el proxy nginx** (si lo instalaste con Vigex):\n"
+            "   `rm /etc/nginx/sites-enabled/vigex /etc/nginx/sites-available/vigex`\n"
+            "   `systemctl reload nginx`\n"
+            "\n"
+            "4. **Elimina la BD** (si quieres borrar los logs):\n"
+            "   `mysql -u root -e \"DROP DATABASE vigex_logs;\"`\n"
+            "\n"
+            "El script de desinstalación incluido en el repositorio automatiza estos pasos:\n"
+            "`sudo bash deploy/api/uninstall_vigex_api.sh`\n"
+        ),
+        "palabras_clave": ["desinstalar", "eliminar", "borrar", "quitar", "uninstall", "limpiar", "completo"],
     },
 ]
 
@@ -7050,28 +8813,361 @@ def _buscar_faq(query: str, contexto_url: str = "") -> list[dict]:
 
 @app.get("/soporte/faq")
 def soporte_faq(request: Request, q: str = "", desde: str = ""):
-    """Pantalla de preguntas frecuentes (FAQ / IA de triage). R-070 / R-085"""
-    if not get_current_user(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    # R-085: pasar contexto de página de origen para boost de relevancia
-    resultados = _buscar_faq(q, contexto_url=desde or request.headers.get("referer", ""))
-
-    context = get_common_context(request)
-    context["faq_entries"] = resultados
-    context["faq_todos"] = _FAQ_ENTRIES
-    context["faq_query"] = q
-    context["faq_total"] = len(_FAQ_ENTRIES)
-    return templates.TemplateResponse(request, "soporte_faq.html", context)
+    """Redirige al nuevo Asistente IA (R-090). Mantenemos la ruta por compatibilidad."""
+    return RedirectResponse(url="/asistente", status_code=301)
 
 
 @app.get("/api/soporte/faq")
 def api_soporte_faq(request: Request, q: str = "", desde: str = ""):
-    """API de búsqueda FAQ para autocompletar/AJAX. R-070 / R-085"""
-    if not get_current_user(request):
+    """API FAQ legacy — devuelve resultados en JSON para compatibilidad. R-070 / R-085"""
+    if not is_authenticated(request):
         return JSONResponse({"error": "no autenticado"}, status_code=401)
     resultados = _buscar_faq(q, contexto_url=desde)
     return JSONResponse({"resultados": resultados, "total": len(resultados)})
+
+
+# =============================================================================
+# R-090 — Asistente IA con RAG
+# Fase 1: Ollama local + búsqueda semántica sobre FAQ (sin deps extra)
+# Fase 2: VIGEX_RAG_LLM_PROVIDER=anthropic para subir de calidad
+# =============================================================================
+
+# R-090-sec: rate limiter en memoria — {username: [timestamps]}
+# Se limpia automáticamente en cada comprobación (sliding window).
+_rag_rate_buckets: dict[str, list[float]] = {}
+
+def _rag_check_rate_limit(username: str) -> bool:
+    """Devuelve True si el usuario está DENTRO del límite (puede continuar).
+    Devuelve False si ha superado RAG_RATE_LIMIT_REQS en RAG_RATE_LIMIT_WINDOW segundos.
+    """
+    import time as _time
+    now = _time.monotonic()
+    window_start = now - RAG_RATE_LIMIT_WINDOW
+    bucket = _rag_rate_buckets.get(username, [])
+    # Descartar timestamps fuera de la ventana
+    bucket = [t for t in bucket if t > window_start]
+    if len(bucket) >= RAG_RATE_LIMIT_REQS:
+        _rag_rate_buckets[username] = bucket
+        return False
+    bucket.append(now)
+    _rag_rate_buckets[username] = bucket
+    return True
+
+_RAG_SYSTEM_PROMPT = (
+    "Eres el asistente técnico de Vigex, un panel de gestión de servidores Linux para PYMEs. "
+    "Ayudas con backups, logs, servicios, alertas, monitoreo y recuperación ante desastres. "
+    "Responde SIEMPRE en español, de forma clara y concisa. "
+    "Usa listas con guion y bloques de código cuando mejore la comprensión. "
+    "Si la documentación proporcionada no cubre la pregunta, dilo con honestidad "
+    "y sugiere abrir un ticket de soporte desde el menú lateral. "
+    "Nunca inventes comandos ni rutas que no aparezcan en la documentación."
+)
+
+
+def _rag_build_context(query: str) -> str:
+    """Recupera los fragmentos más relevantes del conocimiento usando el buscador FAQ."""
+    entradas = _buscar_faq(query)[:RAG_TOP_K]
+    if not entradas:
+        return ""
+    partes = []
+    for e in entradas:
+        partes.append(f"P: {e.get('pregunta', '')}\nR: {e.get('respuesta', '')}")
+    return "\n\n---\n\n".join(partes)
+
+
+def _rag_call_ollama(system: str, messages: list[dict]) -> str:
+    """Llama al LLM local vía Ollama API (urllib stdlib, sin dependencias extra)."""
+    import urllib.request
+    import urllib.error
+
+    payload = json.dumps({
+        "model": RAG_OLLAMA_MODEL,
+        "messages": [{"role": "system", "content": system}] + messages,
+        "stream": False,
+        "options": {
+            "num_predict": RAG_MAX_TOKENS,
+            "temperature": 0.25,
+            "top_p": 0.9,
+            "repeat_penalty": 1.1,
+        },
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        f"{RAG_OLLAMA_URL}/api/chat",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=300) as resp:  # R-090: CPU inference puede tardar >2 min
+            data = json.loads(resp.read().decode("utf-8"))
+            return data.get("message", {}).get("content", "Sin respuesta del modelo.")
+    except urllib.error.URLError:
+        return (
+            "⚠️ No se pudo conectar con Ollama. "
+            f"Asegúrate de que el servicio está corriendo en `{RAG_OLLAMA_URL}`: "
+            "`ollama serve` · Para instalar Ollama: https://ollama.com"
+        )
+    except Exception as exc:
+        return f"⚠️ Error al llamar al modelo local: {exc}"
+
+
+def _rag_call_anthropic(system: str, messages: list[dict]) -> str:
+    """Llama a Claude API. Requiere: pip install anthropic + ANTHROPIC_API_KEY."""
+    if not RAG_ANTHROPIC_KEY:
+        return "⚠️ ANTHROPIC_API_KEY no configurada en config.env."
+    try:
+        import anthropic as _sdk  # type: ignore
+        client = _sdk.Anthropic(api_key=RAG_ANTHROPIC_KEY)
+        response = client.messages.create(
+            model=RAG_ANTHROPIC_MODEL,
+            max_tokens=RAG_MAX_TOKENS,
+            system=system,
+            messages=messages,
+        )
+        return response.content[0].text
+    except ImportError:
+        return "⚠️ Paquete `anthropic` no instalado. Ejecuta: `pip install anthropic`"
+    except Exception as exc:
+        return f"⚠️ Error al llamar a Claude API: {exc}"
+
+
+def _rag_call_gemini(system: str, messages: list[dict]) -> str:
+    """Llama a Gemini API (urllib stdlib, sin dependencias extra). R-090."""
+    if not RAG_GEMINI_KEY:
+        return "⚠️ GOOGLE_API_KEY no configurada en config.env."
+    import urllib.request, urllib.error
+
+    # Gemini usa formato propio: system_instruction + contents con roles user/model
+    contents = []
+    for m in messages:
+        role = "model" if m["role"] == "assistant" else "user"
+        contents.append({"role": role, "parts": [{"text": m["content"]}]})
+
+    payload = json.dumps({
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": contents,
+        "generationConfig": {
+            "maxOutputTokens": RAG_MAX_TOKENS,
+            "temperature": 0.25,
+            "topP": 0.9,
+        },
+    }).encode("utf-8")
+
+    # Las keys AQ.* (formato nuevo de AI Studio) usan Bearer auth.
+    # Las keys AIzaSy* (formato clásico) usan ?key= en la URL.
+    # Probamos Bearer primero; si falla 401/403 reintentamos con ?key=.
+    base_url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{RAG_GEMINI_MODEL}:generateContent")
+
+    def _try(url: str, extra_headers: dict) -> str:
+        hdrs = {"Content-Type": "application/json"}
+        hdrs.update(extra_headers)
+        req = urllib.request.Request(url, data=payload, headers=hdrs, method="POST")
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+
+    # Intento 1: Bearer token (keys AQ.* / OAuth)
+    try:
+        return _try(base_url, {"Authorization": f"Bearer {RAG_GEMINI_KEY}"})
+    except urllib.error.HTTPError as exc1:
+        if exc1.code not in (401, 403):
+            body = exc1.read().decode("utf-8", errors="replace")[:300]
+            return f"⚠️ Error Gemini API ({exc1.code}): {body}"
+        # Intento 2: ?key= clásico (keys AIzaSy*)
+        try:
+            return _try(f"{base_url}?key={RAG_GEMINI_KEY}", {})
+        except urllib.error.HTTPError as exc2:
+            body = exc2.read().decode("utf-8", errors="replace")[:300]
+            return f"⚠️ Error Gemini API ({exc2.code}): {body}"
+    except Exception as exc:
+        return f"⚠️ Error al llamar a Gemini: {exc}"
+
+
+def _rag_call_openai(system: str, messages: list[dict]) -> str:
+    """Llama a OpenAI API (urllib stdlib). R-090."""
+    if not RAG_OPENAI_KEY:
+        return "⚠️ OPENAI_API_KEY no configurada en config.env."
+    import urllib.request, urllib.error
+
+    msgs = [{"role": "system", "content": system}] + messages
+    payload = json.dumps({
+        "model": RAG_OPENAI_MODEL,
+        "messages": msgs,
+        "max_tokens": RAG_MAX_TOKENS,
+        "temperature": 0.25,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=payload,
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {RAG_OPENAI_KEY}"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"]
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")[:300]
+        return f"⚠️ Error OpenAI API ({exc.code}): {body}"
+    except Exception as exc:
+        return f"⚠️ Error al llamar a OpenAI: {exc}"
+
+
+def _rag_call_groq(system: str, messages: list[dict]) -> str:
+    """Llama a Groq API (compatible OpenAI, urllib stdlib). R-090."""
+    if not RAG_GROQ_KEY:
+        return "⚠️ GROQ_API_KEY no configurada en config.env."
+    import urllib.request, urllib.error
+
+    msgs = [{"role": "system", "content": system}] + messages
+    payload = json.dumps({
+        "model": RAG_GROQ_MODEL,
+        "messages": msgs,
+        "max_tokens": RAG_MAX_TOKENS,
+        "temperature": 0.25,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=payload,
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {RAG_GROQ_KEY}",
+                 "User-Agent": "VigexPanel/1.0"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"]
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")[:300]
+        return f"⚠️ Error Groq API ({exc.code}): {body}"
+    except Exception as exc:
+        return f"⚠️ Error al llamar a Groq: {exc}"
+
+
+def _rag_generate(query: str, historial: list[dict]) -> str:
+    """Pipeline completo: retrieval → system prompt → LLM → respuesta. R-090."""
+    context = _rag_build_context(query)
+    system = _RAG_SYSTEM_PROMPT
+    if context:
+        system += f"\n\nDocumentación relevante:\n\n{context}"
+
+    # Limitar historial para no exceder la ventana de contexto del modelo
+    messages = historial[-12:] + [{"role": "user", "content": query}]
+
+    if RAG_LLM_PROVIDER == "anthropic":
+        return _rag_call_anthropic(system, messages)
+    if RAG_LLM_PROVIDER == "gemini":
+        return _rag_call_gemini(system, messages)
+    if RAG_LLM_PROVIDER == "openai":
+        return _rag_call_openai(system, messages)
+    if RAG_LLM_PROVIDER == "groq":
+        return _rag_call_groq(system, messages)
+    return _rag_call_ollama(system, messages)
+
+
+def _rag_check_ollama() -> dict:
+    """Comprueba si Ollama está disponible y el modelo configurado está descargado."""
+    import urllib.request
+    import urllib.error
+    try:
+        req = urllib.request.Request(f"{RAG_OLLAMA_URL}/api/tags", method="GET")
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            modelos = [m.get("name", "") for m in data.get("models", [])]
+            model_ok = any(RAG_OLLAMA_MODEL in m for m in modelos)
+            return {"disponible": True, "modelos": modelos, "modelo_ok": model_ok}
+    except Exception:
+        return {"disponible": False, "modelos": [], "modelo_ok": False}
+
+
+@app.get("/asistente")
+def asistente_page(request: Request):
+    """Página del Asistente IA con RAG. R-090"""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    context = get_common_context(request)
+    context["rag_provider"]      = RAG_LLM_PROVIDER
+    _model_map = {
+        "ollama":    RAG_OLLAMA_MODEL,
+        "anthropic": RAG_ANTHROPIC_MODEL,
+        "gemini":    RAG_GEMINI_MODEL,
+        "openai":    RAG_OPENAI_MODEL,
+        "groq":      RAG_GROQ_MODEL,
+    }
+    context["rag_model"]         = _model_map.get(RAG_LLM_PROVIDER, RAG_OLLAMA_MODEL)
+    context["rag_faq_total"]     = len(_FAQ_ENTRIES)
+
+    # Solo comprobamos el estado de Ollama si el proveedor es local
+    if RAG_LLM_PROVIDER == "ollama":
+        context["rag_status"] = _rag_check_ollama()
+    else:
+        context["rag_status"] = {"disponible": True, "modelo_ok": True, "modelos": []}
+
+    return templates.TemplateResponse(request, "asistente.html", context)
+
+
+@app.post("/api/asistente/chat")
+async def asistente_chat_api(request: Request):
+    """Endpoint de chat del Asistente IA. R-090 / R-090-sec"""
+    # ── Autenticación ────────────────────────────────────────────────────────
+    if not is_authenticated(request):
+        return JSONResponse({"error": "No autenticado."}, status_code=401)
+
+    # ── Permiso de módulo (R-090-sec) ────────────────────────────────────────
+    if not has_permission(request, "asistente"):
+        return JSONResponse(
+            {"error": "Sin permiso para usar el Asistente IA. Contacta con el administrador."},
+            status_code=403,
+        )
+
+    # ── Rate limiting por usuario (R-090-sec) ────────────────────────────────
+    username = request.session.get("user", "anon")
+    if not _rag_check_rate_limit(username):
+        return JSONResponse(
+            {"error": (
+                f"Demasiadas consultas. Máximo {RAG_RATE_LIMIT_REQS} mensajes "
+                f"por {RAG_RATE_LIMIT_WINDOW} segundos. Espera un momento."
+            )},
+            status_code=429,
+        )
+
+    data = await request.json()
+    mensaje   = (data.get("mensaje") or "").strip()
+    historial = data.get("historial", [])
+
+    if not mensaje:
+        return JSONResponse({"error": "Mensaje vacío."}, status_code=400)
+    if len(mensaje) > 2000:
+        return JSONResponse({"error": "Mensaje demasiado largo (máx. 2 000 caracteres)."}, status_code=400)
+
+    # Sanitizar historial
+    historial_limpio: list[dict] = [
+        {"role": m["role"], "content": str(m["content"])[:3000]}
+        for m in historial
+        if isinstance(m, dict)
+        and m.get("role") in ("user", "assistant")
+        and m.get("content")
+    ][-20:]
+
+    respuesta = _rag_generate(mensaje, historial_limpio)
+
+    log_event(
+        tipo="ASISTENTE_IA",
+        resultado="OK",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /api/asistente/chat",
+        detalle=f"RAG query len={len(mensaje)} provider={RAG_LLM_PROVIDER}",
+    )
+
+    return JSONResponse({"respuesta": respuesta})
 
 
 # =============================================================================
@@ -7160,7 +9256,7 @@ _DRO_PASOS: list[dict] = [
 @app.get("/recuperacion")
 def recuperacion_dro(request: Request):
     """Pantalla DRO: runbook guiado de recuperación ante desastres. R-068"""
-    if not get_current_user(request):
+    if not is_authenticated(request):
         return RedirectResponse(url="/login", status_code=303)
 
     # Recopilar estado actual del servidor para el resumen inicial

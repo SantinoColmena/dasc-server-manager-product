@@ -52,8 +52,12 @@
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 14px;">Actualizar estado y prioridad</h2>
-    <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado">
+    <h2 style="margin:0 0 6px;">Actualizar estado y prioridad</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">
+        <i class="fa-solid fa-circle-info"></i>
+        La nota es <strong>obligatoria</strong> — quedará en el historial del ticket.
+    </p>
+    <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado" id="form-estado">
         {{ csrf_input(request) }}
         <div class="detail-grid">
             <div class="field">
@@ -73,8 +77,24 @@
                 </select>
             </div>
         </div>
-        <div style="margin-top:16px;">
-            <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+        <div style="margin-top:14px;">
+            <span style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
+                Nota / Respuesta al cliente <span style="color:#ef4444;">*</span>
+            </span>
+            <textarea
+                name="nota"
+                id="nota-respuesta"
+                class="respuesta"
+                placeholder="Escribe aquí el motivo del cambio, la respuesta al cliente o las acciones tomadas…"
+                rows="4"
+                required
+                oninput="document.getElementById('btn-guardar-estado').disabled = !this.value.trim();"
+            ></textarea>
+        </div>
+        <div style="margin-top:12px;">
+            <button class="btn primary" id="btn-guardar-estado" type="submit" disabled>
+                <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+            </button>
         </div>
     </form>
 </div>

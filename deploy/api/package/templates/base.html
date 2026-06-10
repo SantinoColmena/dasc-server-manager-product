@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Vigex{% endblock %}</title>
 
+    <!-- Favicon (R-083-fix-3) -->
+    <link rel="icon" href="{{ url_for('static', path='img/logo-vigex.svg') }}" type="image/svg+xml">
+
     <!-- Fuente Inter (Fase 7.1) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +18,8 @@
 
     <!-- Estilos base -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/estilo.css') }}">
+    <!-- Overrides dark mode (R-083) — cubre estilo.css, backups.css, servicios.css y templates -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/dark-overrides.css') }}">
 
     <!-- CSRF global (R-063: disponible en todas las páginas para el modal de bug report) -->
     <meta name="csrf-token" content="{{ csrf_token_value(request) }}">
@@ -110,12 +115,8 @@
             </a>
             {% endif %}
 
-            <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') else '' }}">
-                <i class="fa-solid fa-headset"></i> Soporte
-            </a>
-
-            <a href="/soporte/faq" class="{{ 'active' if current_path.startswith('/soporte/faq') else '' }}">
-                <i class="fa-solid fa-circle-question"></i> FAQ
+            <a href="/asistente" class="{{ 'active' if current_path.startswith('/asistente') else '' }}">
+                <i class="fa-solid fa-robot"></i> Asistente
             </a>
 
             <a href="/recuperacion" class="{{ 'active' if current_path == '/recuperacion' else '' }}">
@@ -124,6 +125,12 @@
 
             {% if is_admin %}
             <div class="menu-section">Admin</div>
+            <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') and not current_path.startswith('/soporte/reportes') else '' }}">
+                <i class="fa-solid fa-headset"></i> Tickets
+            </a>
+            <a href="/soporte/reportes" class="{{ 'active' if current_path.startswith('/soporte/reportes') else '' }}">
+                <i class="fa-solid fa-flag"></i> Reportes
+            </a>
             <a href="/admin/usuarios" class="{{ 'active' if current_path == '/admin/usuarios' else '' }}">
                 <i class="fa-solid fa-user-shield"></i> Usuarios
             </a>
@@ -294,6 +301,8 @@
             document.documentElement.removeAttribute('data-theme');
             if (icon) { icon.className = 'fa-solid fa-moon'; }
         }
+        /* R-083: notificar a otras páginas (p. ej. gráficos Chart.js en monitoreo) */
+        window.dispatchEvent(new CustomEvent('vigex-theme-change', { detail: { dark: dark } }));
     }
 
     /* Sincronizar icono al cargar (el tema ya fue aplicado por el script inline) */
@@ -420,6 +429,39 @@
     }
 }());
 </script>
+
+{% if auto_logout_minutes and auto_logout_minutes > 0 %}
+<!-- Auto-logout por inactividad (R-083-fix-9): {{ auto_logout_minutes }} min -->
+<script>
+(function () {
+    'use strict';
+    var TIMEOUT_MS = {{ auto_logout_minutes }} * 60 * 1000;
+    var timer;
+    var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+    function resetTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            /* Cerrar sesión por inactividad */
+            var f = document.createElement('form');
+            f.method = 'POST';
+            f.action = '/logout';
+            var t = document.createElement('input');
+            t.type = 'hidden'; t.name = 'csrf_token'; t.value = csrf;
+            f.appendChild(t);
+            document.body.appendChild(f);
+            f.submit();
+        }, TIMEOUT_MS);
+    }
+
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (ev) {
+        document.addEventListener(ev, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+}());
+</script>
+{% endif %}
 
 </body>
 </html>
