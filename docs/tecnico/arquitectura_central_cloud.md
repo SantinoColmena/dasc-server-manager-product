@@ -42,7 +42,7 @@ que agrega el estado de todas las instalaciones de clientes.
 
 - **Host:** VPS externo (Hetzner CX21, DigitalOcean Droplet, o similar)
 - **SO:** Ubuntu 22.04 LTS
-- **Dominio:** `central.vigexpyme.es` (o el dominio que se registre)
+- **Dominio:** `central.vigex.es` (o el dominio que se registre)
 - **HTTPS:** Let's Encrypt via certbot + nginx reverse proxy
 - **Puerto:** 443 → nginx → 127.0.0.1:8010 (vigex-central)
 - **Firewall:** UFW, solo 22/tcp, 80/tcp y 443/tcp
@@ -64,7 +64,7 @@ Cada instalación de cliente envía:
 Configuración en `config.env` de cada cliente:
 ```bash
 CENTRAL_SUPPORT_ENABLED=true
-CENTRAL_SUPPORT_URL=https://central.vigexpyme.es
+CENTRAL_SUPPORT_URL=https://central.vigex.es
 CENTRAL_SUPPORT_CLIENT_ID=cliente-empresa-a
 CENTRAL_SUPPORT_TOKEN=vigex-token-xxxxxxxxxxxxxxxxx
 ```

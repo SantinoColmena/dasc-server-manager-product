@@ -142,7 +142,7 @@ Para validar que el plan funciona, realizar trimestralmente:
 | Rol | Nombre | Teléfono | Email |
 |-----|--------|----------|-------|
 | Administrador principal | — | — | — |
-| Proveedor Vigex | — | — | soporte@vigexpyme.es |
+| Proveedor Vigex | — | — | soporte@vigex.es |
 | Proveedor de hosting/VPS | — | — | — |
 
 ---

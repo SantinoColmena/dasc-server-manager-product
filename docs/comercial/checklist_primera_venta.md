@@ -15,8 +15,8 @@ No es burocracia: cada punto evita un problema real.
 
 ## 2. Infraestructura de negocio lista
 
-- [ ] **Dominio profesional activo** (p.ej. `vigexpyme.es`) ⏳
-- [ ] **Email profesional** (`soporte@vigexpyme.es`) funcionando ⏳
+- [ ] **Dominio profesional activo** (p.ej. `vigex.es`) ⏳
+- [ ] **Email profesional** (`soporte@vigex.es`) funcionando ⏳
 - [ ] **Cuenta Stripe activa** con verificación KYC completada ⏳
 - [ ] **Payment Links** creados para cada plan ⏳
 - [ ] **Landing page publicada** con HTTPS real ⏳

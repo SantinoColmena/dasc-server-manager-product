@@ -1,6 +1,6 @@
 ﻿# Validación automática del paquete API instalable
 
-Fecha: 2026-06-07 23:35:02
+Fecha: 2026-06-11 01:51:25
 
 ## Resumen
 
@@ -21,7 +21,7 @@ El paquete API cumple las comprobaciones mínimas para seguir avanzando hacia in
 | Estado | Comprobación | Detalle |
 |---|---|---|
 | OK | Existe paquete API | Ruta esperada: deploy/api/package |
-| OK | Existe instalador API | Ruta esperada: deploy/api/install_dasc_api.sh |
+| OK | Existe instalador API | Ruta esperada: deploy/api/install_vigex_api.sh |
 | OK | No existe config.env real en paquete | El paquete no debe incluir secretos reales. |
 | OK | Existe config.env.example en paquete | El instalador debe crear config.env a partir de este ejemplo. |
 | OK | config.env.example incluye BACKUP_DB_HOST | Debe permitir configurar host de backup. |
@@ -64,7 +64,7 @@ El paquete API cumple las comprobaciones mínimas para seguir avanzando hacia in
 | OK | Instalador verifica cliente MariaDB | Debe asegurar mysqldump o mariadb-dump para backups. |
 | OK | Instalador tiene mensaje SSH remoto no bloqueante | Debe mostrar un mensaje final correcto sobre SSH no bloqueante. |
 | OK | Instalador mensaje SSH remoto bien cerrado | Evita líneas echo con comillas sin cerrar. |
-| OK | install_dasc_api.sh usa LF | Los scripts Linux deben tener LF. |
+| OK | install_vigex_api.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | generate_operational_report.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | check_api_installation.sh usa LF | Los scripts Linux deben tener LF. |
 | OK | run_full_db_backup.sh usa LF | Los scripts Linux deben tener LF. |

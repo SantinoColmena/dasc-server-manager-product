@@ -139,14 +139,14 @@ El instalador de nginx configura el proxy a `127.0.0.1:8010`.
 Luego obtén el certificado TLS:
 ```bash
 # Sustituye por tu dominio real
-sudo certbot --nginx -d central.vigexpyme.es
+sudo certbot --nginx -d central.vigex.es
 ```
 
 Certbot se encarga de renovar automáticamente via cron.
 
 Verifica que funciona:
 ```bash
-curl -I https://central.vigexpyme.es/health
+curl -I https://central.vigex.es/health
 # Debe devolver HTTP/2 200
 ```
 
@@ -172,7 +172,7 @@ sudo ufw reload
 
 ## Paso 7 — Registrar el primer cliente
 
-1. Accede al panel central: `https://central.vigexpyme.es`
+1. Accede al panel central: `https://central.vigex.es`
 2. Inicia sesión con el usuario `admin`.
 3. Navega a **Clientes → Registrar nuevo cliente**.
 4. Introduce el ID y nombre del cliente. Se generará un token seguro.
@@ -180,7 +180,7 @@ sudo ufw reload
 6. En el servidor del cliente, añade a `config.env`:
    ```bash
    CENTRAL_SUPPORT_ENABLED=true
-   CENTRAL_SUPPORT_URL=https://central.vigexpyme.es/api/v1/support/tickets
+   CENTRAL_SUPPORT_URL=https://central.vigex.es/api/v1/support/tickets
    CENTRAL_SUPPORT_CLIENT_ID=<id_del_cliente>
    CENTRAL_SUPPORT_CLIENT_NAME=<nombre_del_cliente>
    CENTRAL_SUPPORT_TOKEN=<token_copiado>
@@ -212,7 +212,7 @@ rsync -avz /root/backups/ tu_servidor_externo:/backups/vigex-central/
 - [ ] Usuario `vigex` creado, acceso root desactivado
 - [ ] `vigex-central` arrancado y en verde con `systemctl status`
 - [ ] Variables de entorno configuradas con contraseñas reales
-- [ ] nginx + HTTPS (Let's Encrypt) activo en `https://central.vigexpyme.es`
+- [ ] nginx + HTTPS (Let's Encrypt) activo en `https://central.vigex.es`
 - [ ] Hardening aplicado (fail2ban, UFW)
 - [ ] Al menos un cliente de prueba registrado y aparece en verde en Salud global
 - [ ] Backup de la Central configurado
@@ -233,7 +233,7 @@ sudo ss -tlnp | grep 8010
 curl http://127.0.0.1:8010/health
 
 # Comprobar que nginx hace el proxy correctamente
-curl -I https://central.vigexpyme.es/health
+curl -I https://central.vigex.es/health
 
 # Recargar nginx si cambias la config
 sudo nginx -t && sudo systemctl reload nginx

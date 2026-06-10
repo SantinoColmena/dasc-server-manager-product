@@ -23,7 +23,7 @@ como de la infraestructura del cliente.
 Cliente detecta el problema
         ↓
 Abre ticket en el panel (FAB → Reportar problema)
-  o envía email a soporte@vigexpyme.es
+  o envía email a soporte@vigex.es
         ↓
 Proveedor Vigex recibe notificación
         ↓

@@ -85,15 +85,15 @@ Cuando hayas activado el email profesional (ver `guia_dominio_email.md`), actual
 # Para Google Workspace (Gmail empresarial)
 NOTIF_SMTP_HOST=smtp.gmail.com
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@vigexpyme.es
+NOTIF_SMTP_USER=soporte@vigex.es
 NOTIF_SMTP_PASS=<contraseña_de_aplicación_de_google>
-NOTIF_EMAIL_FROM=soporte@vigexpyme.es
+NOTIF_EMAIL_FROM=soporte@vigex.es
 NOTIF_EMAIL_TO=admin@clienteempresa.com
 
 # Para Zoho Mail (alternativa más barata)
 NOTIF_SMTP_HOST=smtp.zoho.eu
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@vigexpyme.es
+NOTIF_SMTP_USER=soporte@vigex.es
 NOTIF_SMTP_PASS=<contraseña_zoho>
 ```
 

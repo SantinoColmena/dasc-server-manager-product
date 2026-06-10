@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio DASC
 
-Fecha: 2026-06-07 13:38:40
+Fecha: 2026-06-11 01:49:07
 
 Ruta revisada:
 
@@ -13,7 +13,36 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - AVISO: hay cambios pendientes.
 
 ~~~text
- M README.md
+ M deploy/api/package/config.env.example
+ M deploy/api/package/main.py
+ M deploy/api/package/static/css/estilo.css
+ M deploy/api/package/templates/base.html
+ M deploy/api/package/templates/configuracion.html
+ M deploy/api/package/templates/informes.html
+ M deploy/api/package/templates/login.html
+ M deploy/api/package/templates/monitoreo.html
+ M deploy/api/package/templates/soporte_ticket_detalle.html
+ M deploy/api/package/templates/soporte_tickets.html
+ M deploy/central-support/package/main.py
+ M deploy/central-support/package/templates/central_auditoria.html
+ M deploy/central-support/package/templates/central_clientes.html
+ M deploy/central-support/package/templates/central_dashboard.html
+ M deploy/central-support/package/templates/central_salud.html
+ M deploy/central-support/package/templates/central_ticket_detail.html
+ M docs/ROADMAP.md
+ M docs/comercial/checklist_primera_venta.md
+ M docs/comercial/onboarding_cliente.md
+ M docs/comercial/plantilla_propuesta.md
+ M docs/guias/guia_central_vps.md
+ M docs/guias/guia_dominio_email.md
+ M docs/guias/guia_stripe.md
+ M docs/tecnico/arquitectura_central_cloud.md
+ M docs/tecnico/gestion_incidentes.md
+ M docs/tecnico/plan_recuperacion.md
+?? deploy/api/package/static/css/dark-overrides.css
+?? deploy/api/package/templates/asistente.html
+?? docs/cumplimiento/
+?? docs/estrategia/
 ~~~
 
 ## 2. Estructura mínima obligatoria
@@ -34,7 +63,8 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ## 4. Archivos sensibles no recomendados
 
-- OK: no se han encontrado archivos sensibles típicos.
+- ERROR: encontrado archivo sensible o runtime `deploy\api\package\data\users.json`.
+- ERROR: encontrado archivo sensible o runtime `deploy\api\package\data\alerts.db`.
 
 ## 5. Variables sensibles por categoría
 
@@ -69,9 +99,14 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 - REVISAR: hay variables sensibles en código o instaladores. Es aceptable si se generan, se leen del entorno o se usan como nombre de variable, no como secreto real.
 
-  - deploy\api\install_dasc_api.sh -> contiene patrón `ADMIN_PASSWORD=`
-  - deploy\api\install_dasc_api.sh -> contiene patrón `LOGS_DB_PASS=`
-  - deploy\api\install_dasc_api.sh -> contiene patrón `SECRET_KEY=`
+  - deploy\api\install_vigex_api.sh -> contiene patrón `ADMIN_PASSWORD=`
+  - deploy\api\install_vigex_api.sh -> contiene patrón `LOGS_DB_PASS=`
+  - deploy\api\install_vigex_api.sh -> contiene patrón `SECRET_KEY=`
+  - deploy\api\onboarding_nuevo_cliente.sh -> contiene patrón `ADMIN_PASSWORD=`
+  - deploy\api\onboarding_nuevo_cliente.sh -> contiene patrón `SECRET_KEY=`
+  - deploy\api\package\main.py -> contiene patrón `TELEGRAM_BOT_TOKEN=`
+  - deploy\api\package\main.py -> contiene patrón `TELEGRAM_CHAT_ID=`
+  - deploy\api\package\main.py -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\backup-services\install_backup_services.sh -> contiene patrón `DB_BACKUP_PASS=`
   - deploy\central-support\install_central_support.sh -> contiene patrón `SECRET_KEY=`
@@ -82,16 +117,19 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 - REVISAR: hay variables sensibles mencionadas en documentación. Deben ser ejemplos o referencias, nunca secretos reales.
 
+  - docs\guias\guia_central_vps.md -> contiene patrón `ADMIN_PASSWORD=`
+  - docs\guias\guia_central_vps.md -> contiene patrón `SECRET_KEY=`
   - docs\pilotos\R-042_correccion_fallos_piloto_1.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\pilotos\piloto_1\incidencias.md -> contiene patrón `LOGS_DB_PASS=`
-  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `ADMIN_PASSWORD=`
-  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `LOGS_DB_PASS=`
-  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `DB_BACKUP_PASS=`
-  - docs\plantillas\plantilla_configuracion_perfil_dasc.md -> contiene patrón `SECRET_KEY=`
+  - docs\plantillas\plantilla_configuracion_perfil_vigex.md -> contiene patrón `ADMIN_PASSWORD=`
+  - docs\plantillas\plantilla_configuracion_perfil_vigex.md -> contiene patrón `LOGS_DB_PASS=`
+  - docs\plantillas\plantilla_configuracion_perfil_vigex.md -> contiene patrón `DB_BACKUP_PASS=`
+  - docs\plantillas\plantilla_configuracion_perfil_vigex.md -> contiene patrón `SECRET_KEY=`
+  - docs\tecnico\guia_antihackeo.md -> contiene patrón `ADMIN_PASSWORD=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `ADMIN_PASSWORD=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\tecnico\r-006_validacion_perfiles.md -> contiene patrón `SECRET_KEY=`
-  - docs\tecnico\r-007_mejoras_install_dasc_api.md -> contiene patrón `ADMIN_PASSWORD=`
+  - docs\tecnico\r-007_mejoras_install_vigex_api.md -> contiene patrón `ADMIN_PASSWORD=`
   - docs\validaciones\F6-GATE-02A_cierre_api_db_logs_2_servidores.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\validaciones\F6-GATE-04H_cierre_limpieza_ssh_allowed_hosts.md -> contiene patrón `LOGS_DB_PASS=`
   - docs\validaciones\R-051A_auditoria_ips_variables_instaladores.md -> contiene patrón `LOGS_DB_PASS=`
@@ -116,15 +154,14 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ## 7. Instaladores
 
-- OK: existe `deploy\api\install_dasc_api.sh`.
 - OK: existe `deploy\db\install_db.sh`.
 - OK: existe `deploy\backup-services\install_backup_services.sh`.
 
 ## 8. Resultado provisional
 
-Resultado: OK PARA SEGUIR CON LIMPIEZA Y PULIDO.
+Resultado: REVISAR ANTES DE AVANZAR.
 
-No se han encontrado archivos sensibles típicos ni secretos en ubicaciones inesperadas.
+Hay posibles archivos sensibles o secretos en ubicaciones inesperadas.
 
 Acciones recomendadas:
 

@@ -86,7 +86,7 @@ sudo bash /tmp/deploy/api/install_vigex_api.sh
 - [ ] URL del panel con HTTPS
 - [ ] Usuario y contraseña admin (en papel o gestor de contraseñas)
 - [ ] Guía rápida PDF: `deploy/api/package/static/docs/guia_alertas_telegram.pdf`
-- [ ] Contacto de soporte: `soporte@vigexpyme.es` y cómo abrir ticket desde el panel
+- [ ] Contacto de soporte: `soporte@vigex.es` y cómo abrir ticket desde el panel
 
 ---
 

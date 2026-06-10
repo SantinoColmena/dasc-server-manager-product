@@ -13,7 +13,7 @@ New-Item -ItemType Directory -Force $reportDir | Out-Null
 $reportPath = Join-Path $reportDir "validacion_paquete_api_instalable.md"
 
 $packageDir = Join-Path $root "deploy\api\package"
-$installer = Join-Path $root "deploy\api\install_dasc_api.sh"
+$installer = Join-Path $root "deploy\api\install_vigex_api.sh"
 
 $checks = New-Object System.Collections.Generic.List[object]
 
@@ -52,7 +52,7 @@ function Test-LFOnly {
 }
 
 Add-Check "Existe paquete API" (Test-Path -LiteralPath $packageDir) "Ruta esperada: deploy/api/package"
-Add-Check "Existe instalador API" (Test-Path -LiteralPath $installer) "Ruta esperada: deploy/api/install_dasc_api.sh"
+Add-Check "Existe instalador API" (Test-Path -LiteralPath $installer) "Ruta esperada: deploy/api/install_vigex_api.sh"
 
 Add-Check "No existe config.env real en paquete" (-not (Test-Path -LiteralPath (Join-Path $packageDir "config.env"))) "El paquete no debe incluir secretos reales."
 Add-Check "Existe config.env.example en paquete" (Test-Path -LiteralPath (Join-Path $packageDir "config.env.example")) "El instalador debe crear config.env a partir de este ejemplo."
@@ -121,7 +121,7 @@ Add-Check "Instalador verifica cliente MariaDB" ($installerContent -match "Verif
 Add-Check "Instalador tiene mensaje SSH remoto no bloqueante" ($installerContent -match 'echo "SSH remoto: modo no bloqueante\. Validacion completa en puerta posterior\."') "Debe mostrar un mensaje final correcto sobre SSH no bloqueante."
 Add-Check "Instalador mensaje SSH remoto bien cerrado" ($installerContent -notmatch '(?m)^\s*echo "SSH remoto:[^"]*$') "Evita líneas echo con comillas sin cerrar."
 
-Add-Check "install_dasc_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Linux deben tener LF."
+Add-Check "install_vigex_api.sh usa LF" (Test-LFOnly $installer) "Los scripts Linux deben tener LF."
 Add-Check "generate_operational_report.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\generate_operational_report.sh")) "Los scripts Linux deben tener LF."
 Add-Check "check_api_installation.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\check_api_installation.sh")) "Los scripts Linux deben tener LF."
 Add-Check "run_full_db_backup.sh usa LF" (Test-LFOnly (Join-Path $packageDir "tools\run_full_db_backup.sh")) "Los scripts Linux deben tener LF."

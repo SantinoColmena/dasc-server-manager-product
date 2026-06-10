@@ -28,7 +28,7 @@
 [TU_NOMBRE_COMPLETO]  
 [NIF/CIF]  
 [DIRECCIÓN_FISCAL]  
-soporte@vigexpyme.es  
+soporte@vigex.es  
 
 ---
 

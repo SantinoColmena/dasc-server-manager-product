@@ -8,7 +8,7 @@ Tiempo: 30-60 minutos para tenerlo todo activo.
 
 ## Paso 1 — Registrar el dominio
 
-### Opción recomendada: vigexpyme.es (mercado español, cercano al cliente)
+### Opción recomendada: vigex.es (mercado español, cercano al cliente)
 Alternativas según disponibilidad:
 - `vigexservermanager.es`
 - `vigexmanager.es`
@@ -26,7 +26,7 @@ Alternativas según disponibilidad:
 > **Recomendación**: Porkbun para el precio, OVH si prefieres proveedor europeo con factura en euros.
 
 ### Cómo registrar (pasos en Porkbun)
-1. Ve a porkbun.com → busca `vigexpyme.es`.
+1. Ve a porkbun.com → busca `vigex.es`.
 2. Añade al carrito → crea cuenta.
 3. Paga con tarjeta. Recibirás email de confirmación.
 4. El dominio queda activo en 15–30 minutos.
@@ -37,7 +37,7 @@ Alternativas según disponibilidad:
 
 ### Opción A: Zoho Mail (gratuito para 1 usuario, €1/mes para más)
 1. Ve a [zoho.com/es/mail](https://zoho.com/es/mail) → **Free plan** (hasta 5GB, 1 cuenta).
-2. Introduce tu dominio (`vigexpyme.es`).
+2. Introduce tu dominio (`vigex.es`).
 3. Zoho te dará registros DNS que debes añadir en el panel del registrador:
    - Registro MX (para recibir correo)
    - Registro TXT SPF (para no caer en spam)
@@ -68,7 +68,7 @@ TXT  @   "v=spf1 include:_spf.zoho.eu ~all"
          (ajusta según proveedor: Google = _spf.google.com)
 
 # DMARC — política ante fallos de autenticación
-TXT  _dmarc   "v=DMARC1; p=quarantine; rua=mailto:soporte@vigexpyme.es"
+TXT  _dmarc   "v=DMARC1; p=quarantine; rua=mailto:soporte@vigex.es"
 
 # CNAME para web (si usas Netlify/Vercel)
 CNAME  www   <subdomain>.netlify.app.
@@ -79,16 +79,16 @@ A      @     <IP de tu servidor de landing>
 
 ## Paso 4 — Actualizar la landing page y el panel
 
-1. En `web/index.html` busca todos los `TODO` con referencias a `vigexpyme.es`
+1. En `web/index.html` busca todos los `TODO` con referencias a `vigex.es`
    y sustituye por el dominio real que hayas registrado.
 
 2. En el servidor Vigex, actualiza `config.env`:
 ```bash
 NOTIF_SMTP_HOST=smtp.zoho.eu       # o smtp.gmail.com para Google Workspace
 NOTIF_SMTP_PORT=587
-NOTIF_SMTP_USER=soporte@vigexpyme.es
+NOTIF_SMTP_USER=soporte@vigex.es
 NOTIF_SMTP_PASS=<tu_contraseña>
-NOTIF_EMAIL_FROM=soporte@vigexpyme.es
+NOTIF_EMAIL_FROM=soporte@vigex.es
 ```
 
 3. Reinicia el servicio: `sudo systemctl restart vigex-api`
@@ -120,7 +120,7 @@ sudo nano /etc/nginx/sites-available/vigexpyme
 ```nginx
 server {
     listen 80;
-    server_name vigexpyme.es www.vigexpyme.es;
+    server_name vigex.es www.vigex.es;
     root /var/www/vigexpyme;
     index index.html;
     location / { try_files $uri $uri/ =404; }
@@ -128,7 +128,7 @@ server {
 ```
 ```bash
 sudo ln -s /etc/nginx/sites-available/vigexpyme /etc/nginx/sites-enabled/
-sudo certbot --nginx -d vigexpyme.es -d www.vigexpyme.es  # HTTPS gratis con Let's Encrypt
+sudo certbot --nginx -d vigex.es -d www.vigex.es  # HTTPS gratis con Let's Encrypt
 sudo systemctl reload nginx
 ```
 
@@ -137,7 +137,7 @@ sudo systemctl reload nginx
 ## Checklist de activación
 
 - [ ] Dominio registrado
-- [ ] Email profesional `soporte@vigexpyme.es` funcionando
+- [ ] Email profesional `soporte@vigex.es` funcionando
 - [ ] Registros MX, SPF, DKIM y DMARC configurados
 - [ ] Landing page publicada con dominio personalizado y HTTPS
 - [ ] config.env del servidor Vigex actualizado con SMTP real
