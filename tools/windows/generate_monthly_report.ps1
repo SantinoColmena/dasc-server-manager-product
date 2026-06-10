@@ -1,6 +1,6 @@
 ﻿param(
     [string]$RepoRoot = ".",
-    [string]$Cliente = "DASC interno",
+    [string]$Cliente = "Vigex interno",
     [string]$Periodo = "",
     [string]$OutputPath = ""
 )
@@ -92,7 +92,7 @@ if ($auditExists) {
     }
 }
 
-Add-Line $lines "# Informe mensual v1 - DASC Server Manager"
+Add-Line $lines "# Informe mensual v1 - Vigex Server Manager"
 Add-Line $lines ""
 Add-Line $lines "## 1. Datos generales"
 Add-Line $lines ""
@@ -108,7 +108,7 @@ Add-Line $lines ""
 
 Add-Line $lines "## 2. Resumen ejecutivo"
 Add-Line $lines ""
-Add-Line $lines "Este informe corresponde a la primera versión automática de informes mensuales de DASC Server Manager."
+Add-Line $lines "Este informe corresponde a la primera versión automática de informes mensuales de Vigex Server Manager."
 Add-Line $lines ""
 Add-Line $lines "En esta fase el informe se usa como herramienta interna de producto, no como informe comercial definitivo para clientes."
 Add-Line $lines ""

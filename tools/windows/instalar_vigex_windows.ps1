@@ -1,8 +1,8 @@
-﻿# instalar_dasc_windows.ps1 — Asistente de instalacion DASC desde Windows
+﻿# instalar_vigex_windows.ps1 — Asistente de instalacion Vigex desde Windows
 # R-067 / Ruta 8.2
-# Ejecutar desde el directorio raiz del repositorio DASC:
+# Ejecutar desde el directorio raiz del repositorio Vigex:
 #   Set-ExecutionPolicy -Scope Process Bypass
-#   .\tools\windows\instalar_dasc_windows.ps1
+#   .\tools\windows\instalar_vigex_windows.ps1
 
 param(
     [string]$ServidorIP     = "",
@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 function Write-Banner {
     Write-Host ""
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host "  DASC Server Manager - Asistente de despliegue desde Windows" -ForegroundColor Cyan
+    Write-Host "  Vigex Server Manager - Asistente de despliegue desde Windows" -ForegroundColor Cyan
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host "  Este asistente copia los archivos al servidor Linux y ejecuta" -ForegroundColor Gray
     Write-Host "  el instalador de forma guiada. Necesitaras la contrasena SSH." -ForegroundColor Gray
@@ -40,9 +40,9 @@ function Write-Info { param([string]$Msg) Write-Host "  [i]  $Msg" -ForegroundCo
 # ── Verificar directorio del repositorio ─────────────────────────────────────
 
 $RepoRoot = (Get-Location).Path
-if (-not (Test-Path "$RepoRoot\deploy\api\install_dasc_api.sh")) {
-    Write-Err "No se encuentra deploy\api\install_dasc_api.sh."
-    Write-Err "Ejecuta este script desde el directorio raiz del repositorio DASC."
+if (-not (Test-Path "$RepoRoot\deploy\api\install_vigex_api.sh")) {
+    Write-Err "No se encuentra deploy\api\install_vigex_api.sh."
+    Write-Err "Ejecuta este script desde el directorio raiz del repositorio Vigex."
     exit 1
 }
 
@@ -72,9 +72,9 @@ Write-Ok "SCP: $($scpCmd.Source)"
 
 Write-Step 2 "Selecciona la accion"
 Write-Host ""
-Write-Host "    1. Instalar DASC (servidor nuevo)" -ForegroundColor White
-Write-Host "    2. Actualizar DASC (preserva config.env y datos)" -ForegroundColor White
-Write-Host "    3. Hacer backup del panel DASC" -ForegroundColor White
+Write-Host "    1. Instalar Vigex (servidor nuevo)" -ForegroundColor White
+Write-Host "    2. Actualizar Vigex (preserva config.env y datos)" -ForegroundColor White
+Write-Host "    3. Hacer backup del panel Vigex" -ForegroundColor White
 Write-Host ""
 
 if ($AccionInstalar -notin @("instalar","actualizar","backup")) {
@@ -111,7 +111,7 @@ if ($UsuarioSSH -eq "root") {
 
 Write-Ok "Servidor: ${UsuarioSSH}@${ServidorIP}"
 
-# ── Perfil DASC (solo para instalacion nueva) ─────────────────────────────────
+# ── Perfil Vigex (solo para instalacion nueva) ─────────────────────────────────
 
 if ($AccionInstalar -eq "instalar") {
     Write-Step 4 "Perfil de despliegue"
@@ -160,7 +160,7 @@ Write-Info "Se te pedira la contrasena SSH para copiar los archivos."
 Write-Host ""
 
 $EpochSeg = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-$RemoteTmpDir = "/tmp/dasc-deploy-$EpochSeg"
+$RemoteTmpDir = "/tmp/vigex-deploy-$EpochSeg"
 
 # Crear directorio remoto
 & ssh "${UsuarioSSH}@${ServidorIP}" "mkdir -p $RemoteTmpDir"
@@ -184,17 +184,17 @@ Write-Info "Se te pedira la contrasena SSH de nuevo para la ejecucion remota."
 Write-Host ""
 
 $ScriptRemoto = switch ($AccionInstalar) {
-    "instalar"   { "$RemoteTmpDir/deploy/api/install_dasc_api.sh" }
-    "actualizar" { "$RemoteTmpDir/deploy/api/update_dasc_api.sh" }
-    "backup"     { "$RemoteTmpDir/deploy/api/backup_dasc_api.sh" }
+    "instalar"   { "$RemoteTmpDir/deploy/api/install_vigex_api.sh" }
+    "actualizar" { "$RemoteTmpDir/deploy/api/update_vigex_api.sh" }
+    "backup"     { "$RemoteTmpDir/deploy/api/backup_vigex_api.sh" }
 }
 
 $EnvPrefix = ""
 if ($AccionInstalar -eq "instalar") {
-    $EnvPrefix = "export DASC_PROFILE=$Perfil;"
+    $EnvPrefix = "export VIGEX_PROFILE=$Perfil;"
 }
 if ($AccionInstalar -eq "actualizar") {
-    $EnvPrefix = "export DASC_UPDATE_NONINTERACTIVE=1;"
+    $EnvPrefix = "export VIGEX_UPDATE_NONINTERACTIVE=1;"
 }
 
 $RemoteCmd = "chmod +x $ScriptRemoto && $EnvPrefix sudo -E bash $ScriptRemoto"
@@ -221,7 +221,7 @@ if ($SshExitCode -eq 0) {
     if ($AccionInstalar -eq "instalar") {
         Write-Host ""
         Write-Host "  Panel disponible en: http://${ServidorIP}:8000" -ForegroundColor Cyan
-        Write-Host "  Para HTTPS activa el proxy inverso: install_nginx_dasc_api.sh" -ForegroundColor Gray
+        Write-Host "  Para HTTPS activa el proxy inverso: install_nginx_vigex_api.sh" -ForegroundColor Gray
     }
 } else {
     Write-Host "=====================================================================" -ForegroundColor Red

@@ -1,6 +1,6 @@
-﻿# Auditoría Clean del repositorio DASC
+﻿# Auditoría Clean del repositorio Vigex
 
-Fecha: 2026-06-11 01:49:07
+Fecha: 2026-06-11 01:57:11
 
 Ruta revisada:
 
@@ -13,36 +13,14 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - AVISO: hay cambios pendientes.
 
 ~~~text
- M deploy/api/package/config.env.example
- M deploy/api/package/main.py
- M deploy/api/package/static/css/estilo.css
- M deploy/api/package/templates/base.html
- M deploy/api/package/templates/configuracion.html
- M deploy/api/package/templates/informes.html
- M deploy/api/package/templates/login.html
- M deploy/api/package/templates/monitoreo.html
- M deploy/api/package/templates/soporte_ticket_detalle.html
- M deploy/api/package/templates/soporte_tickets.html
- M deploy/central-support/package/main.py
- M deploy/central-support/package/templates/central_auditoria.html
- M deploy/central-support/package/templates/central_clientes.html
- M deploy/central-support/package/templates/central_dashboard.html
- M deploy/central-support/package/templates/central_salud.html
- M deploy/central-support/package/templates/central_ticket_detail.html
- M docs/ROADMAP.md
- M docs/comercial/checklist_primera_venta.md
- M docs/comercial/onboarding_cliente.md
- M docs/comercial/plantilla_propuesta.md
- M docs/guias/guia_central_vps.md
- M docs/guias/guia_dominio_email.md
- M docs/guias/guia_stripe.md
- M docs/tecnico/arquitectura_central_cloud.md
- M docs/tecnico/gestion_incidentes.md
- M docs/tecnico/plan_recuperacion.md
-?? deploy/api/package/static/css/dark-overrides.css
-?? deploy/api/package/templates/asistente.html
-?? docs/cumplimiento/
-?? docs/estrategia/
+ M deploy/api/onboarding_nuevo_cliente.sh
+ M deploy/api/update_vigex_api.sh
+ M docs/validaciones/validacion_paquete_api_instalable.md
+ M tools/windows/check_repo_clean.ps1
+ M tools/windows/generate_monthly_report.ps1
+ M tools/windows/instalar_vigex_windows.ps1
+ M tools/windows/normalize_lf_hook.ps1
+ M tools/windows/smoke_test_release.ps1
 ~~~
 
 ## 2. Estructura mínima obligatoria
@@ -154,6 +132,7 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ## 7. Instaladores
 
+- OK: existe `deploy\api\install_vigex_api.sh`.
 - OK: existe `deploy\db\install_db.sh`.
 - OK: existe `deploy\backup-services\install_backup_services.sh`.
 

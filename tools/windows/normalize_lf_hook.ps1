@@ -1,4 +1,4 @@
-# DASC - Hook PostToolUse para Claude Code
+# Vigex - Hook PostToolUse para Claude Code
 # Normaliza finales de linea CRLF -> LF en archivos .sh y .py tras editarlos.
 # Motivo: .gitattributes obliga a LF en *.sh/*.py y
 # tools/windows/check_api_package_installable.ps1 falla si un script bash tiene CRLF.
@@ -42,7 +42,7 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 $name = Split-Path -Leaf $path
 $result = @{
-    systemMessage = "DASC: finales de linea normalizados a LF en $name (requerido por .gitattributes)."
+    systemMessage = "Vigex: finales de linea normalizados a LF en $name (requerido por .gitattributes)."
 } | ConvertTo-Json -Compress
 
 [Console]::Out.Write($result)

@@ -28,7 +28,7 @@ function Write-Status {
 }
 
 Write-Host ""
-Write-Host "=== DASC Server Manager — Smoke Test Release ===" -ForegroundColor Cyan
+Write-Host "=== Vigex Server Manager — Smoke Test Release ===" -ForegroundColor Cyan
 Write-Host "  Raiz del repo: $root"
 Write-Host "  Fecha        : $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 Write-Host ""
@@ -116,7 +116,7 @@ $requiredFiles = @(
     "config.env.example",
     "deploy\api\package\requirements.txt",
     "deploy\api\package\main.py",
-    "deploy\api\install_dasc_api.sh",
+    "deploy\api\install_vigex_api.sh",
     "deploy\db\install_db.sh",
     "deploy\backup-services\install_backup_services.sh",
     "deploy\proxy\install_reverse_proxy.sh",

@@ -108,7 +108,7 @@ $secretPatterns = @(
     "SECRET_KEY="
 )
 
-Add-ReportLine "# Auditoría Clean del repositorio DASC"
+Add-ReportLine "# Auditoría Clean del repositorio Vigex"
 Add-ReportLine ""
 Add-ReportLine "Fecha: $now"
 Add-ReportLine ""
@@ -331,10 +331,10 @@ Add-ReportLine "## 7. Instaladores"
 Add-ReportLine ""
 
 $installerCandidates = @(
-    "deploy\api\install_dasc_api.sh",
+    "deploy\api\install_vigex_api.sh",
     "deploy\db\install_db.sh",
     "deploy\backup-services\install_backup_services.sh",
-    "scripts\install_dasc_api.sh",
+    "scripts\install_vigex_api.sh",
     "scripts\install_db.sh",
     "scripts\install_backup_services.sh"
 )

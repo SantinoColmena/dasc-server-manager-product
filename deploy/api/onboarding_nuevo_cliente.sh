@@ -9,7 +9,7 @@
 # Uso:
 #   sudo bash deploy/api/onboarding_nuevo_cliente.sh
 #   O con variables ya definidas:
-#   Vigex_CLIENTE_NOMBRE="Empresa S.L." Vigex_PERFIL=standard \
+#   Vigex_CLIENTE_NOMBRE="Empresa S.L." VIGEX_PERFIL=standard \
 #     sudo bash deploy/api/onboarding_nuevo_cliente.sh
 #
 # Requisitos:
@@ -68,19 +68,19 @@ info "ID del cliente: ${Vigex_CLIENTE_ID}"
 # ── Paso 2: Perfil de despliegue ─────────────────────────────────────────────
 section "PASO 2 — Perfil de despliegue"
 
-if [[ -z "${Vigex_PERFIL:-}" ]]; then
+if [[ -z "${VIGEX_PERFIL:-}" ]]; then
     echo "Perfiles disponibles:"
     echo "  lite     — 1 servidor + copia externa (recomendado para PyME pequeña)"
     echo "  standard — 2 servidores: API/backups + DB/logs (recomendado)"
     echo "  pro      — 3 servidores: API / DB / backups"
     echo ""
-    read -rp "Perfil [lite/standard/pro, defecto: standard]: " Vigex_PERFIL
-    Vigex_PERFIL="${Vigex_PERFIL:-standard}"
+    read -rp "Perfil [lite/standard/pro, defecto: standard]: " VIGEX_PERFIL
+    VIGEX_PERFIL="${VIGEX_PERFIL:-standard}"
 fi
 
-case "${Vigex_PERFIL}" in
-    lite|standard|pro) ok "Perfil seleccionado: ${Vigex_PERFIL}" ;;
-    *) error "Perfil no reconocido: ${Vigex_PERFIL}. Usa lite, standard o pro."; exit 1 ;;
+case "${VIGEX_PERFIL}" in
+    lite|standard|pro) ok "Perfil seleccionado: ${VIGEX_PERFIL}" ;;
+    *) error "Perfil no reconocido: ${VIGEX_PERFIL}. Usa lite, standard o pro."; exit 1 ;;
 esac
 
 # ── Paso 3: IPs de los servidores ────────────────────────────────────────────
@@ -89,18 +89,18 @@ section "PASO 3 — IPs de los servidores"
 read -rp "IP del servidor API/panel (este servidor) [127.0.0.1]: " IP_API
 IP_API="${IP_API:-127.0.0.1}"
 
-if [[ "${Vigex_PERFIL}" == "standard" || "${Vigex_PERFIL}" == "pro" ]]; then
+if [[ "${VIGEX_PERFIL}" == "standard" || "${VIGEX_PERFIL}" == "pro" ]]; then
     read -rp "IP del servidor DB/logs: " IP_DB
     if [[ -z "${IP_DB:-}" ]]; then
-        error "La IP del servidor DB es obligatoria para el perfil ${Vigex_PERFIL}."; exit 1
+        error "La IP del servidor DB es obligatoria para el perfil ${VIGEX_PERFIL}."; exit 1
     fi
 else
     IP_DB="127.0.0.1"
 fi
 
-if [[ "${Vigex_PERFIL}" == "standard" ]]; then
+if [[ "${VIGEX_PERFIL}" == "standard" ]]; then
     IP_BACKUP="${IP_API}"  # en standard, backups en el mismo host que API
-elif [[ "${Vigex_PERFIL}" == "pro" ]]; then
+elif [[ "${VIGEX_PERFIL}" == "pro" ]]; then
     read -rp "IP del servidor de backups: " IP_BACKUP
     if [[ -z "${IP_BACKUP:-}" ]]; then
         error "La IP del servidor de backups es obligatoria para el perfil pro."; exit 1
@@ -169,7 +169,7 @@ CONFIG_TARGET="/tmp/config_${Vigex_CLIENTE_ID}_$(date +%Y%m%d_%H%M%S).env"
 cat > "${CONFIG_TARGET}" << ENVEOF
 # Vigex — config.env generado por onboarding_nuevo_cliente.sh
 # Cliente: ${Vigex_CLIENTE_NOMBRE}
-# Perfil:  ${Vigex_PERFIL}
+# Perfil:  ${VIGEX_PERFIL}
 # Fecha:   $(date +%Y-%m-%d)
 # ADVERTENCIA: Este fichero contiene secretos. No commitear al repositorio.
 
@@ -177,7 +177,7 @@ SECRET_KEY=${SECRET_KEY}
 ADMIN_USER=admin
 ADMIN_PASSWORD=${ADMIN_HASH}
 
-VIGEX_PROFILE=${Vigex_PERFIL}
+VIGEX_PROFILE=${VIGEX_PERFIL}
 
 # ── IPs de los servidores
 Vigex_API_HOST=${IP_API}
@@ -217,7 +217,7 @@ echo "¿Ejecutar el instalador ahora con la config generada? [s/N]"
 read -r EJECUTAR_INSTALL
 if [[ "${EJECUTAR_INSTALL,,}" == "s" ]]; then
     info "Copiando config.env y lanzando el instalador..."
-    export VIGEX_PROFILE="${Vigex_PERFIL}"
+    export VIGEX_PROFILE="${VIGEX_PERFIL}"
     export Vigex_API_HOST="${IP_API}"
     export Vigex_DB_HOST="${IP_DB}"
     export Vigex_BACKUP_HOST="${IP_BACKUP}"
@@ -239,7 +239,7 @@ section "RESUMEN DEL ONBOARDING"
 
 echo "  Cliente:          ${Vigex_CLIENTE_NOMBRE}"
 echo "  ID:               ${Vigex_CLIENTE_ID}"
-echo "  Perfil:           ${Vigex_PERFIL}"
+echo "  Perfil:           ${VIGEX_PERFIL}"
 echo "  IP API:           ${IP_API}"
 echo "  IP DB:            ${IP_DB}"
 echo "  IP Backup:        ${IP_BACKUP}"

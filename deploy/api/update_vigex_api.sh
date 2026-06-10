@@ -57,7 +57,7 @@ echo "  Se actualizarán : main.py, templates/, static/, tools/, requirements.tx
 echo "  Se conservarán  : config.env, .ssh/, data/, reports/"
 echo
 
-if [[ -z "${Vigex_UPDATE_NONINTERACTIVE:-}" ]]; then
+if [[ -z "${VIGEX_UPDATE_NONINTERACTIVE:-}" ]]; then
   read -rp "¿Continuar con la actualización? (S/N): " CONFIRM
   if [[ "${CONFIRM,,}" != "s" && "${CONFIRM,,}" != "si" ]]; then
     echo "Actualización cancelada."
