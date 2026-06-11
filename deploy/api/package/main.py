@@ -9237,6 +9237,7 @@ def asistente_page(request: Request):
         "gemini":    RAG_GEMINI_MODEL,
         "openai":    RAG_OPENAI_MODEL,
         "groq":      RAG_GROQ_MODEL,
+        "central":   "Central",
     }
     context["rag_model"]         = _model_map.get(RAG_LLM_PROVIDER, RAG_OLLAMA_MODEL)
     context["rag_faq_total"]     = len(_FAQ_ENTRIES)

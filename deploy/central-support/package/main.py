@@ -1391,7 +1391,8 @@ def _c_llm_call_anthropic(system: str, messages: list[dict]) -> str:
         headers={
             "x-api-key": _C_ANTHROPIC_KEY,
             "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Vigex/1.0",
         },
         method="POST",
     )
@@ -1412,7 +1413,7 @@ def _c_llm_call_openai_compat(url: str, api_key: str, model: str,
     req = _UrlRequest(
         url,
         data=payload,
-        headers={"Authorization": f"Bearer {api_key}", "content-type": "application/json"},
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "User-Agent": "Vigex/1.0"},
         method="POST",
     )
     with _urlopen(req, timeout=30) as resp:
@@ -1433,7 +1434,7 @@ def _c_llm_call_gemini(system: str, messages: list[dict]) -> str:
         "generationConfig": {"maxOutputTokens": _C_LLM_MAX_TOKENS},
     }).encode("utf-8")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{_C_GEMINI_MODEL}:generateContent?key={_C_GEMINI_KEY}"
-    req = _UrlRequest(url, data=payload, headers={"content-type": "application/json"}, method="POST")
+    req = _UrlRequest(url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "Vigex/1.0"}, method="POST")
     with _urlopen(req, timeout=30) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     return data["candidates"][0]["content"]["parts"][0]["text"].strip()
@@ -1602,6 +1603,51 @@ def _c_tg_send(chat_id: str, texto: str, parse_mode: str = "HTML") -> dict:
     )
     with _urlopen(req, timeout=15) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def _c_tg_poll_loop() -> None:
+    """Polling thread: responde a /start y /chatid con el chat_id del usuario."""
+    if not _C_TG_TOKEN:
+        return
+    offset = 0
+    while True:
+        try:
+            url = (
+                f"https://api.telegram.org/bot{_C_TG_TOKEN}/getUpdates"
+                f"?timeout=30&offset={offset}"
+            )
+            req = _UrlRequest(url, method="GET")
+            with _urlopen(req, timeout=40) as resp:
+                updates = json.loads(resp.read().decode("utf-8")).get("result", [])
+            for upd in updates:
+                offset = upd["update_id"] + 1
+                msg = upd.get("message") or upd.get("edited_message")
+                if not msg:
+                    continue
+                texto = (msg.get("text") or "").strip()
+                chat_id = str(msg["chat"]["id"])
+                if texto.startswith("/start") or texto.startswith("/chatid"):
+                    respuesta = (
+                        f"👋 <b>Hola desde @{_C_TG_USERNAME}</b>\n\n"
+                        f"Tu <b>Chat ID</b> es:\n<code>{chat_id}</code>\n\n"
+                        f"Pégalo en <code>TELEGRAM_CHAT_ID</code> de tu config Vigex."
+                    )
+                    try:
+                        _c_tg_send(chat_id, respuesta)
+                    except Exception:
+                        pass
+        except Exception:
+            _time_mod.sleep(5)
+
+
+def _c_tg_start_polling() -> None:
+    if not _C_TG_TOKEN:
+        return
+    t = threading.Thread(target=_c_tg_poll_loop, daemon=True, name="tg-poll")
+    t.start()
+
+
+_c_tg_start_polling()
 
 
 class _TelegramSendRequest(BaseModel):

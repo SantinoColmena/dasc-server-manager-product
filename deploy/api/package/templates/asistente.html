@@ -323,7 +323,7 @@
                 <h2><i class="fa-solid fa-robot" style="color:#6366f1;margin-right:8px;"></i>Asistente Vigex</h2>
                 <p>{{ rag_faq_total }} documentos indexados</p>
             </div>
-            {% set _cloud = rag_provider in ('anthropic', 'gemini', 'openai', 'groq') %}
+            {% set _cloud = rag_provider in ('anthropic', 'gemini', 'openai', 'groq', 'central') %}
             <span class="rag-model-badge {% if _cloud %}anthropic{% endif %}">
                 {% if rag_provider == 'anthropic' %}
                     <span class="rag-status-dot"></span> Claude · {{ rag_model }}
@@ -333,6 +333,8 @@
                     <span class="rag-status-dot"></span> OpenAI · {{ rag_model }}
                 {% elif rag_provider == 'groq' %}
                     <span class="rag-status-dot"></span> Groq · {{ rag_model }}
+                {% elif rag_provider == 'central' %}
+                    <span class="rag-status-dot"></span> Vigex Central · Groq
                 {% else %}
                     <span class="rag-status-dot {% if not rag_status.disponible %}off{% elif not rag_status.modelo_ok %}warn{% endif %}"></span>
                     Ollama · {{ rag_model }}
