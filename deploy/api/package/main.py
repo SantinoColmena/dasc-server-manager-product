@@ -10107,16 +10107,13 @@ def init_cumplimiento_db() -> None:
 
 @app.get("/cumplimiento")
 async def cumplimiento_page(request: Request):
-    user = request.session.get("user")
-    if not user:
+    if not is_authenticated(request):
         return RedirectResponse("/login", status_code=302)
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    if not has_permission(request, "cumplimiento"):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
-    return templates.TemplateResponse(
-        "cumplimiento.html",
-        {"request": request, "user": user, "perms": perms},
-    )
+    context = get_common_context(request)
+    context["current_path"] = "/cumplimiento"
+    return templates.TemplateResponse(request, "cumplimiento.html", context)
 
 
 @app.get("/api/cumplimiento/controles")
@@ -10128,8 +10125,8 @@ async def api_cumplimiento_controles(request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
 
     conn = get_cumplimiento_db()
@@ -10461,8 +10458,8 @@ async def api_cumplimiento_evidencias(request: Request, familia_id: int | None =
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
 
     limit = min(max(1, limit), 200)
@@ -10502,8 +10499,8 @@ async def api_cumplimiento_evidencias_control(request: Request, control_id: str,
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
 
     limit = min(max(1, limit), 50)
@@ -10581,8 +10578,8 @@ async def api_cumplimiento_estado(request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
 
     conn = get_cumplimiento_db()
@@ -10842,8 +10839,8 @@ async def api_cumplimiento_dossier(request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
 
     conn = get_cumplimiento_db()
@@ -11091,17 +11088,13 @@ async def incidentes_page(request: Request):
     user = request.session.get("user")
     if not user:
         return RedirectResponse("/login")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    if not has_permission(request, "cumplimiento"):
         raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
-    return templates.TemplateResponse(
-        "incidentes.html",
-        _base_context(request) | {
-            "current_path": "/incidentes",
-            "tipos": _INC_TIPOS,
-            "severidades": _INC_SEVERIDADES,
-        },
-    )
+    context = get_common_context(request)
+    context["current_path"] = "/incidentes"
+    context["tipos"] = _INC_TIPOS
+    context["severidades"] = _INC_SEVERIDADES
+    return templates.TemplateResponse(request, "incidentes.html", context)
 
 
 # ── API: listar incidentes ───────────────────────────────────────────
@@ -11111,8 +11104,8 @@ async def api_incidentes_list(request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso")
 
     conn = get_cumplimiento_db()
@@ -11130,7 +11123,7 @@ async def api_incidentes_crear(request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    if not is_admin(user):
+    if not is_admin(request):
         raise HTTPException(status_code=403, detail="Solo administradores pueden crear incidentes")
 
     body = await request.json()
@@ -11180,7 +11173,7 @@ async def api_incidentes_actualizar(inc_id: int, request: Request):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    if not is_admin(user):
+    if not is_admin(request):
         raise HTTPException(status_code=403, detail="Solo administradores pueden actualizar incidentes")
 
     body = await request.json()
@@ -11243,8 +11236,8 @@ async def api_incidentes_plantilla(inc_id: int, request: Request, fase: str = "2
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
-    perms = get_user_permissions(user)
-    if not perms.get("cumplimiento") and not is_admin(user):
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
         raise HTTPException(status_code=403, detail="Sin permiso")
     if fase not in ("24h", "72h"):
         raise HTTPException(status_code=400, detail="fase debe ser '24h' o '72h'")
