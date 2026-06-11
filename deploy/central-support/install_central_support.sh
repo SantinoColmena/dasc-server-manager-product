@@ -135,6 +135,15 @@ VIGEX_CENTRAL_OLLAMA_MODEL=mistral
 VIGEX_CENTRAL_LLM_RATE_REQS=30
 VIGEX_CENTRAL_LLM_RATE_WIN=60
 VIGEX_CENTRAL_LLM_MAX_TOKENS=700
+
+# ── Bot Telegram centralizado @VigexBot (R-098) ───────────────────
+# Token del bot único de Vigex. Los clientes solo necesitan su chat_id.
+# Obtén el token creando el bot con @BotFather en Telegram.
+VIGEX_CENTRAL_TELEGRAM_BOT_TOKEN=
+VIGEX_CENTRAL_TELEGRAM_BOT_USERNAME=VigexBot
+# Rate limiting: máximo de mensajes Telegram por cliente en la ventana
+VIGEX_CENTRAL_TELEGRAM_RATE_REQS=20
+VIGEX_CENTRAL_TELEGRAM_RATE_WIN=60
 EOF
 
   chmod 600 "${ENV_FILE}"

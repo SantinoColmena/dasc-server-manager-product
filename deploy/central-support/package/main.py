@@ -1545,6 +1545,176 @@ async def proxy_asistente_estado(
     }
 
 
+# =====================================================================
+# R-098 / Fase 14 — Bot Telegram centralizado (@VigexBot)
+#
+# Un único bot de Telegram gestionado por Vigex. Los clientes solo
+# necesitan su TELEGRAM_CHAT_ID — nunca crean ni gestionan bots propios.
+#
+# Flujo de configuración del cliente:
+#   1. El cliente abre Telegram y escribe a @VigexBot el comando /chatid
+#   2. El bot responde con su chat_id
+#   3. El cliente pega ese chat_id en su config Vigex
+#
+# Config en Central config.env:
+#   VIGEX_CENTRAL_TELEGRAM_BOT_TOKEN = token del bot @VigexBot
+#   VIGEX_CENTRAL_TELEGRAM_BOT_USERNAME = nombre público (ej. VigexBot)
+#   VIGEX_CENTRAL_TELEGRAM_RATE_REQS = 20  (mensajes por cliente/ventana)
+#   VIGEX_CENTRAL_TELEGRAM_RATE_WIN  = 60  (segundos)
+# =====================================================================
+
+_C_TG_TOKEN    = os.getenv("VIGEX_CENTRAL_TELEGRAM_BOT_TOKEN", "").strip()
+_C_TG_USERNAME = os.getenv("VIGEX_CENTRAL_TELEGRAM_BOT_USERNAME", "VigexBot").strip()
+_C_TG_RATE_REQS = int(os.getenv("VIGEX_CENTRAL_TELEGRAM_RATE_REQS", "20"))
+_C_TG_RATE_WIN  = int(os.getenv("VIGEX_CENTRAL_TELEGRAM_RATE_WIN",  "60"))
+
+_c_tg_rate_buckets: dict[str, list[float]] = {}
+_c_tg_rate_lock = threading.Lock()
+
+
+def _c_tg_rate_ok(cliente_id: str) -> bool:
+    now = _time_mod.time()
+    window_start = now - _C_TG_RATE_WIN
+    with _c_tg_rate_lock:
+        bucket = [t for t in _c_tg_rate_buckets.get(cliente_id, []) if t > window_start]
+        if len(bucket) >= _C_TG_RATE_REQS:
+            return False
+        bucket.append(now)
+        _c_tg_rate_buckets[cliente_id] = bucket
+    return True
+
+
+def _c_tg_send(chat_id: str, texto: str, parse_mode: str = "HTML") -> dict:
+    """Llama a sendMessage del bot centralizado."""
+    if not _C_TG_TOKEN:
+        raise ValueError("VIGEX_CENTRAL_TELEGRAM_BOT_TOKEN no configurado en Central")
+    payload = json.dumps({
+        "chat_id": chat_id,
+        "text": texto,
+        "parse_mode": parse_mode,
+        "disable_web_page_preview": True,
+    }).encode("utf-8")
+    req = _UrlRequest(
+        f"https://api.telegram.org/bot{_C_TG_TOKEN}/sendMessage",
+        data=payload,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        method="POST",
+    )
+    with _urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+class _TelegramSendRequest(BaseModel):
+    chat_id: str
+    texto: str
+    parse_mode: str = "HTML"
+
+
+@app.post("/api/v1/alertas/telegram")
+async def proxy_telegram_send(
+    body: _TelegramSendRequest,
+    x_vigex_client_id: Optional[str] = Header(default=None, alias="X-Vigex-Client-Id"),
+    x_vigex_client_token: Optional[str] = Header(default=None, alias="X-Vigex-Client-Token"),
+):
+    """
+    Proxy Telegram centralizado (R-098).
+    El panel cliente envía chat_id + texto; Central lo reenvía via @VigexBot.
+    El cliente nunca necesita token de bot propio.
+    """
+    if CENTRAL_AUTH_ENABLED:
+        if not x_vigex_client_id or not x_vigex_client_token:
+            raise HTTPException(status_code=401, detail="Autenticación requerida")
+        if not validate_client_token(x_vigex_client_id, x_vigex_client_token):
+            raise HTTPException(status_code=403, detail="Token de cliente inválido")
+
+    cliente_id = x_vigex_client_id or "anonimo"
+
+    if not _c_tg_rate_ok(cliente_id):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Límite de mensajes Telegram alcanzado ({_C_TG_RATE_REQS}/{_C_TG_RATE_WIN}s)",
+        )
+
+    if not body.chat_id.strip():
+        raise HTTPException(status_code=400, detail="chat_id es obligatorio")
+
+    try:
+        resultado = _c_tg_send(body.chat_id.strip(), body.texto, body.parse_mode)
+    except (_HTTPError, _URLError) as exc:
+        raise HTTPException(status_code=502, detail=f"Error enviando a Telegram: {exc}")
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+    return {"ok": resultado.get("ok", False), "message_id": resultado.get("result", {}).get("message_id")}
+
+
+@app.get("/api/v1/alertas/telegram/detectar-chat")
+async def proxy_telegram_detectar(
+    x_vigex_client_id: Optional[str] = Header(default=None, alias="X-Vigex-Client-Id"),
+    x_vigex_client_token: Optional[str] = Header(default=None, alias="X-Vigex-Client-Token"),
+):
+    """
+    Devuelve los chats recientes que han escrito al bot (getUpdates).
+    El cliente lo usa para descubrir su chat_id tras escribir /chatid al bot.
+    """
+    if CENTRAL_AUTH_ENABLED:
+        if not x_vigex_client_id or not x_vigex_client_token:
+            raise HTTPException(status_code=401, detail="Autenticación requerida")
+        if not validate_client_token(x_vigex_client_id, x_vigex_client_token):
+            raise HTTPException(status_code=403, detail="Token inválido")
+
+    if not _C_TG_TOKEN:
+        raise HTTPException(status_code=503, detail="Bot Telegram centralizado no configurado")
+
+    req = _UrlRequest(
+        f"https://api.telegram.org/bot{_C_TG_TOKEN}/getUpdates",
+        method="GET",
+    )
+    try:
+        with _urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except (_HTTPError, _URLError) as exc:
+        raise HTTPException(status_code=502, detail=f"Error consultando Telegram: {exc}")
+
+    if not data.get("ok"):
+        return {"chats": []}
+
+    unique: dict[str, dict] = {}
+    for item in reversed(data.get("result", [])):
+        msg = item.get("message") or item.get("edited_message") or item.get("channel_post") or {}
+        chat = msg.get("chat") or {}
+        cid = str(chat.get("id", "")).strip()
+        if not cid or cid in unique:
+            continue
+        chat_type = chat.get("type", "unknown")
+        if chat_type == "private":
+            nombre = chat.get("username") and f"@{chat['username']}" or \
+                     " ".join(filter(None, [chat.get("first_name"), chat.get("last_name")])) or "(privado)"
+        else:
+            nombre = chat.get("title") or chat.get("username") or "(grupo)"
+        unique[cid] = {"chat_id": cid, "nombre": nombre, "tipo": chat_type}
+
+    return {"chats": list(unique.values()), "bot": _C_TG_USERNAME}
+
+
+@app.get("/api/v1/alertas/telegram/estado")
+async def proxy_telegram_estado(
+    x_vigex_client_id: Optional[str] = Header(default=None, alias="X-Vigex-Client-Id"),
+    x_vigex_client_token: Optional[str] = Header(default=None, alias="X-Vigex-Client-Token"),
+):
+    """Informa si el bot centralizado está configurado y cuál es su username."""
+    if CENTRAL_AUTH_ENABLED:
+        if not x_vigex_client_id or not x_vigex_client_token:
+            raise HTTPException(status_code=401, detail="Autenticación requerida")
+        if not validate_client_token(x_vigex_client_id, x_vigex_client_token):
+            raise HTTPException(status_code=403, detail="Token inválido")
+    return {
+        "disponible": bool(_C_TG_TOKEN),
+        "bot_username": _C_TG_USERNAME,
+        "rate_limit": {"reqs": _C_TG_RATE_REQS, "ventana_seg": _C_TG_RATE_WIN},
+    }
+
+
 @app.get("/auditoria", response_class=HTMLResponse)
 def central_auditoria(request: Request):
     guard = require_admin(request)

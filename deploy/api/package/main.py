@@ -252,9 +252,12 @@ def build_ssh_base_command(host: str) -> list[str]:
 # =====================
 # ALERTAS TELEGRAM
 # =====================
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_BOT_TOKEN    = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip()
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+TELEGRAM_CHAT_ID      = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+# R-098: modo centralizado — "central" usa @VigexBot vía Vigex Central;
+#        "local" mantiene el comportamiento original con bot propio.
+TELEGRAM_MODE = os.getenv("VIGEX_TELEGRAM_MODE", "central").strip().lower()
 ALERTS_DB_PATH = os.getenv("ALERTS_DB_PATH", "data/alerts.db")
 CUMPLIMIENTO_DB_PATH = os.getenv("CUMPLIMIENTO_DB_PATH", "data/cumplimiento.db")
 ALERTS_DEFAULT_CHANNEL = os.getenv("ALERTS_DEFAULT_CHANNEL", "telegram")
@@ -824,6 +827,27 @@ def ensure_default_recipient() -> None:
 
 
 def fetch_recent_telegram_chats() -> list[dict[str, Any]]:
+    # R-098: en modo central, pide los chats al proxy de Vigex Central
+    if TELEGRAM_MODE == "central":
+        if not CENTRAL_SUPPORT_URL or not CENTRAL_SUPPORT_TOKEN:
+            return []
+        parsed = _urlparse(CENTRAL_SUPPORT_URL)
+        base = f"{parsed.scheme}://{parsed.netloc}"
+        req = UrlRequest(
+            f"{base}/api/v1/alertas/telegram/detectar-chat",
+            headers={
+                "X-Vigex-Client-Id": CENTRAL_SUPPORT_CLIENT_ID,
+                "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
+            },
+            method="GET",
+        )
+        try:
+            with urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            return data.get("chats", [])
+        except Exception:
+            return []
+
     token = TELEGRAM_BOT_TOKEN
     if not token:
         return []
@@ -872,15 +896,48 @@ def fetch_recent_telegram_chats() -> list[dict[str, Any]]:
 
 
 
-def send_telegram_message(text: str, chat_id: str | None = None) -> dict[str, Any]:
-    token = TELEGRAM_BOT_TOKEN
-    target_chat = (chat_id or "").strip()
+def _send_telegram_central(text: str, chat_id: str) -> dict[str, Any]:
+    """R-098: envía el mensaje via el proxy Telegram de Vigex Central."""
+    parsed = _urlparse(CENTRAL_SUPPORT_URL)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    url = f"{base}/api/v1/alertas/telegram"
+    payload = json.dumps({"chat_id": chat_id, "texto": text, "parse_mode": "HTML"}).encode("utf-8")
+    req = UrlRequest(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "X-Vigex-Client-Id": CENTRAL_SUPPORT_CLIENT_ID,
+            "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return {"ok": bool(data.get("ok")), "status": resp.status, "text": json.dumps(data)}
+    except HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else str(e)
+        return {"ok": False, "status": e.code, "text": body}
+    except URLError as e:
+        return {"ok": False, "status": "ERROR", "text": f"No se pudo conectar con Vigex Central: {e.reason}"}
 
-    if not token:
-        return {"ok": False, "status": "ERROR", "text": "Falta TELEGRAM_BOT_TOKEN en config.env"}
+
+def send_telegram_message(text: str, chat_id: str | None = None) -> dict[str, Any]:
+    target_chat = (chat_id or "").strip()
 
     if not target_chat:
         return {"ok": False, "status": "ERROR", "text": "No hay destinatario configurado. Añade un chat o grupo en Alertas."}
+
+    # R-098: modo centralizado — usa el bot @VigexBot de Vigex Central
+    if TELEGRAM_MODE == "central":
+        if not CENTRAL_SUPPORT_URL or not CENTRAL_SUPPORT_TOKEN:
+            return {"ok": False, "status": "ERROR", "text": "Modo central activo pero CENTRAL_SUPPORT_URL o CENTRAL_SUPPORT_TOKEN no configurados"}
+        return _send_telegram_central(text, target_chat)
+
+    token = TELEGRAM_BOT_TOKEN
+    if not token:
+        return {"ok": False, "status": "ERROR", "text": "Falta TELEGRAM_BOT_TOKEN en config.env"}
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = json.dumps(
@@ -6185,7 +6242,11 @@ def configuracion_panel(request: Request):
     context["smtp_pass_set"]       = bool(NOTIF_SMTP_PASS)   # no exponer la contraseña
     context["smtp_email_from"]     = NOTIF_EMAIL_FROM or ""
     context["smtp_email_to"]       = NOTIF_EMAIL_TO or ""
-    context["telegram_ok"] = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip())
+    # R-098: telegram_ok si hay token local O si el modo central está activo con Central configurado
+    context["telegram_ok"] = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip()) or (
+        TELEGRAM_MODE == "central" and bool(CENTRAL_SUPPORT_URL) and bool(CENTRAL_SUPPORT_TOKEN)
+    )
+    context["telegram_mode"] = TELEGRAM_MODE
     context["ssh_key"] = SSH_KEY_PATH
     context["ssh_timeout"] = SSH_TIMEOUT
     context["auto_logout_minutes"] = AUTO_LOGOUT_MINUTES
