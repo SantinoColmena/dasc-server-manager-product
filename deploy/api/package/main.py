@@ -1775,7 +1775,7 @@ RAG_LLM_PROVIDER    = os.getenv("VIGEX_RAG_LLM_PROVIDER", "ollama")   # "ollama"
 RAG_OLLAMA_URL      = os.getenv("VIGEX_RAG_OLLAMA_URL", "http://localhost:11434")
 RAG_OLLAMA_MODEL    = os.getenv("VIGEX_RAG_OLLAMA_MODEL", "mistral")
 RAG_ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
-RAG_ANTHROPIC_MODEL = os.getenv("VIGEX_RAG_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+RAG_ANTHROPIC_MODEL = os.getenv("VIGEX_RAG_ANTHROPIC_MODEL", "claude-haiku-4-5")
 RAG_GEMINI_KEY      = os.getenv("GOOGLE_API_KEY", "")
 RAG_GEMINI_MODEL    = os.getenv("VIGEX_RAG_GEMINI_MODEL", "gemini-2.0-flash")
 RAG_OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
@@ -9152,7 +9152,10 @@ async def asistente_chat_api(request: Request):
             status_code=429,
         )
 
-    data = await request.json()
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Cuerpo JSON no válido."}, status_code=400)
     mensaje   = (data.get("mensaje") or "").strip()
     historial = data.get("historial", [])
 

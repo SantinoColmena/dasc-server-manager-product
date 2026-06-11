@@ -402,21 +402,24 @@ def api_get_support_ticket_status(
     x_vigex_client_token: Optional[str] = Header(default=None),
     x_vigex_client_id: Optional[str] = Header(default=None),
 ):
-    ticket = get_central_ticket(ticket_id)
-
-    if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket central no encontrado")
-
+    # Auditoría 2026-06-11: validar identidad y token ANTES de revelar la
+    # existencia del ticket, para no exponer un oráculo de existencia a quien no
+    # presenta un token de cliente válido.
     client_id = (x_vigex_client_id or "").strip()
 
     if not client_id:
         raise HTTPException(status_code=400, detail="Falta cabecera X-Vigex-Client-ID")
 
-    if client_id != ticket.get("cliente_id"):
-        raise HTTPException(status_code=403, detail="El ticket no pertenece al cliente indicado")
-
     if not validate_client_token(client_id, x_vigex_client_token):
         raise HTTPException(status_code=401, detail="Token de cliente no válido")
+
+    ticket = get_central_ticket(ticket_id)
+
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket central no encontrado")
+
+    if client_id != ticket.get("cliente_id"):
+        raise HTTPException(status_code=403, detail="El ticket no pertenece al cliente indicado")
 
     return {
         "ok": True,

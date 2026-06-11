@@ -179,6 +179,13 @@ case "$TYPE" in
     ;;
 esac
 
+# Seguridad (auditoría 2026-06-11): un nombre de BD que empiece por '-' podría
+# interpretarse como una opción de mysqldump. Lo rechazamos explícitamente.
+if [[ "$DB" == -* ]]; then
+  echo "ERROR: nombre de base de datos no permitido"
+  exit 1
+fi
+
 if [[ "$DEST" != /home/vigex/backups* ]]; then
   echo "ERROR: destino no permitido"
   exit 1
