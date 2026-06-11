@@ -112,3 +112,44 @@ desarrollador para dejar el código 100 % limpio:
 - `bash -n backups_api.sh` → OK; EOL LF preservado (`file`).
 - `check_api_package_installable.ps1` → 50/50 OK.
 - `check_repo_clean.ps1` → exit 0.
+
+---
+
+## 6. Segundo pase — rendimiento y consistencia (2026-06-11)
+
+Revisión adicional con foco distinto al de seguridad: rendimiento, concurrencia y
+consistencia. Tres hallazgos, **todos corregidos**.
+
+### OPT-1 — Multiplexación SSH (rendimiento)
+- **Dónde:** `/api/dashboard/status` (3 conexiones SSH/petición) y
+  `/api/monitoreo/metrics` (4 conexiones al mismo host: loadavg, meminfo, df, uptime).
+- **Causa:** cada dato abría una conexión SSH nueva (TCP + handshake cripto) en
+  serie. En páginas que autorefrescan, la latencia es la suma de todas.
+- **Fix:** `build_ssh_base_command` añade `ControlMaster=auto` +
+  `ControlPath=…/cm-%C` + `ControlPersist=30`. La primera conexión deja un socket
+  de control y las siguientes lo reutilizan (1 handshake + N aperturas baratas).
+  Configurable (`VIGEX_SSH_MULTIPLEX`, `_CONTROL_PERSIST`, `_CONTROL_DIR`) y con
+  degradación elegante si el socket no es escribible. Sin nueva superficie de
+  seguridad: mismo host/usuario/clave, allowlist intacto.
+
+### CONS-1 — Thread-safety inconsistente (concurrencia)
+- **Causa:** el módulo de informes usaba `_REPORTS_LOCK`, pero `_login_failures`,
+  `_rag_rate_buckets` y el subsistema proactivo se modificaban desde varios hilos
+  (threadpool de FastAPI + worker de fondo) sin lock → posibles pérdidas de
+  actualización en patrones leer-modificar-escribir.
+- **Fix:** locks dedicados — `_login_lock`, `_rag_rate_lock` y `_proactivo_lock`
+  (este serializa `_run_proactive_checks`, llamado por el worker y por el endpoint
+  manual de check). `_proactivo_estado` queda protegido sin candar cada campo.
+
+### CONS-2 — Comandos SSH construidos a mano (consistencia)
+- **Causa:** `leer_backup_remoto` y `run_ssh_terminal_command` armaban el comando
+  SSH a mano, sin `ConnectTimeout` y sin multiplexación.
+- **Fix:** ambos usan ya `build_ssh_base_command`. Una operación contra un host
+  inaccesible falla rápido (10 s) en vez de colgarse hasta `SSH_TIMEOUT` (30 s).
+
+**Notas observadas, no corregidas (sin impacto real):** `get_db()` sin
+`try/finally` (no se filtra hoy porque las rutas con red capturan internamente) y
+`cargar_historial_backups(limit=1)` que transfiere el `history.tsv` entero.
+
+**Verificación:** `py_compile` sin warnings, `check_api_package_installable` 50/50,
+`check_repo_clean` exit 0.

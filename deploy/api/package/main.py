@@ -143,6 +143,14 @@ SSH_TIMEOUT = int(os.getenv("VIGEX_SSH_TIMEOUT", "30"))
 SSH_CONNECT_TIMEOUT = int(os.getenv("VIGEX_SSH_CONNECT_TIMEOUT", "10"))
 SSH_STDIN_MAX_LENGTH = int(os.getenv("VIGEX_SSH_STDIN_MAX_LENGTH", "20000"))
 
+# OPT (auditoría 2026-06-11): multiplexación de conexiones SSH. Los endpoints de
+# estado y monitorización abren varias conexiones al mismo host en ráfaga; con
+# ControlMaster la primera deja un socket de control y las siguientes lo
+# reutilizan, ahorrando un handshake completo por dato. Configurable y degradable.
+SSH_MULTIPLEX = os.getenv("VIGEX_SSH_MULTIPLEX", "true").lower() in ("1", "true", "yes", "on")
+SSH_CONTROL_PERSIST = os.getenv("VIGEX_SSH_CONTROL_PERSIST", "30")  # seg. que el master sigue vivo tras el último uso
+SSH_CONTROL_DIR = os.getenv("VIGEX_SSH_CONTROL_DIR", str(Path(SSH_KEY_PATH).parent / "cm"))
+
 _default_ssh_hosts = f"{SERVIDOR_BACKUPS},{SERVIDOR_SERVICIOS}"
 SSH_ALLOWED_HOSTS = {
     item.strip()
@@ -212,15 +220,28 @@ def validate_ssh_run(host: str, script: str, args: list[str]) -> None:
 
 
 def build_ssh_base_command(host: str) -> list[str]:
-    return [
+    base = [
         "ssh",
         "-i", SSH_KEY_PATH,
         "-o", "BatchMode=yes",
         "-o", "StrictHostKeyChecking=yes",
         "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
         "-o", f"ConnectTimeout={SSH_CONNECT_TIMEOUT}",
-        f"{USUARIO}@{host}",
     ]
+    # Multiplexación: reutiliza el socket de control si existe; si el directorio
+    # no es escribible, SSH abre una conexión normal (degradación elegante).
+    if SSH_MULTIPLEX:
+        try:
+            os.makedirs(SSH_CONTROL_DIR, mode=0o700, exist_ok=True)
+            base += [
+                "-o", "ControlMaster=auto",
+                "-o", f"ControlPath={os.path.join(SSH_CONTROL_DIR, 'cm-%C')}",
+                "-o", f"ControlPersist={SSH_CONTROL_PERSIST}",
+            ]
+        except OSError:
+            pass
+    base.append(f"{USUARIO}@{host}")
+    return base
 
 
 # =====================
@@ -488,9 +509,13 @@ def get_auth_user(username: str, password: str) -> dict[str, Any] | None:
 LOGIN_MAX_ATTEMPTS = int(os.getenv("VIGEX_LOGIN_MAX_ATTEMPTS", "5"))
 LOGIN_WINDOW_SECONDS = int(os.getenv("VIGEX_LOGIN_WINDOW_SECONDS", "900"))
 _login_failures: dict[str, list[float]] = {}
+# Lock para el contador de fallos: varias peticiones de login pueden llegar a la
+# vez en el threadpool de FastAPI. Auditoría 2026-06-11.
+_login_lock = threading.Lock()
 
 
 def _login_prune(ip: str, now: float) -> list[float]:
+    # El llamador debe tener _login_lock tomado.
     recientes = [t for t in _login_failures.get(ip, []) if now - t < LOGIN_WINDOW_SECONDS]
     if recientes:
         _login_failures[ip] = recientes
@@ -501,18 +526,21 @@ def _login_prune(ip: str, now: float) -> list[float]:
 
 def login_is_blocked(ip: str) -> bool:
     now = datetime.now().timestamp()
-    return len(_login_prune(ip, now)) >= LOGIN_MAX_ATTEMPTS
+    with _login_lock:
+        return len(_login_prune(ip, now)) >= LOGIN_MAX_ATTEMPTS
 
 
 def register_login_failure(ip: str) -> None:
     now = datetime.now().timestamp()
-    intentos = _login_prune(ip, now)
-    intentos.append(now)
-    _login_failures[ip] = intentos
+    with _login_lock:
+        intentos = _login_prune(ip, now)
+        intentos.append(now)
+        _login_failures[ip] = intentos
 
 
 def reset_login_failures(ip: str) -> None:
-    _login_failures.pop(ip, None)
+    with _login_lock:
+        _login_failures.pop(ip, None)
 
 
 def is_authenticated(request: Request) -> bool:
@@ -1519,15 +1547,9 @@ def leer_backup_remoto(remote_path: str) -> dict[str, Any]:
         f"cat -- {quoted_path}"
     )
 
-    cmd = [
-        "ssh",
-        "-i", SSH_KEY_PATH,
-        "-o", "BatchMode=yes",
-        "-o", "StrictHostKeyChecking=yes",
-        "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
-        f"{USUARIO}@{SERVIDOR_BACKUPS}",
-        remote_cmd,
-    ]
+    # Consistencia (auditoría 2026-06-11): usar el constructor común para heredar
+    # ConnectTimeout y la multiplexación, en vez de un comando SSH a mano.
+    cmd = build_ssh_base_command(SERVIDOR_BACKUPS) + [remote_cmd]
 
     res = subprocess.run(cmd, capture_output=True, timeout=SSH_TIMEOUT)
     err = (res.stderr or b"").decode("utf-8", errors="replace").strip()
@@ -2235,6 +2257,10 @@ _proactivo_estado: dict[str, Any] = {
 }
 
 _last_alert_time: dict[str, float] = {}  # condition_key → timestamp último envío
+# Serializa el subsistema proactivo: el worker de fondo y el endpoint manual
+# /alertas/proactivas/check llaman ambos a _run_proactive_checks; el lock evita
+# que se solapen y corrompan _proactivo_estado o el cooldown. Auditoría 2026-06-11.
+_proactivo_lock = threading.Lock()
 
 
 def _can_alert(key: str) -> bool:
@@ -2453,11 +2479,12 @@ def _check_services_proactive() -> None:
 
 def _run_proactive_checks() -> None:
     """Ejecuta las tres comprobaciones y actualiza el estado en memoria."""
-    _proactivo_estado["last_run"]   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    _proactivo_estado["runs_total"] += 1
-    _check_disk_proactive()
-    _check_backup_proactive()
-    _check_services_proactive()
+    with _proactivo_lock:
+        _proactivo_estado["last_run"]   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        _proactivo_estado["runs_total"] += 1
+        _check_disk_proactive()
+        _check_backup_proactive()
+        _check_services_proactive()
 
 
 def _proactivo_worker() -> None:
@@ -2722,16 +2749,9 @@ def run_local_terminal_command(command: str) -> dict[str, Any]:
 
 def run_ssh_terminal_command(host: str, command: str) -> dict[str, Any]:
     started = datetime.now()
-    cmd = [
-        "ssh",
-        "-i", SSH_KEY_PATH,
-        "-o", "BatchMode=yes",
-        "-o", "StrictHostKeyChecking=yes",
-        "-o", f"UserKnownHostsFile={SSH_KNOWN_HOSTS_PATH}",
-        f"{USUARIO}@{host}",
-        "bash",
-        "-s",
-    ]
+    # Consistencia (auditoría 2026-06-11): mismo constructor SSH que el resto
+    # (hereda ConnectTimeout y multiplexación).
+    cmd = build_ssh_base_command(host) + ["bash", "-s"]
 
     try:
         res = subprocess.run(
@@ -8849,6 +8869,7 @@ def api_soporte_faq(request: Request, q: str = "", desde: str = ""):
 # R-090-sec: rate limiter en memoria — {username: [timestamps]}
 # Se limpia automáticamente en cada comprobación (sliding window).
 _rag_rate_buckets: dict[str, list[float]] = {}
+_rag_rate_lock = threading.Lock()  # peticiones de chat concurrentes (auditoría 2026-06-11)
 
 def _rag_check_rate_limit(username: str) -> bool:
     """Devuelve True si el usuario está DENTRO del límite (puede continuar).
@@ -8857,15 +8878,15 @@ def _rag_check_rate_limit(username: str) -> bool:
     import time as _time
     now = _time.monotonic()
     window_start = now - RAG_RATE_LIMIT_WINDOW
-    bucket = _rag_rate_buckets.get(username, [])
-    # Descartar timestamps fuera de la ventana
-    bucket = [t for t in bucket if t > window_start]
-    if len(bucket) >= RAG_RATE_LIMIT_REQS:
+    with _rag_rate_lock:
+        # Descartar timestamps fuera de la ventana
+        bucket = [t for t in _rag_rate_buckets.get(username, []) if t > window_start]
+        if len(bucket) >= RAG_RATE_LIMIT_REQS:
+            _rag_rate_buckets[username] = bucket
+            return False
+        bucket.append(now)
         _rag_rate_buckets[username] = bucket
-        return False
-    bucket.append(now)
-    _rag_rate_buckets[username] = bucket
-    return True
+        return True
 
 _RAG_SYSTEM_PROMPT = (
     "Eres el asistente técnico de Vigex, un panel de gestión de servidores Linux para PYMEs. "
