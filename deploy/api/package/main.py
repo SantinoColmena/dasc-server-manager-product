@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv("config.env")
 
-from urllib.parse import quote
+from urllib.parse import quote, urlparse as _urlparse
 from urllib.request import Request as UrlRequest, urlopen
 from urllib.error import URLError, HTTPError
 import os
@@ -1801,7 +1801,7 @@ AUTO_LOGOUT_MINUTES = int(os.getenv("VIGEX_AUTO_LOGOUT_MINUTES", "60"))  # Inact
 # Fase 1: Ollama local (sin dependencias extra, solo urllib stdlib)
 # Fase 2: cambiar VIGEX_RAG_LLM_PROVIDER=anthropic y añadir ANTHROPIC_API_KEY
 RAG_ENABLED         = os.getenv("VIGEX_RAG_ENABLED", "true").lower() in ("1", "true", "yes")
-RAG_LLM_PROVIDER    = os.getenv("VIGEX_RAG_LLM_PROVIDER", "ollama")   # "ollama" | "anthropic" | "gemini" | "openai" | "groq"
+RAG_LLM_PROVIDER    = os.getenv("VIGEX_RAG_LLM_PROVIDER", "ollama")   # "ollama"|"anthropic"|"gemini"|"openai"|"groq"|"central"
 RAG_OLLAMA_URL      = os.getenv("VIGEX_RAG_OLLAMA_URL", "http://localhost:11434")
 RAG_OLLAMA_MODEL    = os.getenv("VIGEX_RAG_OLLAMA_MODEL", "mistral")
 RAG_ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
@@ -9093,6 +9093,37 @@ def _rag_call_groq(system: str, messages: list[dict]) -> str:
         return f"⚠️ Error al llamar a Groq: {exc}"
 
 
+def _rag_call_central(system: str, messages: list[dict]) -> str:
+    """
+    R-097: delega la llamada LLM al proxy centralizado de Vigex Central.
+    Usa las credenciales CENTRAL_SUPPORT_CLIENT_ID / TOKEN ya configuradas.
+    """
+    # Derivar host base desde CENTRAL_SUPPORT_URL (ej. http://vps:8010/api/v1/... → http://vps:8010)
+    parsed = _urlparse(CENTRAL_SUPPORT_URL)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    url = f"{base}/api/v1/asistente/chat"
+
+    payload = json.dumps({"system": system, "messages": messages}).encode("utf-8")
+    req = UrlRequest(
+        url,
+        data=payload,
+        headers={
+            "content-type": "application/json",
+            "X-Vigex-Client-Id": CENTRAL_SUPPORT_CLIENT_ID,
+            "X-Vigex-Client-Token": CENTRAL_SUPPORT_TOKEN,
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data.get("respuesta", "Sin respuesta del proxy")
+    except HTTPError as exc:
+        raise RuntimeError(f"Error del proxy Central ({exc.code}): {exc.read().decode('utf-8', errors='replace')}") from exc
+    except URLError as exc:
+        raise RuntimeError(f"No se pudo conectar con Vigex Central: {exc.reason}") from exc
+
+
 def _rag_generate(query: str, historial: list[dict]) -> str:
     """Pipeline completo: retrieval → system prompt → LLM → respuesta. R-090."""
     context = _rag_build_context(query)
@@ -9103,6 +9134,8 @@ def _rag_generate(query: str, historial: list[dict]) -> str:
     # Limitar historial para no exceder la ventana de contexto del modelo
     messages = historial[-12:] + [{"role": "user", "content": query}]
 
+    if RAG_LLM_PROVIDER == "central":
+        return _rag_call_central(system, messages)
     if RAG_LLM_PROVIDER == "anthropic":
         return _rag_call_anthropic(system, messages)
     if RAG_LLM_PROVIDER == "gemini":

@@ -114,6 +114,27 @@ VIGEX_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
 VIGEX_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
 VIGEX_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
 VIGEX_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
+
+# ── Proxy LLM centralizado (R-097) ────────────────────────────────
+# Proveedor LLM para el Asistente IA de todos los clientes.
+# Los paneles cliente usan VIGEX_RAG_LLM_PROVIDER=central y no necesitan API key.
+# Opciones: anthropic (recomendado) | gemini | openai | groq | ollama
+VIGEX_CENTRAL_LLM_PROVIDER=anthropic
+# Rellena SOLO la clave del proveedor elegido:
+ANTHROPIC_API_KEY=
+VIGEX_CENTRAL_ANTHROPIC_MODEL=claude-haiku-4-5-20251001
+GOOGLE_API_KEY=
+VIGEX_CENTRAL_GEMINI_MODEL=gemini-2.0-flash
+OPENAI_API_KEY=
+VIGEX_CENTRAL_OPENAI_MODEL=gpt-4o-mini
+GROQ_API_KEY=
+VIGEX_CENTRAL_GROQ_MODEL=llama-3.3-70b-versatile
+VIGEX_CENTRAL_OLLAMA_URL=http://localhost:11434
+VIGEX_CENTRAL_OLLAMA_MODEL=mistral
+# Rate limiting por cliente: máximo de peticiones en la ventana deslizante
+VIGEX_CENTRAL_LLM_RATE_REQS=30
+VIGEX_CENTRAL_LLM_RATE_WIN=60
+VIGEX_CENTRAL_LLM_MAX_TOKENS=700
 EOF
 
   chmod 600 "${ENV_FILE}"

@@ -3,10 +3,15 @@ import hmac
 import hashlib
 import secrets
 import sqlite3
+import json
+import threading
+import time as _time_mod
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
+from urllib.request import Request as _UrlRequest, urlopen as _urlopen
+from urllib.error import URLError as _URLError, HTTPError as _HTTPError
 
 from fastapi import FastAPI, Header, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -1320,6 +1325,224 @@ def get_audit_log(limit: int = 200) -> list:
             (limit,),
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+# =====================================================================
+# R-097 / Fase 14 — Proxy LLM centralizado para el Asistente IA
+#
+# Los paneles cliente configuran VIGEX_RAG_LLM_PROVIDER=central y
+# envían sus consultas aquí. Central llama al LLM con su propia clave
+# API — los clientes nunca ven ni necesitan una API key.
+#
+# Config en central config.env:
+#   VIGEX_CENTRAL_LLM_PROVIDER   = anthropic | gemini | openai | groq | ollama
+#   VIGEX_CENTRAL_LLM_MAX_TOKENS = 700
+#   ANTHROPIC_API_KEY / GOOGLE_API_KEY / OPENAI_API_KEY / GROQ_API_KEY
+#   VIGEX_CENTRAL_OLLAMA_URL     = http://localhost:11434
+#   VIGEX_CENTRAL_OLLAMA_MODEL   = mistral
+#   VIGEX_CENTRAL_LLM_RATE_REQS  = 30   (peticiones por cliente en la ventana)
+#   VIGEX_CENTRAL_LLM_RATE_WIN   = 60   (segundos de la ventana)
+# =====================================================================
+
+_C_LLM_PROVIDER    = os.getenv("VIGEX_CENTRAL_LLM_PROVIDER", "anthropic").strip()
+_C_LLM_MAX_TOKENS  = int(os.getenv("VIGEX_CENTRAL_LLM_MAX_TOKENS", "700"))
+_C_ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "").strip()
+_C_ANTHROPIC_MODEL = os.getenv("VIGEX_CENTRAL_ANTHROPIC_MODEL", "claude-haiku-4-5-20251001").strip()
+_C_GEMINI_KEY      = os.getenv("GOOGLE_API_KEY", "").strip()
+_C_GEMINI_MODEL    = os.getenv("VIGEX_CENTRAL_GEMINI_MODEL", "gemini-2.0-flash").strip()
+_C_OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "").strip()
+_C_OPENAI_MODEL    = os.getenv("VIGEX_CENTRAL_OPENAI_MODEL", "gpt-4o-mini").strip()
+_C_GROQ_KEY        = os.getenv("GROQ_API_KEY", "").strip()
+_C_GROQ_MODEL      = os.getenv("VIGEX_CENTRAL_GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+_C_OLLAMA_URL      = os.getenv("VIGEX_CENTRAL_OLLAMA_URL", "http://localhost:11434").strip()
+_C_OLLAMA_MODEL    = os.getenv("VIGEX_CENTRAL_OLLAMA_MODEL", "mistral").strip()
+_C_RATE_REQS       = int(os.getenv("VIGEX_CENTRAL_LLM_RATE_REQS", "30"))
+_C_RATE_WIN        = int(os.getenv("VIGEX_CENTRAL_LLM_RATE_WIN", "60"))
+
+_c_llm_rate_buckets: dict[str, list[float]] = {}
+_c_llm_rate_lock = threading.Lock()
+
+
+def _c_rate_ok(cliente_id: str) -> bool:
+    """True si el cliente está dentro del límite de peticiones."""
+    now = _time_mod.time()
+    window_start = now - _C_RATE_WIN
+    with _c_llm_rate_lock:
+        bucket = [t for t in _c_llm_rate_buckets.get(cliente_id, []) if t > window_start]
+        if len(bucket) >= _C_RATE_REQS:
+            return False
+        bucket.append(now)
+        _c_llm_rate_buckets[cliente_id] = bucket
+    return True
+
+
+def _c_llm_call_anthropic(system: str, messages: list[dict]) -> str:
+    if not _C_ANTHROPIC_KEY:
+        raise ValueError("ANTHROPIC_API_KEY no configurada en Central")
+    payload = json.dumps({
+        "model": _C_ANTHROPIC_MODEL,
+        "max_tokens": _C_LLM_MAX_TOKENS,
+        "system": system,
+        "messages": messages,
+    }).encode("utf-8")
+    req = _UrlRequest(
+        "https://api.anthropic.com/v1/messages",
+        data=payload,
+        headers={
+            "x-api-key": _C_ANTHROPIC_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    with _urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["content"][0]["text"].strip()
+
+
+def _c_llm_call_openai_compat(url: str, api_key: str, model: str,
+                               system: str, messages: list[dict]) -> str:
+    """Sirve para OpenAI y Groq (misma API compatible)."""
+    oai_messages = [{"role": "system", "content": system}] + messages
+    payload = json.dumps({
+        "model": model,
+        "max_tokens": _C_LLM_MAX_TOKENS,
+        "messages": oai_messages,
+    }).encode("utf-8")
+    req = _UrlRequest(
+        url,
+        data=payload,
+        headers={"Authorization": f"Bearer {api_key}", "content-type": "application/json"},
+        method="POST",
+    )
+    with _urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["choices"][0]["message"]["content"].strip()
+
+
+def _c_llm_call_gemini(system: str, messages: list[dict]) -> str:
+    if not _C_GEMINI_KEY:
+        raise ValueError("GOOGLE_API_KEY no configurada en Central")
+    contents = []
+    for m in messages:
+        role = "user" if m["role"] == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": m["content"]}]})
+    payload = json.dumps({
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": contents,
+        "generationConfig": {"maxOutputTokens": _C_LLM_MAX_TOKENS},
+    }).encode("utf-8")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{_C_GEMINI_MODEL}:generateContent?key={_C_GEMINI_KEY}"
+    req = _UrlRequest(url, data=payload, headers={"content-type": "application/json"}, method="POST")
+    with _urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+
+def _c_llm_call_ollama(system: str, messages: list[dict]) -> str:
+    oai_messages = [{"role": "system", "content": system}] + messages
+    payload = json.dumps({
+        "model": _C_OLLAMA_MODEL,
+        "messages": oai_messages,
+        "stream": False,
+        "options": {"num_predict": _C_LLM_MAX_TOKENS},
+    }).encode("utf-8")
+    req = _UrlRequest(
+        f"{_C_OLLAMA_URL}/api/chat",
+        data=payload,
+        headers={"content-type": "application/json"},
+        method="POST",
+    )
+    with _urlopen(req, timeout=60) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["message"]["content"].strip()
+
+
+def _c_llm_call(system: str, messages: list[dict]) -> str:
+    """Despacha al proveedor configurado en Central."""
+    p = _C_LLM_PROVIDER
+    try:
+        if p == "anthropic":
+            return _c_llm_call_anthropic(system, messages)
+        if p == "gemini":
+            return _c_llm_call_gemini(system, messages)
+        if p == "openai":
+            if not _C_OPENAI_KEY:
+                raise ValueError("OPENAI_API_KEY no configurada en Central")
+            return _c_llm_call_openai_compat(
+                "https://api.openai.com/v1/chat/completions",
+                _C_OPENAI_KEY, _C_OPENAI_MODEL, system, messages,
+            )
+        if p == "groq":
+            if not _C_GROQ_KEY:
+                raise ValueError("GROQ_API_KEY no configurada en Central")
+            return _c_llm_call_openai_compat(
+                "https://api.groq.com/openai/v1/chat/completions",
+                _C_GROQ_KEY, _C_GROQ_MODEL, system, messages,
+            )
+        # ollama por defecto
+        return _c_llm_call_ollama(system, messages)
+    except (_HTTPError, _URLError) as exc:
+        raise RuntimeError(f"Error llamando al LLM ({p}): {exc}") from exc
+
+
+class _AsistenteChatRequest(BaseModel):
+    system: str = Field(default="Eres un asistente técnico de Vigex.")
+    messages: list[dict] = Field(default_factory=list)
+
+
+@app.post("/api/v1/asistente/chat")
+async def proxy_asistente_chat(
+    body: _AsistenteChatRequest,
+    x_vigex_client_id: Optional[str] = Header(default=None, alias="X-Vigex-Client-Id"),
+    x_vigex_client_token: Optional[str] = Header(default=None, alias="X-Vigex-Client-Token"),
+):
+    """
+    Proxy LLM centralizado para el Asistente IA (R-097).
+    El panel cliente envía system + historial; Central llama al LLM con su clave API.
+    Autenticación: X-Vigex-Client-Id + X-Vigex-Client-Token (mismo par que soporte).
+    """
+    if CENTRAL_AUTH_ENABLED:
+        if not x_vigex_client_id or not x_vigex_client_token:
+            raise HTTPException(status_code=401, detail="Cabeceras de autenticación requeridas")
+        if not validate_client_token(x_vigex_client_id, x_vigex_client_token):
+            raise HTTPException(status_code=403, detail="Token de cliente inválido o inactivo")
+
+    cliente_id = x_vigex_client_id or "anonimo"
+
+    if not _c_rate_ok(cliente_id):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Límite de peticiones alcanzado ({_C_RATE_REQS} req / {_C_RATE_WIN} s)",
+        )
+
+    if not body.messages:
+        raise HTTPException(status_code=400, detail="messages no puede estar vacío")
+
+    try:
+        respuesta = _c_llm_call(body.system, body.messages)
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {"respuesta": respuesta, "proveedor": _C_LLM_PROVIDER}
+
+
+@app.get("/api/v1/asistente/estado")
+async def proxy_asistente_estado(
+    x_vigex_client_id: Optional[str] = Header(default=None, alias="X-Vigex-Client-Id"),
+    x_vigex_client_token: Optional[str] = Header(default=None, alias="X-Vigex-Client-Token"),
+):
+    """Informa al panel cliente si el proxy LLM está disponible y qué proveedor usa."""
+    if CENTRAL_AUTH_ENABLED:
+        if not x_vigex_client_id or not x_vigex_client_token:
+            raise HTTPException(status_code=401, detail="Autenticación requerida")
+        if not validate_client_token(x_vigex_client_id, x_vigex_client_token):
+            raise HTTPException(status_code=403, detail="Token inválido")
+    return {
+        "disponible": True,
+        "proveedor": _C_LLM_PROVIDER,
+        "rate_limit": {"reqs": _C_RATE_REQS, "ventana_seg": _C_RATE_WIN},
+    }
 
 
 @app.get("/auditoria", response_class=HTMLResponse)
