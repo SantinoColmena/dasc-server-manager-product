@@ -129,7 +129,7 @@ TERMINAL_MAX_COMMAND_LENGTH = int(os.getenv("TERMINAL_MAX_COMMAND_LENGTH", "4000
 SCRIPT_SERVICIOS = os.getenv("SCRIPT_SERVICIOS", "/usr/local/bin/servicios_api.sh")
 SCRIPT_BACKUPS = os.getenv("SCRIPT_BACKUPS", "/usr/local/bin/backups_api.sh")
 SCRIPT_RESTORE = os.getenv("SCRIPT_RESTORE", "/usr/local/bin/restore_api.sh")
-BACKUP_AUTOMATION_MARKER = "# Vigex_BACKUP_AUTO"
+BACKUP_AUTOMATION_MARKER = "# VIGEX_BACKUP_AUTO"
 BACKUP_AUTOMATION_LOG = os.getenv("BACKUP_AUTOMATION_LOG", "/home/vigex/backups/.vigex/cron.log")
 
 
@@ -1287,9 +1287,9 @@ def crear_automatizacion_backup_remota(metadata: dict[str, Any], cron_expression
 set -euo pipefail
 TMP="$(mktemp)"
 crontab -l 2>/dev/null > "$TMP" || true
-cat >> "$TMP" <<'Vigex_CRON_BLOCK'
+cat >> "$TMP" <<'VIGEX_CRON_BLOCK'
 {block.rstrip()}
-Vigex_CRON_BLOCK
+VIGEX_CRON_BLOCK
 crontab "$TMP"
 rm -f "$TMP"
 mkdir -p "$(dirname {shlex.quote(BACKUP_AUTOMATION_LOG)})"
@@ -9410,8 +9410,8 @@ def api_heartbeat(request: Request):
 # R-086 / Ruta 12.2 — API de producto: endpoint de información de versión
 # =====================================================================
 
-_Vigex_API_VERSION = "1.0"
-_Vigex_BUILD_DATE = "2026-06-08"
+_VIGEX_API_VERSION = "1.0"
+_VIGEX_BUILD_DATE = "2026-06-08"
 
 @app.get("/api/v1/info")
 def api_info():
@@ -9422,9 +9422,9 @@ def api_info():
     """
     return {
         "producto": "Vigex",
-        "api_version": _Vigex_API_VERSION,
+        "api_version": _VIGEX_API_VERSION,
         "panel_version": os.getenv("VIGEX_VERSION", "1.0-rc1"),
-        "build_date": _Vigex_BUILD_DATE,
+        "build_date": _VIGEX_BUILD_DATE,
         "endpoints_publicos": [
             "GET /health",
             "GET /api/v1/info",

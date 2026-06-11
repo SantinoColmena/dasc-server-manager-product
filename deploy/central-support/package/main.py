@@ -20,23 +20,23 @@ DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "central_support.db"
 
 APP_NAME = "Vigex Central"
-DEMO_CLIENT_ID = os.getenv("Vigex_CENTRAL_DEMO_CLIENT_ID", "cliente-demo-a")
-DEMO_CLIENT_NAME = os.getenv("Vigex_CENTRAL_DEMO_CLIENT_NAME", "Cliente Demo A")
-DEMO_CLIENT_TOKEN = os.getenv("Vigex_CENTRAL_DEMO_TOKEN", "vigex-central-demo-token-lab")
+DEMO_CLIENT_ID = os.getenv("VIGEX_CENTRAL_DEMO_CLIENT_ID", "cliente-demo-a")
+DEMO_CLIENT_NAME = os.getenv("VIGEX_CENTRAL_DEMO_CLIENT_NAME", "Cliente Demo A")
+DEMO_CLIENT_TOKEN = os.getenv("VIGEX_CENTRAL_DEMO_TOKEN", "vigex-central-demo-token-lab")
 
 # =====================
 # R-049Q - CONFIG AUTENTICACION CENTRAL
 # =====================
 
-CENTRAL_AUTH_ENABLED = os.getenv("Vigex_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
-CENTRAL_LAB_MODE = os.getenv("Vigex_CENTRAL_LAB_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_AUTH_ENABLED = os.getenv("VIGEX_CENTRAL_AUTH_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
+CENTRAL_LAB_MODE = os.getenv("VIGEX_CENTRAL_LAB_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
 
 DEFAULT_LAB_ADMIN_USER = "admin"
 DEFAULT_LAB_ADMIN_PASSWORD = "admin"
 DEFAULT_LAB_TECH_USER = "tecnico"
 DEFAULT_LAB_TECH_PASSWORD = "tecnico"
 
-CENTRAL_SECRET_KEY = os.getenv("Vigex_CENTRAL_SECRET_KEY", "").strip()
+CENTRAL_SECRET_KEY = os.getenv("VIGEX_CENTRAL_SECRET_KEY", "").strip()
 if not CENTRAL_SECRET_KEY:
     CENTRAL_SECRET_KEY = (
         "vigex-central-secret-lab-change-me"
@@ -45,19 +45,19 @@ if not CENTRAL_SECRET_KEY:
     )
 
 CENTRAL_ADMIN_USER = os.getenv(
-    "Vigex_CENTRAL_ADMIN_USER",
+    "VIGEX_CENTRAL_ADMIN_USER",
     DEFAULT_LAB_ADMIN_USER if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_ADMIN_PASSWORD = os.getenv(
-    "Vigex_CENTRAL_ADMIN_PASSWORD",
+    "VIGEX_CENTRAL_ADMIN_PASSWORD",
     DEFAULT_LAB_ADMIN_PASSWORD if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_TECH_USER = os.getenv(
-    "Vigex_CENTRAL_TECH_USER",
+    "VIGEX_CENTRAL_TECH_USER",
     DEFAULT_LAB_TECH_USER if CENTRAL_LAB_MODE else "",
 )
 CENTRAL_TECH_PASSWORD = os.getenv(
-    "Vigex_CENTRAL_TECH_PASSWORD",
+    "VIGEX_CENTRAL_TECH_PASSWORD",
     DEFAULT_LAB_TECH_PASSWORD if CENTRAL_LAB_MODE else "",
 )
 
@@ -65,8 +65,8 @@ CENTRAL_TECH_PASSWORD = os.getenv(
 # dependencias externas). Si se define el hash, tiene prioridad sobre la
 # contraseña en texto plano. Retrocompatible: si no se define, el
 # comportamiento es idéntico al anterior.
-CENTRAL_ADMIN_PASSWORD_HASH = os.getenv("Vigex_CENTRAL_ADMIN_PASSWORD_HASH", "").strip()
-CENTRAL_TECH_PASSWORD_HASH = os.getenv("Vigex_CENTRAL_TECH_PASSWORD_HASH", "").strip()
+CENTRAL_ADMIN_PASSWORD_HASH = os.getenv("VIGEX_CENTRAL_ADMIN_PASSWORD_HASH", "").strip()
+CENTRAL_TECH_PASSWORD_HASH = os.getenv("VIGEX_CENTRAL_TECH_PASSWORD_HASH", "").strip()
 
 
 def verify_pbkdf2(plain, stored):

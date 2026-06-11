@@ -15,17 +15,17 @@
 #
 # Variables de entorno opcionales:
 #   NGINX_ACCESS_LOG   — ruta al access.log de Nginx (default: /var/log/nginx/access.log)
-#   Vigex_BAN_TIME      — tiempo de baneo en segundos (default: 3600 = 1 hora)
-#   Vigex_FIND_TIME     — ventana de observación en segundos (default: 600 = 10 min)
-#   Vigex_MAX_RETRY     — nº de fallos antes de banear (default: 5)
+#   VIGEX_BAN_TIME      — tiempo de baneo en segundos (default: 3600 = 1 hora)
+#   VIGEX_FIND_TIME     — ventana de observación en segundos (default: 600 = 10 min)
+#   VIGEX_MAX_RETRY     — nº de fallos antes de banear (default: 5)
 #   SSH_BAN_TIME       — tiempo de baneo SSH en segundos (default: 3600)
 #   SSH_MAX_RETRY      — nº de fallos SSH antes de banear (default: 5)
 set -euo pipefail
 
 NGINX_ACCESS_LOG="${NGINX_ACCESS_LOG:-/var/log/nginx/access.log}"
-Vigex_BAN_TIME="${Vigex_BAN_TIME:-3600}"
-Vigex_FIND_TIME="${Vigex_FIND_TIME:-600}"
-Vigex_MAX_RETRY="${Vigex_MAX_RETRY:-5}"
+VIGEX_BAN_TIME="${VIGEX_BAN_TIME:-3600}"
+VIGEX_FIND_TIME="${VIGEX_FIND_TIME:-600}"
+VIGEX_MAX_RETRY="${VIGEX_MAX_RETRY:-5}"
 SSH_BAN_TIME="${SSH_BAN_TIME:-3600}"
 SSH_MAX_RETRY="${SSH_MAX_RETRY:-5}"
 
@@ -80,9 +80,9 @@ enabled   = true
 filter    = vigex-auth
 port      = http,https
 logpath   = ${NGINX_ACCESS_LOG}
-maxretry  = ${Vigex_MAX_RETRY}
-findtime  = ${Vigex_FIND_TIME}
-bantime   = ${Vigex_BAN_TIME}
+maxretry  = ${VIGEX_MAX_RETRY}
+findtime  = ${VIGEX_FIND_TIME}
+bantime   = ${VIGEX_BAN_TIME}
 JAILEOF
 
 # ── Activar y arrancar fail2ban ──────────────────────────────────────────────
@@ -114,5 +114,5 @@ fi
 echo
 echo "OK: fail2ban configurado en host API/panel."
 echo "    SSH   — maxretry=${SSH_MAX_RETRY}, bantime=${SSH_BAN_TIME}s"
-echo "    Vigex  — maxretry=${Vigex_MAX_RETRY}, findtime=${Vigex_FIND_TIME}s, bantime=${Vigex_BAN_TIME}s"
+echo "    Vigex  — maxretry=${VIGEX_MAX_RETRY}, findtime=${VIGEX_FIND_TIME}s, bantime=${VIGEX_BAN_TIME}s"
 echo "    Log   — ${NGINX_ACCESS_LOG}"

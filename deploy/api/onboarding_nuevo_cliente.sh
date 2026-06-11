@@ -9,7 +9,7 @@
 # Uso:
 #   sudo bash deploy/api/onboarding_nuevo_cliente.sh
 #   O con variables ya definidas:
-#   Vigex_CLIENTE_NOMBRE="Empresa S.L." VIGEX_PERFIL=standard \
+#   VIGEX_CLIENTE_NOMBRE="Empresa S.L." VIGEX_PERFIL=standard \
 #     sudo bash deploy/api/onboarding_nuevo_cliente.sh
 #
 # Requisitos:
@@ -51,19 +51,19 @@ echo ""
 # ── Paso 1: Datos del cliente ────────────────────────────────────────────────
 section "PASO 1 — Datos del cliente"
 
-if [[ -z "${Vigex_CLIENTE_NOMBRE:-}" ]]; then
-    read -rp "Nombre del cliente (p.ej. 'Talleres García S.L.'): " Vigex_CLIENTE_NOMBRE
+if [[ -z "${VIGEX_CLIENTE_NOMBRE:-}" ]]; then
+    read -rp "Nombre del cliente (p.ej. 'Talleres García S.L.'): " VIGEX_CLIENTE_NOMBRE
 fi
-if [[ -z "${Vigex_CLIENTE_NOMBRE:-}" ]]; then
+if [[ -z "${VIGEX_CLIENTE_NOMBRE:-}" ]]; then
     error "El nombre del cliente es obligatorio."; exit 1
 fi
 
 # Normalizar para usar como ID
-Vigex_CLIENTE_ID="${Vigex_CLIENTE_NOMBRE,,}"  # minúsculas
-Vigex_CLIENTE_ID="${Vigex_CLIENTE_ID// /-}"   # espacios → guiones
-Vigex_CLIENTE_ID="${Vigex_CLIENTE_ID//[^a-z0-9\-]/}"  # solo alfanumérico y guiones
-Vigex_CLIENTE_ID="${Vigex_CLIENTE_ID:0:30}"   # máximo 30 chars
-info "ID del cliente: ${Vigex_CLIENTE_ID}"
+VIGEX_CLIENTE_ID="${VIGEX_CLIENTE_NOMBRE,,}"  # minúsculas
+VIGEX_CLIENTE_ID="${VIGEX_CLIENTE_ID// /-}"   # espacios → guiones
+VIGEX_CLIENTE_ID="${VIGEX_CLIENTE_ID//[^a-z0-9\-]/}"  # solo alfanumérico y guiones
+VIGEX_CLIENTE_ID="${VIGEX_CLIENTE_ID:0:30}"   # máximo 30 chars
+info "ID del cliente: ${VIGEX_CLIENTE_ID}"
 
 # ── Paso 2: Perfil de despliegue ─────────────────────────────────────────────
 section "PASO 2 — Perfil de despliegue"
@@ -164,11 +164,11 @@ fi
 # ── Paso 7: Generar config.env ───────────────────────────────────────────────
 section "PASO 7 — Generando config.env"
 
-CONFIG_TARGET="/tmp/config_${Vigex_CLIENTE_ID}_$(date +%Y%m%d_%H%M%S).env"
+CONFIG_TARGET="/tmp/config_${VIGEX_CLIENTE_ID}_$(date +%Y%m%d_%H%M%S).env"
 
 cat > "${CONFIG_TARGET}" << ENVEOF
 # Vigex — config.env generado por onboarding_nuevo_cliente.sh
-# Cliente: ${Vigex_CLIENTE_NOMBRE}
+# Cliente: ${VIGEX_CLIENTE_NOMBRE}
 # Perfil:  ${VIGEX_PERFIL}
 # Fecha:   $(date +%Y-%m-%d)
 # ADVERTENCIA: Este fichero contiene secretos. No commitear al repositorio.
@@ -180,9 +180,9 @@ ADMIN_PASSWORD=${ADMIN_HASH}
 VIGEX_PROFILE=${VIGEX_PERFIL}
 
 # ── IPs de los servidores
-Vigex_API_HOST=${IP_API}
-Vigex_DB_HOST=${IP_DB}
-Vigex_BACKUP_HOST=${IP_BACKUP}
+VIGEX_API_HOST=${IP_API}
+VIGEX_DB_HOST=${IP_DB}
+VIGEX_BACKUP_HOST=${IP_BACKUP}
 
 # ── SSH
 VIGEX_SSH_ALLOWED_HOSTS=${IP_DB},${IP_BACKUP}
@@ -201,8 +201,8 @@ NOTIF_COOLDOWN_MINUTES=60
 # ── Central Support
 CENTRAL_SUPPORT_ENABLED=$([ -n "${CENTRAL_URL:-}" ] && echo "true" || echo "false")
 CENTRAL_SUPPORT_URL=${CENTRAL_URL:-http://127.0.0.1:8010/api/v1/support/tickets}
-CENTRAL_SUPPORT_CLIENT_ID=${Vigex_CLIENTE_ID}
-CENTRAL_SUPPORT_CLIENT_NAME=${Vigex_CLIENTE_NOMBRE}
+CENTRAL_SUPPORT_CLIENT_ID=${VIGEX_CLIENTE_ID}
+CENTRAL_SUPPORT_CLIENT_NAME=${VIGEX_CLIENTE_NOMBRE}
 CENTRAL_SUPPORT_TOKEN=${CENTRAL_TOKEN}
 CENTRAL_HEARTBEAT_INTERVAL=300
 ENVEOF
@@ -218,9 +218,9 @@ read -r EJECUTAR_INSTALL
 if [[ "${EJECUTAR_INSTALL,,}" == "s" ]]; then
     info "Copiando config.env y lanzando el instalador..."
     export VIGEX_PROFILE="${VIGEX_PERFIL}"
-    export Vigex_API_HOST="${IP_API}"
-    export Vigex_DB_HOST="${IP_DB}"
-    export Vigex_BACKUP_HOST="${IP_BACKUP}"
+    export VIGEX_API_HOST="${IP_API}"
+    export VIGEX_DB_HOST="${IP_DB}"
+    export VIGEX_BACKUP_HOST="${IP_BACKUP}"
     # El instalador leerá la config del env o pedirá interactivamente
     cp "${CONFIG_TARGET}" "${PACKAGE_DIR}/config.env.onboarding"
     bash "${SCRIPT_DIR}/install_vigex_api.sh"
@@ -237,8 +237,8 @@ fi
 # ── Resumen ───────────────────────────────────────────────────────────────────
 section "RESUMEN DEL ONBOARDING"
 
-echo "  Cliente:          ${Vigex_CLIENTE_NOMBRE}"
-echo "  ID:               ${Vigex_CLIENTE_ID}"
+echo "  Cliente:          ${VIGEX_CLIENTE_NOMBRE}"
+echo "  ID:               ${VIGEX_CLIENTE_ID}"
 echo "  Perfil:           ${VIGEX_PERFIL}"
 echo "  IP API:           ${IP_API}"
 echo "  IP DB:            ${IP_DB}"

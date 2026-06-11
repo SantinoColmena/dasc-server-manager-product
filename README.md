@@ -113,7 +113,7 @@ sudo -E VIGEX_PROFILE=lite APP_PASSWORD='<pass>' bash install_backup_services.sh
 # 3. Panel API
 cd ../api
 sudo -E VIGEX_PROFILE=lite ADMIN_PASSWORD_INPUT='<pass-admin>' \
-    Vigex_PASS='<pass>' bash install_vigex_api.sh </dev/null
+    VIGEX_PASS='<pass>' bash install_vigex_api.sh </dev/null
 
 # 4. Proxy HTTPS
 cd ../proxy

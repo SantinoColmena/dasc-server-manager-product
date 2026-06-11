@@ -18,12 +18,12 @@
 # =============================================================================
 set -euo pipefail
 
-SQLITE_DB="${Vigex_SQLITE_PATH:-/opt/vigex/central-support/data/central_support.db}"
-MARIADB_HOST="${Vigex_MARIADB_HOST:-127.0.0.1}"
-MARIADB_PORT="${Vigex_MARIADB_PORT:-3306}"
-MARIADB_USER="${Vigex_MARIADB_USER:-vigex_central}"
-MARIADB_PASS="${Vigex_MARIADB_PASS:-}"
-MARIADB_DB="${Vigex_MARIADB_DB:-vigex_central}"
+SQLITE_DB="${VIGEX_SQLITE_PATH:-/opt/vigex/central-support/data/central_support.db}"
+MARIADB_HOST="${VIGEX_MARIADB_HOST:-127.0.0.1}"
+MARIADB_PORT="${VIGEX_MARIADB_PORT:-3306}"
+MARIADB_USER="${VIGEX_MARIADB_USER:-vigex_central}"
+MARIADB_PASS="${VIGEX_MARIADB_PASS:-}"
+MARIADB_DB="${VIGEX_MARIADB_DB:-vigex_central}"
 
 RESET="\033[0m"; BOLD="\033[1m"; GREEN="\033[32m"; BLUE="\033[34m"
 YELLOW="\033[33m"; RED="\033[31m"
@@ -41,7 +41,7 @@ echo ""
 
 if [[ ! -f "${SQLITE_DB}" ]]; then
     error "No se encuentra la base de datos SQLite en: ${SQLITE_DB}"
-    error "Ajusta Vigex_SQLITE_PATH si la ruta es diferente."
+    error "Ajusta VIGEX_SQLITE_PATH si la ruta es diferente."
     exit 1
 fi
 

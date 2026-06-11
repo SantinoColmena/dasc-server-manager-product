@@ -541,8 +541,8 @@ build_unique_csv() {
 
   printf '%s\n' "$result"
 }
-Vigex_ALLOWED_HOSTS="$(build_unique_csv "127.0.0.1" "localhost" "${BACKUP_HOST}" "${SERVICES_HOST}" "${DATABASE_HOST}")"
-write_env_value "VIGEX_SSH_ALLOWED_HOSTS" "${Vigex_ALLOWED_HOSTS}"
+VIGEX_ALLOWED_HOSTS="$(build_unique_csv "127.0.0.1" "localhost" "${BACKUP_HOST}" "${SERVICES_HOST}" "${DATABASE_HOST}")"
+write_env_value "VIGEX_SSH_ALLOWED_HOSTS" "${VIGEX_ALLOWED_HOSTS}"
 
 touch "$SSH_KNOWN_HOSTS_FILE"
 chown "$APP_USER:$APP_GROUP" "$SSH_KNOWN_HOSTS_FILE"
@@ -574,18 +574,18 @@ chown "$APP_USER:$APP_GROUP" "${APP_USER_HOME}/.ssh"
 chmod 700 "${APP_USER_HOME}/.ssh"
 
 echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
-  if [[ -z "${Vigex_PASS:-}" ]]; then
+  if [[ -z "${VIGEX_PASS:-}" ]]; then
     echo
-    read -rsp "Introduce la contraseña actual del usuario vigex en ${TARGET_HOST}: " Vigex_PASS
+    read -rsp "Introduce la contraseña actual del usuario vigex en ${TARGET_HOST}: " VIGEX_PASS
     echo
   fi
 
-  if [[ -z "$Vigex_PASS" ]]; then
+  if [[ -z "$VIGEX_PASS" ]]; then
     echo "ERROR: la contraseña de vigex no puede estar vacía."
     exit 1
   fi
 
-  sudo -u "$APP_USER" sshpass -p "$Vigex_PASS" ssh-copy-id \
+  sudo -u "$APP_USER" sshpass -p "$VIGEX_PASS" ssh-copy-id \
     -i "$SSH_KEY_FILE.pub" \
     -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS_FILE" \
@@ -606,11 +606,11 @@ echo "==> Configurando acceso SSH automático al servidor ${TARGET_HOST}"
     }
 
 done
-# R-053B/B5: unset Vigex_PASS fuera del bucle para que la contraseña persista
+# R-053B/B5: unset VIGEX_PASS fuera del bucle para que la contraseña persista
 # en despliegues multi-host (Standard/Pro). Dentro del bucle, el unset borraba
 # la variable antes de la segunda iteración; read desde stdin=/dev/null devuelve
 # exit 1, que set -euo pipefail convierte en salida silenciosa del instalador.
-unset Vigex_PASS
+unset VIGEX_PASS
 
 chmod 640 "$CONFIG_FILE"
 if [[ -f "$INSTALL_DIR/tools/check_api_installation.sh" ]]; then

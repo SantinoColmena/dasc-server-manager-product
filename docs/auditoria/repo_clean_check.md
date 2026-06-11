@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio Vigex
 
-Fecha: 2026-06-11 01:57:11
+Fecha: 2026-06-11 02:06:01
 
 Ruta revisada:
 
@@ -13,14 +13,17 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - AVISO: hay cambios pendientes.
 
 ~~~text
+ M README.md
+ M deploy/api/harden_fail2ban_api.sh
+ M deploy/api/install_central_retry_timer.sh
+ M deploy/api/install_vigex_api.sh
  M deploy/api/onboarding_nuevo_cliente.sh
- M deploy/api/update_vigex_api.sh
+ M deploy/api/package/main.py
+ M deploy/api/package/scripts/retry_central_pending.py
+ M deploy/central-support/install_central_support.sh
+ M deploy/central-support/package/main.py
+ M deploy/db/migrate_sqlite_to_mariadb.sh
  M docs/validaciones/validacion_paquete_api_instalable.md
- M tools/windows/check_repo_clean.ps1
- M tools/windows/generate_monthly_report.ps1
- M tools/windows/instalar_vigex_windows.ps1
- M tools/windows/normalize_lf_hook.ps1
- M tools/windows/smoke_test_release.ps1
 ~~~
 
 ## 2. Estructura mínima obligatoria

@@ -69,7 +69,7 @@ ${USER_LINE}
 ${GROUP_LINE}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=${APP_DIR}/config.env
-Environment=Vigex_CENTRAL_RETRY_LIMIT=50
+Environment=VIGEX_CENTRAL_RETRY_LIMIT=50
 ExecStart=${APP_DIR}/venv/bin/python ${INSTALLED_SCRIPT}
 EOF
 

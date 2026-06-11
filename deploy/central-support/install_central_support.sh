@@ -55,7 +55,7 @@ if [ ! -f "${ENV_FILE}" ]; then
   CONFIG_NEEDS_INIT="true"
 elif [ ! -s "${ENV_FILE}" ]; then
   CONFIG_NEEDS_INIT="true"
-elif ! grep -q '^Vigex_CENTRAL_SECRET_KEY=' "${ENV_FILE}"; then
+elif ! grep -q '^VIGEX_CENTRAL_SECRET_KEY=' "${ENV_FILE}"; then
   CONFIG_NEEDS_INIT="true"
 fi
 
@@ -66,19 +66,19 @@ print(secrets.token_urlsafe(48))
 PY
 )"
 
-  CENTRAL_ADMIN_PASSWORD_VALUE="${Vigex_CENTRAL_ADMIN_PASSWORD:-$(python3 - <<'PY'
+  CENTRAL_ADMIN_PASSWORD_VALUE="${VIGEX_CENTRAL_ADMIN_PASSWORD:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(24))
 PY
 )}"
 
-  CENTRAL_TECH_PASSWORD_VALUE="${Vigex_CENTRAL_TECH_PASSWORD:-$(python3 - <<'PY'
+  CENTRAL_TECH_PASSWORD_VALUE="${VIGEX_CENTRAL_TECH_PASSWORD:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(24))
 PY
 )}"
 
-  CENTRAL_DEMO_TOKEN_VALUE="${Vigex_CENTRAL_DEMO_TOKEN:-$(python3 - <<'PY'
+  CENTRAL_DEMO_TOKEN_VALUE="${VIGEX_CENTRAL_DEMO_TOKEN:-$(python3 - <<'PY'
 import secrets
 print(secrets.token_urlsafe(32))
 PY
@@ -100,33 +100,33 @@ PY
 
   cat > "${ENV_FILE}" <<EOF
 # Vigex Central
-Vigex_CENTRAL_AUTH_ENABLED=true
-Vigex_CENTRAL_LAB_MODE=false
-Vigex_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
+VIGEX_CENTRAL_AUTH_ENABLED=true
+VIGEX_CENTRAL_LAB_MODE=false
+VIGEX_CENTRAL_SECRET_KEY=${CENTRAL_SECRET}
 
 # Usuarios centrales. Contraseñas almacenadas como hash PBKDF2 (M-4).
-Vigex_CENTRAL_ADMIN_USER=${Vigex_CENTRAL_ADMIN_USER:-admin}
-Vigex_CENTRAL_ADMIN_PASSWORD_HASH=${CENTRAL_ADMIN_PASSWORD_HASH_VALUE}
-Vigex_CENTRAL_TECH_USER=${Vigex_CENTRAL_TECH_USER:-tecnico}
-Vigex_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
+VIGEX_CENTRAL_ADMIN_USER=${VIGEX_CENTRAL_ADMIN_USER:-admin}
+VIGEX_CENTRAL_ADMIN_PASSWORD_HASH=${CENTRAL_ADMIN_PASSWORD_HASH_VALUE}
+VIGEX_CENTRAL_TECH_USER=${VIGEX_CENTRAL_TECH_USER:-tecnico}
+VIGEX_CENTRAL_TECH_PASSWORD_HASH=${CENTRAL_TECH_PASSWORD_HASH_VALUE}
 
 # Cliente demo para integración local-central
-Vigex_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
-Vigex_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
-Vigex_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
+VIGEX_CENTRAL_DEMO_CLIENT_ID=cliente-demo-a
+VIGEX_CENTRAL_DEMO_CLIENT_NAME=Cliente Demo A
+VIGEX_CENTRAL_DEMO_TOKEN=${CENTRAL_DEMO_TOKEN_VALUE}
 EOF
 
   chmod 600 "${ENV_FILE}"
 
   echo "==> config.env inicializado. Contraseñas almacenadas como hash PBKDF2."
   echo "==> Estas credenciales se muestran SOLO UNA VEZ. Guárdalas en un lugar seguro:"
-  echo "    Admin: ${Vigex_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
-  echo "    Técnico: ${Vigex_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
+  echo "    Admin: ${VIGEX_CENTRAL_ADMIN_USER:-admin} / ${CENTRAL_ADMIN_PASSWORD_VALUE}"
+  echo "    Técnico: ${VIGEX_CENTRAL_TECH_USER:-tecnico} / ${CENTRAL_TECH_PASSWORD_VALUE}"
 else
   echo "==> config.env ya existe, se conserva"
 
-  if ! grep -q '^Vigex_CENTRAL_LAB_MODE=' "${ENV_FILE}"; then
-    echo "Vigex_CENTRAL_LAB_MODE=false" >> "${ENV_FILE}"
+  if ! grep -q '^VIGEX_CENTRAL_LAB_MODE=' "${ENV_FILE}"; then
+    echo "VIGEX_CENTRAL_LAB_MODE=false" >> "${ENV_FILE}"
   fi
 fi
 echo "==> Ajustando permisos"
