@@ -9,7 +9,7 @@
 - **Versión actual:** `v1.0-rc1`
 - **Fase actual:** Fase 13 — Cumplimiento y evidencias automáticas (nueva dirección
   estratégica; Fases 7+8 cerradas, 9–12 con acción pendiente del usuario)
-- **Última actualización:** 2026-06-11
+- **Última actualización:** 2026-06-12
 
 ---
 
@@ -368,7 +368,9 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | ✅ 12.1 IA básica de soporte mejorada | FAQ ampliado: 16 entradas (era 8). Algoritmo con sinónimos, normalización, boost contextual. `_normalizar_palabras`, `_FAQ_SINONIMOS`. ✅ Entregado 2026-06-08 (R-085). | ✅ |
 | ✅ 12.2 API de producto documentada | Endpoint `GET /api/v1/info` con metadatos de versión. Documento `docs/tecnico/api_producto.md` con todos los endpoints, códigos HTTP e integraciones. ✅ Entregado 2026-06-08 (R-086). | ✅ |
 | ✅ 12.4 Preparación migración SQLite → MariaDB | Script `deploy/db/migrate_sqlite_to_mariadb.sh`: crea schema MariaDB, exporta CSVs, carga datos, verifica recuentos. Listo para cuando haga falta. ✅ Entregado 2026-06-08 (R-087). | ✅ |
-| 🔵 12.9 Asistente IA del panel (RAG) | Chat IA integrado: ruta `/asistente` + API `/api/asistente/chat`, RAG sobre la documentación del producto (TOP-K configurable), **5 proveedores LLM** (Ollama local **coste €0** / Anthropic / Gemini / OpenAI / Groq), rate limiting por usuario (R-090-sec), permiso nuevo `asistente`. Por defecto Ollama. ✅ Construido 2026-06-11 (**R-090**) — ⚠️ **sin commitear aún** (~2.600 líneas en `main.py` + `asistente.html`). | 🔵 |
+| ✅ 12.9 Asistente IA del panel (RAG) | Chat IA integrado: ruta `/asistente` + API `/api/asistente/chat`, RAG sobre la documentación del producto (TOP-K configurable), **6 proveedores LLM** (Ollama local **coste €0** / Anthropic / Gemini / OpenAI / Groq / **Central proxy**), rate limiting por usuario (R-090-sec), permiso nuevo `asistente`. Por defecto `central` (sin API key en el cliente). ✅ Entregado y commitado 2026-06-12 (**R-090**). | ✅ |
+| ✅ 12.10 Proxy LLM centralizado | Central Support actúa como proxy LLM para todos los clientes — ningún cliente necesita su propia API key. 5 proveedores soportados (Anthropic, Gemini, OpenAI, Groq, Ollama). Rate limiting por cliente. Proveedor activo: Groq (`llama-3.3-70b-versatile`). ✅ Entregado 2026-06-12 (**R-097**). | ✅ |
+| ✅ 12.11 Bot Telegram centralizado @VigexPanelBot | Central gestiona un único bot Telegram — los clientes solo configuran su `TELEGRAM_CHAT_ID`. Polling thread responde a `/start` y `/chatid` con el chat ID del usuario. Bot desplegado: **@VigexPanelBot**. ✅ Entregado 2026-06-12 (**R-098**). | ✅ |
 | 12.3 IA avanzada (RAG) — fase proactiva | La **base RAG ya existe** (R-090, ver 12.9). Falta la parte proactiva: análisis de logs con LLM y sugerencias automáticas. Requiere base de clientes que lo justifique. ⏳ Backlog. | 🕓 |
 | 12.5 Instalador gráfico Windows | GUI completo (WPF/Electron). Requiere tiempo significativo y base de clientes no técnicos. ⏳ Backlog. | 🕓 |
 | 12.6 WhatsApp Business API | Canal adicional de notificaciones. Requiere cuenta Meta/Twilio (~€0,05/mensaje). ⏳ Backlog. | 🕓 |
@@ -460,6 +462,8 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | 2026-06-11 | **R-090 — Asistente IA (RAG) construido** (sin commitear): chat en el panel con 5 proveedores LLM (Ollama por defecto, coste €0), rate limiting y permiso `asistente`. Adelanta la base de la Ruta 12.3 que estaba en backlog | Diferenciador de producto entregado antes de lo planificado. Pendiente de commit y validación. |
 | 2026-06-11 | **Modo oscuro extendido a todo el panel** (`dark-overrides.css`, R-083): cubre `estilo.css`, plantillas del panel API y Central Support. Sin commitear | La Ruta 10.7 inicial era el toggle; este trabajo corrige el contraste en todas las pantallas. |
 | 2026-06-11 | **F9-GATE superado.** NIF `55325787T` en páginas legales + simulacro de recuperación ejecutado en VM Ubuntu 22.04 (Escenario C: backup full + DROP TABLE + restauración, RTO real ~48 s). `R-048` (primer cliente de pago) desbloqueado | Ambos criterios que faltaban cubiertos en la misma sesión. Validación completa en `docs/validaciones/R-075_simulacro_recuperacion_2026-06-11.md`. |
+| 2026-06-12 | **R-090, R-097, R-098 entregados — Fase 12 Rutas 12.9–12.11 cerradas.** Asistente IA (RAG, 6 proveedores) commitado; proxy LLM centralizado en Central Support (Groq activo en GCloud `104.198.66.244:8010`); bot Telegram centralizado @VigexPanelBot con polling thread `/start` + `/chatid`. Fix crítico User-Agent: Python urllib sin UA era bloqueado por Cloudflare (HTTP 403). Todos los componentes validados end-to-end en `vigex-demo` (multipass). | Plan: R-090 es la base del diferenciador IA; R-097/R-098 eliminan la fricción de configuración (sin API keys ni bots propios en el cliente). |
+| 2026-06-12 | **Central Support desplegado en Google Cloud** (instancia `meme-arbitrage-bot`, proyecto `project-3390b4b5-f749-49f3-a8f`, IP `104.198.66.244:8010`, Ubuntu 22.04). Servicio systemd `vigex-central` activo y persistente. Puerto 8010 abierto via regla firewall `vigex-central-8010`. | Avance de F10-GATE: Central en VPS real (aunque aún sin HTTPS/dominio propio — eso completa 10.2). |
 | 2026-06-11 | **R-091 → R-096 entregados — Fase 13 COMPLETA.** Catálogo de controles NIS2/ENS/ISO 27001 v1.1, motor de evidencias (8 colectores, SHA256), panel semáforo, dossier exportable, ciclo de incidentes NIS2 24h/72h, validación normativa con 4 correcciones aplicadas al catálogo. **F13-GATE todos los criterios técnicos cumplidos.** | Recomendación antes de vender el módulo a cliente con obligación NIS2 real: contratar revisión por consultor externo acreditado. |
 
 ---
