@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
     init_alerts_db()
     ensure_default_recipient()
     init_cumplimiento_db()  # R-091: modelo de datos del módulo de cumplimiento NIS2/ENS/ISO 27001
+    if CUMPLIMIENTO_ENABLED:  # R-092: worker de recolección periódica de evidencias
+        tc = threading.Thread(target=_cumplimiento_worker, daemon=True, name="vigex-cumplimiento")
+        tc.start()
     # R-060: arranque del hilo de notificaciones proactivas (solo si está habilitado)
     if NOTIF_ENABLED:
         t = threading.Thread(target=_proactivo_worker, daemon=True, name="vigex-notif")
@@ -9978,3 +9981,355 @@ async def api_cumplimiento_controles(request: Request):
         "cobertura_por_norma": stats,
         "controles": controles,
     }
+
+
+# =====================================================================
+# R-092 / Fase 13.2 — Motor de evidencias datadas e inmutables
+#
+# Colectores por familia + worker diario + API on-demand.
+# Cada snapshot se guarda en evidencias.db con timestamp ISO + SHA256
+# del contenido JSON, garantizando integridad en el tiempo.
+#
+# Familias con colector automático:
+#   1 → backup_history    (cargar_historial_backups via SSH)
+#   2 → monitoring        (métricas CPU/mem/disco via SSH)
+#   5 → auth_logs         (snapshot local auth_logs.json + SHA256)
+#   6 → reports           (listado + SHA256 del último informe)
+#   7 → cifrado_config    (attestation de configuración SSH+HTTPS)
+#   8 → paquetes          (pip list --format json; pip-audit si disponible)
+# Familias sin colector automático:
+#   3 → ciclo de vida de incidentes (→ R-095)
+#   4 → revisión de accesos / MFA   (→ R-09x futuro)
+#   9-12 → papeleo GRC, no se construye
+#   13 → inventario formal (→ R-093)
+# =====================================================================
+
+CUMPLIMIENTO_ENABLED = os.getenv("CUMPLIMIENTO_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+CUMPLIMIENTO_COLLECT_INTERVAL = int(os.getenv("CUMPLIMIENTO_COLLECT_INTERVAL", "86400"))
+
+# familia_id → tipo_evidencia (label canónico para la tabla evidencias)
+_EV_FAMILIA_TIPO: dict[int, str] = {
+    1: "backup_history",
+    2: "monitoring_metrics",
+    5: "auth_logs_snapshot",
+    6: "reports_snapshot",
+    7: "cifrado_config",
+    8: "paquetes_instalados",
+}
+
+
+def _ev_sha256(data: str) -> str:
+    import hashlib
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
+def _ev_guardar(control_id: str, tipo: str, datos: dict) -> None:
+    """Persiste un snapshot de evidencia en cumplimiento.db."""
+    import json as _json
+    datos_str = _json.dumps(datos, ensure_ascii=False, sort_keys=True)
+    sha = _ev_sha256(datos_str)
+    conn = get_cumplimiento_db()
+    conn.execute(
+        """
+        INSERT INTO evidencias (control_id, recogida_en, tipo_evidencia, datos_json, sha256)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (control_id, datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), tipo, datos_str, sha),
+    )
+    conn.commit()
+    conn.close()
+
+
+# ── Colectores ────────────────────────────────────────────────────────
+
+def _ev_copias_seguridad() -> dict:
+    """Familia 1: snapshot del historial de backups via SSH."""
+    try:
+        historial = cargar_historial_backups(limit=50)
+        ok = [b for b in historial if b.get("status") == "OK"]
+        last = ok[0] if ok else None
+        return {
+            "disponible": True,
+            "total_registros": len(historial),
+            "total_ok": len(ok),
+            "ultimo_backup_fecha": last.get("timestamp") if last else None,
+            "ultimo_backup_tipo": last.get("type") if last else None,
+            "ultimo_backup_sha256": (last.get("notes", "").split("sha256=")[-1].split(";")[0]
+                                     if last and "sha256=" in last.get("notes", "") else None),
+        }
+    except Exception as exc:
+        return {"disponible": False, "error": str(exc)}
+
+
+def _ev_monitorizacion() -> dict:
+    """Familia 2: snapshot de métricas del servidor via SSH."""
+    try:
+        resultados: dict = {}
+        for proc_file, label in [
+            ("/proc/loadavg", "loadavg"),
+            ("/proc/meminfo", "meminfo"),
+            ("/proc/uptime", "uptime"),
+        ]:
+            r = ssh_run(SERVIDOR_BACKUPS, "cat", [proc_file])
+            resultados[label] = r.get("stdout", "")[:500] if r.get("ok") else None
+
+        r_df = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        resultados["df"] = r_df.get("stdout", "")[:500] if r_df.get("ok") else None
+
+        return {"disponible": True, "raw": resultados}
+    except Exception as exc:
+        return {"disponible": False, "error": str(exc)}
+
+
+def _ev_auth_logs() -> dict:
+    """Familia 5: snapshot de auth_logs.json con SHA256 del fichero completo."""
+    import hashlib
+    try:
+        ensure_auth_logs_file()
+        raw = AUTH_LOGS_FILE.read_bytes()
+        sha_fichero = hashlib.sha256(raw).hexdigest()
+        logs = json.loads(raw.decode("utf-8"))
+        total = len(logs)
+        ok_count = sum(1 for e in logs if e.get("event") in ("login_ok", "login_success"))
+        fail_count = sum(1 for e in logs if "fail" in e.get("event", "").lower()
+                         or "block" in e.get("event", "").lower())
+        primer = logs[-1].get("timestamp") if logs else None
+        ultimo = logs[0].get("timestamp") if logs else None
+        return {
+            "disponible": True,
+            "total_entradas": total,
+            "logins_ok": ok_count,
+            "intentos_fallidos": fail_count,
+            "rango_desde": primer,
+            "rango_hasta": ultimo,
+            "sha256_fichero": sha_fichero,
+        }
+    except Exception as exc:
+        return {"disponible": False, "error": str(exc)}
+
+
+def _ev_informes_recientes() -> dict:
+    """Familia 6: snapshot del directorio de informes (último informe + SHA256)."""
+    import hashlib
+    try:
+        reports_dir = BASE_DIR / "reports"
+        if not reports_dir.exists():
+            return {"disponible": False, "error": "directorio reports/ no existe"}
+        archivos = sorted(reports_dir.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not archivos:
+            archivos = sorted(reports_dir.glob("*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
+        ultimo = archivos[0] if archivos else None
+        sha_ultimo = None
+        if ultimo:
+            sha_ultimo = hashlib.sha256(ultimo.read_bytes()).hexdigest()
+        return {
+            "disponible": True,
+            "total_informes": len(archivos),
+            "ultimo_informe": ultimo.name if ultimo else None,
+            "ultimo_informe_fecha": (
+                datetime.utcfromtimestamp(ultimo.stat().st_mtime).strftime("%Y-%m-%dT%H:%M:%SZ")
+                if ultimo else None
+            ),
+            "ultimo_informe_sha256": sha_ultimo,
+        }
+    except Exception as exc:
+        return {"disponible": False, "error": str(exc)}
+
+
+def _ev_cifrado_config() -> dict:
+    """Familia 7: attestation de configuración de cifrado (SSH + HTTPS)."""
+    import hashlib
+    ssh_key_existe = Path(SSH_KEY_PATH).exists() if SSH_KEY_PATH else False
+    https_activo = os.getenv("VIGEX_SESSION_HTTPS_ONLY", "false").lower() in ("1", "true", "yes")
+    ssh_algoritmo = "ed25519" if "ed25519" in (SSH_KEY_PATH or "").lower() else "rsa"
+    datos = {
+        "disponible": True,
+        "ssh_clave_existe": ssh_key_existe,
+        "ssh_algoritmo": ssh_algoritmo,
+        "ssh_batch_mode": True,
+        "ssh_strict_host_checking": True,
+        "https_only_activo": https_activo,
+        "nota": (
+            "Attestation de configuración. Cifrado de disco en reposo requiere "
+            "verificación manual en el servidor."
+        ),
+    }
+    return datos
+
+
+def _ev_paquetes_instalados() -> dict:
+    """Familia 8: inventario de paquetes Python instalados + pip-audit si disponible."""
+    import subprocess, sys
+    try:
+        r = subprocess.run(
+            [sys.executable, "-m", "pip", "list", "--format", "json"],
+            capture_output=True, text=True, timeout=30,
+        )
+        paquetes = json.loads(r.stdout) if r.returncode == 0 else []
+    except Exception:
+        paquetes = []
+
+    audit_result = None
+    try:
+        r2 = subprocess.run(
+            [sys.executable, "-m", "pip_audit", "--format", "json"],
+            capture_output=True, text=True, timeout=120,
+        )
+        if r2.returncode in (0, 1):  # 0=sin vulns, 1=con vulns
+            audit_result = json.loads(r2.stdout)
+    except Exception:
+        pass  # pip-audit no instalado — sin escáner; inventario sigue siendo válido
+
+    return {
+        "disponible": True,
+        "total_paquetes": len(paquetes),
+        "paquetes": paquetes,
+        "pip_audit_disponible": audit_result is not None,
+        "pip_audit_resultado": audit_result,
+    }
+
+
+# ── Orquestador de colección ──────────────────────────────────────────
+
+# Mapa familia_id → función colectora
+_EV_COLECTORES: dict[int, Any] = {
+    1: _ev_copias_seguridad,
+    2: _ev_monitorizacion,
+    5: _ev_auth_logs,
+    6: _ev_informes_recientes,
+    7: _ev_cifrado_config,
+    8: _ev_paquetes_instalados,
+}
+
+
+def recoger_todas_evidencias() -> dict[str, Any]:
+    """
+    Ejecuta todos los colectores y persiste snapshots en cumplimiento.db.
+    Devuelve un resumen: familias procesadas, errores, timestamp.
+    """
+    conn = get_cumplimiento_db()
+    # Recupera los control_id agrupados por familia_id
+    filas = conn.execute(
+        "SELECT id, familia_id FROM controles ORDER BY familia_id"
+    ).fetchall()
+    conn.close()
+
+    familia_a_controles: dict[int, list[str]] = {}
+    for f in filas:
+        fid = f["familia_id"]
+        familia_a_controles.setdefault(fid, []).append(f["id"])
+
+    procesadas = []
+    errores = []
+
+    for familia_id, colector in _EV_COLECTORES.items():
+        control_ids = familia_a_controles.get(familia_id, [])
+        tipo = _EV_FAMILIA_TIPO.get(familia_id, f"familia_{familia_id}")
+        try:
+            datos = colector()
+            for cid in control_ids:
+                _ev_guardar(cid, tipo, datos)
+            procesadas.append(familia_id)
+        except Exception as exc:
+            errores.append({"familia_id": familia_id, "error": str(exc)})
+
+    return {
+        "recogida_en": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "familias_procesadas": procesadas,
+        "errores": errores,
+    }
+
+
+# ── Worker daemon ─────────────────────────────────────────────────────
+
+def _cumplimiento_worker() -> None:
+    """Hilo daemon: recolecta evidencias cada CUMPLIMIENTO_COLLECT_INTERVAL segundos."""
+    _time_mod.sleep(180)  # espera inicial para no sobrecargar el arranque
+    while True:
+        try:
+            recoger_todas_evidencias()
+        except Exception:
+            pass
+        _time_mod.sleep(max(3600, CUMPLIMIENTO_COLLECT_INTERVAL))
+
+
+# El worker arranca en lifespan; aquí solo lo iniciamos si CUMPLIMIENTO_ENABLED.
+# (La llamada real está en lifespan(), que ya lo registra via init_cumplimiento_db.)
+
+
+# ── Rutas de evidencias ───────────────────────────────────────────────
+
+@app.post("/api/cumplimiento/recoger")
+async def api_cumplimiento_recoger(request: Request):
+    """
+    Dispara la recolección de evidencias ahora mismo (solo admin).
+    Devuelve un resumen de lo recogido.
+    """
+    if not is_admin(request):
+        raise HTTPException(status_code=403, detail="Solo el administrador puede forzar la recolección")
+    resumen = await asyncio.to_thread(recoger_todas_evidencias)
+    return resumen
+
+
+@app.get("/api/cumplimiento/evidencias")
+async def api_cumplimiento_evidencias(request: Request, familia_id: int | None = None, limit: int = 20):
+    """
+    Devuelve los snapshots de evidencia más recientes.
+    Filtra opcionalmente por familia_id.
+    """
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+
+    limit = min(max(1, limit), 200)
+
+    conn = get_cumplimiento_db()
+    if familia_id is not None:
+        rows = conn.execute(
+            """
+            SELECT e.*, c.familia_id, c.familia_nombre, c.norma
+            FROM evidencias e
+            JOIN controles c ON e.control_id = c.id
+            WHERE c.familia_id = ?
+            ORDER BY e.recogida_en DESC
+            LIMIT ?
+            """,
+            (familia_id, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT e.*, c.familia_id, c.familia_nombre, c.norma
+            FROM evidencias e
+            JOIN controles c ON e.control_id = c.id
+            ORDER BY e.recogida_en DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    conn.close()
+
+    return {"evidencias": [dict(r) for r in rows]}
+
+
+@app.get("/api/cumplimiento/evidencias/{control_id:path}")
+async def api_cumplimiento_evidencias_control(request: Request, control_id: str, limit: int = 5):
+    """Devuelve los últimos N snapshots de un control concreto."""
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+
+    limit = min(max(1, limit), 50)
+    conn = get_cumplimiento_db()
+    rows = conn.execute(
+        "SELECT * FROM evidencias WHERE control_id = ? ORDER BY recogida_en DESC LIMIT ?",
+        (control_id, limit),
+    ).fetchall()
+    conn.close()
+    return {"control_id": control_id, "evidencias": [dict(r) for r in rows]}

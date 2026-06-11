@@ -115,6 +115,30 @@
         padding: .1rem .45rem; border-radius: 4px; font-family: monospace;
     }
 
+    /* ── Barra de acciones (R-092) ── */
+    .comp-actions {
+        display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+    .comp-btn-recoger {
+        display: inline-flex; align-items: center; gap: .45rem;
+        background: #6d28d9; color: #fff; border: none; border-radius: 8px;
+        padding: .45rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+        transition: background .15s;
+    }
+    .comp-btn-recoger:hover   { background: #5b21b6; }
+    .comp-btn-recoger:disabled { opacity: .6; cursor: default; }
+    .comp-ultima-recoleccion  { font-size: .8rem; color: #9ca3af; }
+
+    /* ── Chip de evidencia en control ── */
+    .comp-ev-chip {
+        display: inline-flex; align-items: center; gap: .3rem;
+        font-size: .7rem; padding: .15rem .5rem; border-radius: 99px;
+        background: #d1fae5; color: #065f46; font-weight: 600;
+        margin-top: .35rem;
+    }
+    .comp-ev-chip.sin-ev { background: #f3f4f6; color: #9ca3af; }
+
     /* ── Estado vacío / cargando ── */
     .comp-loading { text-align: center; padding: 3rem; color: #9ca3af; }
 
@@ -138,7 +162,17 @@
             Cobertura de evidencias técnicas por control normativo · Catálogo v1.0 · Fase 13 (R-091)
         </p>
     </div>
-    <span class="comp-badge"><i class="fa-solid fa-flask"></i> Beta — R-091</span>
+    <span class="comp-badge"><i class="fa-solid fa-flask"></i> Beta — R-092</span>
+</div>
+
+<!-- Barra de acciones R-092 -->
+<div class="comp-actions">
+    {% if is_admin %}
+    <button class="comp-btn-recoger" id="btn-recoger" onclick="recogerEvidencias()">
+        <i class="fa-solid fa-rotate"></i> Recoger evidencias ahora
+    </button>
+    {% endif %}
+    <span class="comp-ultima-recoleccion" id="ultima-recoleccion">Cargando última recolección…</span>
 </div>
 
 <div class="comp-aviso">
@@ -184,22 +218,58 @@
 (function () {
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
     let allData = null;
+    let evData = {};   // familia_id → última recogida ISO string
     let activeFilter = 'all';
+
+    function fmtFecha(iso) {
+        if (!iso) return null;
+        try {
+            const d = new Date(iso);
+            return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit',
+                year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch { return iso; }
+    }
 
     async function loadData() {
         try {
-            const r = await fetch('/api/cumplimiento/controles', {
-                headers: { 'X-CSRF-Token': CSRF }
-            });
-            if (!r.ok) throw new Error(r.status);
-            allData = await r.json();
+            const [rCat, rEv] = await Promise.all([
+                fetch('/api/cumplimiento/controles', { headers: { 'X-CSRF-Token': CSRF } }),
+                fetch('/api/cumplimiento/evidencias?limit=200', { headers: { 'X-CSRF-Token': CSRF } }),
+            ]);
+            if (!rCat.ok) throw new Error(rCat.status);
+            allData = await rCat.json();
+
+            // Construir mapa familia_id → timestamp de última evidencia
+            if (rEv.ok) {
+                const evJson = await rEv.json();
+                for (const ev of (evJson.evidencias || [])) {
+                    const fid = ev.familia_id;
+                    if (!evData[fid] || ev.recogida_en > evData[fid]) {
+                        evData[fid] = ev.recogida_en;
+                    }
+                }
+            }
+
             renderStats(allData);
             buildFilters(allData);
             renderFamilies(allData, activeFilter);
+            renderUltimaRecoleccion();
         } catch (e) {
             document.getElementById('comp-families').innerHTML =
                 '<div class="comp-loading" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar el catálogo</div>';
         }
+    }
+
+    function renderUltimaRecoleccion() {
+        const todas = Object.values(evData);
+        const el = document.getElementById('ultima-recoleccion');
+        if (!el) return;
+        if (todas.length === 0) {
+            el.textContent = 'Sin evidencias recogidas todavía';
+            return;
+        }
+        const ultima = todas.sort().reverse()[0];
+        el.textContent = 'Última recolección: ' + (fmtFecha(ultima) || ultima);
     }
 
     function renderStats(data) {
@@ -207,7 +277,6 @@
         let html = '';
         for (const [norma, s] of Object.entries(stats)) {
             if (norma === 'Transversal') continue;
-            const pct = s.pct_completa + Math.round(s.pct_parcial / 2);
             html += `
             <div class="comp-stat-card">
                 <div class="comp-stat-norm">${norma}</div>
@@ -248,7 +317,6 @@
             ? data.controles
             : data.controles.filter(c => c.norma === normaFilter);
 
-        // Agrupar por familia_id
         const families = {};
         for (const c of controles) {
             if (!families[c.familia_id]) {
@@ -261,7 +329,6 @@
 
         let html = '';
         for (const [fid, fam] of Object.entries(families)) {
-            // Madurez dominante de la familia (peor caso)
             const madurezDom = fam.rows.reduce((worst, c) => {
                 return MADUREZ_ORDER[c.madurez] > MADUREZ_ORDER[worst] ? c.madurez : worst;
             }, 'completa');
@@ -269,6 +336,12 @@
             const tags = fam.rows.map(c =>
                 `<span class="comp-tag tag-${c.madurez}">${c.norma} ${c.articulo}</span>`
             ).join('');
+
+            // Chip de evidencia para esta familia
+            const ultimaEv = evData[parseInt(fid)];
+            const evChip = ultimaEv
+                ? `<span class="comp-ev-chip"><i class="fa-solid fa-database"></i> ${fmtFecha(ultimaEv)}</span>`
+                : `<span class="comp-ev-chip sin-ev"><i class="fa-solid fa-circle-xmark"></i> Sin evidencia</span>`;
 
             const filas = fam.rows.map(c => {
                 let sources = '';
@@ -302,18 +375,44 @@
                 <div class="comp-family-header" onclick="toggleFamily('fam-${fid}')">
                     <span class="comp-family-dot dot-${madurezDom}"></span>
                     <span class="comp-family-name">${fam.nombre}</span>
-                    <div class="comp-family-tags">${tags}</div>
+                    <div style="flex:1; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
+                        <div class="comp-family-tags">${tags}</div>
+                        ${evChip}
+                    </div>
                     <i class="fa-solid fa-chevron-down comp-family-chevron"></i>
                 </div>
                 <div class="comp-family-body">${filas}</div>
             </div>`;
         }
 
-        document.getElementById('comp-families').innerHTML = html || '<div class="comp-loading">Sin controles para este filtro</div>';
+        document.getElementById('comp-families').innerHTML =
+            html || '<div class="comp-loading">Sin controles para este filtro</div>';
     }
 
     window.toggleFamily = function(id) {
         document.getElementById(id)?.classList.toggle('open');
+    };
+
+    window.recogerEvidencias = async function() {
+        const btn = document.getElementById('btn-recoger');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recogiendo…'; }
+        try {
+            const r = await fetch('/api/cumplimiento/recoger', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': CSRF },
+            });
+            const res = await r.json();
+            if (r.ok) {
+                evData = {};  // forzar recarga
+                await loadData();
+            } else {
+                alert('Error: ' + (res.detail || r.status));
+            }
+        } catch (e) {
+            alert('Error de red al recoger evidencias');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recoger evidencias ahora'; }
+        }
     };
 
     loadData();
