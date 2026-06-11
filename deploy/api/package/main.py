@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
     ensure_users_file()
     init_alerts_db()
     ensure_default_recipient()
+    init_cumplimiento_db()  # R-091: modelo de datos del módulo de cumplimiento NIS2/ENS/ISO 27001
     # R-060: arranque del hilo de notificaciones proactivas (solo si está habilitado)
     if NOTIF_ENABLED:
         t = threading.Thread(target=_proactivo_worker, daemon=True, name="vigex-notif")
@@ -251,6 +252,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").strip()
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 ALERTS_DB_PATH = os.getenv("ALERTS_DB_PATH", "data/alerts.db")
+CUMPLIMIENTO_DB_PATH = os.getenv("CUMPLIMIENTO_DB_PATH", "data/cumplimiento.db")
 ALERTS_DEFAULT_CHANNEL = os.getenv("ALERTS_DEFAULT_CHANNEL", "telegram")
 
 # =====================
@@ -271,6 +273,7 @@ AVAILABLE_PERMISSIONS = {
     "alertas": "Alertas",
     "terminal": "Terminal",
     "asistente": "Asistente IA",   # R-090: permiso para acceder al chat IA
+    "cumplimiento": "Cumplimiento NIS2",  # R-091 (Fase 13): módulo de evidencias auditables
 }
 
 
@@ -580,6 +583,7 @@ def get_common_context(request: Request) -> dict[str, Any]:
         "can_servicios": admin or "servicios" in perms,
         "can_alertas": admin or "alertas" in perms,
         "can_terminal": admin or "terminal" in perms,
+        "can_cumplimiento": admin or "cumplimiento" in perms,  # R-091
         "permission_labels": permission_labels_from_keys(effective_keys),
         "permissions_count": len(effective_keys),
         "auto_logout_minutes": AUTO_LOGOUT_MINUTES,
@@ -9478,4 +9482,499 @@ def api_info():
             "GET /api/soporte/estado/{ticket_id}",
         ],
         "documentacion": "/api/docs",
+    }
+
+
+# =====================================================================
+# R-091 / Fase 13.1 — Módulo de cumplimiento: modelo de datos y catálogo
+#
+# Entrega de R-091:
+#   - Esquema SQLite cumplimiento.db: tablas `controles` + `evidencias` (shell
+#     para R-092). `controles` es el catálogo estático versionado que vincula
+#     cada control normativo (NIS2/ENS/ISO 27001:2022) a la evidencia que
+#     Vigex ya genera.
+#   - _COMPLIANCE_CATALOG: fuente de verdad del catálogo en código; se siembra
+#     en DB en cada arranque (idempotente por INSERT OR IGNORE).
+#   - GET /api/cumplimiento/controles: devuelve el catálogo con estadísticas
+#     de cobertura por norma (requiere permiso `cumplimiento` o admin).
+#   - GET /cumplimiento: página HTML stub (UI completa → R-093).
+#
+# Nota de rigor: este catálogo es correspondencia de trabajo. Antes de
+# afirmar cobertura ante un auditor debe validarse contra el texto
+# normativo real (R-096). Vigex aporta evidencia, no certifica cumplimiento.
+# =====================================================================
+
+_CUMPLIMIENTO_CATALOG_VERSION = "1.0"
+
+_COMPLIANCE_CATALOG: list[dict] = [
+    # ── Familia 1: Continuidad y copias de seguridad ──────────────────
+    {
+        "id": "1-NIS2", "familia_id": 1,
+        "familia_nombre": "Continuidad y copias de seguridad",
+        "norma": "NIS2", "articulo": "21.2(c)",
+        "requisito": "Backups regulares, probados, con retención definida y restauración verificable",
+        "fuentes_evidencia": '["cargar_historial_backups","plan_restauracion_backups","plan_eliminacion_backups","sync_external_backup.sh","audit.log"]',
+        "madurez": "completa", "notas": None,
+    },
+    {
+        "id": "1-ENS", "familia_id": 1,
+        "familia_nombre": "Continuidad y copias de seguridad",
+        "norma": "ENS", "articulo": "op.exp.8",
+        "requisito": "Copias de respaldo regulares con procedimientos de recuperación verificados",
+        "fuentes_evidencia": '["cargar_historial_backups","plan_restauracion_backups","plan_eliminacion_backups","sync_external_backup.sh","audit.log"]',
+        "madurez": "completa", "notas": None,
+    },
+    {
+        "id": "1-ISO", "familia_id": 1,
+        "familia_nombre": "Continuidad y copias de seguridad",
+        "norma": "ISO27001", "articulo": "A.8.13",
+        "requisito": "Copias de seguridad de información, software y sistemas con pruebas de restauración",
+        "fuentes_evidencia": '["cargar_historial_backups","plan_restauracion_backups","plan_eliminacion_backups","sync_external_backup.sh","audit.log"]',
+        "madurez": "completa", "notas": None,
+    },
+    # ── Familia 2: Monitorización y disponibilidad ────────────────────
+    {
+        "id": "2-NIS2", "familia_id": 2,
+        "familia_nombre": "Monitorización y disponibilidad",
+        "norma": "NIS2", "articulo": "21.2(a)",
+        "requisito": "Vigilar sistemas, detectar anomalías, registrar capacidad y disponibilidad",
+        "fuentes_evidencia": '["monitoreo_metrics","_parse_loadavg","_parse_meminfo","_parse_df","_parse_uptime","estado_servicios_remoto"]',
+        "madurez": "completa", "notas": None,
+    },
+    {
+        "id": "2-ENS", "familia_id": 2,
+        "familia_nombre": "Monitorización y disponibilidad",
+        "norma": "ENS", "articulo": "op.mon",
+        "requisito": "Monitorización continua de los sistemas de información",
+        "fuentes_evidencia": '["monitoreo_metrics","_parse_loadavg","_parse_meminfo","_parse_df","_parse_uptime","estado_servicios_remoto"]',
+        "madurez": "completa", "notas": None,
+    },
+    {
+        "id": "2-ISO", "familia_id": 2,
+        "familia_nombre": "Monitorización y disponibilidad",
+        "norma": "ISO27001", "articulo": "A.8.16",
+        "requisito": "Monitorización de actividades anómalas y de la capacidad de los sistemas",
+        "fuentes_evidencia": '["monitoreo_metrics","_parse_loadavg","_parse_meminfo","_parse_df","_parse_uptime","estado_servicios_remoto"]',
+        "madurez": "completa", "notas": None,
+    },
+    # ── Familia 3: Gestión de incidentes ─────────────────────────────
+    {
+        "id": "3-NIS2", "familia_id": 3,
+        "familia_nombre": "Gestión de incidentes",
+        "norma": "NIS2", "articulo": "21.2(b)",
+        "requisito": "Detectar, registrar, escalar y notificar incidentes (notificación NIS2: 24 h / 72 h)",
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "madurez": "parcial",
+        "notas": "Detecta y alerta; falta ciclo de vida del incidente y notificación NIS2 24h/72h → R-095",
+    },
+    {
+        "id": "3-ENS", "familia_id": 3,
+        "familia_nombre": "Gestión de incidentes",
+        "norma": "ENS", "articulo": "op.exp.7",
+        "requisito": "Gestión de incidentes de seguridad: registro, comunicación y análisis",
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "madurez": "parcial",
+        "notas": "Falta ciclo de vida completo del incidente → R-095",
+    },
+    {
+        "id": "3-ISO", "familia_id": 3,
+        "familia_nombre": "Gestión de incidentes",
+        "norma": "ISO27001", "articulo": "A.5.24-A.5.26",
+        "requisito": "Planificación, gestión y aprendizaje de incidentes de seguridad",
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "madurez": "parcial",
+        "notas": "Falta ciclo de vida completo del incidente → R-095",
+    },
+    # ── Familia 4: Control de accesos y autenticación ─────────────────
+    {
+        "id": "4-NIS2", "familia_id": 4,
+        "familia_nombre": "Control de accesos y autenticación",
+        "norma": "NIS2", "articulo": "21.2(i)/(j)",
+        "requisito": "Gestión de accesos, mínimo privilegio, políticas de autenticación segura",
+        "fuentes_evidencia": '["AVAILABLE_PERMISSIONS","hash_password","verify_password","login_is_blocked","register_auth_log"]',
+        "madurez": "parcial",
+        "notas": "Control de accesos por módulo y bcrypt implementados; falta MFA y revisión periódica documentada",
+    },
+    {
+        "id": "4-ENS", "familia_id": 4,
+        "familia_nombre": "Control de accesos y autenticación",
+        "norma": "ENS", "articulo": "op.acc",
+        "requisito": "Control de acceso basado en roles con principio de mínimo privilegio",
+        "fuentes_evidencia": '["AVAILABLE_PERMISSIONS","hash_password","verify_password","login_is_blocked","register_auth_log"]',
+        "madurez": "parcial",
+        "notas": "Falta MFA y revisión periódica de accesos documentada",
+    },
+    {
+        "id": "4-ISO", "familia_id": 4,
+        "familia_nombre": "Control de accesos y autenticación",
+        "norma": "ISO27001", "articulo": "A.5.15-A.5.18/A.8.5",
+        "requisito": "Gestión de identidades, autenticación y control de acceso privilegiado",
+        "fuentes_evidencia": '["AVAILABLE_PERMISSIONS","hash_password","verify_password","login_is_blocked","register_auth_log"]',
+        "madurez": "parcial",
+        "notas": "Falta MFA y revisión periódica de accesos documentada",
+    },
+    # ── Familia 5: Registro y trazabilidad ───────────────────────────
+    {
+        "id": "5-NIS2", "familia_id": 5,
+        "familia_nombre": "Registro y trazabilidad (logs)",
+        "norma": "NIS2", "articulo": "21.2(a)",
+        "requisito": "Registro de actividad, accesos y eventos; conservado y protegido",
+        "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
+        "madurez": "parcial",
+        "notas": "Se registra; falta retención garantizada e integridad/sellado del log → R-092",
+    },
+    {
+        "id": "5-ENS", "familia_id": 5,
+        "familia_nombre": "Registro y trazabilidad (logs)",
+        "norma": "ENS", "articulo": "op.exp.8/op.mon",
+        "requisito": "Registro de la actividad de los usuarios y administradores",
+        "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
+        "madurez": "parcial",
+        "notas": "Falta retención garantizada e integridad/sellado del log → R-092",
+    },
+    {
+        "id": "5-ISO", "familia_id": 5,
+        "familia_nombre": "Registro y trazabilidad (logs)",
+        "norma": "ISO27001", "articulo": "A.8.15",
+        "requisito": "Registros de actividad (logging): generación, protección y análisis",
+        "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
+        "madurez": "parcial",
+        "notas": "Falta retención garantizada e integridad/sellado del log → R-092",
+    },
+    # ── Familia 6: Evidencia datada (transversal) ─────────────────────
+    {
+        "id": "6-TRANSVERSAL", "familia_id": 6,
+        "familia_nombre": "Evidencia datada e informe de cumplimiento",
+        "norma": "Transversal", "articulo": "NIS2+ENS+ISO (todas)",
+        "requisito": "Demostrar cumplimiento ante auditor de forma continua, datada y trazable",
+        "fuentes_evidencia": '["_reports_worker","_informe_html","reports/"]',
+        "madurez": "parcial",
+        "notas": "Motor de informes existe; falta mapeo a controles y sellado como evidencia auditable → R-092",
+    },
+    # ── Familia 7: Cifrado ────────────────────────────────────────────
+    {
+        "id": "7-NIS2", "familia_id": 7,
+        "familia_nombre": "Cifrado",
+        "norma": "NIS2", "articulo": "21.2(h)",
+        "requisito": "Cifrado de datos en reposo y en tránsito",
+        "fuentes_evidencia": '["build_ssh_base_command","validate_ssh_run","HTTPS_reverse_proxy","sync_external_backup.sh"]',
+        "madurez": "parcial",
+        "notas": "Canal SSH/HTTPS y copia externa cifrada GPG; falta evidenciar cifrado de datos en reposo sistemáticamente",
+    },
+    {
+        "id": "7-ENS", "familia_id": 7,
+        "familia_nombre": "Cifrado",
+        "norma": "ENS", "articulo": "mp.info.3",
+        "requisito": "Cifrado de información clasificada en almacenamiento y tránsito",
+        "fuentes_evidencia": '["build_ssh_base_command","validate_ssh_run","HTTPS_reverse_proxy","sync_external_backup.sh"]',
+        "madurez": "parcial",
+        "notas": "Canal y copia externa cifrados; falta evidenciar cifrado en reposo sistemáticamente",
+    },
+    {
+        "id": "7-ISO", "familia_id": 7,
+        "familia_nombre": "Cifrado",
+        "norma": "ISO27001", "articulo": "A.8.24",
+        "requisito": "Uso de criptografía para proteger información confidencial",
+        "fuentes_evidencia": '["build_ssh_base_command","validate_ssh_run","HTTPS_reverse_proxy","sync_external_backup.sh"]',
+        "madurez": "parcial",
+        "notas": "Falta evidenciar cifrado de datos en reposo sistemáticamente",
+    },
+    # ── Familia 8: Gestión de vulnerabilidades ────────────────────────
+    {
+        "id": "8-NIS2", "familia_id": 8,
+        "familia_nombre": "Gestión de vulnerabilidades y parches",
+        "norma": "NIS2", "articulo": "21.2(e)",
+        "requisito": "Gestión de vulnerabilidades, parcheo y versiones de componentes",
+        "fuentes_evidencia": '["pip-audit (R-054D)","version_SO_via_SSH"]',
+        "madurez": "parcial",
+        "notas": "pip-audit puntual; no hay inventario continuo. Candidato menor: evidenciable vía SSH ya permitido",
+    },
+    {
+        "id": "8-ENS", "familia_id": 8,
+        "familia_nombre": "Gestión de vulnerabilidades y parches",
+        "norma": "ENS", "articulo": "op.exp.4",
+        "requisito": "Gestión de la configuración y parcheo de sistemas",
+        "fuentes_evidencia": '["pip-audit (R-054D)","version_SO_via_SSH"]',
+        "madurez": "parcial",
+        "notas": "pip-audit puntual; no hay inventario continuo",
+    },
+    {
+        "id": "8-ISO", "familia_id": 8,
+        "familia_nombre": "Gestión de vulnerabilidades y parches",
+        "norma": "ISO27001", "articulo": "A.8.8",
+        "requisito": "Gestión de vulnerabilidades técnicas en sistemas de información",
+        "fuentes_evidencia": '["pip-audit (R-054D)","version_SO_via_SSH"]',
+        "madurez": "parcial",
+        "notas": "pip-audit puntual; no hay inventario continuo",
+    },
+    # ── Familia 9: Análisis de riesgos (papeleo — no se construye) ────
+    {
+        "id": "9-NIS2", "familia_id": 9,
+        "familia_nombre": "Análisis de riesgos",
+        "norma": "NIS2", "articulo": "21.2(a)",
+        "requisito": "Metodología documentada de análisis y gestión de riesgos",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — Vigex no lo persigue; integrar con GRC externo si el cliente lo requiere",
+    },
+    {
+        "id": "9-ENS", "familia_id": 9,
+        "familia_nombre": "Análisis de riesgos",
+        "norma": "ENS", "articulo": "op.pl.1",
+        "requisito": "Análisis de riesgos documentado y actualizado",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — no se construye",
+    },
+    {
+        "id": "9-ISO", "familia_id": 9,
+        "familia_nombre": "Análisis de riesgos",
+        "norma": "ISO27001", "articulo": "Cláusula 6 / A.5.2",
+        "requisito": "Proceso de valoración y tratamiento de riesgos de seguridad",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — no se construye",
+    },
+    # ── Familia 10: Políticas y procedimientos ────────────────────────
+    {
+        "id": "10-NIS2", "familia_id": 10,
+        "familia_nombre": "Políticas y procedimientos",
+        "norma": "NIS2", "articulo": "21.2(a)",
+        "requisito": "Política de seguridad y procedimientos escritos y aprobados",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — no se construye en Vigex",
+    },
+    {
+        "id": "10-ENS", "familia_id": 10,
+        "familia_nombre": "Políticas y procedimientos",
+        "norma": "ENS", "articulo": "org.*",
+        "requisito": "Marco organizativo de seguridad: política, roles y funciones",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — no se construye en Vigex",
+    },
+    {
+        "id": "10-ISO", "familia_id": 10,
+        "familia_nombre": "Políticas y procedimientos",
+        "norma": "ISO27001", "articulo": "A.5.1",
+        "requisito": "Políticas de seguridad de la información: aprobación y comunicación",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "Papeleo GRC — no se construye en Vigex",
+    },
+    # ── Familia 11: Formación y concienciación ────────────────────────
+    {
+        "id": "11-NIS2", "familia_id": 11,
+        "familia_nombre": "Formación y concienciación",
+        "norma": "NIS2", "articulo": "21.2(g)",
+        "requisito": "Formación continua en ciberseguridad con métricas de seguimiento",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue — fuera del alcance de Vigex",
+    },
+    {
+        "id": "11-ENS", "familia_id": 11,
+        "familia_nombre": "Formación y concienciación",
+        "norma": "ENS", "articulo": "mp.per.3",
+        "requisito": "Concienciación y formación del personal en seguridad",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue — fuera del alcance de Vigex",
+    },
+    {
+        "id": "11-ISO", "familia_id": 11,
+        "familia_nombre": "Formación y concienciación",
+        "norma": "ISO27001", "articulo": "A.6.3",
+        "requisito": "Concienciación, formación y educación en seguridad de la información",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue — fuera del alcance de Vigex",
+    },
+    # ── Familia 12: Seguridad de proveedores ──────────────────────────
+    {
+        "id": "12-NIS2", "familia_id": 12,
+        "familia_nombre": "Seguridad de proveedores",
+        "norma": "NIS2", "articulo": "21.2(d)",
+        "requisito": "Seguridad en la cadena de suministro y relaciones con proveedores",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue — integrar con GRC externo si el cliente lo requiere",
+    },
+    {
+        "id": "12-ENS", "familia_id": 12,
+        "familia_nombre": "Seguridad de proveedores",
+        "norma": "ENS", "articulo": "op.ext",
+        "requisito": "Gestión de la seguridad en servicios externos y subcontratistas",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue",
+    },
+    {
+        "id": "12-ISO", "familia_id": 12,
+        "familia_nombre": "Seguridad de proveedores",
+        "norma": "ISO27001", "articulo": "A.5.19-A.5.22",
+        "requisito": "Seguridad en relaciones con proveedores y contratos de servicio",
+        "fuentes_evidencia": '[]',
+        "madurez": "ausente",
+        "notas": "No se persigue",
+    },
+    # ── Familia 13: Inventario de activos ─────────────────────────────
+    {
+        "id": "13-ENS", "familia_id": 13,
+        "familia_nombre": "Inventario de activos",
+        "norma": "ENS", "articulo": "op.pl.2",
+        "requisito": "Inventario de activos y clasificación de la información",
+        "fuentes_evidencia": '["config_perfil_hosts","estado_servicios_remoto"]',
+        "madurez": "parcial",
+        "notas": "Conoce hosts/servicios/BBDD gestionados; no hay inventario formal exportable",
+    },
+    {
+        "id": "13-ISO", "familia_id": 13,
+        "familia_nombre": "Inventario de activos",
+        "norma": "ISO27001", "articulo": "A.5.9",
+        "requisito": "Inventario de activos de información y responsables asignados",
+        "fuentes_evidencia": '["config_perfil_hosts","estado_servicios_remoto"]',
+        "madurez": "parcial",
+        "notas": "Base parcial reutilizable; no hay inventario formal exportable",
+    },
+]
+
+
+def resolve_cumplimiento_db_path() -> Path:
+    raw = (CUMPLIMIENTO_DB_PATH or "").strip()
+    if not raw:
+        return BASE_DIR / "data" / "cumplimiento.db"
+    p = Path(raw)
+    if not p.is_absolute():
+        p = BASE_DIR / p
+    return p
+
+
+def get_cumplimiento_db() -> sqlite3.Connection:
+    p = resolve_cumplimiento_db_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(p))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_cumplimiento_db() -> None:
+    conn = get_cumplimiento_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS controles (
+            id                TEXT PRIMARY KEY,
+            familia_id        INTEGER NOT NULL,
+            familia_nombre    TEXT NOT NULL,
+            norma             TEXT NOT NULL,
+            articulo          TEXT NOT NULL,
+            requisito         TEXT NOT NULL,
+            fuentes_evidencia TEXT NOT NULL,
+            madurez           TEXT NOT NULL CHECK(madurez IN ('completa','parcial','ausente')),
+            notas             TEXT,
+            version_catalogo  TEXT NOT NULL DEFAULT '1.0'
+        )
+        """
+    )
+
+    # Tabla de snapshots de evidencia (shell para R-092; se crea aquí para que
+    # R-092 solo añada el motor de recolección, sin cambiar el esquema).
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS evidencias (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            control_id       TEXT NOT NULL REFERENCES controles(id),
+            recogida_en      TEXT NOT NULL,
+            tipo_evidencia   TEXT NOT NULL,
+            datos_json       TEXT NOT NULL,
+            sha256           TEXT NOT NULL,
+            version_colector TEXT NOT NULL DEFAULT '1.0'
+        )
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_ev_control ON evidencias(control_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_ev_fecha ON evidencias(recogida_en)")
+
+    conn.commit()
+
+    # Sembrar catálogo (idempotente: INSERT OR IGNORE).
+    for row in _COMPLIANCE_CATALOG:
+        cur.execute(
+            """
+            INSERT OR IGNORE INTO controles
+              (id, familia_id, familia_nombre, norma, articulo,
+               requisito, fuentes_evidencia, madurez, notas, version_catalogo)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                row["id"], row["familia_id"], row["familia_nombre"],
+                row["norma"], row["articulo"], row["requisito"],
+                row["fuentes_evidencia"], row["madurez"],
+                row.get("notas"), _CUMPLIMIENTO_CATALOG_VERSION,
+            ),
+        )
+    conn.commit()
+    conn.close()
+
+
+# ── Rutas del módulo de cumplimiento ──────────────────────────────────
+
+@app.get("/cumplimiento")
+async def cumplimiento_page(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+    return templates.TemplateResponse(
+        "cumplimiento.html",
+        {"request": request, "user": user, "perms": perms},
+    )
+
+
+@app.get("/api/cumplimiento/controles")
+async def api_cumplimiento_controles(request: Request):
+    """
+    Devuelve el catálogo de controles normativos con estadísticas de cobertura.
+    Requiere permiso `cumplimiento` o rol admin.
+    """
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+
+    conn = get_cumplimiento_db()
+    cur = conn.cursor()
+    filas = cur.execute(
+        "SELECT * FROM controles ORDER BY familia_id, norma"
+    ).fetchall()
+    conn.close()
+
+    controles = [dict(f) for f in filas]
+
+    # Estadísticas de cobertura por norma
+    stats: dict[str, dict] = {}
+    for c in controles:
+        norma = c["norma"]
+        if norma not in stats:
+            stats[norma] = {"total": 0, "completa": 0, "parcial": 0, "ausente": 0}
+        stats[norma]["total"] += 1
+        stats[norma][c["madurez"]] += 1
+
+    for norma, s in stats.items():
+        t = s["total"]
+        s["pct_completa"] = round(s["completa"] / t * 100) if t else 0
+        s["pct_parcial"] = round(s["parcial"] / t * 100) if t else 0
+
+    return {
+        "version_catalogo": _CUMPLIMIENTO_CATALOG_VERSION,
+        "total_controles": len(controles),
+        "cobertura_por_norma": stats,
+        "controles": controles,
     }

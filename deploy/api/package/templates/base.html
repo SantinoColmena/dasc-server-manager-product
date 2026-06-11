@@ -123,6 +123,12 @@
                 <i class="fa-solid fa-shield-halved"></i> Recuperación
             </a>
 
+            {% if can_cumplimiento %}
+            <a href="/cumplimiento" class="{{ 'active' if current_path.startswith('/cumplimiento') else '' }}">
+                <i class="fa-solid fa-scale-balanced"></i> Cumplimiento
+            </a>
+            {% endif %}
+
             {% if is_admin %}
             <div class="menu-section">Admin</div>
             <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') and not current_path.startswith('/soporte/reportes') else '' }}">
