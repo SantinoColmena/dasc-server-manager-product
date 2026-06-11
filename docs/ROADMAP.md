@@ -300,15 +300,13 @@ restaurable ✅ (backup_vigex_api.sh); Jira recibe tickets via webhook ✅; FAQ 
 - [x] Web del producto publicada con planes y precios. ✅ Desplegada y accesible en `vigex.es` (Netlify + Formspree + Plausible, 2026-06-11).
 - [x] Dominio + email profesional activos. ✅ `vigex.es` accesible y email operativo (confirmado por el usuario 2026-06-11).
 - [x] Método de cobro operativo. ✅ Payment Links de Stripe en **modo live** (confirmado por el usuario 2026-06-11).
-- 🟡 Términos de servicio y privacidad publicados. *(publicados con datos reales; **falta solo el NIF** — alta de autónomo)*
-- [ ] Plan de recuperación documentado y probado. *(documentado en `docs/tecnico/`, falta prueba trimestral)*
+- [x] Términos de servicio y privacidad publicados. ✅ NIF `55325787T` incorporado (2026-06-11).
+- [x] Plan de recuperación documentado y probado. ✅ Simulacro Escenario C ejecutado en VM Ubuntu 22.04 — backup full + DROP TABLE + restauración completa con SHA256 verificado. RTO real: ~48 s (objetivo < 4 h). Ver `docs/validaciones/R-075_simulacro_recuperacion_2026-06-11.md`.
 
-> **Estado del gate (2026-06-11):** a **un paso de superarse**. Dominio, email,
-> web y cobro en live ya están confirmados. Solo restan **dos acciones**: (1) el
-> **NIF** en las páginas legales (al alta de autónomo) y (2) una **prueba real del
-> plan de recuperación**. El producto, la web y el cobro están operativos.
+> **Estado del gate (2026-06-11): ✅ SUPERADO.** Todos los criterios cumplidos.
+> Producto listo para el primer cliente de pago.
 
-**→ R-048: Primer cliente de pago real** (se activa al superar F9-GATE)
+**→ R-048: Primer cliente de pago real** ✅ F9-GATE superado — listo para activar.
 
 ---
 
@@ -461,6 +459,7 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | 2026-06-11 | **Web del producto activada en real** (Fase 9.2/9.3 pasan de "código listo" a **desplegado**): Netlify (`netlify.toml`), Formspree con ID real, **Payment Links de Stripe** en los botones de precios, **Plausible Analytics**, favicon y `gracias.html` post-pago | El bloqueo de F9-GATE ya no es de producto sino administrativo (NIF, email, modo live de Stripe). |
 | 2026-06-11 | **R-090 — Asistente IA (RAG) construido** (sin commitear): chat en el panel con 5 proveedores LLM (Ollama por defecto, coste €0), rate limiting y permiso `asistente`. Adelanta la base de la Ruta 12.3 que estaba en backlog | Diferenciador de producto entregado antes de lo planificado. Pendiente de commit y validación. |
 | 2026-06-11 | **Modo oscuro extendido a todo el panel** (`dark-overrides.css`, R-083): cubre `estilo.css`, plantillas del panel API y Central Support. Sin commitear | La Ruta 10.7 inicial era el toggle; este trabajo corrige el contraste en todas las pantallas. |
+| 2026-06-11 | **F9-GATE superado.** NIF `55325787T` en páginas legales + simulacro de recuperación ejecutado en VM Ubuntu 22.04 (Escenario C: backup full + DROP TABLE + restauración, RTO real ~48 s). `R-048` (primer cliente de pago) desbloqueado | Ambos criterios que faltaban cubiertos en la misma sesión. Validación completa en `docs/validaciones/R-075_simulacro_recuperacion_2026-06-11.md`. |
 
 ---
 

@@ -151,4 +151,4 @@ Para validar que el plan funciona, realizar trimestralmente:
 
 | Fecha | Escenario | Resultado | RTO real | Notas |
 |-------|-----------|-----------|----------|-------|
-| — | — | — | — | Sin pruebas realizadas aún |
+| 2026-06-11 | Escenario C (pérdida de datos, restauración completa) | ✅ OK | ~48 segundos | VM Ubuntu 22.04, MariaDB. 3 registros eliminados y restaurados íntegros. SHA256 verificado. Ver `docs/validaciones/R-075_simulacro_recuperacion_2026-06-11.md` |
