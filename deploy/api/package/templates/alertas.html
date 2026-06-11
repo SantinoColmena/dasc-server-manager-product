@@ -139,20 +139,17 @@
         <div class="card-head">
             <div class="card-icon amber"><i class="fa-solid fa-comments"></i></div>
             <div class="card-title">
-                <h3>Detectar chats recientes</h3>
-                <p>Haz <code>/start</code> al bot o añade el bot a un grupo y luego pulsa detectar.</p>
+                <h3>Obtener tu Chat ID</h3>
+                <p>Escribe <code>/chatid</code> a <strong>@VigexPanelBot</strong> en Telegram — el bot responde con tu ID en segundos.</p>
             </div>
         </div>
 
         <div class="actions-row">
-            {% if bot_link %}
-            <a class="btn" href="{{ bot_link }}" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Abrir bot en Telegram</a>
-            {% endif %}
+            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Abrir @VigexPanelBot</a>
             <form method="post" action="/alertas/detect" class="inline-form">
                 {{ csrf_input(request) }}
-                <button class="btn primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Detectar chats recientes</button>
+                <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Detectar chats recientes</button>
             </form>
-            <a class="btn" href="{{ manual_url or '/static/docs/guia_alertas_telegram.pdf' }}" target="_blank" rel="noopener"><i class="fa-solid fa-book"></i> Abrir guía PDF</a>
         </div>
 
         <div class="table-wrap">
@@ -175,7 +172,7 @@
                     </tr>
                     {% endfor %}
                     {% if not detected_chats %}
-                    <tr><td colspan="4" class="empty-state">Todavía no hay chats detectados. Haz <code>/start</code> al bot y pulsa detectar.</td></tr>
+                    <tr><td colspan="4" class="empty-state">Escribe <code>/chatid</code> a @VigexPanelBot en Telegram y pulsa "Detectar chats recientes".</td></tr>
                     {% endif %}
                 </tbody>
             </table>
@@ -192,20 +189,22 @@
         </div>
 
         <div class="muted-box">
-            <strong>Recomendado para el MVP:</strong> crear un grupo de Telegram por empresa, añadir el bot y usar ese único <code>chat_id</code>.
+            <strong>Sin configuración extra:</strong> el bot <strong>@VigexPanelBot</strong> es gestionado por Vigex.
+            Solo necesitas tu <code>TELEGRAM_CHAT_ID</code> — obtenlo escribiendo <code>/chatid</code> al bot.
+            Cada empresa recibe únicamente sus propias alertas.
         </div>
 
         <form method="post" action="/alertas/recipient/add">
             {{ csrf_input(request) }}
             <div class="simple-form-grid">
                 <div class="field-block"><label>Empresa</label><input type="text" name="company" placeholder="Ej: Cliente Demo" required></div>
-                <div class="field-block"><label>Nombre visible</label><input type="text" name="name" placeholder="Ej: Grupo Alertas IT" required></div>
-                <div class="field-block"><label>Tipo</label><select name="kind" required><option value="group">Grupo (recomendado)</option><option value="user">Usuario individual</option></select></div>
-                <div class="field-block"><label>Chat ID</label><input type="text" name="destination" placeholder="Ej: -1001234567890" required></div>
+                <div class="field-block"><label>Nombre visible</label><input type="text" name="name" placeholder="Ej: Alertas IT" required></div>
+                <div class="field-block"><label>Tipo</label><select name="kind" required><option value="user">Usuario individual</option><option value="group">Grupo</option></select></div>
+                <div class="field-block"><label>Chat ID</label><input type="text" name="destination" placeholder="Ej: 1827559281" required></div>
             </div>
             <div class="actions-row">
                 <button class="btn primary" type="submit"><i class="fa-solid fa-plus"></i> Guardar destinatario</button>
-                <a class="btn" href="{{ manual_url or '/static/docs/guia_alertas_telegram.pdf' }}" target="_blank" rel="noopener"><i class="fa-solid fa-book"></i> Manual chat_id (PDF)</a>
+                <a class="btn" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Obtener Chat ID</a>
             </div>
         </form>
 
@@ -269,19 +268,16 @@
 
     <article class="card span-6">
         <div class="card-head">
-            <div class="card-icon blue"><i class="fa-solid fa-book-open"></i></div>
-            <div class="card-title"><h3>Cómo usarlo en el MVP</h3><p>Proceso recomendado para dejar Telegram listo.</p></div>
+            <div class="card-icon blue"><i class="fa-brands fa-telegram"></i></div>
+            <div class="card-title"><h3>Cómo activar las alertas Telegram</h3><p>Tres pasos — sin crear bots ni tokens propios.</p></div>
         </div>
         <ol class="help-list">
-            <li>Crea o reutiliza vuestro bot corporativo.</li>
-            <li>Crea un grupo por empresa en Telegram.</li>
-            <li>Añade el bot al grupo y envía un mensaje.</li>
-            <li>Obtén el <code>chat_id</code> del grupo con la guía PDF.</li>
-            <li>Guarda el destinatario aquí en Alertas.</li>
-            <li>Haz una prueba manual con el botón de prueba.</li>
+            <li>Abre Telegram y busca <strong>@VigexPanelBot</strong>.</li>
+            <li>Escríbele <code>/chatid</code> — el bot responde con tu número de Chat ID.</li>
+            <li>Pega ese número como destinatario en esta página y haz una prueba.</li>
         </ol>
         <div class="actions-row">
-            <a class="btn primary" href="{{ manual_url or '/static/docs/guia_alertas_telegram.pdf' }}" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i> Abrir guía PDF</a>
+            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Abrir @VigexPanelBot</a>
         </div>
     </article>
 </section>
