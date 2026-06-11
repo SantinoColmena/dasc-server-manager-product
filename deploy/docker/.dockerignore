@@ -1,0 +1,15 @@
+deploy/api/package/config.env
+deploy/api/package/data/*.db
+deploy/api/package/data/*.json
+deploy/api/package/data/*.log
+deploy/api/package/reports/
+deploy/api/package/.ssh/
+deploy/api/package/venv/
+deploy/api/package/__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.git/
+docs/
+tools/windows/
+web/
