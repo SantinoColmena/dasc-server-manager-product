@@ -1,0 +1,111 @@
+# Auditoría exhaustiva de lógica — 2026-06-11
+
+> **Contexto.** Revisión profunda de toda la lógica del producto solicitada por el
+> desarrollador tras un ciclo de desarrollo hecho mayoritariamente con un modelo
+> menor. Objetivo: dejar el código "perfecto y limpio". Auditor: Opus 4.8.
+> **Alcance:** `deploy/api/package/main.py` (~9.400 líneas),
+> `deploy/central-support/package/main.py`, y los scripts bash de
+> `deploy/backup-services/package/`.
+
+## 1. Resumen ejecutivo
+
+Se auditaron 8 áreas. El modelo de seguridad del producto (allowlist SSH +
+`shlex.quote`, auth bcrypt, CSRF, permisos por módulo, SQL parametrizado, token
+multi-cliente) es **sólido y consistente**. Se encontraron **3 defectos
+accionables** —2 de severidad alta, 1 de robustez— **todos corregidos** en este
+mismo commit. El resto del código quedó verificado sin hallazgos.
+
+| # | Severidad | Área | Estado |
+|---|---|---|---|
+| FINDING-1 | 🔴 Alta (RCE autenticado) | Automatización de backups (heredoc) | ✅ Corregido |
+| FINDING-2 | 🟠 Alta (disponibilidad) | Asistente IA R-090 (event loop) | ✅ Corregido |
+| FINDING-3 | 🟡 Robustez | `backups_api.sh` (TSV) | ✅ Corregido |
+| Extra | 🟢 Limpieza | `SyntaxWarning` escape `\w` | ✅ Corregido |
+
+## 2. Hallazgos y correcciones
+
+### FINDING-1 — Inyección por delimitador de heredoc (RCE en host de backups)
+- **Dónde:** `crear_automatizacion_backup_remota()` + ruta `POST /backups/automation/create`.
+- **Causa:** los campos de texto libre `notes` (y `db`/`dest`) se interpolan, vía
+  `shlex.quote`, dentro de un heredoc con delimitador fijo
+  (`<<'VIGEX_CRON_BLOCK'`). `shlex.quote` **preserva los saltos de línea
+  literales**, de modo que un `notes` con `"\nVIGEX_CRON_BLOCK\n<comandos>"`
+  cierra el heredoc antes de tiempo y ejecuta `<comandos>` como shell en el host
+  de backups. Requiere usuario autenticado con permiso `backups`.
+- **Impacto:** ejecución de comandos arbitrarios en el host de backups, eludiendo
+  el allowlist de scripts SSH en el que se apoya el modelo de seguridad. Además,
+  un salto de línea corrompía el crontab aunque no hubiera ataque.
+- **Fix:** se rechaza cualquier carácter de control (`ord < 32`) en `db`, `dest`
+  y `notes` en la ruta. Una entrada de cron es siempre de una sola línea, así que
+  el rechazo es además correcto funcionalmente. *(Defensa en profundidad: ver
+  FINDING-3 en el lado bash.)*
+
+### FINDING-2 — Llamada bloqueante al LLM congela el event loop
+- **Dónde:** `asistente_chat_api()` (`async`) → `_rag_generate()`.
+- **Causa:** `_rag_generate` hace HTTP **bloqueante** (`urllib`, `timeout=300` con
+  Ollama; SDK síncrono con Anthropic). Llamado directamente dentro de una ruta
+  `async`, bloquea el event loop de Uvicorn. Con el despliegue documentado (un
+  solo worker), **una sola consulta congela el panel entero para todos los
+  usuarios** durante la inferencia (hasta 5 minutos con Ollama en CPU).
+- **Impacto:** denegación de servicio trivial; el proveedor por defecto (Ollama
+  local en CPU) es justamente el más lento.
+- **Fix:** se delega la generación a un hilo con
+  `await asyncio.to_thread(_rag_generate, ...)`, liberando el event loop.
+
+### FINDING-3 — Corrupción de `history.tsv` por `echo -e` + entrada sin sanear
+- **Dónde:** `backups_api.sh`, escritura de la fila de historial.
+- **Causa:** la fila se escribía con `echo -e` y `${DB}`/`${NOTES}` sin sanear. Un
+  salto de línea o tabulador en `notes` rompe el TSV (líneas/columnas falsas) y
+  `echo -e` además interpreta secuencias con backslash.
+- **Impacto:** principalmente robustez (rompe el listado y el parsing del
+  historial). El impacto de seguridad es bajo porque `restore_api.sh` y el borrado
+  en cascada validan checksum y contención de ruta antes de actuar.
+- **Fix:** se neutralizan `\n`/`\r`/`\t` en `DB` y `NOTES` (mismo patrón que
+  `audit_log`) y se escribe con `printf` en lugar de `echo -e`.
+
+### Extra — `SyntaxWarning: invalid escape sequence '\w'`
+- **Dónde:** cadena de ayuda con una ruta Windows `tools\windows\...` en `main.py`.
+- **Fix:** backslashes escapados (`tools\\windows\\...`). Verificado con
+  `python -W error::SyntaxWarning -m py_compile`.
+
+## 3. Áreas verificadas sin hallazgos
+
+- **Ejecución SSH:** `validate_ssh_run` (allowlist host+script), `ssh_run`
+  (`shlex.quote` por token), `leer_backup_remoto` (ruta validada + `--`), borrado
+  en cascada (IDs `isdigit`). Sólido.
+- **Terminal (`/api/terminal/run`):** RCE por diseño, pero bien contenido —
+  permiso `terminal`, host restringido a máquinas configuradas, límite de
+  longitud y auditoría completa.
+- **Auth/sesión/CSRF:** bcrypt (passlib), lockout por IP, CSRF con
+  `compare_digest`, cookie `httponly`+`samesite=lax`+`https_only` configurable,
+  orden de middleware correcto, gating por `has_permission`/`is_admin`.
+- **Restauración/retención:** `restore_api.sh` valida ID, confirmación, contención
+  de ruta (`readlink -m`), SHA256 y `gzip -t`. `safe_retention_cleanup` nunca borra
+  fuera del root permitido.
+- **Asistente IA (resto):** auth + permiso + rate limiting + límites de longitud +
+  sanitización de historial; sin acceso a herramientas (prompt-injection de bajo
+  riesgo).
+- **Central Support:** SQL parametrizado, `validate_client_token` rechaza cliente
+  inactivo y usa `compare_digest`, y la consulta de ticket verifica pertenencia al
+  cliente (sin fuga entre clientes).
+- **Alertas/monitorización:** SQL parametrizado; contenido de alertas interno.
+- **Scripts bash restantes:** `servicios_api.sh` (ACTION whitelist, SERVICE
+  saneado), `sync_external_backup.sh` (config de operador, `trap cleanup`). Todos
+  con `set -euo pipefail`.
+
+## 4. Notas menores (no corregidas — bajo impacto, registradas)
+
+- Central `GET /api/v1/support/tickets/{id}`: comprueba pertenencia antes que el
+  token → oráculo de existencia de ticket (sin fuga de contenido). Severidad baja.
+- Modelo Anthropic por defecto `claude-3-haiku-20240307` (antiguo); es un valor de
+  `config.env`, ajustable sin tocar código.
+- `asistente_chat_api`: un body JSON malformado devuelve 500 en vez de 400.
+- `mysqldump --databases "$DB"`: podría blindarse con `--`; `db` ya va entre
+  comillas y validado contra caracteres de control.
+
+## 5. Verificación
+
+- `python -W error::SyntaxWarning -m py_compile main.py` → limpio.
+- `bash -n backups_api.sh` → OK; EOL LF preservado (`file`).
+- `check_api_package_installable.ps1` → 50/50 OK.
+- `check_repo_clean.ps1` → exit 0.

@@ -278,7 +278,15 @@ if [[ "$TYPE" != "full" ]]; then
 fi
 
 TIMESTAMP="$(date -Iseconds)"
-echo -e "${ID}\t${TIMESTAMP}\t${TYPE}\t${DB}\t${FINAL_FILE}\t${BASE_ID}\tOK\t${NOTES};sha256=${SHA256};size=${SIZE_BYTES}" >> "$HISTORY_FILE"
+# Saneado (auditoría 2026-06-11, FINDING-3): DB y NOTES pueden originarse en el
+# panel; un salto de línea o tabulador corrompería el TSV de historial (y, vía
+# 'echo -e', un backslash se interpretaría). Neutralizamos esos caracteres a
+# espacios y escribimos con printf para tratar el contenido de forma literal.
+DB_SAFE="${DB//$'\n'/ }";       DB_SAFE="${DB_SAFE//$'\r'/ }";       DB_SAFE="${DB_SAFE//$'\t'/ }"
+NOTES_SAFE="${NOTES//$'\n'/ }"; NOTES_SAFE="${NOTES_SAFE//$'\r'/ }"; NOTES_SAFE="${NOTES_SAFE//$'\t'/ }"
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+  "${ID}" "${TIMESTAMP}" "${TYPE}" "${DB_SAFE}" "${FINAL_FILE}" "${BASE_ID}" "OK" \
+  "${NOTES_SAFE};sha256=${SHA256};size=${SIZE_BYTES}" >> "$HISTORY_FILE"
 audit_log "backup.create" "OK" "id=${ID}" "type=${TYPE}" "db=${DB}" "file=${FINAL_FILE}" "sha256=${SHA256}" "size=${SIZE_BYTES}"
 
 safe_retention_cleanup "$DEST" "$RETENTION" "$HISTORY_FILE" "$CHECKSUM_FILE"

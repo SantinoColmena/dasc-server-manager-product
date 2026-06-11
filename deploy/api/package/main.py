@@ -5,6 +5,7 @@ from urllib.parse import quote
 from urllib.request import Request as UrlRequest, urlopen
 from urllib.error import URLError, HTTPError
 import os
+import asyncio
 import json
 import sqlite3
 import subprocess
@@ -3483,6 +3484,19 @@ def backups_automation_create(
 
     db = (db or "").strip()
     dest = (dest or "/home/vigex/backups").strip()
+
+    # Seguridad (auditoría 2026-06-11, FINDING-1): db/dest/notes acaban en una
+    # única línea del crontab y dentro de un heredoc remoto en
+    # crear_automatizacion_backup_remota. Un salto de línea rompería el crontab
+    # y permitiría inyección por delimitador de heredoc (ejecución de comandos
+    # en el host de backups). Una entrada de cron es siempre de una sola línea,
+    # así que rechazamos cualquier carácter de control en estos campos.
+    for _valor in (db, dest, notes):
+        if any(ord(ch) < 32 for ch in (_valor or "")):
+            return RedirectResponse(
+                url="/backups?ok=0&msg=Caracteres+no+validos+en+el+formulario",
+                status_code=303,
+            )
 
     if not db:
         return RedirectResponse(
@@ -7319,7 +7333,7 @@ _FAQ_ENTRIES: list[dict] = [
             "2. Anotar la versión actual: `head -5 /opt/vigex/api/main.py`.\n"
             "3. Revisar el CHANGELOG en `docs/ROADMAP.md` para cambios incompatibles.\n"
             "\n"
-            "Desde Windows puedes usar: `tools\windows\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar). Si el servicio falla después, revisa los logs con `journalctl -u vigex-api -n 50`.\n"
+            "Desde Windows puedes usar: `tools\\windows\\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar). Si el servicio falla después, revisa los logs con `journalctl -u vigex-api -n 50`.\n"
         ),
         "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade", "actualización"],
     },
@@ -9156,7 +9170,11 @@ async def asistente_chat_api(request: Request):
         and m.get("content")
     ][-20:]
 
-    respuesta = _rag_generate(mensaje, historial_limpio)
+    # Auditoría 2026-06-11 (FINDING-2): _rag_generate hace llamadas HTTP
+    # bloqueantes (urllib, hasta 300 s con Ollama). En una ruta async eso
+    # congelaría el event loop de Uvicorn y, con un solo worker, todo el panel
+    # para todos los usuarios. Se delega a un hilo para no bloquear el loop.
+    respuesta = await asyncio.to_thread(_rag_generate, mensaje, historial_limpio)
 
     log_event(
         tipo="ASISTENTE_IA",
