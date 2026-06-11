@@ -62,6 +62,8 @@ Thumbs.db
 
 # Docker local
 docker-compose.override.yml
+# Artefactos de build del instalador Windows (R-099) — generados por makensis
+deploy/docker/VigexSetup.exe
 
 # Python cache
 *.pyc
