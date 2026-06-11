@@ -20,7 +20,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGE_DIR="${SCRIPT_DIR}/package"
 
 # ── Colores ──────────────────────────────────────────────────────────────────
 RESET="\033[0m"
@@ -166,6 +165,15 @@ section "PASO 7 — Generando config.env"
 
 CONFIG_TARGET="/tmp/config_${VIGEX_CLIENTE_ID}_$(date +%Y%m%d_%H%M%S).env"
 
+# FIX onboarding-hosts: hasta ahora el asistente escribía VIGEX_API_HOST/
+# VIGEX_DB_HOST/VIGEX_BACKUP_HOST, claves que ni main.py ni install_vigex_api.sh
+# leen jamás, dejando el config.env funcionalmente incompleto (las IPs no llegaban
+# al panel). Se emiten las claves canónicas BACKUPS_HOST/SERVICIOS_HOST/
+# LOGS_DB_HOST/TERMINAL_DATABASE_HOST — las mismas de config/perfiles/*.env.example
+# y de las lecturas os.getenv() del panel. Mapeo desde el modelo de 3 IPs del
+# onboarding: servicios y backups conviven en IP_BACKUP (en standard IP_BACKUP=
+# IP_API), DB/logs en IP_DB; coincide con los defaults del instalador, donde
+# SERVICIOS_HOST y TERMINAL_DATABASE_HOST heredan del host compartido.
 cat > "${CONFIG_TARGET}" << ENVEOF
 # Vigex — config.env generado por onboarding_nuevo_cliente.sh
 # Cliente: ${VIGEX_CLIENTE_NOMBRE}
@@ -179,10 +187,11 @@ ADMIN_PASSWORD=${ADMIN_HASH}
 
 VIGEX_PROFILE=${VIGEX_PERFIL}
 
-# ── IPs de los servidores
-VIGEX_API_HOST=${IP_API}
-VIGEX_DB_HOST=${IP_DB}
-VIGEX_BACKUP_HOST=${IP_BACKUP}
+# ── IPs de los servidores (claves canónicas que lee el panel)
+BACKUPS_HOST=${IP_BACKUP}
+SERVICIOS_HOST=${IP_BACKUP}
+LOGS_DB_HOST=${IP_DB}
+TERMINAL_DATABASE_HOST=${IP_DB}
 
 # ── SSH
 VIGEX_SSH_ALLOWED_HOSTS=${IP_DB},${IP_BACKUP}
@@ -216,21 +225,32 @@ echo ""
 echo "¿Ejecutar el instalador ahora con la config generada? [s/N]"
 read -r EJECUTAR_INSTALL
 if [[ "${EJECUTAR_INSTALL,,}" == "s" ]]; then
-    info "Copiando config.env y lanzando el instalador..."
+    info "Sembrando config.env y lanzando el instalador..."
     export VIGEX_PROFILE="${VIGEX_PERFIL}"
-    export VIGEX_API_HOST="${IP_API}"
-    export VIGEX_DB_HOST="${IP_DB}"
-    export VIGEX_BACKUP_HOST="${IP_BACKUP}"
-    # El instalador leerá la config del env o pedirá interactivamente
-    cp "${CONFIG_TARGET}" "${PACKAGE_DIR}/config.env.onboarding"
+    # FIX onboarding-hosts: exportar las claves canónicas que prompt_config_key del
+    # instalador busca en el entorno (${!key}); así no vuelve a preguntar las IPs.
+    export BACKUPS_HOST="${IP_BACKUP}"
+    export SERVICIOS_HOST="${IP_BACKUP}"
+    export LOGS_DB_HOST="${IP_DB}"
+    export TERMINAL_DATABASE_HOST="${IP_DB}"
+    # FIX onboarding-seed: antes se copiaba el config a package/config.env.onboarding,
+    # fichero que el instalador NO consume — perdiendo SECRET_KEY, el hash de
+    # ADMIN_PASSWORD, SMTP y Central generados aquí (el instalador regeneraba clave y
+    # volvía a pedir la contraseña). Se siembra ahora directamente el config.env del
+    # destino: install_vigex_api.sh respeta un config.env existente y solo rellena lo
+    # que falte (ver bloques "existente conservado"). INSTALL_DIR debe coincidir con
+    # el del instalador.
+    INSTALL_DIR="/opt/vigex/api"
+    mkdir -p "${INSTALL_DIR}"
+    install -m 600 "${CONFIG_TARGET}" "${INSTALL_DIR}/config.env"
     bash "${SCRIPT_DIR}/install_vigex_api.sh"
     ok "Instalador completado."
 else
-    info "Instalación omitida. Ejecuta manualmente:"
+    info "Instalación omitida. Ejecuta manualmente (siembra el config ANTES de instalar"
+    info "para que el instalador conserve SECRET_KEY, la contraseña y el resto):"
+    echo "  sudo mkdir -p /opt/vigex/api"
+    echo "  sudo install -m 600 ${CONFIG_TARGET} /opt/vigex/api/config.env"
     echo "  sudo bash deploy/api/install_vigex_api.sh"
-    echo ""
-    info "Y copia la config generada:"
-    echo "  sudo cp ${CONFIG_TARGET} /opt/vigex/api/config.env"
     echo "  sudo systemctl restart vigex-api"
 fi
 
