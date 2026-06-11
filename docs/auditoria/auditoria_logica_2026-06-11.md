@@ -93,15 +93,18 @@ mismo commit. El resto del código quedó verificado sin hallazgos.
   saneado), `sync_external_backup.sh` (config de operador, `trap cleanup`). Todos
   con `set -euo pipefail`.
 
-## 4. Notas menores (no corregidas — bajo impacto, registradas)
+## 4. Notas menores · ✅ TODAS CORREGIDAS (commit posterior)
 
-- Central `GET /api/v1/support/tickets/{id}`: comprueba pertenencia antes que el
-  token → oráculo de existencia de ticket (sin fuga de contenido). Severidad baja.
-- Modelo Anthropic por defecto `claude-3-haiku-20240307` (antiguo); es un valor de
-  `config.env`, ajustable sin tocar código.
-- `asistente_chat_api`: un body JSON malformado devuelve 500 en vez de 400.
-- `mysqldump --databases "$DB"`: podría blindarse con `--`; `db` ya va entre
-  comillas y validado contra caracteres de control.
+Inicialmente registradas como de bajo impacto; corregidas a petición del
+desarrollador para dejar el código 100 % limpio:
+
+- ✅ Central `GET /api/v1/support/tickets/{id}`: ahora valida el token del cliente
+  **antes** de revelar la existencia del ticket (elimina el oráculo de existencia).
+- ✅ Modelo Anthropic por defecto actualizado de `claude-3-haiku-20240307`
+  (deprecado) a `claude-haiku-4-5`, en `main.py` y `config.env.example`.
+- ✅ `asistente_chat_api`: un body JSON malformado devuelve ahora 400 (no 500).
+- ✅ `backups_api.sh`: se rechaza un nombre de BD que empiece por `-` para que
+  `mysqldump` no lo interprete como una opción.
 
 ## 5. Verificación
 
