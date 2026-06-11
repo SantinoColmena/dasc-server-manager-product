@@ -4,19 +4,18 @@
 
 {% block extra_head %}
 <style>
-    /* ── R-091 / Fase 13 — Módulo de cumplimiento NIS2/ENS/ISO 27001 ── */
+    /* ── R-093 / Fase 13 — Panel de cumplimiento NIS2/ENS/ISO 27001 ── */
     .comp-header {
         display: flex; align-items: flex-start; justify-content: space-between;
-        flex-wrap: wrap; gap: .75rem; margin-bottom: 1.75rem;
+        flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem;
     }
     .comp-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
-    .comp-subtitle { color: #6b7280; font-size: .95rem; margin: .25rem 0 0; }
-
+    .comp-subtitle { color: #6b7280; font-size: .9rem; margin: .2rem 0 0; }
     .comp-badge {
         display: inline-flex; align-items: center; gap: .4rem;
         background: #ede9fe; color: #5b21b6;
         padding: .3rem .8rem; border-radius: 99px;
-        font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+        font-size: .75rem; font-weight: 700; text-transform: uppercase;
     }
 
     /* ── Aviso de rigor ── */
@@ -24,130 +23,161 @@
         display: flex; align-items: flex-start; gap: .65rem;
         padding: .85rem 1rem; background: #fefce8; border: 1px solid #fde68a;
         border-radius: 10px; font-size: .83rem; color: #713f12;
-        margin-bottom: 1.75rem;
+        margin-bottom: 1.5rem;
     }
 
-    /* ── Tarjetas de cobertura por norma ── */
+    /* ── Barra de acciones ── */
+    .comp-actions {
+        display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .comp-btn {
+        display: inline-flex; align-items: center; gap: .45rem;
+        background: #6d28d9; color: #fff; border: none; border-radius: 8px;
+        padding: .45rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+        transition: background .15s;
+    }
+    .comp-btn:hover    { background: #5b21b6; }
+    .comp-btn:disabled { opacity: .6; cursor: default; }
+    .comp-last-run     { font-size: .8rem; color: #9ca3af; }
+
+    /* ── Banner de atención ── */
+    .comp-atencion {
+        display: none; align-items: flex-start; gap: .65rem;
+        padding: .85rem 1rem; background: #fff7ed; border: 1px solid #fed7aa;
+        border-radius: 10px; font-size: .83rem; color: #9a3412;
+        margin-bottom: 1.5rem;
+    }
+    .comp-atencion.visible { display: flex; }
+
+    /* ── Tarjetas de estado ── */
     .comp-stats {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: .85rem; margin-bottom: 1.75rem;
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: .75rem; margin-bottom: 1.5rem;
     }
     .comp-stat-card {
         background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-        padding: 1.1rem 1.3rem;
+        padding: 1rem 1.1rem;
     }
-    .comp-stat-norm  { font-size: .72rem; font-weight: 700; text-transform: uppercase;
-                       letter-spacing: .06em; color: #9ca3af; margin-bottom: .4rem; }
-    .comp-stat-pct   { font-size: 2rem; font-weight: 800; color: #1e1b4b; line-height: 1; }
-    .comp-stat-label { font-size: .8rem; color: #6b7280; margin-top: .15rem; }
+    .comp-stat-card.fresh  { border-left: 3px solid #10b981; }
+    .comp-stat-card.stale  { border-left: 3px solid #f59e0b; }
+    .comp-stat-card.noev   { border-left: 3px solid #e5e7eb; }
+    .comp-stat-card.norm   { border-left: 3px solid #6d28d9; }
+    .comp-stat-label { font-size: .72rem; font-weight: 700; text-transform: uppercase;
+                       letter-spacing: .05em; color: #9ca3af; margin-bottom: .3rem; }
+    .comp-stat-val   { font-size: 1.9rem; font-weight: 800; color: #1e1b4b; line-height: 1; }
+    .comp-stat-sub   { font-size: .78rem; color: #6b7280; margin-top: .15rem; }
+    .comp-stat-bar   { height: 5px; border-radius: 3px; background: #f3f4f6;
+                       margin-top: .65rem; overflow: hidden; display: flex; gap: 1px; }
+    .comp-stat-bar-completa { background: #10b981; }
+    .comp-stat-bar-parcial  { background: #f59e0b; }
 
-    .comp-stat-bar   { height: 6px; border-radius: 3px; background: #f3f4f6;
-                       margin-top: .75rem; overflow: hidden; display: flex; gap: 2px; }
-    .comp-stat-bar-completa { background: #10b981; border-radius: 3px; }
-    .comp-stat-bar-parcial  { background: #f59e0b; border-radius: 3px; }
-
-    /* ── Filtros de norma ── */
-    .comp-filters {
-        display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem;
+    /* ── Filtros ── */
+    .comp-toolbar {
+        display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+        margin-bottom: 1.1rem;
     }
     .comp-filter-btn {
-        padding: .35rem .85rem; border-radius: 99px; border: 1.5px solid #e5e7eb;
+        padding: .32rem .8rem; border-radius: 99px; border: 1.5px solid #e5e7eb;
         background: #fff; font-size: .8rem; font-weight: 600; cursor: pointer;
         color: #6b7280; transition: all .15s;
     }
     .comp-filter-btn:hover  { border-color: #6d28d9; color: #6d28d9; }
     .comp-filter-btn.active { border-color: #6d28d9; background: #6d28d9; color: #fff; }
 
-    /* ── Lista de familias ── */
-    .comp-families { display: flex; flex-direction: column; gap: .75rem; }
+    /* ── Leyenda ── */
+    .comp-legend {
+        display: flex; gap: 1.1rem; flex-wrap: wrap; margin-left: auto;
+        font-size: .77rem; color: #6b7280;
+    }
+    .comp-legend-item { display: flex; align-items: center; gap: .35rem; }
 
+    /* ── Familias / acordeón ── */
+    .comp-families { display: flex; flex-direction: column; gap: .65rem; }
     .comp-family {
         background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
         overflow: hidden;
     }
     .comp-family-header {
-        display: flex; align-items: center; gap: .75rem;
-        padding: .9rem 1.2rem; cursor: pointer;
-        transition: background .15s;
+        display: flex; align-items: center; gap: .65rem;
+        padding: .85rem 1.1rem; cursor: pointer; transition: background .12s;
     }
     .comp-family-header:hover { background: #f9fafb; }
 
-    .comp-family-dot {
-        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    .comp-dot {
+        width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
     }
     .dot-completa { background: #10b981; }
     .dot-parcial  { background: #f59e0b; }
-    .dot-ausente  { background: #e5e7eb; }
+    .dot-ausente  { background: #d1d5db; }
 
-    .comp-family-name  { font-weight: 600; color: #1e1b4b; flex: 1; font-size: .95rem; }
-    .comp-family-tags  { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .comp-family-name { font-weight: 600; color: #1e1b4b; font-size: .92rem; flex: 1; }
+    .comp-family-meta { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 
     .comp-tag {
-        font-size: .7rem; font-weight: 700; padding: .2rem .55rem;
-        border-radius: 99px; letter-spacing: .03em;
+        font-size: .68rem; font-weight: 700; padding: .18rem .48rem;
+        border-radius: 99px;
     }
     .tag-completa { background: #d1fae5; color: #065f46; }
     .tag-parcial  { background: #fffbeb; color: #92400e; }
     .tag-ausente  { background: #f3f4f6; color: #9ca3af; }
 
-    .comp-family-chevron { color: #9ca3af; font-size: .8rem; flex-shrink: 0;
+    .comp-ev-badge {
+        display: inline-flex; align-items: center; gap: .28rem;
+        font-size: .7rem; font-weight: 600; padding: .15rem .48rem;
+        border-radius: 99px;
+    }
+    .ev-fresca   { background: #d1fae5; color: #065f46; }
+    .ev-caducada { background: #fff7ed; color: #9a3412; }
+    .ev-noev     { background: #f3f4f6; color: #9ca3af; }
+    .ev-nocolec  { background: #f3f4f6; color: #d1d5db; }
+
+    .comp-family-chevron { color: #9ca3af; font-size: .75rem; flex-shrink: 0;
                            transition: transform .2s; }
     .comp-family.open .comp-family-chevron { transform: rotate(180deg); }
 
     .comp-family-body { display: none; border-top: 1px solid #f3f4f6; }
     .comp-family.open .comp-family-body { display: block; }
 
+    /* ── Controles dentro del acordeón ── */
     .comp-control-row {
-        display: grid; grid-template-columns: 90px 1fr; gap: 1rem;
-        padding: .75rem 1.2rem; border-bottom: 1px solid #f9fafb;
-        font-size: .85rem;
+        display: grid; grid-template-columns: 90px 1fr; gap: .9rem;
+        padding: .7rem 1.1rem; border-bottom: 1px solid #f9fafb; font-size: .83rem;
     }
     .comp-control-row:last-child { border-bottom: none; }
-    .comp-control-norm  { font-weight: 700; color: #6d28d9; }
-    .comp-control-art   { font-size: .75rem; color: #9ca3af; margin-top: .05rem; }
-    .comp-control-req   { color: #374151; }
-    .comp-control-notes { font-size: .78rem; color: #9ca3af; margin-top: .25rem; }
-    .comp-control-sources {
-        margin-top: .3rem; display: flex; flex-wrap: wrap; gap: .25rem;
-    }
-    .comp-source-chip {
-        font-size: .68rem; background: #f3f4f6; color: #6b7280;
-        padding: .1rem .45rem; border-radius: 4px; font-family: monospace;
-    }
+    .comp-ctrl-norm  { font-weight: 700; color: #6d28d9; }
+    .comp-ctrl-art   { font-size: .72rem; color: #9ca3af; margin-top: .04rem; }
+    .comp-ctrl-req   { color: #374151; }
+    .comp-ctrl-notes { font-size: .76rem; color: #9ca3af; margin-top: .2rem; }
+    .comp-ctrl-chips { margin-top: .25rem; display: flex; flex-wrap: wrap; gap: .2rem; }
+    .comp-src-chip   { font-size: .66rem; background: #f3f4f6; color: #6b7280;
+                       padding: .08rem .4rem; border-radius: 4px; font-family: monospace; }
 
-    /* ── Barra de acciones (R-092) ── */
-    .comp-actions {
-        display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
-        margin-bottom: 1.25rem;
+    /* ── Evidencia detalle ── */
+    .comp-ev-detail {
+        margin: 0 1.1rem .9rem; padding: .85rem 1rem;
+        background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+        font-size: .8rem;
     }
-    .comp-btn-recoger {
-        display: inline-flex; align-items: center; gap: .45rem;
-        background: #6d28d9; color: #fff; border: none; border-radius: 8px;
-        padding: .45rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
-        transition: background .15s;
+    .comp-ev-detail-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: .6rem; gap: .5rem; flex-wrap: wrap;
     }
-    .comp-btn-recoger:hover   { background: #5b21b6; }
-    .comp-btn-recoger:disabled { opacity: .6; cursor: default; }
-    .comp-ultima-recoleccion  { font-size: .8rem; color: #9ca3af; }
+    .comp-ev-detail-title { font-weight: 700; color: #374151; }
+    .comp-ev-detail-ts    { font-size: .72rem; color: #9ca3af; font-family: monospace; }
+    .comp-ev-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+        gap: .4rem .7rem;
+    }
+    .comp-ev-kv { }
+    .comp-ev-k  { font-size: .68rem; font-weight: 700; text-transform: uppercase;
+                  letter-spacing: .04em; color: #9ca3af; }
+    .comp-ev-v  { font-weight: 600; color: #1e1b4b; word-break: break-all; }
+    .comp-ev-hash { font-family: monospace; font-size: .68rem; color: #9ca3af;
+                    margin-top: .5rem; word-break: break-all; }
 
-    /* ── Chip de evidencia en control ── */
-    .comp-ev-chip {
-        display: inline-flex; align-items: center; gap: .3rem;
-        font-size: .7rem; padding: .15rem .5rem; border-radius: 99px;
-        background: #d1fae5; color: #065f46; font-weight: 600;
-        margin-top: .35rem;
-    }
-    .comp-ev-chip.sin-ev { background: #f3f4f6; color: #9ca3af; }
-
-    /* ── Estado vacío / cargando ── */
-    .comp-loading { text-align: center; padding: 3rem; color: #9ca3af; }
-
-    /* ── Leyenda ── */
-    .comp-legend {
-        display: flex; gap: 1.25rem; flex-wrap: wrap;
-        font-size: .8rem; color: #6b7280; margin-bottom: 1.25rem;
-    }
-    .comp-legend-item { display: flex; align-items: center; gap: .4rem; }
+    /* ── Loading ── */
+    .comp-loading { text-align: center; padding: 2.5rem; color: #9ca3af; }
 </style>
 {% endblock %}
 
@@ -159,55 +189,61 @@
             Cumplimiento NIS2 / ENS / ISO 27001
         </h1>
         <p class="comp-subtitle">
-            Cobertura de evidencias técnicas por control normativo · Catálogo v1.0 · Fase 13 (R-091)
+            Evidencias técnicas automáticas por control normativo · Catálogo v1.0 · Fase 13 (R-093)
         </p>
     </div>
-    <span class="comp-badge"><i class="fa-solid fa-flask"></i> Beta — R-092</span>
+    <span class="comp-badge"><i class="fa-solid fa-flask"></i> Beta — R-093</span>
 </div>
 
-<!-- Barra de acciones R-092 -->
+<!-- Barra de acciones -->
 <div class="comp-actions">
     {% if is_admin %}
-    <button class="comp-btn-recoger" id="btn-recoger" onclick="recogerEvidencias()">
+    <button class="comp-btn" id="btn-recoger" onclick="recogerEvidencias()">
         <i class="fa-solid fa-rotate"></i> Recoger evidencias ahora
     </button>
     {% endif %}
-    <span class="comp-ultima-recoleccion" id="ultima-recoleccion">Cargando última recolección…</span>
+    <button class="comp-btn" id="btn-dossier" onclick="exportarDossier()" style="background:#4f46e5;">
+        <i class="fa-solid fa-file-arrow-down"></i> Exportar dossier
+    </button>
+    <a href="/incidentes" class="comp-btn" style="background:#dc2626; text-decoration:none;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Incidentes NIS2
+    </a>
+    <span class="comp-last-run" id="ultima-recoleccion">Cargando…</span>
 </div>
 
+<!-- Aviso de rigor -->
 <div class="comp-aviso">
     <i class="fa-solid fa-triangle-exclamation" style="margin-top:.1rem; flex-shrink:0;"></i>
     <span>
         <strong>Aviso de rigor:</strong> este módulo muestra la evidencia técnica que Vigex genera
         automáticamente. <strong>No certifica cumplimiento normativo</strong> — eso requiere una
-        auditoría formal por un organismo acreditado. La cobertura debe validarse contra el texto
-        normativo real antes de presentarla ante un auditor (R-096).
+        auditoría formal por un organismo acreditado. Antes de presentar este dossier ante un
+        auditor debe validarse contra el texto normativo real (R-096).
     </span>
 </div>
 
-<!-- Tarjetas de cobertura por norma -->
+<!-- Banner de atención -->
+<div class="comp-atencion" id="comp-atencion">
+    <i class="fa-solid fa-bell" style="margin-top:.1rem; flex-shrink:0;"></i>
+    <span id="comp-atencion-txt"></span>
+</div>
+
+<!-- Tarjetas de estado (frescura + cobertura) -->
 <div class="comp-stats" id="comp-stats">
-    <div class="comp-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando…</div>
+    <div class="comp-loading"><i class="fa-solid fa-spinner fa-spin"></i></div>
 </div>
 
-<!-- Leyenda + filtros -->
-<div class="comp-legend">
-    <span class="comp-legend-item">
-        <span class="comp-family-dot dot-completa"></span> Evidencia completa
-    </span>
-    <span class="comp-legend-item">
-        <span class="comp-family-dot dot-parcial"></span> Evidencia parcial (falta empaquetado/sellado)
-    </span>
-    <span class="comp-legend-item">
-        <span class="comp-family-dot dot-ausente"></span> No cubierto (papeleo GRC)
-    </span>
+<!-- Toolbar: leyenda + filtros -->
+<div class="comp-toolbar">
+    <div id="comp-filters" style="display:flex; gap:.4rem; flex-wrap:wrap;"></div>
+    <div class="comp-legend">
+        <span class="comp-legend-item"><span class="comp-dot dot-completa"></span> Completa</span>
+        <span class="comp-legend-item"><span class="comp-dot dot-parcial"></span> Parcial</span>
+        <span class="comp-legend-item"><span class="comp-dot dot-ausente"></span> No cubierta</span>
+    </div>
 </div>
 
-<div class="comp-filters" id="comp-filters">
-    <button class="comp-filter-btn active" data-norma="all">Todas las normas</button>
-</div>
-
-<!-- Lista de familias de controles -->
+<!-- Lista de familias -->
 <div class="comp-families" id="comp-families">
     <div class="comp-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando controles…</div>
 </div>
@@ -217,89 +253,136 @@
 <script>
 (function () {
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    let allData = null;
-    let evData = {};   // familia_id → última recogida ISO string
+    let catData   = null;   // /api/cumplimiento/controles
+    let estadoData = null;  // /api/cumplimiento/estado
+    let evData    = {};     // familia_id → {ts, datos_json, sha256, tipo}
     let activeFilter = 'all';
 
-    function fmtFecha(iso) {
-        if (!iso) return null;
-        try {
-            const d = new Date(iso);
-            return d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit',
-                year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        } catch { return iso; }
+    /* ── Helpers ──────────────────────────────────────────────────── */
+    function fmt(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleString('es-ES',
+            { day:'2-digit', month:'2-digit', year:'numeric',
+              hour:'2-digit', minute:'2-digit' }); }
+        catch { return iso; }
     }
 
+    function evBadge(frescura) {
+        const map = {
+            fresca:     ['ev-fresca',   'fa-circle-check',  'Fresca'],
+            caducada:   ['ev-caducada', 'fa-clock',         'Caducada'],
+            sin_evidencia: ['ev-noev',  'fa-circle-xmark',  'Sin evidencia'],
+            sin_colector:  ['ev-nocolec','fa-minus',         'Sin colector'],
+        };
+        const [cls, ico, txt] = map[frescura] || map['sin_evidencia'];
+        return `<span class="comp-ev-badge ${cls}"><i class="fa-solid ${ico}"></i> ${txt}</span>`;
+    }
+
+    /* ── Carga de datos ───────────────────────────────────────────── */
     async function loadData() {
         try {
-            const [rCat, rEv] = await Promise.all([
-                fetch('/api/cumplimiento/controles', { headers: { 'X-CSRF-Token': CSRF } }),
+            const [rCat, rEst, rEv] = await Promise.all([
+                fetch('/api/cumplimiento/controles',  { headers: { 'X-CSRF-Token': CSRF } }),
+                fetch('/api/cumplimiento/estado',     { headers: { 'X-CSRF-Token': CSRF } }),
                 fetch('/api/cumplimiento/evidencias?limit=200', { headers: { 'X-CSRF-Token': CSRF } }),
             ]);
-            if (!rCat.ok) throw new Error(rCat.status);
-            allData = await rCat.json();
+            if (!rCat.ok || !rEst.ok) throw new Error('API error');
+            catData    = await rCat.json();
+            estadoData = await rEst.json();
 
-            // Construir mapa familia_id → timestamp de última evidencia
             if (rEv.ok) {
                 const evJson = await rEv.json();
                 for (const ev of (evJson.evidencias || [])) {
                     const fid = ev.familia_id;
-                    if (!evData[fid] || ev.recogida_en > evData[fid]) {
-                        evData[fid] = ev.recogida_en;
+                    if (!evData[fid] || ev.recogida_en > evData[fid].ts) {
+                        evData[fid] = {
+                            ts:         ev.recogida_en,
+                            datos_json: ev.datos_json,
+                            sha256:     ev.sha256,
+                            tipo:       ev.tipo_evidencia,
+                        };
                     }
                 }
             }
 
-            renderStats(allData);
-            buildFilters(allData);
-            renderFamilies(allData, activeFilter);
-            renderUltimaRecoleccion();
+            renderStats();
+            buildFilters();
+            renderFamilies();
+            renderBanner();
+            renderLastRun();
         } catch (e) {
             document.getElementById('comp-families').innerHTML =
-                '<div class="comp-loading" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar el catálogo</div>';
+                '<div class="comp-loading" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar</div>';
         }
     }
 
-    function renderUltimaRecoleccion() {
-        const todas = Object.values(evData);
+    function renderLastRun() {
+        const todas = Object.values(evData).map(e => e.ts).filter(Boolean);
         const el = document.getElementById('ultima-recoleccion');
         if (!el) return;
-        if (todas.length === 0) {
-            el.textContent = 'Sin evidencias recogidas todavía';
-            return;
-        }
-        const ultima = todas.sort().reverse()[0];
-        el.textContent = 'Última recolección: ' + (fmtFecha(ultima) || ultima);
+        el.textContent = todas.length
+            ? 'Última recolección: ' + fmt(todas.sort().reverse()[0])
+            : 'Sin evidencias recogidas todavía';
     }
 
-    function renderStats(data) {
-        const stats = data.cobertura_por_norma;
-        let html = '';
-        for (const [norma, s] of Object.entries(stats)) {
+    /* ── Tarjetas de estado ─────────────────────────────────────────── */
+    function renderStats() {
+        const r = estadoData.resumen;
+        const normaStats = catData.cobertura_por_norma;
+        let html = `
+        <div class="comp-stat-card fresh">
+            <div class="comp-stat-label">Evidencias frescas</div>
+            <div class="comp-stat-val">${r.fresca}</div>
+            <div class="comp-stat-sub">de ${r.familias_con_colector} familias con colector</div>
+        </div>
+        <div class="comp-stat-card stale">
+            <div class="comp-stat-label">Caducadas (&gt;${estadoData.max_age_dias}d)</div>
+            <div class="comp-stat-val">${r.caducada}</div>
+            <div class="comp-stat-sub">${r.sin_evidencia} sin recoger todavía</div>
+        </div>`;
+
+        for (const [norma, s] of Object.entries(normaStats)) {
             if (norma === 'Transversal') continue;
             html += `
-            <div class="comp-stat-card">
-                <div class="comp-stat-norm">${norma}</div>
-                <div class="comp-stat-pct">${s.pct_completa}<span style="font-size:1rem;color:#9ca3af">%</span></div>
-                <div class="comp-stat-label">${s.completa} completos · ${s.parcial} parciales · ${s.ausente} no cubiertos</div>
+            <div class="comp-stat-card norm">
+                <div class="comp-stat-label">${norma}</div>
+                <div class="comp-stat-val">${s.pct_completa}<span style="font-size:.9rem;color:#9ca3af">%</span></div>
+                <div class="comp-stat-sub">${s.completa} completos · ${s.parcial} parciales</div>
                 <div class="comp-stat-bar">
                     <div class="comp-stat-bar-completa" style="width:${s.pct_completa}%"></div>
                     <div class="comp-stat-bar-parcial"  style="width:${s.pct_parcial}%"></div>
                 </div>
             </div>`;
         }
-        document.getElementById('comp-stats').innerHTML = html || '<div class="comp-loading">Sin datos</div>';
+        document.getElementById('comp-stats').innerHTML = html;
     }
 
-    function buildFilters(data) {
-        const normas = [...new Set(data.controles.map(c => c.norma))];
+    /* ── Banner de atención ─────────────────────────────────────────── */
+    function renderBanner() {
+        const problemáticas = (estadoData.familias || []).filter(
+            f => f.tiene_colector && f.frescura !== 'fresca'
+        );
+        const banner = document.getElementById('comp-atencion');
+        const txt    = document.getElementById('comp-atencion-txt');
+        if (!problemáticas.length || !banner) return;
+        const caducadas = problemáticas.filter(f => f.frescura === 'caducada').map(f => f.familia_nombre);
+        const sinEv = problemáticas.filter(f => f.frescura === 'sin_evidencia').map(f => f.familia_nombre);
+        let msg = '<strong>Atención:</strong> ';
+        const partes = [];
+        if (caducadas.length) partes.push(`evidencia caducada en <em>${caducadas.join(', ')}</em>`);
+        if (sinEv.length)     partes.push(`sin evidencia en <em>${sinEv.join(', ')}</em>`);
+        txt.innerHTML = msg + partes.join(' · ') + '. Pulsa "Recoger evidencias ahora" para actualizar.';
+        banner.classList.add('visible');
+    }
+
+    /* ── Filtros ────────────────────────────────────────────────────── */
+    function buildFilters() {
+        const normas = [...new Set(catData.controles.map(c => c.norma))];
         const container = document.getElementById('comp-filters');
         container.innerHTML = '<button class="comp-filter-btn active" data-norma="all">Todas</button>';
-        for (const norma of normas) {
+        for (const n of normas) {
             const btn = document.createElement('button');
-            btn.className = 'comp-filter-btn';
-            btn.dataset.norma = norma;
-            btn.textContent = norma;
+            btn.className = 'comp-filter-btn'; btn.dataset.norma = n; btn.textContent = n;
             container.appendChild(btn);
         }
         container.addEventListener('click', e => {
@@ -308,80 +391,160 @@
             activeFilter = btn.dataset.norma;
             container.querySelectorAll('.comp-filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderFamilies(allData, activeFilter);
+            renderFamilies();
         });
     }
 
-    function renderFamilies(data, normaFilter) {
-        const controles = normaFilter === 'all'
-            ? data.controles
-            : data.controles.filter(c => c.norma === normaFilter);
+    /* ── Panel de detalle de evidencia ─────────────────────────────── */
+    function renderEvDetalle(fid) {
+        const ev = evData[fid];
+        if (!ev) return '';
+        let data = {};
+        try { data = JSON.parse(ev.datos_json); } catch {}
+
+        // Renderizado tipo-específico
+        let rows = '';
+        const kv = (k, v) => v != null
+            ? `<div class="comp-ev-kv"><div class="comp-ev-k">${k}</div><div class="comp-ev-v">${v}</div></div>`
+            : '';
+
+        if (ev.tipo === 'backup_history') {
+            rows = [
+                kv('Backups OK',   data.total_ok),
+                kv('Total registros', data.total_registros),
+                kv('Último backup', fmt(data.ultimo_backup_fecha)),
+                kv('Tipo',         data.ultimo_backup_tipo || '—'),
+                kv('SHA256 backup', data.ultimo_backup_sha256
+                    ? data.ultimo_backup_sha256.slice(0,16)+'…' : '—'),
+            ].join('');
+        } else if (ev.tipo === 'monitoring_metrics') {
+            const loadLine = (data.raw?.loadavg || '').trim().split(' ');
+            rows = [
+                kv('Load 1m',  loadLine[0] || '—'),
+                kv('Load 5m',  loadLine[1] || '—'),
+                kv('Load 15m', loadLine[2] || '—'),
+                kv('Disponible', data.disponible ? 'Sí' : 'No'),
+            ].join('');
+        } else if (ev.tipo === 'auth_logs_snapshot') {
+            rows = [
+                kv('Total entradas',    data.total_entradas),
+                kv('Logins OK',         data.logins_ok),
+                kv('Intentos fallidos', data.intentos_fallidos),
+                kv('Rango desde',  fmt(data.rango_desde)),
+                kv('SHA256 fichero', data.sha256_fichero
+                    ? data.sha256_fichero.slice(0,16)+'…' : '—'),
+            ].join('');
+        } else if (ev.tipo === 'reports_snapshot') {
+            rows = [
+                kv('Total informes',  data.total_informes),
+                kv('Último informe',  data.ultimo_informe || '—'),
+                kv('Fecha',           fmt(data.ultimo_informe_fecha)),
+                kv('SHA256', data.ultimo_informe_sha256
+                    ? data.ultimo_informe_sha256.slice(0,16)+'…' : '—'),
+            ].join('');
+        } else if (ev.tipo === 'cifrado_config') {
+            rows = [
+                kv('Clave SSH existe',  data.ssh_clave_existe ? '✅' : '❌'),
+                kv('Algoritmo SSH',     data.ssh_algoritmo),
+                kv('HTTPS activo',      data.https_only_activo ? '✅' : '⚠️ Desactivado'),
+                kv('Batch mode',        data.ssh_batch_mode ? '✅' : '❌'),
+            ].join('');
+        } else if (ev.tipo === 'paquetes_instalados') {
+            rows = [
+                kv('Paquetes Python',   data.total_paquetes),
+                kv('pip-audit',         data.pip_audit_disponible ? '✅ Disponible' : '— No instalado'),
+                kv('Vulnerabilidades',  data.pip_audit_resultado?.vulnerabilities?.length ?? '—'),
+            ].join('');
+        } else if (ev.tipo === 'inventario_activos') {
+            const lista = (data.activos || []).map(a =>
+                `<div class="comp-ev-kv"><div class="comp-ev-k">${a.rol}</div><div class="comp-ev-v">${a.host}</div></div>`
+            ).join('');
+            rows = kv('Perfil', data.perfil) + kv('Total activos', data.total_activos) + lista;
+        } else {
+            rows = kv('Disponible', data.disponible ? 'Sí' : 'No');
+        }
+
+        return `
+        <div class="comp-ev-detail">
+            <div class="comp-ev-detail-header">
+                <span class="comp-ev-detail-title"><i class="fa-solid fa-database" style="color:#6d28d9;margin-right:.35rem;"></i>Última evidencia recogida</span>
+                <span class="comp-ev-detail-ts">${fmt(ev.ts)}</span>
+            </div>
+            <div class="comp-ev-grid">${rows}</div>
+            <div class="comp-ev-hash">SHA256: ${ev.sha256}</div>
+        </div>`;
+    }
+
+    /* ── Familias acordeón ──────────────────────────────────────────── */
+    function renderFamilies() {
+        const controles = activeFilter === 'all'
+            ? catData.controles
+            : catData.controles.filter(c => c.norma === activeFilter);
 
         const families = {};
         for (const c of controles) {
-            if (!families[c.familia_id]) {
+            if (!families[c.familia_id])
                 families[c.familia_id] = { nombre: c.familia_nombre, rows: [] };
-            }
             families[c.familia_id].rows.push(c);
         }
 
-        const MADUREZ_ORDER = { completa: 0, parcial: 1, ausente: 2 };
+        const frescuraMap = {};
+        for (const f of (estadoData.familias || []))
+            frescuraMap[f.familia_id] = f.frescura;
 
+        const MADUREZ_ORD = { completa: 0, parcial: 1, ausente: 2 };
         let html = '';
+
         for (const [fid, fam] of Object.entries(families)) {
-            const madurezDom = fam.rows.reduce((worst, c) => {
-                return MADUREZ_ORDER[c.madurez] > MADUREZ_ORDER[worst] ? c.madurez : worst;
-            }, 'completa');
+            const fidN = parseInt(fid);
+            const madurezDom = fam.rows.reduce((w, c) =>
+                MADUREZ_ORD[c.madurez] > MADUREZ_ORD[w] ? c.madurez : w, 'completa');
 
             const tags = fam.rows.map(c =>
                 `<span class="comp-tag tag-${c.madurez}">${c.norma} ${c.articulo}</span>`
             ).join('');
 
-            // Chip de evidencia para esta familia
-            const ultimaEv = evData[parseInt(fid)];
-            const evChip = ultimaEv
-                ? `<span class="comp-ev-chip"><i class="fa-solid fa-database"></i> ${fmtFecha(ultimaEv)}</span>`
-                : `<span class="comp-ev-chip sin-ev"><i class="fa-solid fa-circle-xmark"></i> Sin evidencia</span>`;
+            const frescura = frescuraMap[fidN] || 'sin_evidencia';
+            const evDetalle = renderEvDetalle(fidN);
 
             const filas = fam.rows.map(c => {
-                let sources = '';
+                let srcs = '';
                 try {
-                    const srcs = JSON.parse(c.fuentes_evidencia);
-                    sources = srcs.length
-                        ? '<div class="comp-control-sources">' +
-                          srcs.map(s => `<span class="comp-source-chip">${s}</span>`).join('') +
-                          '</div>'
-                        : '';
+                    const ss = JSON.parse(c.fuentes_evidencia);
+                    if (ss.length) srcs = '<div class="comp-ctrl-chips">' +
+                        ss.map(s => `<span class="comp-src-chip">${s}</span>`).join('') + '</div>';
                 } catch {}
-                const notas = c.notas
-                    ? `<div class="comp-control-notes"><i class="fa-solid fa-circle-info" style="margin-right:.3rem;"></i>${c.notas}</div>`
+                const nota = c.notas
+                    ? `<div class="comp-ctrl-notes"><i class="fa-solid fa-circle-info" style="margin-right:.25rem;"></i>${c.notas}</div>`
                     : '';
                 return `
                 <div class="comp-control-row">
                     <div>
-                        <div class="comp-control-norm">${c.norma}</div>
-                        <div class="comp-control-art">${c.articulo}</div>
+                        <div class="comp-ctrl-norm">${c.norma}</div>
+                        <div class="comp-ctrl-art">${c.articulo}</div>
                     </div>
                     <div>
-                        <div class="comp-control-req">${c.requisito}</div>
-                        ${notas}
-                        ${sources}
+                        <div class="comp-ctrl-req">${c.requisito}</div>
+                        ${nota}${srcs}
                     </div>
                 </div>`;
             }).join('');
 
             html += `
             <div class="comp-family" id="fam-${fid}">
-                <div class="comp-family-header" onclick="toggleFamily('fam-${fid}')">
-                    <span class="comp-family-dot dot-${madurezDom}"></span>
+                <div class="comp-family-header" onclick="toggleFam('fam-${fid}')">
+                    <span class="comp-dot dot-${madurezDom}"></span>
                     <span class="comp-family-name">${fam.nombre}</span>
-                    <div style="flex:1; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
-                        <div class="comp-family-tags">${tags}</div>
-                        ${evChip}
+                    <div class="comp-family-meta">
+                        ${tags}
+                        ${evBadge(frescura)}
                     </div>
                     <i class="fa-solid fa-chevron-down comp-family-chevron"></i>
                 </div>
-                <div class="comp-family-body">${filas}</div>
+                <div class="comp-family-body">
+                    ${evDetalle}
+                    ${filas}
+                </div>
             </div>`;
         }
 
@@ -389,28 +552,50 @@
             html || '<div class="comp-loading">Sin controles para este filtro</div>';
     }
 
-    window.toggleFamily = function(id) {
-        document.getElementById(id)?.classList.toggle('open');
+    /* ── Interacciones ─────────────────────────────────────────────── */
+    window.toggleFam = id => document.getElementById(id)?.classList.toggle('open');
+
+    window.exportarDossier = async function () {
+        const btn = document.getElementById('btn-dossier');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…'; }
+        try {
+            const r = await fetch('/api/cumplimiento/dossier', { headers: { 'X-CSRF-Token': CSRF } });
+            if (!r.ok) {
+                const res = await r.json().catch(() => ({}));
+                alert('Error: ' + (res.detail || r.status));
+                return;
+            }
+            const blob = await r.blob();
+            const cd = r.headers.get('Content-Disposition') || '';
+            const match = cd.match(/filename="([^"]+)"/);
+            const nombre = match ? match[1] : 'dossier_cumplimiento.md';
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = nombre; a.click();
+            URL.revokeObjectURL(url);
+        } catch { alert('Error de red'); }
+        finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Exportar dossier'; }
+        }
     };
 
-    window.recogerEvidencias = async function() {
+    window.recogerEvidencias = async function () {
         const btn = document.getElementById('btn-recoger');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recogiendo…'; }
         try {
             const r = await fetch('/api/cumplimiento/recoger', {
-                method: 'POST',
-                headers: { 'X-CSRF-Token': CSRF },
+                method: 'POST', headers: { 'X-CSRF-Token': CSRF }
             });
-            const res = await r.json();
             if (r.ok) {
-                evData = {};  // forzar recarga
+                evData = {};
+                document.getElementById('comp-atencion')?.classList.remove('visible');
                 await loadData();
             } else {
+                const res = await r.json().catch(() => ({}));
                 alert('Error: ' + (res.detail || r.status));
             }
-        } catch (e) {
-            alert('Error de red al recoger evidencias');
-        } finally {
+        } catch { alert('Error de red'); }
+        finally {
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recoger evidencias ahora'; }
         }
     };

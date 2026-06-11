@@ -404,20 +404,20 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 
 | Ruta | Contenido | Tarea | Estado |
 |---|---|---|---|
-| 13.1 Mapa control→evidencia | Modelo de datos versionado que vincula cada control normativo (NIS2 21.2 / ENS / ISO Annex A) a la evidencia que Vigex produce. Catálogo inicial de las familias ✅/🟡 (filas 1–7 del mapa). | `R-091` | 🗓️ Planificada |
-| 13.2 Motor de evidencias datadas e inmutables | Snapshot de evidencia con timestamp + hash SHA256 + origen, almacenamiento append-only. Reutiliza `_reports_worker` y el SHA256 ya implementado (R-064). | `R-092` | 🗓️ Planificada |
-| 13.3 Panel "Cumplimiento" | Pantalla semáforo de cobertura por norma: % de controles con evidencia fresca, qué caduca. Permiso nuevo `cumplimiento` en `AVAILABLE_PERMISSIONS`. | `R-093` | 🗓️ Planificada |
-| 13.4 Dossier exportable | Generación de dossier (PDF/Markdown) de evidencias para auditor, datado, con **declaración de conformidad parcial** (nunca "cumplimiento total"). | `R-094` | 🗓️ Planificada |
-| 13.5 Notificación de incidentes NIS2 24 h/72 h | Ciclo de vida del incidente + plantilla de notificación al CSIRT. Cierra la fila 3 del mapa (la obligación estrella de NIS2). | `R-095` | 🗓️ Planificada |
-| 13.6 Validación contra texto normativo real | Contrastar el mapa control→evidencia con el texto real (ISO 27001:2022 Annex A / ENS RD 311/2022 / NIS2 art. 21) — con consultor o fuente primaria — para que la cobertura sea **defendible ante auditor**. | `R-096` | 🗓️ Planificada |
+| 13.1 Mapa control→evidencia | Modelo de datos versionado que vincula cada control normativo (NIS2 21.2 / ENS / ISO Annex A) a la evidencia que Vigex produce. Catálogo inicial de las familias ✅/🟡 (filas 1–7 del mapa). | `R-091` | ✅ Entregado 2026-06-11 |
+| 13.2 Motor de evidencias datadas e inmutables | Snapshot de evidencia con timestamp + hash SHA256 + origen, almacenamiento append-only. Reutiliza `_reports_worker` y el SHA256 ya implementado (R-064). | `R-092` | ✅ Entregado 2026-06-11 |
+| 13.3 Panel "Cumplimiento" | Pantalla semáforo de cobertura por norma: % de controles con evidencia fresca, qué caduca. Permiso nuevo `cumplimiento` en `AVAILABLE_PERMISSIONS`. | `R-093` | ✅ Entregado 2026-06-11 |
+| 13.4 Dossier exportable | Generación de dossier Markdown de evidencias para auditor, datado, con **declaración de conformidad parcial** (nunca "cumplimiento total"). Sellado SHA256 del documento completo. | `R-094` | ✅ Entregado 2026-06-11 |
+| 13.5 Notificación de incidentes NIS2 24 h/72 h | Ciclo de vida del incidente + plantilla de notificación al CSIRT (INCIBE-CERT/CCN-CERT). Página `/incidentes` con cuenta atrás, modal de registro, transiciones de estado y descarga de plantilla Art. 23. | `R-095` | ✅ Entregado 2026-06-11 |
+| 13.6 Validación contra texto normativo real | Contraste del catálogo v1.0 contra texto articulado real (NIS2 Art. 21, ENS RD 311/2022 Anexo II, ISO 27001:2022 Annex A). 4 correcciones aplicadas: artículo ENS `5-ENS` (`op.exp.8`→`op.exp.10`), precisión NIS2 `5-NIS2`, notas R-095 en familia 3, madurez `6-TRANSVERSAL` parcial→completa. Catálogo migrado a v1.1. | `R-096` | ✅ Entregado 2026-06-11 |
 
 ### 🚪 Gate de salida `F13-GATE` "Evidencias auditables"
 **No se vende el módulo de cumplimiento hasta cumplir TODO esto:**
-- [ ] Mapa control→evidencia poblado y **revisado contra el texto normativo** (R-091 + R-096).
-- [ ] Cada evidencia **datada + hash verificable** (R-092).
-- [ ] Panel de cumplimiento muestra **cobertura real por norma** (R-093).
-- [ ] **Dossier exportable** generado en prueba con datos reales (R-094).
-- [ ] **Notificación de incidente 24 h/72 h** documentada y probada (R-095).
+- [x] Mapa control→evidencia poblado y **revisado contra el texto normativo** (R-091 + R-096). ✅ 2026-06-11
+- [x] Cada evidencia **datada + hash verificable** (R-092). ✅ 2026-06-11
+- [x] Panel de cumplimiento muestra **cobertura real por norma** (R-093). ✅ 2026-06-11
+- [x] **Dossier exportable** generado en prueba con datos reales (R-094). ✅ 2026-06-11
+- [x] **Notificación de incidente 24 h/72 h** documentada y probada (R-095). ✅ 2026-06-11
 - [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
 - [ ] Sin promesas de cobertura no validada (coherencia con `docs/legal/limites_responsabilidad.md`).
 
@@ -460,6 +460,7 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | 2026-06-11 | **R-090 — Asistente IA (RAG) construido** (sin commitear): chat en el panel con 5 proveedores LLM (Ollama por defecto, coste €0), rate limiting y permiso `asistente`. Adelanta la base de la Ruta 12.3 que estaba en backlog | Diferenciador de producto entregado antes de lo planificado. Pendiente de commit y validación. |
 | 2026-06-11 | **Modo oscuro extendido a todo el panel** (`dark-overrides.css`, R-083): cubre `estilo.css`, plantillas del panel API y Central Support. Sin commitear | La Ruta 10.7 inicial era el toggle; este trabajo corrige el contraste en todas las pantallas. |
 | 2026-06-11 | **F9-GATE superado.** NIF `55325787T` en páginas legales + simulacro de recuperación ejecutado en VM Ubuntu 22.04 (Escenario C: backup full + DROP TABLE + restauración, RTO real ~48 s). `R-048` (primer cliente de pago) desbloqueado | Ambos criterios que faltaban cubiertos en la misma sesión. Validación completa en `docs/validaciones/R-075_simulacro_recuperacion_2026-06-11.md`. |
+| 2026-06-11 | **R-091 → R-096 entregados — Fase 13 COMPLETA.** Catálogo de controles NIS2/ENS/ISO 27001 v1.1, motor de evidencias (8 colectores, SHA256), panel semáforo, dossier exportable, ciclo de incidentes NIS2 24h/72h, validación normativa con 4 correcciones aplicadas al catálogo. **F13-GATE todos los criterios técnicos cumplidos.** | Recomendación antes de vender el módulo a cliente con obligación NIS2 real: contratar revisión por consultor externo acreditado. |
 
 ---
 

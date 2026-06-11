@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Incidentes NIS2 — Vigex{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── R-095 / Fase 13 — Ciclo de vida de incidentes NIS2 ── */
+    .inc-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        flex-wrap: wrap; gap: .75rem; margin-bottom: 1.5rem;
+    }
+    .inc-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
+    .inc-subtitle { color: #6b7280; font-size: .9rem; margin: .2rem 0 0; }
+    .inc-badge {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: #fee2e2; color: #991b1b;
+        padding: .3rem .8rem; border-radius: 99px;
+        font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    }
+
+    /* ── Info NIS2 ── */
+    .inc-info {
+        display: flex; align-items: flex-start; gap: .65rem;
+        padding: .85rem 1rem; background: #eff6ff; border: 1px solid #bfdbfe;
+        border-radius: 10px; font-size: .83rem; color: #1e40af;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ── Acciones ── */
+    .inc-actions { display: flex; gap: .65rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .inc-btn {
+        display: inline-flex; align-items: center; gap: .45rem;
+        background: #dc2626; color: #fff; border: none; border-radius: 8px;
+        padding: .45rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer;
+        transition: background .15s;
+    }
+    .inc-btn:hover    { background: #b91c1c; }
+    .inc-btn.secondary { background: #6d28d9; }
+    .inc-btn.secondary:hover { background: #5b21b6; }
+    .inc-btn:disabled { opacity: .6; cursor: default; }
+
+    /* ── Tarjetas de incidente ── */
+    .inc-list { display: flex; flex-direction: column; gap: .85rem; }
+    .inc-card {
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        overflow: hidden;
+    }
+    .inc-card.critico { border-left: 4px solid #dc2626; }
+    .inc-card.alto    { border-left: 4px solid #f97316; }
+    .inc-card.medio   { border-left: 4px solid #f59e0b; }
+    .inc-card.bajo    { border-left: 4px solid #22c55e; }
+    .inc-card.cerrado { border-left: 4px solid #d1d5db; opacity: .7; }
+
+    .inc-card-header {
+        display: flex; align-items: center; gap: .65rem;
+        padding: .85rem 1.1rem; cursor: pointer; transition: background .12s;
+    }
+    .inc-card-header:hover { background: #f9fafb; }
+
+    .inc-sev-dot {
+        width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sev-critico { background: #dc2626; }
+    .sev-alto    { background: #f97316; }
+    .sev-medio   { background: #f59e0b; }
+    .sev-bajo    { background: #22c55e; }
+
+    .inc-card-title { font-weight: 700; color: #1e1b4b; flex: 1; font-size: .95rem; }
+    .inc-card-id    { font-size: .72rem; color: #9ca3af; font-family: monospace; }
+
+    .inc-estado-badge {
+        font-size: .7rem; font-weight: 700; padding: .18rem .55rem;
+        border-radius: 99px; white-space: nowrap;
+    }
+    .est-detectado         { background: #fee2e2; color: #991b1b; }
+    .est-notif_24h_enviada { background: #fef3c7; color: #92400e; }
+    .est-notif_72h_enviada { background: #d1fae5; color: #065f46; }
+    .est-resuelto          { background: #ede9fe; color: #5b21b6; }
+    .est-cerrado           { background: #f3f4f6; color: #9ca3af; }
+
+    .inc-card-chevron { color: #9ca3af; font-size: .75rem; transition: transform .2s; }
+    .inc-card.open .inc-card-chevron { transform: rotate(180deg); }
+
+    .inc-card-body { display: none; border-top: 1px solid #f3f4f6; padding: 1rem 1.1rem; }
+    .inc-card.open .inc-card-body { display: block; }
+
+    /* ── Cuentas atrás ── */
+    .inc-plazos {
+        display: flex; gap: .65rem; flex-wrap: wrap; margin-bottom: .9rem;
+    }
+    .inc-plazo {
+        display: flex; flex-direction: column; align-items: center;
+        padding: .55rem .9rem; border-radius: 10px; min-width: 130px;
+        border: 1px solid #e5e7eb; background: #f9fafb;
+    }
+    .inc-plazo.urgente  { background: #fef2f2; border-color: #fca5a5; }
+    .inc-plazo.ok       { background: #f0fdf4; border-color: #86efac; }
+    .inc-plazo.cumplido { background: #f3f4f6; border-color: #e5e7eb; }
+    .inc-plazo-label    { font-size: .68rem; font-weight: 700; text-transform: uppercase;
+                          letter-spacing: .04em; color: #6b7280; margin-bottom: .2rem; }
+    .inc-plazo-val      { font-size: 1.1rem; font-weight: 800; color: #1e1b4b; line-height: 1.1; }
+    .inc-plazo-sub      { font-size: .7rem; color: #9ca3af; margin-top: .15rem; }
+
+    /* ── Detalles ── */
+    .inc-detail-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+        gap: .4rem .9rem; margin-bottom: .9rem; font-size: .83rem;
+    }
+    .inc-kv-k { font-size: .68rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: .04em; color: #9ca3af; }
+    .inc-kv-v { font-weight: 600; color: #1e1b4b; word-break: break-word; }
+
+    .inc-desc { font-size: .83rem; color: #374151; background: #f9fafb;
+                border: 1px solid #e5e7eb; border-radius: 8px;
+                padding: .65rem .85rem; margin-bottom: .9rem; white-space: pre-wrap; }
+
+    /* ── Botones de transición + plantilla ── */
+    .inc-transition-row {
+        display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .65rem;
+    }
+    .inc-trans-btn {
+        font-size: .78rem; font-weight: 600; padding: .3rem .75rem;
+        border-radius: 8px; border: 1.5px solid #dc2626; color: #dc2626;
+        background: #fff; cursor: pointer; transition: all .15s;
+    }
+    .inc-trans-btn:hover { background: #dc2626; color: #fff; }
+    .inc-tmpl-btn {
+        font-size: .78rem; font-weight: 600; padding: .3rem .75rem;
+        border-radius: 8px; border: 1.5px solid #6d28d9; color: #6d28d9;
+        background: #fff; cursor: pointer; transition: all .15s;
+    }
+    .inc-tmpl-btn:hover { background: #6d28d9; color: #fff; }
+
+    /* ── Modal ── */
+    .inc-modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,.45); z-index: 1000;
+        align-items: center; justify-content: center;
+    }
+    .inc-modal-overlay.visible { display: flex; }
+    .inc-modal {
+        background: #fff; border-radius: 14px; padding: 1.5rem;
+        width: min(520px, 95vw); max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .inc-modal-title { font-size: 1.1rem; font-weight: 700; color: #1e1b4b;
+                       margin: 0 0 1rem; }
+    .inc-form-group { margin-bottom: .85rem; }
+    .inc-form-label { display: block; font-size: .78rem; font-weight: 700;
+                      color: #374151; margin-bottom: .3rem; }
+    .inc-form-input, .inc-form-select, .inc-form-textarea {
+        width: 100%; padding: .45rem .65rem; border: 1.5px solid #d1d5db;
+        border-radius: 8px; font-size: .85rem; color: #1e1b4b;
+        background: #fff; box-sizing: border-box; transition: border-color .15s;
+    }
+    .inc-form-input:focus, .inc-form-select:focus, .inc-form-textarea:focus {
+        outline: none; border-color: #dc2626;
+    }
+    .inc-form-textarea { resize: vertical; min-height: 80px; }
+    .inc-form-actions { display: flex; gap: .5rem; justify-content: flex-end;
+                        margin-top: 1.1rem; }
+    .inc-form-cancel {
+        padding: .4rem .9rem; border-radius: 8px; border: 1.5px solid #e5e7eb;
+        background: #fff; font-size: .85rem; font-weight: 600;
+        color: #6b7280; cursor: pointer;
+    }
+    .inc-form-cancel:hover { border-color: #9ca3af; }
+    .inc-form-submit {
+        padding: .4rem 1rem; border-radius: 8px; border: none;
+        background: #dc2626; color: #fff; font-size: .85rem; font-weight: 600;
+        cursor: pointer; transition: background .15s;
+    }
+    .inc-form-submit:hover { background: #b91c1c; }
+
+    .inc-empty { text-align: center; padding: 3rem; color: #9ca3af; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inc-header">
+    <div>
+        <h1 class="inc-title">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; margin-right:.4rem;"></i>
+            Incidentes NIS2 — Ciclo de vida
+        </h1>
+        <p class="inc-subtitle">
+            Plazos de notificación Art. 23 NIS2 · INCIBE-CERT (empresas) / CCN-CERT (AA.PP.)
+        </p>
+    </div>
+    <span class="inc-badge"><i class="fa-solid fa-clock"></i> 24 h · 72 h</span>
+</div>
+
+<div class="inc-info">
+    <i class="fa-solid fa-circle-info" style="margin-top:.1rem; flex-shrink:0;"></i>
+    <span>
+        <strong>NIS2 Art. 23:</strong> las entidades esenciales e importantes deben notificar
+        incidentes significativos al CSIRT en <strong>≤ 24 h</strong> (aviso temprano) y
+        <strong>≤ 72 h</strong> (notificación completa) desde que tengan conocimiento del incidente.
+        Usa los botones de plantilla para descargar el documento preformateado.
+    </span>
+</div>
+
+<div class="inc-actions">
+    {% if is_admin %}
+    <button class="inc-btn" onclick="abrirModal()">
+        <i class="fa-solid fa-plus"></i> Registrar incidente
+    </button>
+    {% endif %}
+    <a href="/cumplimiento" class="inc-btn secondary" style="text-decoration:none;">
+        <i class="fa-solid fa-arrow-left"></i> Volver a Cumplimiento
+    </a>
+</div>
+
+<!-- Lista de incidentes -->
+<div class="inc-list" id="inc-list">
+    <div class="inc-empty"><i class="fa-solid fa-spinner fa-spin"></i> Cargando…</div>
+</div>
+
+<!-- Modal de creación -->
+<div class="inc-modal-overlay" id="inc-modal">
+    <div class="inc-modal">
+        <p class="inc-modal-title"><i class="fa-solid fa-plus" style="color:#dc2626;margin-right:.4rem;"></i>Registrar nuevo incidente</p>
+        <form id="inc-form" onsubmit="crearIncidente(event)">
+            <div class="inc-form-group">
+                <label class="inc-form-label">Título *</label>
+                <input class="inc-form-input" name="titulo" required placeholder="Ej: Acceso no autorizado a servidor de logs">
+            </div>
+            <div class="inc-form-group">
+                <label class="inc-form-label">Descripción *</label>
+                <textarea class="inc-form-textarea" name="descripcion" required placeholder="Describe qué ocurrió, cómo se detectó y cuál es el impacto conocido…"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                <div class="inc-form-group">
+                    <label class="inc-form-label">Tipo *</label>
+                    <select class="inc-form-select" name="tipo" required>
+                        <option value="">Seleccionar…</option>
+                        {% for val, label in tipos.items() %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="inc-form-group">
+                    <label class="inc-form-label">Severidad *</label>
+                    <select class="inc-form-select" name="severidad" required>
+                        <option value="">Seleccionar…</option>
+                        {% for val, label in severidades.items() %}
+                        <option value="{{ val }}">{{ val.capitalize() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="inc-form-group">
+                <label class="inc-form-label">Momento de detección (cuándo tomaste conocimiento) *</label>
+                <input class="inc-form-input" type="datetime-local" name="detectado_en" required>
+            </div>
+            <div class="inc-form-group">
+                <label class="inc-form-label">Sistemas / servicios afectados</label>
+                <input class="inc-form-input" name="sistemas_afect" placeholder="Ej: Servidor de backups, panel Vigex">
+            </div>
+            <div class="inc-form-group">
+                <label class="inc-form-label">Medidas inmediatas adoptadas</label>
+                <textarea class="inc-form-textarea" name="medidas_tomadas" placeholder="Ej: Aislamiento de servidor, cambio de credenciales, notificación interna…" style="min-height:60px;"></textarea>
+            </div>
+            <div class="inc-form-actions">
+                <button type="button" class="inc-form-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="inc-form-submit" id="btn-crear-submit">
+                    <i class="fa-solid fa-floppy-disk"></i> Registrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+
+    const ESTADO_LABELS = {
+        detectado:          'Detectado',
+        notif_24h_enviada:  'Aviso 24 h enviado',
+        notif_72h_enviada:  'Notificación 72 h enviada',
+        resuelto:           'Resuelto',
+        cerrado:            'Cerrado',
+    };
+    const TRANS_LABELS = {
+        notif_24h_enviada:  'Marcar aviso 24 h enviado',
+        notif_72h_enviada:  'Marcar notif. 72 h enviada',
+        resuelto:           'Marcar como resuelto',
+        cerrado:            'Cerrar incidente',
+    };
+
+    /* ── Helpers ─────────────────────────────────────────────────── */
+    function fmt(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleString('es-ES',
+            { day:'2-digit', month:'2-digit', year:'numeric',
+              hour:'2-digit', minute:'2-digit' }); }
+        catch { return iso; }
+    }
+
+    function fmtCuenta(seg) {
+        if (seg <= 0) return 'Vencido';
+        const h = Math.floor(seg / 3600);
+        const m = Math.floor((seg % 3600) / 60);
+        if (h > 48) return Math.floor(h / 24) + ' días ' + (h % 24) + ' h';
+        return h + ' h ' + m + ' min';
+    }
+
+    /* ── Renderizado de cuenta atrás ─────────────────────────────── */
+    function renderPlazos(inc) {
+        const ca = inc.cuentas_atras;
+        const estado = inc.estado;
+        const ya24h = ['notif_24h_enviada','notif_72h_enviada','resuelto','cerrado'].includes(estado);
+        const ya72h = ['notif_72h_enviada','resuelto','cerrado'].includes(estado);
+
+        const plazo24Cls = ya24h ? 'cumplido' : (ca.vencido_24h ? 'urgente' : (ca.seg_hasta_24h < 7200 ? 'urgente' : 'ok'));
+        const plazo72Cls = ya72h ? 'cumplido' : (ca.vencido_72h ? 'urgente' : (ca.seg_hasta_72h < 14400 ? 'urgente' : 'ok'));
+
+        return `
+        <div class="inc-plazos">
+            <div class="inc-plazo ${plazo24Cls}">
+                <span class="inc-plazo-label">Aviso 24 h</span>
+                <span class="inc-plazo-val">${ya24h ? '✅ Enviado' : (ca.vencido_24h ? '⚠️ Vencido' : fmtCuenta(ca.seg_hasta_24h))}</span>
+                <span class="inc-plazo-sub">${inc.notif_24h_en ? fmt(inc.notif_24h_en) : (ya24h ? '' : 'Resta')}</span>
+            </div>
+            <div class="inc-plazo ${plazo72Cls}">
+                <span class="inc-plazo-label">Notif. 72 h</span>
+                <span class="inc-plazo-val">${ya72h ? '✅ Enviada' : (ca.vencido_72h ? '⚠️ Vencida' : fmtCuenta(ca.seg_hasta_72h))}</span>
+                <span class="inc-plazo-sub">${inc.notif_72h_en ? fmt(inc.notif_72h_en) : (ya72h ? '' : 'Resta')}</span>
+            </div>
+            <div class="inc-plazo">
+                <span class="inc-plazo-label">Detectado hace</span>
+                <span class="inc-plazo-val">${fmtCuenta(ca.seg_detectado)}</span>
+                <span class="inc-plazo-sub">${fmt(inc.detectado_en)}</span>
+            </div>
+        </div>`;
+    }
+
+    /* ── Renderizado de tarjeta completa ─────────────────────────── */
+    function renderCard(inc) {
+        const sevCls = inc.severidad === 'cerrado' ? 'cerrado' : inc.severidad;
+        const estadoCls = 'est-' + inc.estado;
+
+        const transiciones = IS_ADMIN ? (inc.transiciones_posibles || []).map(t => `
+            <button class="inc-trans-btn" onclick="avanzarEstado(${inc.id},'${t}')">
+                <i class="fa-solid fa-arrow-right"></i> ${TRANS_LABELS[t] || t}
+            </button>`).join('') : '';
+
+        const plantillas = `
+            <button class="inc-tmpl-btn" onclick="descargarPlantilla(${inc.id},'24h')">
+                <i class="fa-solid fa-file-arrow-down"></i> Plantilla 24 h
+            </button>
+            <button class="inc-tmpl-btn" onclick="descargarPlantilla(${inc.id},'72h')">
+                <i class="fa-solid fa-file-arrow-down"></i> Plantilla 72 h
+            </button>`;
+
+        return `
+        <div class="inc-card ${sevCls === 'cerrado' ? 'cerrado' : inc.severidad}" id="inc-card-${inc.id}">
+            <div class="inc-card-header" onclick="toggleCard(${inc.id})">
+                <span class="inc-sev-dot sev-${inc.severidad}"></span>
+                <span class="inc-card-title">${inc.titulo}</span>
+                <span class="inc-card-id">INC-${String(inc.id).padStart(4,'0')}</span>
+                <span class="inc-estado-badge ${estadoCls}">${inc.estado_label}</span>
+                <i class="fa-solid fa-chevron-down inc-card-chevron"></i>
+            </div>
+            <div class="inc-card-body">
+                ${renderPlazos(inc)}
+                <div class="inc-detail-grid">
+                    <div><div class="inc-kv-k">Tipo</div><div class="inc-kv-v">${inc.tipo_label}</div></div>
+                    <div><div class="inc-kv-k">Severidad</div><div class="inc-kv-v">${inc.severidad.charAt(0).toUpperCase()+inc.severidad.slice(1)}</div></div>
+                    <div><div class="inc-kv-k">Creado por</div><div class="inc-kv-v">${inc.creado_por}</div></div>
+                    <div><div class="inc-kv-k">Ref. CSIRT</div><div class="inc-kv-v">${inc.csirt_ref || '—'}</div></div>
+                    <div><div class="inc-kv-k">Resuelto</div><div class="inc-kv-v">${inc.resuelto_en ? fmt(inc.resuelto_en) : '—'}</div></div>
+                </div>
+                ${inc.descripcion ? `<div class="inc-desc">${inc.descripcion}</div>` : ''}
+                ${inc.sistemas_afect ? `<div style="font-size:.8rem;color:#374151;margin-bottom:.65rem;"><strong>Sistemas afectados:</strong> ${inc.sistemas_afect}</div>` : ''}
+                ${inc.medidas_tomadas ? `<div style="font-size:.8rem;color:#374151;margin-bottom:.65rem;"><strong>Medidas adoptadas:</strong> ${inc.medidas_tomadas}</div>` : ''}
+                <div class="inc-transition-row">
+                    ${transiciones}
+                    ${plantillas}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    /* ── Carga de datos ──────────────────────────────────────────── */
+    async function loadIncidentes() {
+        try {
+            const r = await fetch('/api/cumplimiento/incidentes', { headers: {'X-CSRF-Token': CSRF} });
+            if (!r.ok) throw new Error(r.status);
+            const data = await r.json();
+            const lista = document.getElementById('inc-list');
+            if (!data.incidentes?.length) {
+                lista.innerHTML = '<div class="inc-empty"><i class="fa-solid fa-check-circle" style="color:#22c55e;"></i><br>Sin incidentes registrados</div>';
+                return;
+            }
+            lista.innerHTML = data.incidentes.map(renderCard).join('');
+        } catch {
+            document.getElementById('inc-list').innerHTML =
+                '<div class="inc-empty" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar</div>';
+        }
+    }
+
+    /* ── Interacciones ───────────────────────────────────────────── */
+    window.toggleCard = id => document.getElementById('inc-card-' + id)?.classList.toggle('open');
+
+    window.abrirModal = function () {
+        // Inicializa el datetime-local al momento actual
+        const now = new Date();
+        const local = new Date(now - now.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 16);
+        document.querySelector('[name="detectado_en"]').value = local;
+        document.getElementById('inc-modal').classList.add('visible');
+    };
+    window.cerrarModal = () => document.getElementById('inc-modal').classList.remove('visible');
+
+    // Cerrar modal al hacer click fuera
+    document.getElementById('inc-modal').addEventListener('click', e => {
+        if (e.target === e.currentTarget) cerrarModal();
+    });
+
+    window.crearIncidente = async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-crear-submit');
+        btn.disabled = true;
+        const fd = new FormData(e.target);
+        const body = Object.fromEntries(fd.entries());
+        // Normalizar detectado_en a ISO 8601
+        if (body.detectado_en) body.detectado_en = new Date(body.detectado_en).toISOString();
+        try {
+            const r = await fetch('/api/cumplimiento/incidentes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+                body: JSON.stringify(body),
+            });
+            if (!r.ok) {
+                const res = await r.json().catch(() => ({}));
+                alert('Error: ' + (res.detail || r.status));
+                return;
+            }
+            cerrarModal();
+            e.target.reset();
+            await loadIncidentes();
+        } catch { alert('Error de red'); }
+        finally { btn.disabled = false; }
+    };
+
+    window.avanzarEstado = async function (id, nuevoEstado) {
+        if (!confirm('¿Confirmas el avance de estado a "' + (ESTADO_LABELS[nuevoEstado] || nuevoEstado) + '"?')) return;
+        try {
+            const r = await fetch('/api/cumplimiento/incidentes/' + id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+                body: JSON.stringify({ estado: nuevoEstado }),
+            });
+            if (!r.ok) {
+                const res = await r.json().catch(() => ({}));
+                alert('Error: ' + (res.detail || r.status));
+                return;
+            }
+            await loadIncidentes();
+        } catch { alert('Error de red'); }
+    };
+
+    window.descargarPlantilla = async function (id, fase) {
+        try {
+            const r = await fetch(`/api/cumplimiento/incidentes/${id}/plantilla?fase=${fase}`,
+                { headers: { 'X-CSRF-Token': CSRF } });
+            if (!r.ok) { alert('Error al generar plantilla'); return; }
+            const blob = await r.blob();
+            const cd = r.headers.get('Content-Disposition') || '';
+            const match = cd.match(/filename="([^"]+)"/);
+            const nombre = match ? match[1] : `notif_nis2_${fase}.md`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = nombre; a.click();
+            URL.revokeObjectURL(url);
+        } catch { alert('Error de red'); }
+    };
+
+    loadIncidentes();
+
+    // Actualiza las cuentas atrás cada minuto sin recargar desde servidor
+    setInterval(loadIncidentes, 60000);
+})();
+</script>
+{% endblock %}

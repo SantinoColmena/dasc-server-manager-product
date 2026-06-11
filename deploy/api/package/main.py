@@ -15,6 +15,7 @@ import posixpath
 import smtplib
 import threading
 import time as _time_mod
+import hashlib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
@@ -9507,7 +9508,7 @@ def api_info():
 # normativo real (R-096). Vigex aporta evidencia, no certifica cumplimiento.
 # =====================================================================
 
-_CUMPLIMIENTO_CATALOG_VERSION = "1.0"
+_CUMPLIMIENTO_CATALOG_VERSION = "1.1"  # R-096: validación contra texto normativo real
 
 _COMPLIANCE_CATALOG: list[dict] = [
     # ── Familia 1: Continuidad y copias de seguridad ──────────────────
@@ -9566,27 +9567,27 @@ _COMPLIANCE_CATALOG: list[dict] = [
         "familia_nombre": "Gestión de incidentes",
         "norma": "NIS2", "articulo": "21.2(b)",
         "requisito": "Detectar, registrar, escalar y notificar incidentes (notificación NIS2: 24 h / 72 h)",
-        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats","incidentes_nis2"]',
         "madurez": "parcial",
-        "notas": "Detecta y alerta; falta ciclo de vida del incidente y notificación NIS2 24h/72h → R-095",
+        "notas": "Ciclo de vida 24h/72h implementado (R-095); falta proceso organizativo documentado (roles, post-mortem)",
     },
     {
         "id": "3-ENS", "familia_id": 3,
         "familia_nombre": "Gestión de incidentes",
         "norma": "ENS", "articulo": "op.exp.7",
         "requisito": "Gestión de incidentes de seguridad: registro, comunicación y análisis",
-        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats","incidentes_nis2"]',
         "madurez": "parcial",
-        "notas": "Falta ciclo de vida completo del incidente → R-095",
+        "notas": "Ciclo de vida y plantilla CSIRT implementados (R-095); falta procedimiento organizativo escrito",
     },
     {
         "id": "3-ISO", "familia_id": 3,
         "familia_nombre": "Gestión de incidentes",
         "norma": "ISO27001", "articulo": "A.5.24-A.5.26",
         "requisito": "Planificación, gestión y aprendizaje de incidentes de seguridad",
-        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats"]',
+        "fuentes_evidencia": '["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats","incidentes_nis2"]',
         "madurez": "parcial",
-        "notas": "Falta ciclo de vida completo del incidente → R-095",
+        "notas": "Ciclo de vida implementado (R-095); falta plan de aprendizaje post-incidente documentado",
     },
     # ── Familia 4: Control de accesos y autenticación ─────────────────
     {
@@ -9620,20 +9621,20 @@ _COMPLIANCE_CATALOG: list[dict] = [
     {
         "id": "5-NIS2", "familia_id": 5,
         "familia_nombre": "Registro y trazabilidad (logs)",
-        "norma": "NIS2", "articulo": "21.2(a)",
+        "norma": "NIS2", "articulo": "21.2(a)/21.2(b)",
         "requisito": "Registro de actividad, accesos y eventos; conservado y protegido",
         "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
         "madurez": "parcial",
-        "notas": "Se registra; falta retención garantizada e integridad/sellado del log → R-092",
+        "notas": "Snapshot + SHA256 implementados (R-092); falta política de retención mínima documentada",
     },
     {
         "id": "5-ENS", "familia_id": 5,
         "familia_nombre": "Registro y trazabilidad (logs)",
-        "norma": "ENS", "articulo": "op.exp.8/op.mon",
+        "norma": "ENS", "articulo": "op.exp.10/op.mon.1",
         "requisito": "Registro de la actividad de los usuarios y administradores",
         "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
         "madurez": "parcial",
-        "notas": "Falta retención garantizada e integridad/sellado del log → R-092",
+        "notas": "R-096: op.exp.10 es el control ENS de registros (op.exp.8 es backups). Snapshot + SHA256 implementados (R-092); falta política de retención mínima documentada",
     },
     {
         "id": "5-ISO", "familia_id": 5,
@@ -9642,7 +9643,7 @@ _COMPLIANCE_CATALOG: list[dict] = [
         "requisito": "Registros de actividad (logging): generación, protección y análisis",
         "fuentes_evidencia": '["register_auth_log","log_event","auth_logs.json","logs_db_mysql"]',
         "madurez": "parcial",
-        "notas": "Falta retención garantizada e integridad/sellado del log → R-092",
+        "notas": "Snapshot + SHA256 implementados (R-092); falta análisis automatizado de anomalías y retención documentada",
     },
     # ── Familia 6: Evidencia datada (transversal) ─────────────────────
     {
@@ -9650,9 +9651,9 @@ _COMPLIANCE_CATALOG: list[dict] = [
         "familia_nombre": "Evidencia datada e informe de cumplimiento",
         "norma": "Transversal", "articulo": "NIS2+ENS+ISO (todas)",
         "requisito": "Demostrar cumplimiento ante auditor de forma continua, datada y trazable",
-        "fuentes_evidencia": '["_reports_worker","_informe_html","reports/"]',
-        "madurez": "parcial",
-        "notas": "Motor de informes existe; falta mapeo a controles y sellado como evidencia auditable → R-092",
+        "fuentes_evidencia": '["_reports_worker","_informe_html","reports/","evidencias_db","dossier_exportable","incidentes_nis2"]',
+        "madurez": "completa",
+        "notas": "R-091–R-095 implementados: catálogo de controles, motor de evidencias con SHA256, panel semáforo, dossier exportable y ciclo de vida de incidentes. Pendiente: validación contra auditor real (R-096 documental)",
     },
     # ── Familia 7: Cifrado ────────────────────────────────────────────
     {
@@ -9901,6 +9902,38 @@ def init_cumplimiento_db() -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_ev_control ON evidencias(control_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_ev_fecha ON evidencias(recogida_en)")
 
+    # Tabla de incidentes NIS2 (R-095): ciclo de vida + plazos 24h/72h
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS incidentes (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo          TEXT NOT NULL,
+            descripcion     TEXT NOT NULL,
+            tipo            TEXT NOT NULL CHECK(tipo IN
+                            ('confidencialidad','disponibilidad','integridad','multiple')),
+            severidad       TEXT NOT NULL CHECK(severidad IN
+                            ('bajo','medio','alto','critico')),
+            estado          TEXT NOT NULL DEFAULT 'detectado'
+                            CHECK(estado IN ('detectado','notif_24h_enviada',
+                                             'notif_72h_enviada','resuelto','cerrado')),
+            detectado_en    TEXT NOT NULL,
+            notif_24h_en    TEXT,
+            notif_72h_en    TEXT,
+            resuelto_en     TEXT,
+            cerrado_en      TEXT,
+            csirt_ref       TEXT,
+            sistemas_afect  TEXT,
+            medidas_tomadas TEXT,
+            notas           TEXT,
+            creado_por      TEXT NOT NULL,
+            creado_en       TEXT NOT NULL,
+            actualizado_en  TEXT NOT NULL
+        )
+        """
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_inc_estado ON incidentes(estado)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_inc_detectado ON incidentes(detectado_en)")
+
     conn.commit()
 
     # Sembrar catálogo (idempotente: INSERT OR IGNORE).
@@ -9920,6 +9953,58 @@ def init_cumplimiento_db() -> None:
             ),
         )
     conn.commit()
+
+    # R-096: migración v1.0 → v1.1 — corregir las filas ya sembradas
+    # (INSERT OR IGNORE no actualiza; este bloque es idempotente por versión).
+    if True:
+        _v11_updates = [
+            # 5-ENS: op.exp.8 era backups; el control correcto de registros es op.exp.10
+            ("op.exp.10/op.mon.1",
+             "R-096: op.exp.10 es el control ENS de registros (op.exp.8 es backups). Snapshot + SHA256 implementados (R-092); falta política de retención mínima documentada",
+             "5-ENS"),
+            # 5-NIS2: precisar artículo
+            ("21.2(a)/21.2(b)",
+             "Snapshot + SHA256 implementados (R-092); falta política de retención mínima documentada",
+             "5-NIS2"),
+            # 5-ISO: actualizar nota
+            ("A.8.15",
+             "Snapshot + SHA256 implementados (R-092); falta análisis automatizado de anomalías y retención documentada",
+             "5-ISO"),
+            # 3-*: R-095 entregado
+            ("21.2(b)",
+             "Ciclo de vida 24h/72h implementado (R-095); falta proceso organizativo documentado (roles, post-mortem)",
+             "3-NIS2"),
+            ("op.exp.7",
+             "Ciclo de vida y plantilla CSIRT implementados (R-095); falta procedimiento organizativo escrito",
+             "3-ENS"),
+            ("A.5.24-A.5.26",
+             "Ciclo de vida implementado (R-095); falta plan de aprendizaje post-incidente documentado",
+             "3-ISO"),
+            # 6-TRANSVERSAL: R-091–R-095 completos → madurez completa
+            ("NIS2+ENS+ISO (todas)",
+             "R-091–R-095 implementados: catálogo, motor evidencias SHA256, panel semáforo, dossier exportable y ciclo incidentes. Pendiente: validación auditor real (R-096 documental)",
+             "6-TRANSVERSAL"),
+        ]
+        for articulo, notas, ctrl_id in _v11_updates:
+            cur.execute(
+                "UPDATE controles SET articulo=?, notas=?, version_catalogo=? WHERE id=?",
+                (articulo, notas, "1.1", ctrl_id),
+            )
+        # Madurez completa para 6-TRANSVERSAL
+        cur.execute(
+            "UPDATE controles SET madurez='completa', version_catalogo='1.1' WHERE id='6-TRANSVERSAL'",
+        )
+        # Añadir incidentes_nis2 a fuentes de familia 3
+        for ctrl_id in ("3-NIS2", "3-ENS", "3-ISO"):
+            cur.execute(
+                """UPDATE controles
+                   SET fuentes_evidencia='["emit_alert","_check_disk_proactive","_check_backup_proactive","get_alert_stats","incidentes_nis2"]',
+                       version_catalogo='1.1'
+                   WHERE id=?""",
+                (ctrl_id,),
+            )
+        conn.commit()
+
     conn.close()
 
 
@@ -10006,6 +10091,7 @@ async def api_cumplimiento_controles(request: Request):
 
 CUMPLIMIENTO_ENABLED = os.getenv("CUMPLIMIENTO_ENABLED", "true").lower() in ("1", "true", "yes", "on")
 CUMPLIMIENTO_COLLECT_INTERVAL = int(os.getenv("CUMPLIMIENTO_COLLECT_INTERVAL", "86400"))
+CUMPLIMIENTO_EV_MAX_AGE_DAYS  = int(os.getenv("CUMPLIMIENTO_EV_MAX_AGE_DAYS", "7"))   # R-093: días antes de marcar evidencia como caducada
 
 # familia_id → tipo_evidencia (label canónico para la tabla evidencias)
 _EV_FAMILIA_TIPO: dict[int, str] = {
@@ -10333,3 +10419,753 @@ async def api_cumplimiento_evidencias_control(request: Request, control_id: str,
     ).fetchall()
     conn.close()
     return {"control_id": control_id, "evidencias": [dict(r) for r in rows]}
+
+
+# =====================================================================
+# R-093 / Fase 13.3 — Panel de cumplimiento: estado con frescura + inventario
+# =====================================================================
+
+def _ev_inventario_activos() -> dict:
+    """Familia 13: inventario de activos basado en la configuración de perfil."""
+    hosts = {
+        "panel_host":    "localhost",
+        "backups_host":  SERVIDOR_BACKUPS,
+        "servicios_host": os.getenv("SERVICIOS_HOST", ""),
+        "db_host":       LOGS_DB_HOST,
+        "terminal_db_host": TERMINAL_DATABASE_HOST,
+    }
+    activos = []
+    seen: set[str] = set()
+    roles_map = {
+        "panel_host":       "Panel / API",
+        "backups_host":     "Backups / Almacenamiento",
+        "servicios_host":   "Servicios",
+        "db_host":          "Base de datos / Logs",
+        "terminal_db_host": "Terminal / BD",
+    }
+    for clave, host in hosts.items():
+        if not host or host in seen:
+            continue
+        seen.add(host)
+        activos.append({"host": host, "rol": roles_map[clave]})
+
+    return {
+        "disponible": True,
+        "total_activos": len(activos),
+        "activos": activos,
+        "perfil": os.getenv("VIGEX_PROFILE", "desconocido"),
+    }
+
+
+# Registrar familia 13 en los mapas de R-092
+_EV_FAMILIA_TIPO[13] = "inventario_activos"
+_EV_COLECTORES[13] = _ev_inventario_activos
+
+
+def _frescura_evidencia(recogida_en_iso: str | None) -> str:
+    """Devuelve 'fresca', 'caducada' o 'sin_evidencia' según la antigüedad del snapshot."""
+    if not recogida_en_iso:
+        return "sin_evidencia"
+    try:
+        from datetime import timezone
+        ts = datetime.strptime(recogida_en_iso.replace("Z", "+00:00"), "%Y-%m-%dT%H:%M:%S+00:00")
+        ts = ts.replace(tzinfo=timezone.utc)
+        ahora = datetime.now(timezone.utc)
+        dias = (ahora - ts).total_seconds() / 86400
+        return "fresca" if dias <= CUMPLIMIENTO_EV_MAX_AGE_DAYS else "caducada"
+    except Exception:
+        return "sin_evidencia"
+
+
+@app.get("/api/cumplimiento/estado")
+async def api_cumplimiento_estado(request: Request):
+    """
+    Estado global del módulo de cumplimiento con frescura de evidencias por familia.
+    Devuelve: resumen general + detalle por familia (madurez + última evidencia + frescura).
+    """
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+
+    conn = get_cumplimiento_db()
+
+    # Madurez dominante por familia desde el catálogo
+    cat_rows = conn.execute(
+        """
+        SELECT familia_id, familia_nombre,
+               MAX(CASE madurez WHEN 'ausente' THEN 2 WHEN 'parcial' THEN 1 ELSE 0 END) AS madurez_ord,
+               MIN(madurez) AS madurez_min
+        FROM controles
+        GROUP BY familia_id, familia_nombre
+        ORDER BY familia_id
+        """
+    ).fetchall()
+
+    # Última evidencia por familia_id
+    ev_rows = conn.execute(
+        """
+        SELECT c.familia_id, MAX(e.recogida_en) AS ultima_ev
+        FROM evidencias e
+        JOIN controles c ON e.control_id = c.id
+        GROUP BY c.familia_id
+        """
+    ).fetchall()
+    conn.close()
+
+    ultima_por_familia: dict[int, str] = {r["familia_id"]: r["ultima_ev"] for r in ev_rows}
+
+    familias = []
+    conteos = {"fresca": 0, "caducada": 0, "sin_evidencia": 0}
+    MADUREZ_LABEL = {0: "completa", 1: "parcial", 2: "ausente"}
+
+    for r in cat_rows:
+        fid = r["familia_id"]
+        ultima = ultima_por_familia.get(fid)
+        tiene_colector = fid in _EV_COLECTORES
+        frescura = _frescura_evidencia(ultima) if tiene_colector else "sin_colector"
+
+        if tiene_colector:
+            clave = frescura if frescura in conteos else "sin_evidencia"
+            conteos[clave] += 1
+
+        familias.append({
+            "familia_id": fid,
+            "familia_nombre": r["familia_nombre"],
+            "madurez_catalogo": MADUREZ_LABEL.get(r["madurez_ord"], "ausente"),
+            "tiene_colector": tiene_colector,
+            "ultima_evidencia": ultima,
+            "frescura": frescura,
+        })
+
+    return {
+        "max_age_dias": CUMPLIMIENTO_EV_MAX_AGE_DAYS,
+        "proxima_recoleccion_seg": CUMPLIMIENTO_COLLECT_INTERVAL,
+        "resumen": {
+            "familias_con_colector": len(_EV_COLECTORES),
+            "fresca":        conteos["fresca"],
+            "caducada":      conteos["caducada"],
+            "sin_evidencia": conteos["sin_evidencia"],
+        },
+        "familias": familias,
+    }
+
+
+# =====================================================================
+# R-094 / Fase 13.4 — Dossier exportable de evidencias para auditor
+#
+# Genera un documento Markdown estructurado por norma con:
+#   - Declaración legal de conformidad parcial (nunca "cumplimiento total")
+#   - Evidencia técnica datada por familia de control (timestamp + SHA256)
+#   - Sello SHA256 del documento completo al final
+#
+# Entrega de R-094:
+#   - GET /api/cumplimiento/dossier → descarga dossier_cumplimiento_<fecha>.md
+#   - Botón "Exportar dossier" en cumplimiento.html (→ R-093 UI)
+#   - El dossier es solo evidencia técnica; la certificación normativa
+#     real requiere auditoría formal (R-096).
+# =====================================================================
+
+_DOSSIER_DECLARACION = """\
+## ⚠️ Declaración legal obligatoria
+
+Este documento **NO constituye certificación ni declaración de cumplimiento normativo**.
+Contiene evidencia técnica generada automáticamente por Vigex a partir del estado
+real del sistema en el momento de la generación.
+
+El cumplimiento formal de NIS2 (RD-ley 7/2025), ENS (RD 311/2022) o ISO 27001:2022
+requiere una auditoría independiente realizada por un organismo de certificación
+acreditado. Este dossier aporta evidencia de soporte para dicha auditoría; no la sustituye.
+
+**Alcance técnico cubierto:** configuración SSH, estado de backups, métricas de
+disponibilidad, snapshots de logs de autenticación, informes operativos, inventario
+de activos e integridad de paquetes. Controles de proceso y organizativos (gestión
+de incidentes, formación, contratos con terceros, etc.) quedan fuera del alcance
+técnico de Vigex y deben ser evidenciados manualmente.
+"""
+
+
+def _generar_dossier_md(
+    controles: list[dict],
+    evidencias_por_familia: dict[int, dict],
+    max_age_dias: int,
+) -> str:
+    """
+    Genera el cuerpo Markdown del dossier (sin sello SHA256, que se añade después).
+    """
+    ahora_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    ahora_legible = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+
+    lineas: list[str] = []
+
+    # ── Cabecera ──
+    lineas += [
+        "# Dossier de Evidencias Técnicas — Vigex",
+        "",
+        f"**Fecha de generación:** {ahora_legible}  ",
+        f"**Versión catálogo:** {_CUMPLIMIENTO_CATALOG_VERSION}  ",
+        f"**Caducidad de evidencia configurada:** {max_age_dias} días  ",
+        "",
+        "---",
+        "",
+        _DOSSIER_DECLARACION,
+        "---",
+        "",
+    ]
+
+    # ── Resumen ejecutivo ──
+    normas_vistas: list[str] = []
+    for c in controles:
+        if c["norma"] not in normas_vistas:
+            normas_vistas.append(c["norma"])
+
+    stats_norma: dict[str, dict] = {}
+    fids_vistos: set[int] = set()
+    for c in controles:
+        fid = c["familia_id"]
+        norma = c["norma"]
+        if norma not in stats_norma:
+            stats_norma[norma] = {"total_familias": 0, "con_evidencia_fresca": 0,
+                                  "caducada": 0, "sin_evidencia": 0}
+        if fid not in fids_vistos:
+            fids_vistos.add(fid)
+            ev = evidencias_por_familia.get(fid)
+            frescura = _frescura_evidencia(ev["ts"] if ev else None) if ev else "sin_evidencia"
+            if fid in _EV_COLECTORES:
+                stats_norma[norma]["total_familias"] += 1
+                if frescura == "fresca":
+                    stats_norma[norma]["con_evidencia_fresca"] += 1
+                elif frescura == "caducada":
+                    stats_norma[norma]["caducada"] += 1
+                else:
+                    stats_norma[norma]["sin_evidencia"] += 1
+
+    lineas += ["## Resumen ejecutivo", ""]
+    lineas += ["| Norma | Familias con colector | Evidencia fresca | Caducada | Sin recoger |",
+               "|---|---|---|---|---|"]
+    for norma in normas_vistas:
+        s = stats_norma.get(norma, {})
+        lineas.append(
+            f"| {norma} | {s.get('total_familias',0)} "
+            f"| {s.get('con_evidencia_fresca',0)} "
+            f"| {s.get('caducada',0)} "
+            f"| {s.get('sin_evidencia',0)} |"
+        )
+    lineas += ["", "---", ""]
+
+    # ── Detalle por norma → familia ──
+    familias_por_norma: dict[str, dict[int, dict]] = {}
+    for c in controles:
+        norma = c["norma"]
+        fid = c["familia_id"]
+        if norma not in familias_por_norma:
+            familias_por_norma[norma] = {}
+        if fid not in familias_por_norma[norma]:
+            familias_por_norma[norma][fid] = {
+                "nombre": c["familia_nombre"],
+                "controles": [],
+            }
+        familias_por_norma[norma][fid]["controles"].append(c)
+
+    MADUREZ_EMOJI = {"completa": "✅", "parcial": "⚠️", "ausente": "❌"}
+    FRESCURA_EMOJI = {"fresca": "🟢", "caducada": "🟡", "sin_evidencia": "🔴",
+                      "sin_colector": "⬜"}
+
+    for norma in normas_vistas:
+        lineas += [f"## {norma}", ""]
+        for fid, fam in familias_por_norma.get(norma, {}).items():
+            ev = evidencias_por_familia.get(fid)
+            tiene_colector = fid in _EV_COLECTORES
+            frescura = _frescura_evidencia(ev["ts"] if ev else None) if tiene_colector else "sin_colector"
+            madurez_dom = max(
+                (c["madurez"] for c in fam["controles"]),
+                key=lambda m: {"ausente": 2, "parcial": 1, "completa": 0}[m],
+            )
+
+            lineas += [
+                f"### {MADUREZ_EMOJI.get(madurez_dom, '')} {fam['nombre']}",
+                "",
+                f"**Evidencia:** {FRESCURA_EMOJI.get(frescura, '')} {frescura.replace('_', ' ').capitalize()}  ",
+            ]
+            if ev and ev.get("ts"):
+                lineas.append(f"**Recogida:** {ev['ts']}  ")
+                lineas.append(f"**SHA256:** `{ev.get('sha256', '—')}`  ")
+            lineas.append("")
+
+            # Controles de esta familia
+            lineas.append("**Controles normativos:**")
+            lineas.append("")
+            for c in fam["controles"]:
+                madurez_c = MADUREZ_EMOJI.get(c["madurez"], c["madurez"])
+                lineas.append(f"- {madurez_c} **{c['articulo']}** — {c['requisito']}")
+                if c.get("notas"):
+                    lineas.append(f"  > _{c['notas']}_")
+            lineas.append("")
+
+            # Detalle de evidencia si existe
+            if ev and ev.get("datos_json"):
+                try:
+                    datos = json.loads(ev["datos_json"])
+                    lineas.append("**Datos recogidos:**")
+                    lineas.append("")
+                    lineas.append("```json")
+                    lineas.append(json.dumps(datos, ensure_ascii=False, indent=2))
+                    lineas.append("```")
+                    lineas.append("")
+                except Exception:
+                    pass
+
+            lineas += ["---", ""]
+
+    # ── Pie: metadatos de generación ──
+    lineas += [
+        "## Metadatos de generación",
+        "",
+        f"- **Sistema:** Vigex v1.0 (Fase 13 — R-094)",
+        f"- **Timestamp ISO 8601:** {ahora_iso}",
+        f"- **Perfil de despliegue:** {os.getenv('VIGEX_PROFILE', 'desconocido')}",
+        "",
+        "---",
+        "",
+        "_Este dossier ha sido generado automáticamente por Vigex. "
+        "Véase la declaración legal al inicio del documento._",
+        "",
+    ]
+
+    return "\n".join(lineas)
+
+
+@app.get("/api/cumplimiento/dossier")
+async def api_cumplimiento_dossier(request: Request):
+    """
+    Genera y descarga el dossier Markdown de evidencias para auditor (R-094).
+    Sellado con SHA256 del contenido completo al final del fichero.
+    Requiere permiso `cumplimiento` o rol admin.
+    """
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+
+    conn = get_cumplimiento_db()
+
+    controles = [dict(r) for r in conn.execute(
+        "SELECT * FROM controles ORDER BY familia_id, norma"
+    ).fetchall()]
+
+    ev_rows = conn.execute(
+        """
+        SELECT c.familia_id, e.recogida_en, e.datos_json, e.sha256, e.tipo_evidencia
+        FROM evidencias e
+        JOIN controles c ON e.control_id = c.id
+        ORDER BY e.recogida_en DESC
+        """
+    ).fetchall()
+    conn.close()
+
+    # Última evidencia por familia (la más reciente)
+    evidencias_por_familia: dict[int, dict] = {}
+    for r in ev_rows:
+        fid = r["familia_id"]
+        if fid not in evidencias_por_familia:
+            evidencias_por_familia[fid] = {
+                "ts":         r["recogida_en"],
+                "datos_json": r["datos_json"],
+                "sha256":     r["sha256"],
+                "tipo":       r["tipo_evidencia"],
+            }
+
+    cuerpo = _generar_dossier_md(controles, evidencias_por_familia, CUMPLIMIENTO_EV_MAX_AGE_DAYS)
+
+    # Sello SHA256 del documento completo
+    sello = hashlib.sha256(cuerpo.encode("utf-8")).hexdigest()
+    cuerpo += f"\n**SHA256 del dossier:** `{sello}`\n"
+
+    fecha_hoy = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    nombre_fichero = f"dossier_cumplimiento_{fecha_hoy}.md"
+
+    return Response(
+        content=cuerpo.encode("utf-8"),
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{nombre_fichero}"',
+            "X-Dossier-SHA256": sello,
+        },
+    )
+
+
+# =====================================================================
+# R-095 / Fase 13.5 — Ciclo de vida de incidentes NIS2 (24h / 72h)
+#
+# NIS2 Art. 23 exige notificar al CSIRT:
+#   - Aviso temprano (24 h desde que la entidad toma conciencia)
+#   - Notificación completa (72 h)
+#
+# Entrega de R-095:
+#   - Tabla `incidentes` en cumplimiento.db (iniciada en init_cumplimiento_db)
+#   - GET  /incidentes                       → página HTML del ciclo de vida
+#   - GET  /api/cumplimiento/incidentes      → lista con cuenta atrás calculada
+#   - POST /api/cumplimiento/incidentes      → crear incidente (admin)
+#   - PATCH /api/cumplimiento/incidentes/{id} → avanzar estado (admin)
+#   - GET  /api/cumplimiento/incidentes/{id}/plantilla?fase=24h|72h
+#                                            → descarga Markdown para CSIRT
+#
+# CSIRT de referencia para España: INCIBE-CERT (empresas privadas) /
+#   CCN-CERT (Administración Pública / ENS). La plantilla sigue la
+#   estructura de Art. 23 NIS2 + guía ENISA.
+# =====================================================================
+
+_INC_TIPOS = {
+    "confidencialidad": "Violación de confidencialidad",
+    "disponibilidad":   "Interrupción de disponibilidad",
+    "integridad":       "Alteración de integridad",
+    "multiple":         "Incidente múltiple/combinado",
+}
+_INC_SEVERIDADES = {
+    "bajo":    "Bajo — impacto mínimo, sin servicios esenciales afectados",
+    "medio":   "Medio — impacto moderado o servicios parcialmente afectados",
+    "alto":    "Alto — servicios esenciales afectados significativamente",
+    "critico": "Crítico — interrupción grave, posible obligación NIS2 de notificación",
+}
+_INC_ESTADOS_LABEL = {
+    "detectado":          "Detectado",
+    "notif_24h_enviada":  "Aviso 24 h enviado",
+    "notif_72h_enviada":  "Notificación 72 h enviada",
+    "resuelto":           "Resuelto",
+    "cerrado":            "Cerrado",
+}
+# Transiciones permitidas
+_INC_TRANSICIONES: dict[str, list[str]] = {
+    "detectado":         ["notif_24h_enviada", "resuelto"],
+    "notif_24h_enviada": ["notif_72h_enviada", "resuelto"],
+    "notif_72h_enviada": ["resuelto"],
+    "resuelto":          ["cerrado"],
+    "cerrado":           [],
+}
+
+
+def _inc_cuentas_atras(detectado_iso: str, estado: str) -> dict:
+    """Calcula segundos restantes hasta los plazos 24h y 72h desde detección."""
+    from datetime import timezone
+    try:
+        ts = datetime.fromisoformat(detectado_iso.replace("Z", "+00:00"))
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        ahora = datetime.now(timezone.utc)
+        elapsed = (ahora - ts).total_seconds()
+        return {
+            "seg_detectado":  int(elapsed),
+            "seg_hasta_24h":  max(0, int(86400 - elapsed)),
+            "seg_hasta_72h":  max(0, int(259200 - elapsed)),
+            "vencido_24h":    elapsed > 86400,
+            "vencido_72h":    elapsed > 259200,
+        }
+    except Exception:
+        return {"seg_detectado": 0, "seg_hasta_24h": 0, "seg_hasta_72h": 0,
+                "vencido_24h": False, "vencido_72h": False}
+
+
+def _inc_fila_a_dict(r) -> dict:
+    d = dict(r)
+    d["cuentas_atras"] = _inc_cuentas_atras(d["detectado_en"], d["estado"])
+    d["estado_label"] = _INC_ESTADOS_LABEL.get(d["estado"], d["estado"])
+    d["tipo_label"] = _INC_TIPOS.get(d["tipo"], d["tipo"])
+    d["severidad_label"] = _INC_SEVERIDADES.get(d["severidad"], d["severidad"])
+    d["transiciones_posibles"] = _INC_TRANSICIONES.get(d["estado"], [])
+    return d
+
+
+def _generar_plantilla_csirt(inc: dict, fase: str) -> str:
+    """Genera la plantilla Markdown de notificación al CSIRT (24h o 72h)."""
+    ahora_legible = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+    detectado_legible = inc.get("detectado_en", "—")
+
+    cabecera = f"""\
+# Notificación de Incidente NIS2 — {'Aviso temprano (24 h)' if fase == '24h' else 'Notificación completa (72 h)'}
+
+**Referencia interna:** INC-{inc['id']:04d}
+**Fecha de notificación:** {ahora_legible}
+**CSIRT destinatario:** INCIBE-CERT (empresas privadas) / CCN-CERT (AA.PP. / ENS)
+**Referencia CSIRT asignada:** {inc.get('csirt_ref') or '_(pendiente de asignar)_'}
+
+---
+
+## ⚠️ Aviso legal
+
+Esta notificación se emite en cumplimiento del **Art. 23 de la Directiva NIS2**
+(transpuesta en España mediante RD-ley 7/2025) y del **Art. 40 ENS** (RD 311/2022).
+El contenido es confidencial y está destinado exclusivamente al CSIRT receptor.
+
+---
+"""
+
+    seccion_comun = f"""\
+## 1. Identificación del incidente
+
+| Campo | Valor |
+|---|---|
+| Identificador interno | INC-{inc['id']:04d} |
+| Título | {inc['titulo']} |
+| Tipo | {_INC_TIPOS.get(inc['tipo'], inc['tipo'])} |
+| Severidad | {inc['severidad'].capitalize()} |
+| Estado actual | {_INC_ESTADOS_LABEL.get(inc['estado'], inc['estado'])} |
+| Momento de detección | {detectado_legible} |
+| Notificación 24 h enviada | {inc.get('notif_24h_en') or '_(pendiente)_'} |
+| Notificación 72 h enviada | {inc.get('notif_72h_en') or '_(pendiente)_'} |
+
+## 2. Sistemas y servicios afectados
+
+{inc.get('sistemas_afect') or '_(completar manualmente)_'}
+
+## 3. Descripción del incidente
+
+{inc['descripcion']}
+
+## 4. Indicios y evidencias disponibles
+
+> _Describir logs, alertas, IOCs o cualquier evidencia técnica disponible en el momento
+> de la notificación. Vigex genera evidencia técnica automática — véase el dossier
+> de evidencias adjunto (R-094)._
+
+## 5. Medidas inmediatas adoptadas
+
+{inc.get('medidas_tomadas') or '_(completar manualmente)_'}
+"""
+
+    if fase == "24h":
+        cuerpo_especifico = """\
+## 6. Notas adicionales (aviso temprano)
+
+> _Este es un aviso temprano. La información puede ser incompleta. Se completará
+> en la notificación formal de 72 h (Art. 23.4 NIS2)._
+
+"""
+    else:
+        cuerpo_especifico = f"""\
+## 6. Análisis de causa raíz
+
+{inc.get('notas') or '_(completar: causa raíz conocida o hipótesis principal)_'}
+
+## 7. Impacto estimado
+
+> _Describir: número de usuarios afectados, duración de la interrupción, datos
+> comprometidos (categorías, volumen estimado), impacto en servicios esenciales._
+
+## 8. Medidas correctivas y plan de remediación
+
+{inc.get('medidas_tomadas') or '_(completar manualmente con el plan de remediación completo)_'}
+
+## 9. Estado de resolución
+
+| Campo | Valor |
+|---|---|
+| Incidente resuelto | {'Sí — ' + inc['resuelto_en'] if inc.get('resuelto_en') else 'No (en curso)'} |
+| Incidente cerrado  | {'Sí — ' + inc['cerrado_en'] if inc.get('cerrado_en') else 'No'} |
+
+"""
+
+    pie = f"""\
+---
+
+## Datos del notificador
+
+| Campo | Valor |
+|---|---|
+| Organización | _(completar)_ |
+| Rol del notificador | Administrador de sistema (Vigex) |
+| Email de contacto | _(completar)_ |
+| Teléfono | _(completar)_ |
+
+---
+
+_Documento generado automáticamente por Vigex v1.0 (R-095 / Fase 13) el {ahora_legible}._
+_SHA256 del incidente en el momento de generación: `{hashlib.sha256(json.dumps(inc, sort_keys=True, default=str).encode()).hexdigest()}`_
+"""
+
+    return cabecera + seccion_comun + cuerpo_especifico + pie
+
+
+# ── Página HTML de incidentes ────────────────────────────────────────
+
+@app.get("/incidentes")
+async def incidentes_page(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse("/login")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso para Cumplimiento")
+    return templates.TemplateResponse(
+        "incidentes.html",
+        _base_context(request) | {
+            "current_path": "/incidentes",
+            "tipos": _INC_TIPOS,
+            "severidades": _INC_SEVERIDADES,
+        },
+    )
+
+
+# ── API: listar incidentes ───────────────────────────────────────────
+
+@app.get("/api/cumplimiento/incidentes")
+async def api_incidentes_list(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso")
+
+    conn = get_cumplimiento_db()
+    filas = conn.execute(
+        "SELECT * FROM incidentes ORDER BY detectado_en DESC"
+    ).fetchall()
+    conn.close()
+    return {"incidentes": [_inc_fila_a_dict(r) for r in filas]}
+
+
+# ── API: crear incidente ─────────────────────────────────────────────
+
+@app.post("/api/cumplimiento/incidentes")
+async def api_incidentes_crear(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    if not is_admin(user):
+        raise HTTPException(status_code=403, detail="Solo administradores pueden crear incidentes")
+
+    body = await request.json()
+    titulo    = str(body.get("titulo", "")).strip()
+    descripcion = str(body.get("descripcion", "")).strip()
+    tipo      = str(body.get("tipo", "")).strip()
+    severidad = str(body.get("severidad", "")).strip()
+    detectado_en = str(body.get("detectado_en", "")).strip()
+    sistemas_afect  = str(body.get("sistemas_afect", "")).strip() or None
+    medidas_tomadas = str(body.get("medidas_tomadas", "")).strip() or None
+
+    if not titulo or not descripcion:
+        raise HTTPException(status_code=400, detail="titulo y descripcion son obligatorios")
+    if tipo not in _INC_TIPOS:
+        raise HTTPException(status_code=400, detail=f"tipo debe ser uno de: {list(_INC_TIPOS)}")
+    if severidad not in _INC_SEVERIDADES:
+        raise HTTPException(status_code=400, detail=f"severidad debe ser uno de: {list(_INC_SEVERIDADES)}")
+    if not detectado_en:
+        raise HTTPException(status_code=400, detail="detectado_en es obligatorio (ISO 8601)")
+    try:
+        datetime.fromisoformat(detectado_en.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="detectado_en: formato ISO 8601 inválido")
+
+    ahora = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn = get_cumplimiento_db()
+    cur = conn.execute(
+        """
+        INSERT INTO incidentes
+          (titulo, descripcion, tipo, severidad, estado, detectado_en,
+           sistemas_afect, medidas_tomadas, creado_por, creado_en, actualizado_en)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (titulo, descripcion, tipo, severidad, "detectado", detectado_en,
+         sistemas_afect, medidas_tomadas, user, ahora, ahora),
+    )
+    inc_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return {"ok": True, "id": inc_id}
+
+
+# ── API: actualizar estado de incidente ──────────────────────────────
+
+@app.patch("/api/cumplimiento/incidentes/{inc_id}")
+async def api_incidentes_actualizar(inc_id: int, request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    if not is_admin(user):
+        raise HTTPException(status_code=403, detail="Solo administradores pueden actualizar incidentes")
+
+    body = await request.json()
+    nuevo_estado    = body.get("estado")
+    csirt_ref       = body.get("csirt_ref")
+    medidas_tomadas = body.get("medidas_tomadas")
+    notas           = body.get("notas")
+
+    conn = get_cumplimiento_db()
+    fila = conn.execute("SELECT * FROM incidentes WHERE id=?", (inc_id,)).fetchone()
+    if not fila:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Incidente no encontrado")
+
+    inc = dict(fila)
+    estado_actual = inc["estado"]
+    ahora = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    campos: list[str] = ["actualizado_en = ?"]
+    valores: list = [ahora]
+
+    if nuevo_estado and nuevo_estado != estado_actual:
+        if nuevo_estado not in _INC_TRANSICIONES.get(estado_actual, []):
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail=f"Transición no permitida: {estado_actual} → {nuevo_estado}",
+            )
+        campos.append("estado = ?")
+        valores.append(nuevo_estado)
+        # Registrar timestamps de notificación / resolución
+        if nuevo_estado == "notif_24h_enviada":
+            campos.append("notif_24h_en = ?"); valores.append(ahora)
+        elif nuevo_estado == "notif_72h_enviada":
+            campos.append("notif_72h_en = ?"); valores.append(ahora)
+        elif nuevo_estado == "resuelto":
+            campos.append("resuelto_en = ?"); valores.append(ahora)
+        elif nuevo_estado == "cerrado":
+            campos.append("cerrado_en = ?"); valores.append(ahora)
+
+    if csirt_ref is not None:
+        campos.append("csirt_ref = ?"); valores.append(str(csirt_ref).strip() or None)
+    if medidas_tomadas is not None:
+        campos.append("medidas_tomadas = ?"); valores.append(str(medidas_tomadas).strip() or None)
+    if notas is not None:
+        campos.append("notas = ?"); valores.append(str(notas).strip() or None)
+
+    valores.append(inc_id)
+    conn.execute(f"UPDATE incidentes SET {', '.join(campos)} WHERE id=?", valores)
+    conn.commit()
+    fila_actualizada = conn.execute("SELECT * FROM incidentes WHERE id=?", (inc_id,)).fetchone()
+    conn.close()
+    return _inc_fila_a_dict(fila_actualizada)
+
+
+# ── API: generar plantilla CSIRT ────────────────────────────────────
+
+@app.get("/api/cumplimiento/incidentes/{inc_id}/plantilla")
+async def api_incidentes_plantilla(inc_id: int, request: Request, fase: str = "24h"):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_user_permissions(user)
+    if not perms.get("cumplimiento") and not is_admin(user):
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    if fase not in ("24h", "72h"):
+        raise HTTPException(status_code=400, detail="fase debe ser '24h' o '72h'")
+
+    conn = get_cumplimiento_db()
+    fila = conn.execute("SELECT * FROM incidentes WHERE id=?", (inc_id,)).fetchone()
+    conn.close()
+    if not fila:
+        raise HTTPException(status_code=404, detail="Incidente no encontrado")
+
+    inc = _inc_fila_a_dict(dict(fila))
+    contenido = _generar_plantilla_csirt(inc, fase)
+    fecha_hoy = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    nombre = f"notif_nis2_{fase}_INC{inc_id:04d}_{fecha_hoy}.md"
+    return Response(
+        content=contenido.encode("utf-8"),
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
