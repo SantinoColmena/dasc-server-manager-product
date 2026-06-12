@@ -324,7 +324,14 @@ def _agent_translate(
 
         # ── Backups ────────────────────────────────────────────────────────────
         if script == SCRIPT_BACKUPS:
-            resp = _call_agent(host, "/api/v1/backups/create", "POST", token=token)
+            # args = [type, db, dest, name, compress, retention, base_ref, notes]
+            # o simplemente [tipo] desde el endpoint rápido
+            body: dict[str, Any] = {}
+            if args:
+                body["backup_type"] = args[0]  # "full" | "incremental" | "differential"
+            if len(args) > 3 and args[3]:
+                body["name"] = args[3]
+            resp = _call_agent(host, "/api/v1/backups/create", "POST", data=body or None, token=token)
             ok   = bool(resp.get("ok"))
             fn   = resp.get("filename", "")
             text = f"OK: backup {fn}" if ok else f"ERROR: {resp.get('error', 'desconocido')}"
@@ -332,7 +339,8 @@ def _agent_translate(
 
         # ── Restore ───────────────────────────────────────────────────────────
         if script == SCRIPT_RESTORE:
-            filename = args[0] if args else ""
+            # args[3] = filename explícito (R-104); args[0] = backup_id numérico (fallback)
+            filename = (args[3] if len(args) > 3 and args[3] else args[0]) if args else ""
             resp = _call_agent(host, f"/api/v1/backups/restore?filename={filename}", "POST", token=token)
             ok   = bool(resp.get("ok"))
             text = "OK: restauración completada" if ok else f"ERROR: {resp.get('error', 'desconocido')}"
@@ -389,6 +397,23 @@ def _agent_translate(
         # ── crontab -l (no aplica en Windows) ─────────────────────────────────
         if script == "crontab" and args == ["-l"]:
             return {**_base, "ok": True, "text": "no crontab for vigex", "stdout": ""}
+
+        # ── Historial de backups (history.tsv) ────────────────────────────────
+        if script == "cat" and args and args[0] == "/home/vigex/backups/.vigex/history.tsv":
+            bk_list = _call_agent(host, "/api/v1/backups", token=token)
+            if not isinstance(bk_list, list) or not bk_list:
+                return {**_base, "ok": True, "text": "", "stdout": ""}
+            header = "id\ttimestamp\ttype\tdb\tfile\tstatus\tsize_mb"
+            rows: list[str] = []
+            for i, bf in enumerate(bk_list, 1):
+                # created_at: "2026-06-12T10:30:00Z" → "2026-06-12 10:30:00"
+                created = bf.get("created_at", "").replace("T", " ")[:19]
+                fn_     = bf.get("filename", "")
+                db_     = bf.get("db_backend", "db")
+                sz_     = bf.get("size_mb", 0)
+                rows.append(f"{i}\t{created}\tfull\t{db_}\t{fn_}\tOK\t{sz_}")
+            tsv = header + "\n" + "\n".join(rows)
+            return {**_base, "ok": True, "text": tsv, "stdout": tsv}
 
         # ── Ficheros Linux no disponibles en agente Windows ────────────────────
         if script == "cat":
@@ -1336,7 +1361,7 @@ def ssh_run_stdin(host: str, script_text: str) -> dict[str, Any]:
 def cargar_historial_backups(limit: int = 50) -> list[dict[str, str]]:
     """Carga el historial generado por backups_api.sh desde el servidor de backups."""
 
-    result = ssh_run(
+    result = remote_run(
         SERVIDOR_BACKUPS,
         "cat",
         ["/home/vigex/backups/.vigex/history.tsv"],
@@ -1710,11 +1735,12 @@ def plan_restauracion_backups(backup_id: int, history: list[dict[str, str]]) -> 
     }
 
 
-def restaurar_backup_remoto(backup_id: int) -> dict[str, Any]:
-    return ssh_run(
+def restaurar_backup_remoto(backup_id: int, filename: str = "") -> dict[str, Any]:
+    # filename: nombre de fichero usado por el agente Windows (args[3]); Linux lo ignora
+    return remote_run(
         SERVIDOR_BACKUPS,
         SCRIPT_RESTORE,
-        [str(backup_id), "/home/vigex/backups", "SI"],
+        [str(backup_id), "/home/vigex/backups", "SI", filename],
     )
 
 
@@ -4022,7 +4048,12 @@ def backups_restore_confirm(
             status_code=303,
         )
 
-    result = restaurar_backup_remoto(backup_id)
+    try:
+        _bk = buscar_backup_por_id(backup_id, history)
+        _bk_file = _bk.get("file", "") or _bk.get("path", "")
+    except ValueError:
+        _bk_file = ""
+    result = restaurar_backup_remoto(backup_id, filename=_bk_file)
     ok = 1 if result["ok"] and is_ok(result["text"]) else 0
 
     if ok:
