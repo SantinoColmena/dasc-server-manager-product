@@ -52,26 +52,22 @@ Fase            → momento del producto (dónde estamos en su ciclo de vida)
 | 4 | Demo y validación | R-032 → R-039 | ✅ Cerrada | — |
 | 5 | Pilotos reales y RC | R-040 → R-047 | ✅ Cerrada | — |
 | **6** | **Endurecimiento y producto vendible** | **R-048 → R-057** | ✅ **Cerrada** | **—** |
-| **7** | **Madurez del producto** | **R-058 → R-064 (aprox.)** | 🔵 **En curso** | **Ahora** |
-| **8** | **Madurez operacional** | **R-065 → R-071 (aprox.)** | ▶️ Siguiente | Siguiente |
-| **9** | **Infraestructura de negocio** | **R-072 → R-078 (aprox.)** | ▶️ Siguiente | Siguiente |
+| **7** | **Madurez del producto** | **R-058 → R-064 (aprox.)** | ✅ **Cerrada** | **—** |
+| **8** | **Madurez operacional** | **R-065 → R-071 (aprox.)** | ✅ **Cerrada** | **—** |
+| **9** | **Infraestructura de negocio** | **R-072 → R-078 (aprox.)** | 🟡 **En curso (acción pendiente del usuario)** | **Ahora** |
 | **10** | **Central cloud y multi-cliente** | **R-077 → R-083 (aprox.)** | 🟡 **En curso (acción pendiente del usuario)** | **Ahora** |
 | 11 | Comercial y escalado | (se numera al planificar) | 🟡 En curso (acción pendiente del usuario) | Después |
-| 12 | Evolución (IA avanzada, Windows GUI, refactor) | (se numera al planificar) | 🟡 En curso (parcial) | Después |
-| **13** | **Cumplimiento y evidencias automáticas (NIS2/ENS/ISO 27001)** | **R-091 → R-096 (aprox.)** | ▶️ **Siguiente (nueva dirección)** | **Ahora** |
+| 12 | Evolución (Windows Agent, IA, refactor) | R-085 → R-104 | 🟡 En curso (parcial) | Después |
+| **13** | **Cumplimiento y evidencias automáticas (NIS2/ENS/ISO 27001)** | **R-091 → R-096** | ✅ **Cerrada 2026-06-11** | **—** |
 
 **Próximos objetivos concretos** (lo que dicta el propio repo, en orden):
 
 1. ~~**R-053 → R-057** — Fases de validación, hardening, guías y freeze.~~ ✅ Todas cerradas 2026-06-07.
 2. ~~**Fase 7** — Madurez del producto.~~ ✅ Cerrada 2026-06-08.
 3. ~~**Fase 8** — Madurez operacional.~~ ✅ Cerrada 2026-06-08.
-4. **Ahora — Fase 13 (nueva dirección):** Cumplimiento y evidencias automáticas
-   (NIS2/ENS/ISO 27001) como diferenciador comercial. Ancla estratégica en
-   [`docs/estrategia/direccion_cumplimiento_nis2.md`](estrategia/direccion_cumplimiento_nis2.md).
-5. **En paralelo (acción del usuario) — Fases 9–11:** dominio + email, web/precios,
-   Stripe y legal. Prerrequisito de cualquier venta, con cumplimiento o sin él.
-6. **Gate F9-GATE + F13-GATE superados → R-048:** Primer cliente de pago real,
-   ya con el diferenciador de cumplimiento.
+4. ~~**Fase 13 — Cumplimiento (NIS2/ENS/ISO 27001):** R-091→R-096.~~ ✅ Cerrada 2026-06-11. F13-GATE superado.
+5. ~~**Fase 12 — Windows Agent (topología mixta):** R-100→R-104.~~ ✅ Cerrado 2026-06-12.
+6. **Ahora — R-048: Primer cliente de pago.** `F9-GATE` ✅ y `F13-GATE` ✅ superados. Bloqueante restante: Fases 9–11 acción del usuario (NIF autónomo, dominio propio, Stripe live).
 
 ---
 
@@ -372,14 +368,19 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | ✅ 12.10 Proxy LLM centralizado | Central Support actúa como proxy LLM para todos los clientes — ningún cliente necesita su propia API key. 5 proveedores soportados (Anthropic, Gemini, OpenAI, Groq, Ollama). Rate limiting por cliente. Proveedor activo: Groq (`llama-3.3-70b-versatile`). ✅ Entregado 2026-06-12 (**R-097**). | ✅ |
 | ✅ 12.11 Bot Telegram centralizado @VigexPanelBot | Central gestiona un único bot Telegram — los clientes solo configuran su `TELEGRAM_CHAT_ID`. Polling thread responde a `/start` y `/chatid` con el chat ID del usuario. Bot desplegado: **@VigexPanelBot**. ✅ Entregado 2026-06-12 (**R-098**). | ✅ |
 | 12.3 IA avanzada (RAG) — fase proactiva | La **base RAG ya existe** (R-090, ver 12.9). Falta la parte proactiva: análisis de logs con LLM y sugerencias automáticas. Requiere base de clientes que lo justifique. ⏳ Backlog. | 🕓 |
-| ✅ 12.5 Vigex para Windows — instalador Docker | **R-099** — Experiencia 100% Windows sin tocar Linux: `VigexSetup.ps1` instala Docker Desktop silenciosamente, descarga la imagen `vigex/panel:latest`, registra tarea de autoarranque en Windows y despliega el contenedor en `localhost:8000`. El cliente nunca ve una terminal ni configura Linux. Entregado: `Dockerfile` (python:3.11-slim + openssh-client), `docker-compose.yml` con volúmenes persistentes, `VigexSetup.ps1` (instala Docker, verifica RAM/disco, modo --Uninstall/--Update), `vigex-update.bat` (doble clic), `config.env.example` Docker. Imagen verificada localmente — /health → 200 en < 5 s. Los servidores gestionados siguen siendo Linux. ✅ Entregado 2026-06-12 (**R-099**). | ✅ |
+| ✅ 12.5 Vigex para Windows — instalador Docker | **R-099** — Experiencia 100% Windows sin tocar Linux: `VigexSetup.ps1` instala Docker Desktop silenciosamente, descarga la imagen `scolmena/vigex-panel:latest`, registra tarea de autoarranque en Windows y despliega el contenedor en `localhost:8000`. El cliente nunca ve una terminal ni configura Linux. Entregado: `Dockerfile` (python:3.11-slim + openssh-client), `docker-compose.yml` con volúmenes persistentes, `VigexSetup.ps1` (instala Docker, verifica RAM/disco, modo --Uninstall/--Update), `vigex-update.bat` (doble clic), `config.env.example` Docker, `VigexSetup.exe` (NSIS). Imagen publicada en Docker Hub — `/health` → 200. Los servidores gestionados siguen siendo Linux. ✅ Entregado 2026-06-12 (**R-099**). | ✅ |
+| ✅ 12.12 Vigex Agent — servicio HTTP para servidores Windows gestionados | **R-100** — Agente Go (7.2 MB, sin dependencias externas) que expone `/api/v1/system`, `/api/v1/disk`, `/api/v1/services`, `/api/v1/backups` y `/api/v1/logs` por HTTP en el puerto 8050. Autenticación por cabecera `X-Vigex-Token`. Compila a `VigexAgent.exe`. 21/21 tests pasan. Deploy: `deploy/agent/`. ✅ Entregado 2026-06-12 (**R-100**). | ✅ |
+| ✅ 12.13 Integración del agente en el panel — routing transparente | **R-101** — `remote_run()` como sustituto drop-in de `ssh_run()`: si el host aparece en `VIGEX_AGENT_TOKEN_MAP` enruta a HTTP; si no, usa SSH. `_agent_translate()` mapea operaciones (scripts bash, `df`, `cat`, `crontab`) a llamadas REST y normaliza respuestas a formato compatible con los parsers existentes. 14 llamadas `ssh_run(SERVIDOR_BACKUPS,…)` y 5 de `SERVIDOR_SERVICIOS` migradas. ✅ Entregado 2026-06-12 (**R-101**). | ✅ |
+| ✅ 12.14 Perfiles de despliegue con soporte Windows | **R-102** — `VIGEX_AGENT_PORT` y `VIGEX_AGENT_TOKEN_MAP` añadidos a los tres perfiles (`config.single`, `config.dual`, `config.distributed`) y a `config.env.example`. Instrucciones de uso en `generar_config_perfil.sh`. ✅ Entregado 2026-06-12 (**R-102**). | ✅ |
+| ✅ 12.15 Wizard de configuración de agentes en VigexSetup | **R-103** — `Invoke-AgentWizard` en `VigexSetup.ps1`: detecta hosts Windows en `VIGEX_AGENT_TOKEN_MAP`, genera tokens RNG de 32 caracteres, escribe en `config.env` y reinicia el contenedor. Se lanza automáticamente tras el despliegue del panel. ✅ Entregado 2026-06-12 (**R-103**). | ✅ |
+| ✅ 12.16 Topología mixta Linux+Windows — auditoría completa | **R-104** — Corrección de llamadas `ssh_run` multilinea no capturadas por el reemplazo masivo (historial de backups, restauración con nombre de archivo). 3 bugs en VigexAgent: campos de disco en cero (mismatch `TotalGB`/`total_gb`), `event_id` siempre 0, encoding UTF-8 en pipes PowerShell. `charset=utf-8` en `Content-Type` de todas las respuestas del agente. ✅ Entregado 2026-06-12 (**R-104**). | ✅ |
 | 12.6 WhatsApp Business API | Canal adicional de notificaciones. Requiere cuenta Meta/Twilio (~€0,05/mensaje). ⏳ Backlog. | 🕓 |
 | 12.7 Refactor de `main.py` | Deuda técnica L-6: ~7000 líneas en un fichero. 🕓 Diferida conscientemente hasta que la funcionalidad esté estable. | 🕓 |
 | 12.8 Alta disponibilidad | Failover automático, replicación MariaDB. Solo se justifica con clientes de alta criticidad e ingresos consolidados. ⏳ Backlog. | 🕓 |
 
 ---
 
-## 10bis. Fase 13 — Cumplimiento y evidencias automáticas · ▶️ SIGUIENTE (nueva dirección)
+## 10bis. Fase 13 — Cumplimiento y evidencias automáticas · ✅ CERRADA 2026-06-11
 
 > **Objetivo:** convertir la evidencia técnica que Vigex ya genera (backups,
 > monitorización, alertas, `auth_logs`, informes) en **evidencias auditables**
@@ -420,8 +421,8 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 - [x] Panel de cumplimiento muestra **cobertura real por norma** (R-093). ✅ 2026-06-11
 - [x] **Dossier exportable** generado en prueba con datos reales (R-094). ✅ 2026-06-11
 - [x] **Notificación de incidente 24 h/72 h** documentada y probada (R-095). ✅ 2026-06-11
-- [ ] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde.
-- [ ] Sin promesas de cobertura no validada (coherencia con `docs/legal/limites_responsabilidad.md`).
+- [x] `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde. ✅ 2026-06-12
+- [x] Sin promesas de cobertura no validada: la UI declara explícitamente "Vigex aporta evidencia, no certifica cumplimiento". ✅ 2026-06-11
 
 > **Nota de numeración.** `R-091` es el siguiente identificador libre: el máximo en
 > uso real en el repo es `R-090` (permiso Asistente IA), por encima de lo que la
@@ -465,6 +466,8 @@ Central accesible por HTTPS, al menos 2 instalaciones reportando estado real, to
 | 2026-06-12 | **R-090, R-097, R-098 entregados — Fase 12 Rutas 12.9–12.11 cerradas.** Asistente IA (RAG, 6 proveedores) commitado; proxy LLM centralizado en Central Support (Groq activo en GCloud `104.198.66.244:8010`); bot Telegram centralizado @VigexPanelBot con polling thread `/start` + `/chatid`. Fix crítico User-Agent: Python urllib sin UA era bloqueado por Cloudflare (HTTP 403). Todos los componentes validados end-to-end en `vigex-demo` (multipass). | Plan: R-090 es la base del diferenciador IA; R-097/R-098 eliminan la fricción de configuración (sin API keys ni bots propios en el cliente). |
 | 2026-06-12 | **R-099 entregado — Vigex para Windows (instalador Docker).** `deploy/docker/`: `Dockerfile` (python:3.11-slim + openssh-client), `docker-compose.yml` con volúmenes persistentes, `VigexSetup.ps1` (instala Docker Desktop, verifica prerrequisitos, despliega contenedor, registra tarea de autoarranque), `vigex-update.bat`, `config.env.example` Docker. Imagen `vigex/panel:latest` verificada localmente — /health → 200 en < 5 s. Motivación: ~65% de SMEs europeas usan Windows internamente; eliminar la barrera del VPS Linux amplía el mercado objetivo significativamente. | Decisión: Docker es el estándar industrial para self-hosted (Portainer, Netdata, Nextcloud, Bitwarden); el diferenciador es el instalador, no la tecnología. Pendiente: empaquetado en VigexSetup.exe con NSIS (siguiente iteración). |
 | 2026-06-12 | **Central Support desplegado en Google Cloud** (instancia `meme-arbitrage-bot`, proyecto `project-3390b4b5-f749-49f3-a8f`, IP `104.198.66.244:8010`, Ubuntu 22.04). Servicio systemd `vigex-central` activo y persistente. Puerto 8010 abierto via regla firewall `vigex-central-8010`. | Avance de F10-GATE: Central en VPS real (aunque aún sin HTTPS/dominio propio — eso completa 10.2). |
+| 2026-06-12 | **R-100 → R-104 entregados — Fase 12 rutas 12.12–12.16 cerradas.** Vigex Agent (Go, `VigexAgent.exe`, 7.2 MB, 21/21 tests); integración `remote_run()` en panel (routing SSH/HTTP transparente, cero cambios en lógica de negocio); perfiles con `VIGEX_AGENT_TOKEN_MAP`; wizard `Invoke-AgentWizard` en `VigexSetup.ps1`; auditoría de topología mixta con 3 bugs corregidos en el agente (disco 0 GB, `event_id` 0, encoding UTF-8). | Un servidor Linux gestionado y un servidor Windows gestionado coexisten en la misma instalación sin fricción. `remote_run()` es retrocompatible: despliegues Linux puros no cambian. |
+| 2026-06-12 | **F13-GATE cerrado.** `check_api_package_installable.ps1` y `check_repo_clean.ps1` en verde; UI declara "Vigex aporta evidencia, no certifica cumplimiento". Fase 13 queda oficialmente cerrada. | Todos los criterios técnicos del gate verificados. Recomendación vigente: revisión por consultor externo antes de vender a cliente con obligación NIS2 real. |
 | 2026-06-11 | **R-091 → R-096 entregados — Fase 13 COMPLETA.** Catálogo de controles NIS2/ENS/ISO 27001 v1.1, motor de evidencias (8 colectores, SHA256), panel semáforo, dossier exportable, ciclo de incidentes NIS2 24h/72h, validación normativa con 4 correcciones aplicadas al catálogo. **F13-GATE todos los criterios técnicos cumplidos.** | Recomendación antes de vender el módulo a cliente con obligación NIS2 real: contratar revisión por consultor externo acreditado. |
 
 ---
