@@ -258,6 +258,87 @@ function Update-Vigex {
     Write-Ok "Vigex actualizado."
 }
 
+function Invoke-AgentWizard {
+    # R-103 — wizard para configurar hosts Windows gestionados por Vigex Agent
+    param([string]$ConfigFile)
+
+    if ($Unattended) { return }
+    if (-not (Test-Path $ConfigFile)) { return }
+
+    # Leer valor actual de VIGEX_AGENT_TOKEN_MAP en config.env
+    $currentMap = ""
+    $match = (Get-Content $ConfigFile | Select-String -Pattern "^VIGEX_AGENT_TOKEN_MAP=(.*)$")
+    if ($match) { $currentMap = $match.Matches[0].Groups[1].Value.Trim() }
+
+    Write-Host ""
+    Write-Host "  ─────────────────────────────────────────────────────" -ForegroundColor DarkCyan
+    Write-Host "  Servidores Windows gestionados por Vigex Agent" -ForegroundColor Cyan
+    Write-Host "  ─────────────────────────────────────────────────────" -ForegroundColor DarkCyan
+
+    if ($currentMap -ne "") {
+        Write-Host "  Configuracion actual: $currentMap" -ForegroundColor Yellow
+        if (-not (Confirm-Continue "Modificar la lista de servidores Windows?")) { return }
+    } else {
+        Write-Host "  Si tienes servidores Windows a gestionar, instala VigexAgent.exe"
+        Write-Host "  en cada uno y registra su IP y token aqui."
+        Write-Host ""
+        if (-not (Confirm-Continue "Tienes servidores Windows a gestionar?")) {
+            Write-Ok "Sin servidores Windows. Puedes configurarlos mas adelante en config.env."
+            return
+        }
+    }
+
+    $entries = @()
+    do {
+        Write-Host ""
+        $ip = (Read-Host "  IP del servidor Windows (Enter para terminar)").Trim()
+        if ($ip -eq "") { break }
+
+        # Token aleatorio de 32 caracteres URL-safe
+        $bytes = New-Object byte[] 24
+        [System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes($bytes)
+        $suggested = ([Convert]::ToBase64String($bytes) -replace "[/+=]","").Substring(0,32)
+
+        Write-Host ""
+        Write-Host "  Token sugerido para ${ip}:" -ForegroundColor DarkCyan
+        Write-Host "  >>> $suggested <<<" -ForegroundColor Yellow
+        Write-Warn "Anota este token: lo necesitaras al instalar VigexAgent.exe en $ip"
+        Write-Host ""
+        $token = (Read-Host "  Token para $ip [Enter = usar el sugerido]").Trim()
+        if ($token -eq "") { $token = $suggested }
+
+        $entries += "${ip}:${token}"
+
+    } while ($true)
+
+    if ($entries.Count -eq 0) {
+        Write-Ok "Sin cambios en servidores Windows."
+        return
+    }
+
+    $tokenMap = $entries -join ","
+
+    # Actualizar (o añadir) VIGEX_AGENT_TOKEN_MAP en config.env
+    $raw = [System.IO.File]::ReadAllText($ConfigFile, [System.Text.Encoding]::UTF8)
+    if ($raw -match "(?m)^VIGEX_AGENT_TOKEN_MAP=") {
+        $raw = $raw -replace "(?m)^VIGEX_AGENT_TOKEN_MAP=.*$", "VIGEX_AGENT_TOKEN_MAP=$tokenMap"
+    } else {
+        $raw = $raw.TrimEnd("`r","`n") + "`nVIGEX_AGENT_TOKEN_MAP=$tokenMap`n"
+    }
+    [System.IO.File]::WriteAllText($ConfigFile, $raw, [System.Text.Encoding]::UTF8)
+
+    Write-Ok "$($entries.Count) servidor(es) Windows configurado(s) en VIGEX_AGENT_TOKEN_MAP."
+    Write-Warn "Instala VigexAgent.exe en cada servidor Windows listado y usa el token correspondiente."
+
+    # Reiniciar el contenedor para aplicar el nuevo config.env
+    $running = docker ps --filter "name=$CONTAINER_NAME" --format "{{.Names}}" 2>$null
+    if ($running -eq $CONTAINER_NAME) {
+        Write-Step "Aplicando configuracion — reiniciando contenedor..."
+        docker restart $CONTAINER_NAME | Out-Null
+        Write-Ok "Contenedor reiniciado con la nueva configuracion."
+    }
+}
+
 # ── Punto de entrada ────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════╗" -ForegroundColor White
@@ -282,6 +363,7 @@ Assert-Prereqs
 Install-DockerIfMissing
 Ensure-DockerRunning
 Deploy-VigexContainer
+Invoke-AgentWizard -ConfigFile "$InstallDir\config.env"
 Register-AutostartTask
 
 Write-Host ""
