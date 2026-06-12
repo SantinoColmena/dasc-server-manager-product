@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Incidentes NIS2 — Vigex{% endblock %}
+{% block title %}{{ t('inc.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -177,71 +177,67 @@
     <div>
         <h1 class="inc-title">
             <i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; margin-right:.4rem;"></i>
-            Incidentes NIS2 — Ciclo de vida
+            {{ t('inc.page_title') }}
         </h1>
-        <p class="inc-subtitle">
-            Plazos de notificación Art. 23 NIS2 · INCIBE-CERT (empresas) / CCN-CERT (AA.PP.)
-        </p>
+        <p class="inc-subtitle">{{ t('inc.page_subtitle') }}</p>
     </div>
     <span class="inc-badge"><i class="fa-solid fa-clock"></i> 24 h · 72 h</span>
 </div>
 
 <div class="inc-info">
     <i class="fa-solid fa-circle-info" style="margin-top:.1rem; flex-shrink:0;"></i>
-    <span>
-        <strong>NIS2 Art. 23:</strong> las entidades esenciales e importantes deben notificar
-        incidentes significativos al CSIRT en <strong>≤ 24 h</strong> (aviso temprano) y
-        <strong>≤ 72 h</strong> (notificación completa) desde que tengan conocimiento del incidente.
-        Usa los botones de plantilla para descargar el documento preformateado.
-    </span>
+    <span>{{ t('inc.info') | safe }}</span>
 </div>
 
 <div class="inc-actions">
     {% if is_admin %}
-    <button class="inc-btn" onclick="abrirModal()">
-        <i class="fa-solid fa-plus"></i> Registrar incidente
+    <button class="inc-btn" id="btn-nuevo-inc">
+        <i class="fa-solid fa-plus"></i> {{ t('inc.btn_new') }}
     </button>
     {% endif %}
-    <button class="inc-btn" id="btn-registro" onclick="exportarRegistro()" style="background:#0f766e;">
-        <i class="fa-solid fa-file-code"></i> Exportar registro
+    <button class="inc-btn" id="btn-registro" style="background:#0f766e;">
+        <i class="fa-solid fa-file-code"></i> {{ t('inc.btn_export') }}
     </button>
     <a href="/cumplimiento" class="inc-btn secondary" style="text-decoration:none;">
-        <i class="fa-solid fa-arrow-left"></i> Volver a Cumplimiento
+        <i class="fa-solid fa-arrow-left"></i> {{ t('inc.btn_back') }}
     </a>
 </div>
 
 <!-- Lista de incidentes -->
 <div class="inc-list" id="inc-list">
-    <div class="inc-empty"><i class="fa-solid fa-spinner fa-spin"></i> Cargando…</div>
+    <div class="inc-empty"><i class="fa-solid fa-spinner fa-spin"></i> {{ t('inc.loading') }}</div>
 </div>
 
 <!-- Modal de creación -->
 <div class="inc-modal-overlay" id="inc-modal">
     <div class="inc-modal">
-        <p class="inc-modal-title"><i class="fa-solid fa-plus" style="color:#dc2626;margin-right:.4rem;"></i>Registrar nuevo incidente</p>
-        <form id="inc-form" onsubmit="crearIncidente(event)">
+        <p class="inc-modal-title">
+            <i class="fa-solid fa-plus" style="color:#dc2626;margin-right:.4rem;"></i>
+            {{ t('inc.modal_title') }}
+        </p>
+        <form id="inc-form">
             <div class="inc-form-group">
-                <label class="inc-form-label">Título *</label>
-                <input class="inc-form-input" name="titulo" required placeholder="Ej: Acceso no autorizado a servidor de logs">
+                <label class="inc-form-label">{{ t('inc.lbl_titulo') }}</label>
+                <input class="inc-form-input" name="titulo" required placeholder="{{ t('inc.ph_titulo') }}">
             </div>
             <div class="inc-form-group">
-                <label class="inc-form-label">Descripción *</label>
-                <textarea class="inc-form-textarea" name="descripcion" required placeholder="Describe qué ocurrió, cómo se detectó y cuál es el impacto conocido…"></textarea>
+                <label class="inc-form-label">{{ t('inc.lbl_desc') }}</label>
+                <textarea class="inc-form-textarea" name="descripcion" required placeholder="{{ t('inc.ph_desc') }}"></textarea>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
                 <div class="inc-form-group">
-                    <label class="inc-form-label">Tipo *</label>
+                    <label class="inc-form-label">{{ t('inc.lbl_tipo') }}</label>
                     <select class="inc-form-select" name="tipo" required>
-                        <option value="">Seleccionar…</option>
+                        <option value="">{{ t('inc.ph_select') }}</option>
                         {% for val, label in tipos.items() %}
                         <option value="{{ val }}">{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="inc-form-group">
-                    <label class="inc-form-label">Severidad *</label>
+                    <label class="inc-form-label">{{ t('inc.lbl_sev') }}</label>
                     <select class="inc-form-select" name="severidad" required>
-                        <option value="">Seleccionar…</option>
+                        <option value="">{{ t('inc.ph_select') }}</option>
                         {% for val, label in severidades.items() %}
                         <option value="{{ val }}">{{ val.capitalize() }}</option>
                         {% endfor %}
@@ -249,21 +245,21 @@
                 </div>
             </div>
             <div class="inc-form-group">
-                <label class="inc-form-label">Momento de detección (cuándo tomaste conocimiento) *</label>
+                <label class="inc-form-label">{{ t('inc.lbl_detected') }}</label>
                 <input class="inc-form-input" type="datetime-local" name="detectado_en" required>
             </div>
             <div class="inc-form-group">
-                <label class="inc-form-label">Sistemas / servicios afectados</label>
-                <input class="inc-form-input" name="sistemas_afect" placeholder="Ej: Servidor de backups, panel Vigex">
+                <label class="inc-form-label">{{ t('inc.lbl_sistemas') }}</label>
+                <input class="inc-form-input" name="sistemas_afect" placeholder="{{ t('inc.ph_sistemas') }}">
             </div>
             <div class="inc-form-group">
-                <label class="inc-form-label">Medidas inmediatas adoptadas</label>
-                <textarea class="inc-form-textarea" name="medidas_tomadas" placeholder="Ej: Aislamiento de servidor, cambio de credenciales, notificación interna…" style="min-height:60px;"></textarea>
+                <label class="inc-form-label">{{ t('inc.lbl_medidas') }}</label>
+                <textarea class="inc-form-textarea" name="medidas_tomadas" placeholder="{{ t('inc.ph_medidas') }}" style="min-height:60px;"></textarea>
             </div>
             <div class="inc-form-actions">
-                <button type="button" class="inc-form-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button type="button" class="inc-form-cancel" id="btn-cancel-modal">{{ t('inc.btn_cancel') }}</button>
                 <button type="submit" class="inc-form-submit" id="btn-crear-submit">
-                    <i class="fa-solid fa-floppy-disk"></i> Registrar
+                    <i class="fa-solid fa-floppy-disk"></i> {{ t('inc.btn_submit') }}
                 </button>
             </div>
         </form>
@@ -272,23 +268,92 @@
 {% endblock %}
 
 {% block extra_js %}
+<div id="inc-i18n" style="display:none"
+    data-est-detectado="{{ t('inc.js_est_detectado') }}"
+    data-est-24h="{{ t('inc.js_est_24h') }}"
+    data-est-72h="{{ t('inc.js_est_72h') }}"
+    data-est-resuelto="{{ t('inc.js_est_resuelto') }}"
+    data-est-cerrado="{{ t('inc.js_est_cerrado') }}"
+    data-trans-24h="{{ t('inc.js_trans_24h') }}"
+    data-trans-72h="{{ t('inc.js_trans_72h') }}"
+    data-trans-resuelto="{{ t('inc.js_trans_resuelto') }}"
+    data-trans-cerrado="{{ t('inc.js_trans_cerrado') }}"
+    data-vencido="{{ t('inc.js_vencido') }}"
+    data-dias="{{ t('inc.js_dias') }}"
+    data-horas="{{ t('inc.js_horas') }}"
+    data-min="{{ t('inc.js_min') }}"
+    data-plazo-24="{{ t('inc.js_plazo_24') }}"
+    data-plazo-72="{{ t('inc.js_plazo_72') }}"
+    data-plazo-det="{{ t('inc.js_plazo_det') }}"
+    data-enviado="{{ t('inc.js_enviado') }}"
+    data-vencido-24="{{ t('inc.js_vencido_24') }}"
+    data-enviada="{{ t('inc.js_enviada') }}"
+    data-vencida-72="{{ t('inc.js_vencida_72') }}"
+    data-resta="{{ t('inc.js_resta') }}"
+    data-kv-tipo="{{ t('inc.js_kv_tipo') }}"
+    data-kv-sev="{{ t('inc.js_kv_sev') }}"
+    data-kv-creado="{{ t('inc.js_kv_creado') }}"
+    data-kv-csirt="{{ t('inc.js_kv_csirt') }}"
+    data-kv-resuelto="{{ t('inc.js_kv_resuelto') }}"
+    data-sist-afect="{{ t('inc.js_sist_afect') }}"
+    data-medidas="{{ t('inc.js_medidas') }}"
+    data-tmpl-24="{{ t('inc.js_tmpl_24') }}"
+    data-tmpl-72="{{ t('inc.js_tmpl_72') }}"
+    data-confirm-pre="{{ t('inc.js_confirm_pre') }}"
+    data-confirm-suf="{{ t('inc.js_confirm_suf') }}"
+    data-no-inc="{{ t('inc.js_no_inc') }}"
+    data-load-err="{{ t('inc.js_load_err') }}"
+    data-generating="{{ t('inc.js_generating') }}"
+    data-export-btn="{{ t('inc.js_export_btn') }}"
+    data-net-err="{{ t('inc.js_net_err') }}">
+</div>
 <script>
 (function () {
-    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
-
-    const ESTADO_LABELS = {
-        detectado:          'Detectado',
-        notif_24h_enviada:  'Aviso 24 h enviado',
-        notif_72h_enviada:  'Notificación 72 h enviada',
-        resuelto:           'Resuelto',
-        cerrado:            'Cerrado',
-    };
-    const TRANS_LABELS = {
-        notif_24h_enviada:  'Marcar aviso 24 h enviado',
-        notif_72h_enviada:  'Marcar notif. 72 h enviada',
-        resuelto:           'Marcar como resuelto',
-        cerrado:            'Cerrar incidente',
+    const CSRF   = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const IS_ADM = {{ 'true' if is_admin else 'false' }};
+    const _el    = document.getElementById('inc-i18n');
+    const i18n   = {
+        estLabels: {
+            detectado:         _el.dataset.estDetectado,
+            notif_24h_enviada: _el.dataset.est24h,
+            notif_72h_enviada: _el.dataset.est72h,
+            resuelto:          _el.dataset.estResuelto,
+            cerrado:           _el.dataset.estCerrado,
+        },
+        transLabels: {
+            notif_24h_enviada: _el.dataset.trans24h,
+            notif_72h_enviada: _el.dataset.trans72h,
+            resuelto:          _el.dataset.transResuelto,
+            cerrado:           _el.dataset.transCerrado,
+        },
+        vencido:     _el.dataset.vencido,
+        dias:        _el.dataset.dias,
+        horas:       _el.dataset.horas,
+        min:         _el.dataset.min,
+        plazo24:     _el.dataset.plazo24,
+        plazo72:     _el.dataset.plazo72,
+        plazoDet:    _el.dataset.plazoDet,
+        enviado:     _el.dataset.enviado,
+        vencido24:   _el.dataset.vencido24,
+        enviada:     _el.dataset.enviada,
+        vencida72:   _el.dataset.vencida72,
+        resta:       _el.dataset.resta,
+        kvTipo:      _el.dataset.kvTipo,
+        kvSev:       _el.dataset.kvSev,
+        kvCreado:    _el.dataset.kvCreado,
+        kvCsirt:     _el.dataset.kvCsirt,
+        kvResuelto:  _el.dataset.kvResuelto,
+        sistAfect:   _el.dataset.sistAfect,
+        medidas:     _el.dataset.medidas,
+        tmpl24:      _el.dataset.tmpl24,
+        tmpl72:      _el.dataset.tmpl72,
+        confirmPre:  _el.dataset.confirmPre,
+        confirmSuf:  _el.dataset.confirmSuf,
+        noInc:       _el.dataset.noInc,
+        loadErr:     _el.dataset.loadErr,
+        generating:  _el.dataset.generating,
+        exportBtn:   _el.dataset.exportBtn,
+        netErr:      _el.dataset.netErr,
     };
 
     /* ── Helpers ─────────────────────────────────────────────────── */
@@ -301,11 +366,11 @@
     }
 
     function fmtCuenta(seg) {
-        if (seg <= 0) return 'Vencido';
+        if (seg <= 0) return i18n.vencido;
         const h = Math.floor(seg / 3600);
         const m = Math.floor((seg % 3600) / 60);
-        if (h > 48) return Math.floor(h / 24) + ' días ' + (h % 24) + ' h';
-        return h + ' h ' + m + ' min';
+        if (h > 48) return Math.floor(h / 24) + i18n.dias + (h % 24) + i18n.horas.trim();
+        return h + i18n.horas + m + i18n.min;
     }
 
     /* ── Renderizado de cuenta atrás ─────────────────────────────── */
@@ -315,23 +380,23 @@
         const ya24h = ['notif_24h_enviada','notif_72h_enviada','resuelto','cerrado'].includes(estado);
         const ya72h = ['notif_72h_enviada','resuelto','cerrado'].includes(estado);
 
-        const plazo24Cls = ya24h ? 'cumplido' : (ca.vencido_24h ? 'urgente' : (ca.seg_hasta_24h < 7200 ? 'urgente' : 'ok'));
-        const plazo72Cls = ya72h ? 'cumplido' : (ca.vencido_72h ? 'urgente' : (ca.seg_hasta_72h < 14400 ? 'urgente' : 'ok'));
+        const p24Cls = ya24h ? 'cumplido' : (ca.vencido_24h ? 'urgente' : (ca.seg_hasta_24h < 7200 ? 'urgente' : 'ok'));
+        const p72Cls = ya72h ? 'cumplido' : (ca.vencido_72h ? 'urgente' : (ca.seg_hasta_72h < 14400 ? 'urgente' : 'ok'));
 
         return `
         <div class="inc-plazos">
-            <div class="inc-plazo ${plazo24Cls}">
-                <span class="inc-plazo-label">Aviso 24 h</span>
-                <span class="inc-plazo-val">${ya24h ? '✅ Enviado' : (ca.vencido_24h ? '⚠️ Vencido' : fmtCuenta(ca.seg_hasta_24h))}</span>
-                <span class="inc-plazo-sub">${inc.notif_24h_en ? fmt(inc.notif_24h_en) : (ya24h ? '' : 'Resta')}</span>
+            <div class="inc-plazo ${p24Cls}">
+                <span class="inc-plazo-label">${i18n.plazo24}</span>
+                <span class="inc-plazo-val">${ya24h ? i18n.enviado : (ca.vencido_24h ? i18n.vencido24 : fmtCuenta(ca.seg_hasta_24h))}</span>
+                <span class="inc-plazo-sub">${inc.notif_24h_en ? fmt(inc.notif_24h_en) : (ya24h ? '' : i18n.resta)}</span>
             </div>
-            <div class="inc-plazo ${plazo72Cls}">
-                <span class="inc-plazo-label">Notif. 72 h</span>
-                <span class="inc-plazo-val">${ya72h ? '✅ Enviada' : (ca.vencido_72h ? '⚠️ Vencida' : fmtCuenta(ca.seg_hasta_72h))}</span>
-                <span class="inc-plazo-sub">${inc.notif_72h_en ? fmt(inc.notif_72h_en) : (ya72h ? '' : 'Resta')}</span>
+            <div class="inc-plazo ${p72Cls}">
+                <span class="inc-plazo-label">${i18n.plazo72}</span>
+                <span class="inc-plazo-val">${ya72h ? i18n.enviada : (ca.vencido_72h ? i18n.vencida72 : fmtCuenta(ca.seg_hasta_72h))}</span>
+                <span class="inc-plazo-sub">${inc.notif_72h_en ? fmt(inc.notif_72h_en) : (ya72h ? '' : i18n.resta)}</span>
             </div>
             <div class="inc-plazo">
-                <span class="inc-plazo-label">Detectado hace</span>
+                <span class="inc-plazo-label">${i18n.plazoDet}</span>
                 <span class="inc-plazo-val">${fmtCuenta(ca.seg_detectado)}</span>
                 <span class="inc-plazo-sub">${fmt(inc.detectado_en)}</span>
             </div>
@@ -340,21 +405,26 @@
 
     /* ── Renderizado de tarjeta completa ─────────────────────────── */
     function renderCard(inc) {
-        const sevCls = inc.severidad === 'cerrado' ? 'cerrado' : inc.severidad;
+        const sevCls   = inc.severidad === 'cerrado' ? 'cerrado' : inc.severidad;
         const estadoCls = 'est-' + inc.estado;
 
-        const transiciones = IS_ADMIN ? (inc.transiciones_posibles || []).map(t => `
+        const transiciones = IS_ADM ? (inc.transiciones_posibles || []).map(t => `
             <button class="inc-trans-btn" onclick="avanzarEstado(${inc.id},'${t}')">
-                <i class="fa-solid fa-arrow-right"></i> ${TRANS_LABELS[t] || t}
+                <i class="fa-solid fa-arrow-right"></i> ${i18n.transLabels[t] || t}
             </button>`).join('') : '';
 
         const plantillas = `
             <button class="inc-tmpl-btn" onclick="descargarPlantilla(${inc.id},'24h')">
-                <i class="fa-solid fa-file-arrow-down"></i> Plantilla 24 h
+                <i class="fa-solid fa-file-arrow-down"></i> ${i18n.tmpl24}
             </button>
             <button class="inc-tmpl-btn" onclick="descargarPlantilla(${inc.id},'72h')">
-                <i class="fa-solid fa-file-arrow-down"></i> Plantilla 72 h
+                <i class="fa-solid fa-file-arrow-down"></i> ${i18n.tmpl72}
             </button>`;
+
+        const sistHtml = inc.sistemas_afect
+            ? `<div style="font-size:.8rem;color:var(--text);margin-bottom:.65rem;"><strong>${i18n.sistAfect}</strong> ${inc.sistemas_afect}</div>` : '';
+        const medHtml  = inc.medidas_tomadas
+            ? `<div style="font-size:.8rem;color:var(--text);margin-bottom:.65rem;"><strong>${i18n.medidas}</strong> ${inc.medidas_tomadas}</div>` : '';
 
         return `
         <div class="inc-card ${sevCls === 'cerrado' ? 'cerrado' : inc.severidad}" id="inc-card-${inc.id}">
@@ -368,15 +438,14 @@
             <div class="inc-card-body">
                 ${renderPlazos(inc)}
                 <div class="inc-detail-grid">
-                    <div><div class="inc-kv-k">Tipo</div><div class="inc-kv-v">${inc.tipo_label}</div></div>
-                    <div><div class="inc-kv-k">Severidad</div><div class="inc-kv-v">${inc.severidad.charAt(0).toUpperCase()+inc.severidad.slice(1)}</div></div>
-                    <div><div class="inc-kv-k">Creado por</div><div class="inc-kv-v">${inc.creado_por}</div></div>
-                    <div><div class="inc-kv-k">Ref. CSIRT</div><div class="inc-kv-v">${inc.csirt_ref || '—'}</div></div>
-                    <div><div class="inc-kv-k">Resuelto</div><div class="inc-kv-v">${inc.resuelto_en ? fmt(inc.resuelto_en) : '—'}</div></div>
+                    <div><div class="inc-kv-k">${i18n.kvTipo}</div><div class="inc-kv-v">${inc.tipo_label}</div></div>
+                    <div><div class="inc-kv-k">${i18n.kvSev}</div><div class="inc-kv-v">${inc.severidad.charAt(0).toUpperCase()+inc.severidad.slice(1)}</div></div>
+                    <div><div class="inc-kv-k">${i18n.kvCreado}</div><div class="inc-kv-v">${inc.creado_por}</div></div>
+                    <div><div class="inc-kv-k">${i18n.kvCsirt}</div><div class="inc-kv-v">${inc.csirt_ref || '—'}</div></div>
+                    <div><div class="inc-kv-k">${i18n.kvResuelto}</div><div class="inc-kv-v">${inc.resuelto_en ? fmt(inc.resuelto_en) : '—'}</div></div>
                 </div>
                 ${inc.descripcion ? `<div class="inc-desc">${inc.descripcion}</div>` : ''}
-                ${inc.sistemas_afect ? `<div style="font-size:.8rem;color:#374151;margin-bottom:.65rem;"><strong>Sistemas afectados:</strong> ${inc.sistemas_afect}</div>` : ''}
-                ${inc.medidas_tomadas ? `<div style="font-size:.8rem;color:#374151;margin-bottom:.65rem;"><strong>Medidas adoptadas:</strong> ${inc.medidas_tomadas}</div>` : ''}
+                ${sistHtml}${medHtml}
                 <div class="inc-transition-row">
                     ${transiciones}
                     ${plantillas}
@@ -393,41 +462,42 @@
             const data = await r.json();
             const lista = document.getElementById('inc-list');
             if (!data.incidentes?.length) {
-                lista.innerHTML = '<div class="inc-empty"><i class="fa-solid fa-check-circle" style="color:#22c55e;"></i><br>Sin incidentes registrados</div>';
+                lista.innerHTML = `<div class="inc-empty"><i class="fa-solid fa-check-circle" style="color:#22c55e;"></i><br>${i18n.noInc}</div>`;
                 return;
             }
             lista.innerHTML = data.incidentes.map(renderCard).join('');
         } catch {
             document.getElementById('inc-list').innerHTML =
-                '<div class="inc-empty" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar</div>';
+                `<div class="inc-empty" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> ${i18n.loadErr}</div>`;
         }
     }
 
     /* ── Interacciones ───────────────────────────────────────────── */
     window.toggleCard = id => document.getElementById('inc-card-' + id)?.classList.toggle('open');
 
-    window.abrirModal = function () {
-        // Inicializa el datetime-local al momento actual
-        const now = new Date();
-        const local = new Date(now - now.getTimezoneOffset() * 60000)
-            .toISOString().slice(0, 16);
+    function abrirModal() {
+        const now   = new Date();
+        const local = new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         document.querySelector('[name="detectado_en"]').value = local;
         document.getElementById('inc-modal').classList.add('visible');
-    };
-    window.cerrarModal = () => document.getElementById('inc-modal').classList.remove('visible');
+    }
+    function cerrarModal() { document.getElementById('inc-modal').classList.remove('visible'); }
 
-    // Cerrar modal al hacer click fuera
+    const btnNuevo = document.getElementById('btn-nuevo-inc');
+    if (btnNuevo) btnNuevo.addEventListener('click', abrirModal);
+
+    document.getElementById('btn-cancel-modal')?.addEventListener('click', cerrarModal);
+
     document.getElementById('inc-modal').addEventListener('click', e => {
         if (e.target === e.currentTarget) cerrarModal();
     });
 
-    window.crearIncidente = async function (e) {
+    document.getElementById('inc-form')?.addEventListener('submit', async function (e) {
         e.preventDefault();
         const btn = document.getElementById('btn-crear-submit');
         btn.disabled = true;
-        const fd = new FormData(e.target);
+        const fd   = new FormData(e.target);
         const body = Object.fromEntries(fd.entries());
-        // Normalizar detectado_en a ISO 8601
         if (body.detectado_en) body.detectado_en = new Date(body.detectado_en).toISOString();
         try {
             const r = await fetch('/api/cumplimiento/incidentes', {
@@ -443,12 +513,12 @@
             cerrarModal();
             e.target.reset();
             await loadIncidentes();
-        } catch { alert('Error de red'); }
+        } catch { alert(i18n.netErr); }
         finally { btn.disabled = false; }
-    };
+    });
 
     window.avanzarEstado = async function (id, nuevoEstado) {
-        if (!confirm('¿Confirmas el avance de estado a "' + (ESTADO_LABELS[nuevoEstado] || nuevoEstado) + '"?')) return;
+        if (!confirm(i18n.confirmPre + (i18n.estLabels[nuevoEstado] || nuevoEstado) + i18n.confirmSuf)) return;
         try {
             const r = await fetch('/api/cumplimiento/incidentes/' + id, {
                 method: 'PATCH',
@@ -461,27 +531,31 @@
                 return;
             }
             await loadIncidentes();
-        } catch { alert('Error de red'); }
+        } catch { alert(i18n.netErr); }
     };
 
-    window.exportarRegistro = async function () {
-        const btn = document.getElementById('btn-registro');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…'; }
-        try {
-            const r = await fetch('/api/cumplimiento/incidentes/registro', { headers: { 'X-CSRF-Token': CSRF } });
-            if (!r.ok) { alert('Error: ' + r.status); return; }
-            const blob  = await r.blob();
-            const cd    = r.headers.get('Content-Disposition') || '';
-            const match = cd.match(/filename="([^"]+)"/);
-            const nombre = match ? match[1] : 'registro_incidentes.html';
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
-            URL.revokeObjectURL(url);
-        } catch { alert('Error de red'); }
-        finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-code"></i> Exportar registro'; }
-        }
-    };
+    const btnRegistro = document.getElementById('btn-registro');
+    if (btnRegistro) {
+        btnRegistro.addEventListener('click', async function () {
+            btnRegistro.disabled = true;
+            btnRegistro.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.generating}`;
+            try {
+                const r = await fetch('/api/cumplimiento/incidentes/registro', { headers: { 'X-CSRF-Token': CSRF } });
+                if (!r.ok) { alert('Error: ' + r.status); return; }
+                const blob  = await r.blob();
+                const cd    = r.headers.get('Content-Disposition') || '';
+                const match = cd.match(/filename="([^"]+)"/);
+                const nombre = match ? match[1] : 'registro_incidentes.html';
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
+                URL.revokeObjectURL(url);
+            } catch { alert(i18n.netErr); }
+            finally {
+                btnRegistro.disabled = false;
+                btnRegistro.innerHTML = `<i class="fa-solid fa-file-code"></i> ${i18n.exportBtn}`;
+            }
+        });
+    }
 
     window.descargarPlantilla = async function (id, fase) {
         try {
@@ -489,19 +563,16 @@
                 { headers: { 'X-CSRF-Token': CSRF } });
             if (!r.ok) { alert('Error al generar plantilla'); return; }
             const blob = await r.blob();
-            const cd = r.headers.get('Content-Disposition') || '';
+            const cd   = r.headers.get('Content-Disposition') || '';
             const match = cd.match(/filename="([^"]+)"/);
             const nombre = match ? match[1] : `notif_nis2_${fase}.md`;
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = nombre; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
             URL.revokeObjectURL(url);
-        } catch { alert('Error de red'); }
+        } catch { alert(i18n.netErr); }
     };
 
     loadIncidentes();
-
-    // Actualiza las cuentas atrás cada minuto sin recargar desde servidor
     setInterval(loadIncidentes, 60000);
 })();
 </script>
