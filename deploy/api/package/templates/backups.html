@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Copias de seguridad — Vigex{% endblock %}
+{% block title %}{{ t('bkp.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
@@ -8,29 +8,29 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Estado del módulo</h3>
-    <p><span class="dot ok"></span> Listo para crear copias</p>
-    <p><span class="dot ok"></span> Copias incrementales disponibles</p>
-    <p><span class="dot ok"></span> Acceso controlado</p>
+    <h3>{{ t('bkp.sidebar_title') }}</h3>
+    <p><span class="dot ok"></span> {{ t('bkp.sidebar_ready') }}</p>
+    <p><span class="dot ok"></span> {{ t('bkp.sidebar_inc') }}</p>
+    <p><span class="dot ok"></span> {{ t('bkp.sidebar_access') }}</p>
 </div>
 {% endblock %}
 
 {% block content %}
 
 {% if ok == "1" %}
-<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ msg or "Backup ejecutado correctamente." }}</div></div>
+<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ msg or t('bkp.msg_ok') }}</div></div>
 {% elif ok == "0" %}
-<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>{{ msg or "Error al ejecutar el backup." }}</div></div>
+<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>{{ msg or t('bkp.msg_error') }}</div></div>
 {% endif %}
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Copias de seguridad</h2>
-        <p class="page-subtitle">Elige el tipo de copia que necesitas y ponla en marcha en segundos.</p>
+        <h2 class="page-title">{{ t('bkp.page_title') }}</h2>
+        <p class="page-subtitle">{{ t('bkp.page_subtitle') }}</p>
     </div>
     <div class="topbar-actions">
         <a class="btn" href="/copias/salud" style="font-size:.85rem;">
-            <i class="fa-solid fa-shield-check"></i> Integridad
+            <i class="fa-solid fa-shield-check"></i> {{ t('bkp.integrity_btn') }}
         </a>
         <div class="status-pill"><i class="fa-solid fa-shield-halved"></i> {{ role_label }}</div>
     </div>
@@ -41,15 +41,15 @@
         <div class="card-head">
             <div class="card-icon green"><i class="fa-solid fa-database"></i></div>
             <div class="card-title">
-                <h3>Crear copia</h3>
-                <p>Elige el tipo de backup y abre su formulario.</p>
+                <h3>{{ t('bkp.create_title') }}</h3>
+                <p>{{ t('bkp.create_desc') }}</p>
             </div>
         </div>
 
         <div class="actions">
-            <a class="btn primary" href="#modal-completo"><i class="fa-solid fa-box"></i> Backup completo</a>
-            <a class="btn" href="#modal-incremental"><i class="fa-solid fa-rotate"></i> Backup incremental</a>
-            <a class="btn" href="#modal-diferencial"><i class="fa-solid fa-layer-group"></i> Backup diferencial</a>
+            <a class="btn primary" href="#modal-completo"><i class="fa-solid fa-box"></i> {{ t('bkp.btn_full') }}</a>
+            <a class="btn" href="#modal-incremental"><i class="fa-solid fa-rotate"></i> {{ t('bkp.btn_inc') }}</a>
+            <a class="btn" href="#modal-diferencial"><i class="fa-solid fa-layer-group"></i> {{ t('bkp.btn_diff') }}</a>
         </div>
     </article>
 
@@ -57,35 +57,25 @@
         <div class="card-head">
             <div class="card-icon blue"><i class="fa-solid fa-circle-info"></i></div>
             <div class="card-title">
-                <h3>Notas del producto</h3>
-                <p>Ayudas y explicaciones intuitivas para el usuario.</p>
+                <h3>{{ t('bkp.notes_title') }}</h3>
+                <p>{{ t('bkp.notes_desc') }}</p>
             </div>
         </div>
 
         <div class="help-grid">
             <div class="help-box">
-                <h4><i class="fa-solid fa-check"></i> Completo</h4>
-                <p>
-                    Crea una copia íntegra de la base de datos seleccionada. Es la opción más recomendable
-                    para copias iniciales, pruebas de restauración y puntos de seguridad claros antes de
-                    realizar cambios importantes.
-                </p>
+                <h4><i class="fa-solid fa-check"></i> {{ t('bkp.help_full_title') }}</h4>
+                <p>{{ t('bkp.help_full_desc') }}</p>
             </div>
 
             <div class="help-box">
-                <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Incremental</h4>
-                <p>
-                    Guarda los cambios realizados desde el último backup registrado usando binary logs. Reduce espacio y permite mantener una cadena de copias incremental.
-                </p>
+                <h4><i class="fa-solid fa-wand-magic-sparkles"></i> {{ t('bkp.help_inc_title') }}</h4>
+                <p>{{ t('bkp.help_inc_desc') }}</p>
             </div>
 
             <div class="help-box">
-                <h4><i class="fa-solid fa-list-check"></i> Diferencial</h4>
-                <p>
-                    Genera una copia con los cambios acumulados desde la última copia completa. Es útil
-                    cuando se quiere un equilibrio entre rapidez de restauración y menor volumen de
-                    almacenamiento.
-                </p>
+                <h4><i class="fa-solid fa-list-check"></i> {{ t('bkp.help_diff_title') }}</h4>
+                <p>{{ t('bkp.help_diff_desc') }}</p>
             </div>
         </div>
     </article>
@@ -94,37 +84,25 @@
         <div class="card-head">
             <div class="card-icon violet"><i class="fa-solid fa-book-open"></i></div>
             <div class="card-title">
-                <h3>Funciones relacionadas</h3>
-                <p>Más información para entender la evolución del módulo de copias.</p>
+                <h3>{{ t('bkp.related_title') }}</h3>
+                <p>{{ t('bkp.related_desc') }}</p>
             </div>
         </div>
 
         <div class="help-grid">
             <div class="help-box">
-                <h4><i class="fa-regular fa-clock"></i> Copias automáticas y programadas</h4>
-                <p>
-                    Permite definir copias periódicas para no depender de ejecuciones manuales. La idea es
-                    que el sistema pueda mantener una rutina estable de protección según la frecuencia
-                    configurada por el usuario.
-                </p>
+                <h4><i class="fa-regular fa-clock"></i> {{ t('bkp.help_sched_title') }}</h4>
+                <p>{{ t('bkp.help_sched_desc') }}</p>
             </div>
 
             <div class="help-box">
-                <h4><i class="fa-solid fa-rotate-left"></i> Restauración</h4>
-                <p>
-                    Será la función encargada de recuperar un punto anterior de la base de datos a partir de
-                    una copia disponible. Está pensada para resolver errores, pérdidas de información o
-                    volver a un estado conocido del sistema.
-                </p>
+                <h4><i class="fa-solid fa-rotate-left"></i> {{ t('bkp.help_restore_title') }}</h4>
+                <p>{{ t('bkp.help_restore_desc') }}</p>
             </div>
 
             <div class="help-box">
-                <h4><i class="fa-solid fa-folder-open"></i> Historial de copias</h4>
-                <p>
-                    Mostrará el registro de copias realizadas con su fecha, tipo, resultado y ubicación. De
-                    esta manera el usuario podrá revisar rápidamente qué se ha ejecutado y qué punto de
-                    respaldo tiene disponible.
-                </p>
+                <h4><i class="fa-solid fa-folder-open"></i> {{ t('bkp.help_hist_title') }}</h4>
+                <p>{{ t('bkp.help_hist_desc') }}</p>
             </div>
         </div>
     </article>
@@ -134,8 +112,8 @@
     <div class="card-head">
         <div class="card-icon amber"><i class="fa-solid fa-calendar-days"></i></div>
         <div class="card-title">
-            <h3>Automatización con CRON</h3>
-            <p>Programa copias automáticas en el servidor de backups sin perder el control de dependencias.</p>
+            <h3>{{ t('bkp.auto_title') }}</h3>
+            <p>{{ t('bkp.auto_desc') }}</p>
         </div>
     </div>
 
@@ -145,121 +123,120 @@
             <div class="callout cron-callout">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <div>
-                    <strong>Control de dependencias:</strong>
-                    las copias incrementales solo se pueden automatizar si ya existe una copia base de esa base de datos.
-                    Las diferenciales solo se pueden automatizar si ya existe una copia completa.
+                    <strong>{{ t('bkp.callout_warn_bold') }}</strong>
+                    {{ t('bkp.callout_warn_text') }}
                 </div>
             </div>
 
             <div class="form-grid">
                 <label class="field">
-                    <span>Tipo de copia</span>
+                    <span>{{ t('bkp.field_type') }}</span>
                     <select name="type" required>
-                        <option value="full" selected>Completa</option>
-                        <option value="incremental">Incremental</option>
-                        <option value="differential">Diferencial</option>
+                        <option value="full" selected>{{ t('bkp.opt_full') }}</option>
+                        <option value="incremental">{{ t('bkp.opt_inc') }}</option>
+                        <option value="differential">{{ t('bkp.opt_diff') }}</option>
                     </select>
                 </label>
 
                 <label class="field">
-                    <span>Base de datos</span>
+                    <span>{{ t('bkp.field_db') }}</span>
                     <input name="db" value="employees" required>
                 </label>
 
                 <label class="field">
-                    <span>Carpeta destino</span>
+                    <span>{{ t('bkp.field_dest') }}</span>
                     <input name="dest" value="/home/vigex/backups" required>
                 </label>
 
                 <label class="field">
-                    <span>Compresión</span>
+                    <span>{{ t('bkp.field_compress') }}</span>
                     <select name="compress">
                         <option value="gzip" selected>GZIP (.gz)</option>
-                        <option value="none">Sin compresión</option>
+                        <option value="none">{{ t('bkp.no_compress') }}</option>
                     </select>
                 </label>
 
                 <label class="field">
-                    <span>Retención</span>
+                    <span>{{ t('bkp.field_retention') }}</span>
                     <select name="retention">
                         <option value="7" selected>7 días</option>
                         <option value="14">14 días</option>
                         <option value="30">30 días</option>
-                        <option value="0">No borrar</option>
+                        <option value="0">{{ t('bkp.no_delete') }}</option>
                     </select>
                 </label>
 
                 <label class="field">
-                    <span>Frecuencia</span>
+                    <span>{{ t('bkp.field_schedule') }}</span>
                     <select name="schedule_type">
-                        <option value="daily" selected>Diaria</option>
-                        <option value="weekly">Semanal</option>
-                        <option value="monthly">Mensual</option>
-                        <option value="hourly">Cada hora</option>
+                        <option value="daily" selected>{{ t('bkp.opt_daily') }}</option>
+                        <option value="weekly">{{ t('bkp.opt_weekly') }}</option>
+                        <option value="monthly">{{ t('bkp.opt_monthly') }}</option>
+                        <option value="hourly">{{ t('bkp.opt_hourly') }}</option>
                     </select>
                 </label>
 
                 <label class="field">
-                    <span>Hora</span>
+                    <span>{{ t('bkp.field_time') }}</span>
                     <input type="time" name="schedule_time" value="02:00" required>
                 </label>
 
                 <label class="field">
-                    <span>Día semanal</span>
+                    <span>{{ t('bkp.field_weekday') }}</span>
                     <select name="weekday">
-                        <option value="1" selected>Lunes</option>
-                        <option value="2">Martes</option>
-                        <option value="3">Miércoles</option>
-                        <option value="4">Jueves</option>
-                        <option value="5">Viernes</option>
-                        <option value="6">Sábado</option>
-                        <option value="0">Domingo</option>
+                        <option value="1" selected>{{ t('bkp.mon') }}</option>
+                        <option value="2">{{ t('bkp.tue') }}</option>
+                        <option value="3">{{ t('bkp.wed') }}</option>
+                        <option value="4">{{ t('bkp.thu') }}</option>
+                        <option value="5">{{ t('bkp.fri') }}</option>
+                        <option value="6">{{ t('bkp.sat') }}</option>
+                        <option value="0">{{ t('bkp.sun') }}</option>
                     </select>
                 </label>
 
                 <label class="field">
-                    <span>Día mensual</span>
+                    <span>{{ t('bkp.field_monthday') }}</span>
                     <select name="monthday">
                         {% for day in range(1, 29) %}
-                        <option value="{{ day }}" {% if day == 1 %}selected{% endif %}>Día {{ day }}</option>
+                        <option value="{{ day }}" {% if day == 1 %}selected{% endif %}>{{ t('bkp.day_prefix') }}{{ day }}</option>
                         {% endfor %}
                     </select>
                 </label>
 
                 <label class="field field--full">
-                    <span>Notas</span>
+                    <span>{{ t('bkp.field_notes') }}</span>
                     <input name="notes" placeholder="Ej: copia automática nocturna">
                 </label>
             </div>
 
             <div class="automation-foot">
-                <button class="btn primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Crear automatización</button>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> {{ t('bkp.btn_create_auto') }}</button>
             </div>
         </form>
 
         <div class="automation-side">
             <div class="help-box automation-help">
-                <h4><i class="fa-solid fa-circle-check"></i> Reglas aplicadas</h4>
-                <p><strong>Completa:</strong> se puede programar siempre.</p>
-                <p><strong>Incremental:</strong> necesita una copia anterior válida de la misma BD.</p>
-                <p><strong>Diferencial:</strong> necesita una copia completa previa de la misma BD.</p>
+                <h4><i class="fa-solid fa-circle-check"></i> {{ t('bkp.rules_title') }}</h4>
+                <p><strong>{{ t('bkp.opt_full') }}:</strong> {{ t('bkp.rules_full') }}</p>
+                <p><strong>{{ t('bkp.opt_inc') }}:</strong> {{ t('bkp.rules_inc') }}</p>
+                <p><strong>{{ t('bkp.opt_diff') }}:</strong> {{ t('bkp.rules_diff') }}</p>
             </div>
 
             <div class="help-box automation-help">
-                <h4><i class="fa-solid fa-file-lines"></i> Log de CRON</h4>
-                <p>Las ejecuciones automáticas escriben su salida en:</p>
+                <h4><i class="fa-solid fa-file-lines"></i> {{ t('bkp.log_title') }}</h4>
+                <p>{{ t('bkp.log_desc') }}</p>
                 <code>/home/vigex/backups/.vigex/cron.log</code>
             </div>
         </div>
     </div>
 
     <div class="automation-table-block">
-        <h4 class="section-subtitle"><i class="fa-solid fa-list-check"></i> Automatizaciones activas</h4>
+        <h4 class="section-subtitle"><i class="fa-solid fa-list-check"></i> {{ t('bkp.auto_list_title') }}</h4>
         <div class="bkp-table-wrap">
             <table class="bkp-table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Tipo</th><th>BD</th><th>Frecuencia</th><th>Destino</th><th>Creada por</th><th>Acciones</th>
+                        <th>ID</th><th>{{ t('bkp.th_type') }}</th><th>BD</th><th>{{ t('bkp.th_freq') }}</th><th>{{ t('bkp.th_dest') }}</th><th>{{ t('bkp.th_created_by') }}</th><th>{{ t('bkp.th_actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -267,9 +244,9 @@
                     <tr>
                         <td>{{ auto.id }}</td>
                         <td>
-                            {% if auto.type == "full" %}<span class="tag tag-full">Completa</span>
-                            {% elif auto.type == "incremental" %}<span class="tag tag-inc">Incremental</span>
-                            {% elif auto.type == "differential" %}<span class="tag tag-diff">Diferencial</span>
+                            {% if auto.type == "full" %}<span class="tag tag-full">{{ t('bkp.tag_full') }}</span>
+                            {% elif auto.type == "incremental" %}<span class="tag tag-inc">{{ t('bkp.tag_inc') }}</span>
+                            {% elif auto.type == "differential" %}<span class="tag tag-diff">{{ t('bkp.tag_diff') }}</span>
                             {% else %}{{ auto.tipo_label }}{% endif %}
                         </td>
                         <td>{{ auto.db }}</td>
@@ -280,13 +257,13 @@
                             <form method="post" action="/backups/automation/delete" style="display:inline;">
                                 {{ csrf_input(request) }}
                                 <input type="hidden" name="automation_id" value="{{ auto.id }}">
-                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> {{ t('bkp.btn_delete') }}</button>
                             </form>
                         </td>
                     </tr>
                     {% endfor %}
                     {% if not backup_automations %}
-                    <tr><td colspan="7" style="text-align:center;">No hay automatizaciones CRON creadas todavía.</td></tr>
+                    <tr><td colspan="7" style="text-align:center;">{{ t('bkp.no_autos') }}</td></tr>
                     {% endif %}
                 </tbody>
             </table>
@@ -298,8 +275,8 @@
     <div class="card-head">
         <div class="card-icon slate"><i class="fa-solid fa-clipboard-list"></i></div>
         <div class="card-title">
-            <h3>Historial de copias</h3>
-            <p>Últimas copias completas, incrementales y diferenciales registradas</p>
+            <h3>{{ t('bkp.hist_title') }}</h3>
+            <p>{{ t('bkp.hist_desc') }}</p>
         </div>
     </div>
 
@@ -307,7 +284,7 @@
         <table class="bkp-table">
             <thead>
                 <tr>
-                    <th>ID</th><th>Fecha</th><th>Tipo</th><th>Base de datos</th><th>Archivo</th><th>Base</th><th>Rango binlog</th><th>Notas</th><th>Acciones</th>
+                    <th>ID</th><th>{{ t('bkp.th_date') }}</th><th>{{ t('bkp.th_type') }}</th><th>{{ t('bkp.field_db') }}</th><th>{{ t('bkp.th_file') }}</th><th>{{ t('bkp.th_base') }}</th><th>{{ t('bkp.th_binlog') }}</th><th>{{ t('bkp.field_notes') }}</th><th>{{ t('bkp.th_actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -316,9 +293,9 @@
                     <td>{{ b.id }}</td>
                     <td>{{ b.created_at }}</td>
                     <td>
-                        {% if b.type == "full" %}<span class="tag tag-full">Completo</span>
-                        {% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>
-                        {% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>
+                        {% if b.type == "full" %}<span class="tag tag-full">{{ t('bkp.tag_full') }}</span>
+                        {% elif b.type == "incremental" %}<span class="tag tag-inc">{{ t('bkp.tag_inc') }}</span>
+                        {% elif b.type == "differential" %}<span class="tag tag-diff">{{ t('bkp.tag_diff') }}</span>
                         {% else %}{{ b.tipo_label }}{% endif %}
                     </td>
                     <td>{{ b.db }}</td>
@@ -328,23 +305,23 @@
                     <td>{{ b.notes or "-" }}</td>
                     <td>
                         <div class="row-actions">
-                            <a class="btn small download" href="/backups/download/{{ b.id }}"><i class="fa-solid fa-download"></i> Descargar</a>
+                            <a class="btn small download" href="/backups/download/{{ b.id }}"><i class="fa-solid fa-download"></i> {{ t('bkp.btn_download') }}</a>
                             <form method="post" action="/backups/restore/preview" style="display:inline;">
                                 {{ csrf_input(request) }}
                                 <input type="hidden" name="backup_id" value="{{ b.id }}">
-                                <button type="submit" class="btn small restore"><i class="fa-solid fa-rotate-left"></i> Restaurar</button>
+                                <button type="submit" class="btn small restore"><i class="fa-solid fa-rotate-left"></i> {{ t('bkp.btn_restore') }}</button>
                             </form>
                             <form method="post" action="/backups/delete/preview" style="display:inline;">
                                 {{ csrf_input(request) }}
                                 <input type="hidden" name="backup_id" value="{{ b.id }}">
-                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                                <button type="submit" class="btn small danger"><i class="fa-solid fa-trash"></i> {{ t('bkp.btn_delete') }}</button>
                             </form>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% if not backup_history %}
-                <tr><td colspan="9" style="text-align:center;">No hay copias registradas todavía.</td></tr>
+                <tr><td colspan="9" style="text-align:center;">{{ t('bkp.no_history') }}</td></tr>
                 {% endif %}
             </tbody>
         </table>
@@ -356,88 +333,88 @@
 {% block extra_js %}
 <!-- Modales de backup (fuera del flujo del documento) -->
 <section id="modal-completo" class="modal">
-    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup completo">
+    <a href="#" class="modal__overlay" aria-label="{{ t('bkp.btn_cancel') }}"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="{{ t('bkp.modal_full_title') }}">
         <div class="modal__head">
             <div class="modal__title">
-                <h3><i class="fa-solid fa-box"></i> Backup completo</h3>
-                <p>Recomendado como copia base del sistema</p>
+                <h3><i class="fa-solid fa-box"></i> {{ t('bkp.modal_full_title') }}</h3>
+                <p>{{ t('bkp.modal_full_sub') }}</p>
             </div>
-            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+            <a class="modal__close" href="#" aria-label="{{ t('bkp.btn_cancel') }}"><i class="fa-solid fa-xmark"></i></a>
         </div>
         <form class="bkp-form" method="POST" action="/backups/run">
             {{ csrf_input(request) }}
             <input type="hidden" name="type" value="full">
             <div class="form-grid">
-                <label class="field"><span>Base de datos</span><input name="db" placeholder="Ej: employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
-                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-completo-YYYYMMDD-HHMM.sql" required></label>
-                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-                <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14">14 días</option><option value="30" selected>30 días</option><option value="0">No borrar</option></select></label>
-                <label class="field field--full"><span>Notas (opcional)</span><input name="notes" placeholder="Ej: antes de actualizar el sistema"></label>
+                <label class="field"><span>{{ t('bkp.field_db') }}</span><input name="db" placeholder="Ej: employees" required></label>
+                <label class="field"><span>{{ t('bkp.field_dest') }}</span><input name="dest" value="/home/vigex/backups" required></label>
+                <label class="field"><span>{{ t('bkp.field_filename') }}</span><input name="name" placeholder="backup-completo-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>{{ t('bkp.field_compress') }}</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">{{ t('bkp.no_compress') }}</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_retention') }}</span><select name="retention"><option value="7">7 días</option><option value="14">14 días</option><option value="30" selected>30 días</option><option value="0">{{ t('bkp.no_delete') }}</option></select></label>
+                <label class="field field--full"><span>{{ t('bkp.field_notes_opt') }}</span><input name="notes" placeholder="Ej: antes de actualizar el sistema"></label>
             </div>
             <div class="modal__foot">
-                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> {{ t('bkp.btn_cancel') }}</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> {{ t('bkp.btn_run') }}</button>
             </div>
         </form>
     </div>
 </section>
 
 <section id="modal-incremental" class="modal">
-    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup incremental">
+    <a href="#" class="modal__overlay" aria-label="{{ t('bkp.btn_cancel') }}"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="{{ t('bkp.modal_inc_title') }}">
         <div class="modal__head">
             <div class="modal__title">
-                <h3><i class="fa-solid fa-rotate"></i> Backup incremental</h3>
-                <p>Ejecuta cambios desde el último backup registrado</p>
+                <h3><i class="fa-solid fa-rotate"></i> {{ t('bkp.modal_inc_title') }}</h3>
+                <p>{{ t('bkp.modal_inc_sub') }}</p>
             </div>
-            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+            <a class="modal__close" href="#" aria-label="{{ t('bkp.btn_cancel') }}"><i class="fa-solid fa-xmark"></i></a>
         </div>
         <form class="bkp-form" method="POST" action="/backups/run">
             {{ csrf_input(request) }}
             <input type="hidden" name="type" value="incremental">
-            <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>Incremental real:</strong> se genera a partir de los binary logs desde el último backup registrado.</div></div>
+            <div class="callout"><i class="fa-solid fa-circle-info"></i><div><strong>{{ t('bkp.tag_inc') }}:</strong> {{ t('bkp.modal_inc_callout') }}</div></div>
             <div class="form-grid">
-                <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
-                <label class="field"><span>Base de referencia</span><select name="base_ref"><option value="latest" selected>Último backup disponible</option><option value="manual">Manual</option></select></label>
-                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-inc-YYYYMMDD-HHMM.sql" required></label>
-                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-                <label class="field"><span>Retención</span><select name="retention"><option value="7" selected>7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_db') }}</span><input name="db" value="employees" required></label>
+                <label class="field"><span>{{ t('bkp.field_dest') }}</span><input name="dest" value="/home/vigex/backups" required></label>
+                <label class="field"><span>{{ t('bkp.field_ref') }}</span><select name="base_ref"><option value="latest" selected>{{ t('bkp.opt_latest') }}</option><option value="manual">{{ t('bkp.opt_manual') }}</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_filename') }}</span><input name="name" placeholder="backup-inc-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>{{ t('bkp.field_compress') }}</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">{{ t('bkp.no_compress') }}</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_retention') }}</span><select name="retention"><option value="7" selected>7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="0">{{ t('bkp.no_delete') }}</option></select></label>
             </div>
             <div class="modal__foot">
-                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> {{ t('bkp.btn_cancel') }}</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> {{ t('bkp.btn_run') }}</button>
             </div>
         </form>
     </div>
 </section>
 
 <section id="modal-diferencial" class="modal">
-    <a href="#" class="modal__overlay" aria-label="Cerrar"></a>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Backup diferencial">
+    <a href="#" class="modal__overlay" aria-label="{{ t('bkp.btn_cancel') }}"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="{{ t('bkp.modal_diff_title') }}">
         <div class="modal__head">
             <div class="modal__title">
-                <h3><i class="fa-solid fa-layer-group"></i> Backup diferencial</h3>
-                <p>Ejecuta cambios desde el último backup completo</p>
+                <h3><i class="fa-solid fa-layer-group"></i> {{ t('bkp.modal_diff_title') }}</h3>
+                <p>{{ t('bkp.modal_diff_sub') }}</p>
             </div>
-            <a class="modal__close" href="#" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+            <a class="modal__close" href="#" aria-label="{{ t('bkp.btn_cancel') }}"><i class="fa-solid fa-xmark"></i></a>
         </div>
         <form class="bkp-form" method="POST" action="/backups/run">
             {{ csrf_input(request) }}
             <input type="hidden" name="type" value="differential">
             <div class="form-grid">
-                <label class="field"><span>Base de datos</span><input name="db" value="employees" required></label>
-                <label class="field"><span>Carpeta destino</span><input name="dest" value="/home/vigex/backups" required></label>
-                <label class="field"><span>Referencia</span><select name="base_ref"><option value="last_full" selected>Último backup completo</option><option value="manual">Manual</option></select></label>
-                <label class="field"><span>Nombre del archivo</span><input name="name" placeholder="backup-diff-YYYYMMDD-HHMM.sql" required></label>
-                <label class="field"><span>Compresión</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">Sin compresión</option></select></label>
-                <label class="field"><span>Retención</span><select name="retention"><option value="7">7 días</option><option value="14" selected>14 días</option><option value="30">30 días</option><option value="0">No borrar</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_db') }}</span><input name="db" value="employees" required></label>
+                <label class="field"><span>{{ t('bkp.field_dest') }}</span><input name="dest" value="/home/vigex/backups" required></label>
+                <label class="field"><span>{{ t('bkp.field_ref_diff') }}</span><select name="base_ref"><option value="last_full" selected>{{ t('bkp.opt_last_full') }}</option><option value="manual">{{ t('bkp.opt_manual') }}</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_filename') }}</span><input name="name" placeholder="backup-diff-YYYYMMDD-HHMM.sql" required></label>
+                <label class="field"><span>{{ t('bkp.field_compress') }}</span><select name="compress"><option value="gzip" selected>GZIP (.gz)</option><option value="none">{{ t('bkp.no_compress') }}</option></select></label>
+                <label class="field"><span>{{ t('bkp.field_retention') }}</span><select name="retention"><option value="7">7 días</option><option value="14" selected>14 días</option><option value="30">30 días</option><option value="0">{{ t('bkp.no_delete') }}</option></select></label>
             </div>
             <div class="modal__foot">
-                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> Cancelar</a>
-                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar ahora</button>
+                <a class="btn" href="#"><i class="fa-solid fa-ban"></i> {{ t('bkp.btn_cancel') }}</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> {{ t('bkp.btn_run') }}</button>
             </div>
         </form>
     </div>
@@ -445,42 +422,41 @@
 
 {% if restore_plan %}
 <section class="modal is-open" id="modal-restaurar-backup">
-    <a href="/backups" class="modal__overlay" aria-label="Cancelar restauración"></a>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar restauración de backup">
+    <a href="/backups" class="modal__overlay" aria-label="{{ t('bkp.btn_cancel') }}"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="{{ t('bkp.restore_title') }}">
         <div class="modal__head">
             <div class="modal__title">
-                <h3><i class="fa-solid fa-rotate-left"></i> Confirmar restauración</h3>
-                <p>La base de datos será restaurada al punto seleccionado.</p>
+                <h3><i class="fa-solid fa-rotate-left"></i> {{ t('bkp.restore_title') }}</h3>
+                <p>{{ t('bkp.restore_sub') }}</p>
             </div>
-            <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+            <a class="modal__close" href="/backups" aria-label="{{ t('bkp.btn_cancel') }}"><i class="fa-solid fa-xmark"></i></a>
         </div>
         <div class="delete-warning">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <div>
-                <strong>Atención:</strong>
-                esta operación modificará la base de datos <strong>{{ restore_plan.db }}</strong>.
-                Antes de restaurar, el sistema creará una copia preventiva automática del estado actual.
+                <strong>{{ t('bkp.restore_warn_bold') }}</strong>
+                {{ t('bkp.restore_warn_pre') }} <strong>{{ restore_plan.db }}</strong>{{ t('bkp.restore_warn_post') }}
             </div>
         </div>
         {% if restore_plan.has_chain %}
         <div class="delete-warning soft">
             <i class="fa-solid fa-link"></i>
-            <div>Para restaurar la copia ID {{ restore_plan.target.id }}, se aplicará esta cadena: <strong>{{ restore_plan.ids_csv }}</strong>.</div>
+            <div>{{ t('bkp.restore_chain_pre') }} {{ restore_plan.target.id }}, {{ t('bkp.restore_chain_post') }} <strong>{{ restore_plan.ids_csv }}</strong>.</div>
         </div>
         {% else %}
         <div class="delete-warning soft">
             <i class="fa-solid fa-circle-info"></i>
-            <div>Esta restauración solo necesita aplicar la copia completa seleccionada.</div>
+            <div>{{ t('bkp.restore_no_chain') }}</div>
         </div>
         {% endif %}
         <div class="bkp-table-wrap delete-table">
             <table class="bkp-table">
-                <thead><tr><th>Orden</th><th>ID</th><th>Tipo</th><th>Archivo</th><th>Base</th><th>Rango binlog</th></tr></thead>
+                <thead><tr><th>{{ t('bkp.th_order') }}</th><th>ID</th><th>{{ t('bkp.th_type') }}</th><th>{{ t('bkp.th_file') }}</th><th>{{ t('bkp.th_base') }}</th><th>{{ t('bkp.th_binlog') }}</th></tr></thead>
                 <tbody>
                     {% for b in restore_plan["items"] %}
                     <tr>
                         <td>{{ loop.index }}</td><td>{{ b.id }}</td>
-                        <td>{% if b.type == "full" %}<span class="tag tag-full">Completo</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>{% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
+                        <td>{% if b.type == "full" %}<span class="tag tag-full">{{ t('bkp.tag_full') }}</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">{{ t('bkp.tag_inc') }}</span>{% elif b.type == "differential" %}<span class="tag tag-diff">{{ t('bkp.tag_diff') }}</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
                         <td>{{ b.filename }}</td><td>{{ b.base_id or "-" }}</td><td>{{ b.rango }}</td>
                     </tr>
                     {% endfor %}
@@ -492,8 +468,8 @@
             <input type="hidden" name="backup_id" value="{{ restore_plan.target.id }}">
             <input type="hidden" name="confirm_restore" value="SI">
             <div class="modal__foot">
-                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
-                <button class="btn restore strong" type="submit"><i class="fa-solid fa-rotate-left"></i> Restaurar backup</button>
+                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> {{ t('bkp.btn_cancel') }}</a>
+                <button class="btn restore strong" type="submit"><i class="fa-solid fa-rotate-left"></i> {{ t('bkp.btn_restore_confirm') }}</button>
             </div>
         </form>
     </div>
@@ -502,35 +478,35 @@
 
 {% if delete_plan %}
 <section class="modal is-open" id="modal-eliminar-backup">
-    <a href="/backups" class="modal__overlay" aria-label="Cancelar eliminación"></a>
-    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="Confirmar eliminación de backup">
+    <a href="/backups" class="modal__overlay" aria-label="{{ t('bkp.btn_cancel') }}"></a>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-label="{{ t('bkp.delete_title') }}">
         <div class="modal__head">
             <div class="modal__title">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmar eliminación</h3>
-                {% if delete_plan.has_dependents %}<p>Esta copia tiene dependencias. Se eliminará la cadena completa.</p>
-                {% else %}<p>Esta copia no tiene dependencias y se puede eliminar de forma individual.</p>{% endif %}
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> {{ t('bkp.delete_title') }}</h3>
+                {% if delete_plan.has_dependents %}<p>{{ t('bkp.delete_has_deps') }}</p>
+                {% else %}<p>{{ t('bkp.delete_no_deps') }}</p>{% endif %}
             </div>
-            <a class="modal__close" href="/backups" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></a>
+            <a class="modal__close" href="/backups" aria-label="{{ t('bkp.btn_cancel') }}"><i class="fa-solid fa-xmark"></i></a>
         </div>
         {% if delete_plan.has_dependents %}
         <div class="delete-warning">
             <i class="fa-solid fa-link-slash"></i>
-            <div><strong>Atención:</strong> si eliminas la copia ID {{ delete_plan.target.id }}, también se eliminarán {{ delete_plan.dependents_count }} copia(s) dependiente(s). Esta acción no se puede deshacer.</div>
+            <div><strong>{{ t('bkp.delete_warn_bold') }}</strong> {{ t('bkp.delete_warn_pre') }} {{ delete_plan.target.id }}{{ t('bkp.delete_warn_mid') }} {{ delete_plan.dependents_count }} {{ t('bkp.delete_warn_post') }}</div>
         </div>
         {% else %}
         <div class="delete-warning soft">
             <i class="fa-solid fa-circle-info"></i>
-            <div>Se eliminará únicamente la copia seleccionada y su archivo físico del servidor de backups.</div>
+            <div>{{ t('bkp.delete_simple') }}</div>
         </div>
         {% endif %}
         <div class="bkp-table-wrap delete-table">
             <table class="bkp-table">
-                <thead><tr><th>ID</th><th>Tipo</th><th>Archivo</th><th>Base</th><th>Rango binlog</th></tr></thead>
+                <thead><tr><th>ID</th><th>{{ t('bkp.th_type') }}</th><th>{{ t('bkp.th_file') }}</th><th>{{ t('bkp.th_base') }}</th><th>{{ t('bkp.th_binlog') }}</th></tr></thead>
                 <tbody>
                     {% for b in delete_plan["items"] %}
                     <tr>
                         <td>{{ b.id }}</td>
-                        <td>{% if b.type == "full" %}<span class="tag tag-full">Completo</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">Incremental</span>{% elif b.type == "differential" %}<span class="tag tag-diff">Diferencial</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
+                        <td>{% if b.type == "full" %}<span class="tag tag-full">{{ t('bkp.tag_full') }}</span>{% elif b.type == "incremental" %}<span class="tag tag-inc">{{ t('bkp.tag_inc') }}</span>{% elif b.type == "differential" %}<span class="tag tag-diff">{{ t('bkp.tag_diff') }}</span>{% else %}{{ b.tipo_label }}{% endif %}</td>
                         <td>{{ b.filename }}</td><td>{{ b.base_id or "-" }}</td><td>{{ b.rango }}</td>
                     </tr>
                     {% endfor %}
@@ -542,10 +518,10 @@
             <input type="hidden" name="backup_id" value="{{ delete_plan.target.id }}">
             <input type="hidden" name="confirm_delete" value="SI">
             <div class="modal__foot">
-                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> Cancelar</a>
+                <a class="btn" href="/backups"><i class="fa-solid fa-ban"></i> {{ t('bkp.btn_cancel') }}</a>
                 <button class="btn danger" type="submit">
                     <i class="fa-solid fa-trash"></i>
-                    {% if delete_plan.has_dependents %}Eliminar cadena completa{% else %}Eliminar copia{% endif %}
+                    {% if delete_plan.has_dependents %}{{ t('bkp.btn_delete_chain') }}{% else %}{{ t('bkp.btn_delete_single') }}{% endif %}
                 </button>
             </div>
         </form>

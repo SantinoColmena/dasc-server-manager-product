@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Logs — Vigex{% endblock %}
+{% block title %}{{ t('nav.logs') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
@@ -7,10 +7,10 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Resumen rápido</h3>
-    <p><span class="dot ok"></span> Eventos OK: {{ logs_ok }}</p>
-    <p><span class="dot warn"></span> Con error: {{ logs_error }}</p>
-    {% if logs_last %}<p><span class="dot ok"></span> Último: {{ logs_last }}</p>{% endif %}
+    <h3>{{ t('logs.sidebar_title') }}</h3>
+    <p><span class="dot ok"></span> {{ t('logs.events_ok') }}: {{ logs_ok }}</p>
+    <p><span class="dot warn"></span> {{ t('logs.events_error') }}: {{ logs_error }}</p>
+    {% if logs_last %}<p><span class="dot ok"></span> {{ t('logs.last') }}: {{ logs_last }}</p>{% endif %}
 </div>
 {% endblock %}
 
@@ -18,22 +18,22 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Registro de actividad</h2>
-        <p class="page-subtitle">Todo lo que pasa en el sistema, registrado y listo para revisar cuando lo necesites.</p>
+        <h2 class="page-title">{{ t('logs.page_title') }}</h2>
+        <p class="page-subtitle">{{ t('logs.page_subtitle') }}</p>
     </div>
 </div>
 
 <div class="kpi-grid">
     <div class="kpi-card">
-        <div><div class="kpi-label">Eventos cargados</div><div class="kpi-value">{{ logs_total }}</div></div>
+        <div><div class="kpi-label">{{ t('logs.kpi_total') }}</div><div class="kpi-value">{{ logs_total }}</div></div>
         <i class="fa-solid fa-clipboard-list"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Sin errores</div><div class="kpi-value ok">{{ logs_ok }}</div></div>
+        <div><div class="kpi-label">{{ t('logs.kpi_ok') }}</div><div class="kpi-value ok">{{ logs_ok }}</div></div>
         <i class="fa-solid fa-circle-check"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Con errores</div><div class="kpi-value error">{{ logs_error }}</div></div>
+        <div><div class="kpi-label">{{ t('logs.kpi_errors') }}</div><div class="kpi-value error">{{ logs_error }}</div></div>
         <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
 </div>
@@ -42,13 +42,13 @@
     <div class="card-head">
         <div class="card-icon teal"><i class="fa-solid fa-chart-line"></i></div>
         <div class="card-title">
-            <h3>Monitorización externa</h3>
-            <p>Acceso directo a Cacti desde el panel.</p>
+            <h3>{{ t('logs.cacti_title') }}</h3>
+            <p>{{ t('logs.cacti_desc') }}</p>
         </div>
     </div>
     <div class="actions">
         <a class="btn primary" href="{{ cacti_url }}" target="_blank" rel="noopener">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir Cacti
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ t('logs.cacti_btn') }}
         </a>
     </div>
 </section>
@@ -57,8 +57,8 @@
     <div class="card-head">
         <div class="card-icon blue"><i class="fa-solid fa-file-lines"></i></div>
         <div class="card-title">
-            <h3>Eventos de Vigex Web</h3>
-            <p>Últimos 100 registros de auditoría almacenados en base de datos.</p>
+            <h3>{{ t('logs.table_title') }}</h3>
+            <p>{{ t('logs.table_desc') }}</p>
         </div>
     </div>
 
@@ -67,8 +67,10 @@
         <table class="svc-table">
             <thead>
                 <tr>
-                    <th>ID</th><th>Fecha</th><th>Origen</th><th>Tipo</th><th>Usuario</th>
-                    <th>IP</th><th>Recurso</th><th>Resultado</th><th>Detalle</th>
+                    <th>ID</th><th>{{ t('logs.th_fecha') }}</th><th>{{ t('logs.th_origen') }}</th>
+                    <th>{{ t('logs.th_tipo') }}</th><th>{{ t('logs.th_usuario') }}</th>
+                    <th>IP</th><th>{{ t('logs.th_recurso') }}</th>
+                    <th>{{ t('logs.th_resultado') }}</th><th>{{ t('logs.th_detalle') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,7 +98,7 @@
     </div>
     {% else %}
     <div class="empty-state">
-        <p>No hay eventos para mostrar. Si la vista se abre vacía, revisa la conectividad con la base de logs.</p>
+        <p>{{ t('logs.empty') }}</p>
     </div>
     {% endif %}
 </section>
