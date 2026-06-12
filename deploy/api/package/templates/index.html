@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Panel — Vigex{% endblock %}
+{% block title %}{{ t('nav.panel') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -89,18 +89,18 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">¡Hola, {{ user }}!</h2>
-        <p class="page-subtitle">{{ role_label }} · Todo bajo control.</p>
+        <h2 class="page-title">{{ t('panel.hello_prefix') }}{{ user }}!</h2>
+        <p class="page-subtitle">{{ role_label }} · {{ t('panel.subtitle_ok') }}</p>
     </div>
     <div class="topbar-actions">
         <div class="status-pill">
             <i class="fa-solid fa-circle-dot" style="color:#22c55e;"></i>
-            Sistema activo
+            {{ t('panel.system_active') }}
         </div>
         {% if is_admin %}
         <div class="status-pill">
             <i class="fa-solid fa-users"></i>
-            {{ users_count }} usuario{{ 's' if users_count != 1 else '' }}
+            {{ users_count }} {{ t('panel.users_singular') }}{{ 's' if users_count != 1 else '' }}
         </div>
         {% endif %}
     </div>
@@ -114,8 +114,8 @@
             <div class="dstat-icon green"><i class="fa-solid fa-database"></i></div>
             <span class="dstat-badge muted">—</span>
         </div>
-        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
-        <div class="dstat-label">Última copia</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> {{ t('panel.checking') }}</div>
+        <div class="dstat-label">{{ t('panel.stat_backup') }}</div>
     </div>
 
     <div class="dstat-card" id="stat-services">
@@ -123,8 +123,8 @@
             <div class="dstat-icon teal"><i class="fa-solid fa-server"></i></div>
             <span class="dstat-badge muted">—</span>
         </div>
-        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
-        <div class="dstat-label">Servicios</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> {{ t('panel.checking') }}</div>
+        <div class="dstat-label">{{ t('panel.stat_services') }}</div>
     </div>
 
     <div class="dstat-card" id="stat-alerts">
@@ -132,8 +132,8 @@
             <div class="dstat-icon amber"><i class="fa-solid fa-bell"></i></div>
             <span class="dstat-badge muted">—</span>
         </div>
-        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
-        <div class="dstat-label">Alertas</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> {{ t('panel.checking') }}</div>
+        <div class="dstat-label">{{ t('panel.stat_alerts') }}</div>
     </div>
 
     <div class="dstat-card" id="stat-disk">
@@ -141,8 +141,8 @@
             <div class="dstat-icon blue"><i class="fa-solid fa-hard-drive"></i></div>
             <span class="dstat-badge muted">—</span>
         </div>
-        <div class="dstat-loading"><div class="dstat-spinner"></div> Comprobando…</div>
-        <div class="dstat-label">Disco del servidor</div>
+        <div class="dstat-loading"><div class="dstat-spinner"></div> {{ t('panel.checking') }}</div>
+        <div class="dstat-label">{{ t('panel.stat_disk') }}</div>
     </div>
 
 </div>
@@ -155,15 +155,15 @@
         <div class="card-head">
             <div class="card-icon green"><i class="fa-solid fa-database"></i></div>
             <div class="card-title">
-                <h3>Copias de seguridad</h3>
-                <p>Protege tus datos con un clic. Programa copias automáticas y recupéralas cuando lo necesites.</p>
+                <h3>{{ t('panel.backups_title') }}</h3>
+                <p>{{ t('panel.backups_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/backups"><i class="fa-solid fa-box"></i> Abrir copias</a>
+            <a class="btn primary" href="/backups"><i class="fa-solid fa-box"></i> {{ t('panel.backups_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-shield-halved"></i> Cada copia verificada automáticamente</span>
+            <span class="meta"><i class="fa-solid fa-shield-halved"></i> {{ t('panel.backups_meta') }}</span>
         </div>
     </article>
     {% endif %}
@@ -173,15 +173,15 @@
         <div class="card-head">
             <div class="card-icon blue"><i class="fa-solid fa-file-lines"></i></div>
             <div class="card-title">
-                <h3>Logs y auditoría</h3>
-                <p>¿Algo fue raro? Aquí están todos los eventos del sistema, ordenados y fáciles de revisar.</p>
+                <h3>{{ t('panel.logs_title') }}</h3>
+                <p>{{ t('panel.logs_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/logs"><i class="fa-solid fa-chart-line"></i> Ver logs</a>
+            <a class="btn primary" href="/logs"><i class="fa-solid fa-chart-line"></i> {{ t('panel.logs_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-clipboard-list"></i> Registros guardados de forma segura</span>
+            <span class="meta"><i class="fa-solid fa-clipboard-list"></i> {{ t('panel.logs_meta') }}</span>
         </div>
     </article>
     {% endif %}
@@ -191,15 +191,15 @@
         <div class="card-head">
             <div class="card-icon teal"><i class="fa-solid fa-server"></i></div>
             <div class="card-title">
-                <h3>Servicios del sistema</h3>
-                <p>Arranca, para o reinicia servicios del servidor sin tocar ningún cable. Todo desde aquí.</p>
+                <h3>{{ t('panel.servicios_title') }}</h3>
+                <p>{{ t('panel.servicios_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/servicios"><i class="fa-solid fa-gear"></i> Gestionar servicios</a>
+            <a class="btn primary" href="/servicios"><i class="fa-solid fa-gear"></i> {{ t('panel.servicios_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-bolt"></i> Conexión cifrada al servidor</span>
+            <span class="meta"><i class="fa-solid fa-bolt"></i> {{ t('panel.servicios_meta') }}</span>
         </div>
     </article>
     {% endif %}
@@ -209,15 +209,15 @@
         <div class="card-head">
             <div class="card-icon violet"><i class="fa-solid fa-terminal"></i></div>
             <div class="card-title">
-                <h3>Terminal remota</h3>
-                <p>Acceso directo al servidor cuando lo necesitas. Rápido, seguro y sin salir del panel.</p>
+                <h3>{{ t('panel.terminal_title') }}</h3>
+                <p>{{ t('panel.terminal_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/terminal"><i class="fa-solid fa-play"></i> Abrir terminal</a>
+            <a class="btn primary" href="/terminal"><i class="fa-solid fa-play"></i> {{ t('panel.terminal_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-lock"></i> Solo comandos autorizados</span>
+            <span class="meta"><i class="fa-solid fa-lock"></i> {{ t('panel.terminal_meta') }}</span>
         </div>
     </article>
     {% endif %}
@@ -227,15 +227,15 @@
         <div class="card-head">
             <div class="card-icon amber"><i class="fa-solid fa-bell"></i></div>
             <div class="card-title">
-                <h3>Alertas</h3>
-                <p>Define quién recibe aviso y cuándo. El sistema te alerta por Telegram cuando algo necesita tu atención.</p>
+                <h3>{{ t('panel.alertas_title') }}</h3>
+                <p>{{ t('panel.alertas_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/alertas"><i class="fa-solid fa-paper-plane"></i> Gestionar alertas</a>
+            <a class="btn primary" href="/alertas"><i class="fa-solid fa-paper-plane"></i> {{ t('panel.alertas_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-brands fa-telegram"></i> Avisos al instante por Telegram</span>
+            <span class="meta"><i class="fa-brands fa-telegram"></i> {{ t('panel.alertas_meta') }}</span>
         </div>
     </article>
     {% endif %}
@@ -244,15 +244,15 @@
         <div class="card-head">
             <div class="card-icon"><i class="fa-solid fa-headset"></i></div>
             <div class="card-title">
-                <h3>Soporte Vigex</h3>
-                <p>¿Algo no funciona como esperas? Abre un ticket y el equipo Vigex se encarga de solucionarlo.</p>
+                <h3>{{ t('panel.soporte_title') }}</h3>
+                <p>{{ t('panel.soporte_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/soporte"><i class="fa-solid fa-ticket"></i> Abrir soporte</a>
+            <a class="btn primary" href="/soporte"><i class="fa-solid fa-ticket"></i> {{ t('panel.soporte_btn') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta"><i class="fa-solid fa-rotate"></i> Conectado a Vigex Central</span>
+            <span class="meta"><i class="fa-solid fa-rotate"></i> {{ t('panel.soporte_meta') }}</span>
         </div>
     </article>
 
@@ -261,21 +261,39 @@
         <div class="card-head">
             <div class="card-icon red"><i class="fa-solid fa-user-shield"></i></div>
             <div class="card-title">
-                <h3>Administración</h3>
-                <p>Dale acceso a tu equipo y decide exactamente qué puede ver o tocar cada persona.</p>
+                <h3>{{ t('panel.admin_title') }}</h3>
+                <p>{{ t('panel.admin_desc') }}</p>
             </div>
         </div>
         <div class="actions">
-            <a class="btn primary" href="/admin/usuarios"><i class="fa-solid fa-user-plus"></i> Gestionar usuarios</a>
-            <a class="btn" href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> Ver accesos</a>
+            <a class="btn primary" href="/admin/usuarios"><i class="fa-solid fa-user-plus"></i> {{ t('panel.admin_btn1') }}</a>
+            <a class="btn" href="/admin/login-logs"><i class="fa-solid fa-right-to-bracket"></i> {{ t('panel.admin_btn2') }}</a>
         </div>
         <div class="card-foot">
-            <span class="meta ok"><i class="fa-solid fa-crown"></i> Solo administrador</span>
+            <span class="meta ok"><i class="fa-solid fa-crown"></i> {{ t('panel.admin_meta') }}</span>
         </div>
     </article>
     {% endif %}
 
 </section>
+
+<!-- Strings i18n para el JS del dashboard -->
+<div id="panel-i18n" style="display:none"
+     data-no-data="{{ t('panel.no_data') }}"
+     data-all-active="{{ t('panel.all_active') }}"
+     data-inactive-sg="{{ t('panel.inactive_sg') }}"
+     data-inactive-pl="{{ t('panel.inactive_pl') }}"
+     data-with-error="{{ t('panel.with_error') }}"
+     data-no-errors="{{ t('panel.no_errors') }}"
+     data-disk-full="{{ t('panel.disk_full') }}"
+     data-disk-watch="{{ t('panel.disk_watch') }}"
+     data-disk-free="{{ t('panel.disk_free') }}"
+     data-disk-of="{{ t('panel.disk_of') }}"
+     data-disk-used-suf="{{ t('panel.disk_used_suf') }}"
+     data-badge-nd="{{ t('panel.badge_nd') }}"
+     data-badge-attention="{{ t('panel.badge_attention') }}"
+     data-badge-review="{{ t('panel.badge_review') }}"
+></div>
 
 {% endblock %}
 
@@ -283,6 +301,26 @@
 <script>
 (function () {
     "use strict";
+
+    /* Strings i18n desde data attributes */
+    var _el = document.getElementById('panel-i18n');
+    var _d  = _el ? _el.dataset : {};
+    var i18n = {
+        noData:       _d.noData       || 'Sin datos',
+        allActive:    _d.allActive    || 'Todos activos',
+        inactiveSg:   _d.inactiveSg   || ' inactivo',
+        inactivePl:   _d.inactivePl   || ' inactivos',
+        withError:    _d.withError    || ' con error',
+        noErrors:     _d.noErrors     || 'Sin errores',
+        diskFull:     _d.diskFull     || 'Lleno',
+        diskWatch:    _d.diskWatch    || 'Vigilar',
+        diskFree:     _d.diskFree     || 'Libre',
+        diskOf:       _d.diskOf       || ' de ',
+        diskUsedSuf:  _d.diskUsedSuf  || ' usado',
+        badgeNd:      _d.badgeNd      || 'N/D',
+        badgeAtt:     _d.badgeAttention || 'Atención',
+        badgeReview:  _d.badgeReview  || 'Revisar',
+    };
 
     /* Utilidad: reemplaza el spinner por valor + subtítulo y actualiza el badge */
     function resolveCard(cardId, valueHtml, subHtml, badgeClass, badgeText) {
@@ -302,7 +340,7 @@
     }
 
     function ndCard(cardId) {
-        resolveCard(cardId, '—', 'Sin datos', 'muted', 'N/D');
+        resolveCard(cardId, '—', i18n.noData, 'muted', i18n.badgeNd);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -328,16 +366,16 @@
                 /* ── Servicios ──────────────────────────────────────────── */
                 var sv = data.services || {};
                 if (sv.available) {
-                    var allOk = sv.inactive === 0;
+                    var allOk  = sv.inactive === 0;
                     var subTxt = allOk
-                        ? 'Todos activos'
-                        : sv.inactive + (sv.inactive === 1 ? ' inactivo' : ' inactivos');
+                        ? i18n.allActive
+                        : sv.inactive + (sv.inactive === 1 ? i18n.inactiveSg : i18n.inactivePl);
                     resolveCard(
                         'stat-services',
                         sv.active + '<span style="font-size:14px;font-weight:500;color:var(--muted);">/' + sv.total + '</span>',
                         subTxt,
                         allOk ? 'ok' : 'warn',
-                        allOk ? 'OK' : 'Atención'
+                        allOk ? 'OK' : i18n.badgeAtt
                     );
                 } else {
                     ndCard('stat-services');
@@ -350,9 +388,9 @@
                     resolveCard(
                         'stat-alerts',
                         String(al.total),
-                        hasErr ? al.error + ' con error' : 'Sin errores',
+                        hasErr ? al.error + i18n.withError : i18n.noErrors,
                         hasErr ? 'error' : 'ok',
-                        hasErr ? 'Revisar' : 'OK'
+                        hasErr ? i18n.badgeReview : 'OK'
                     );
                 } else {
                     ndCard('stat-alerts');
@@ -363,8 +401,8 @@
                 if (dk.available) {
                     var pct    = dk.percent || 0;
                     var color  = pct >= 90 ? 'error' : pct >= 75 ? 'warn' : 'ok';
-                    var label  = pct >= 90 ? 'Lleno'  : pct >= 75 ? 'Vigilar' : 'Libre';
-                    var icolor = pct >= 90 ? 'red'    : pct >= 75 ? 'amber'   : 'blue';
+                    var label  = pct >= 90 ? i18n.diskFull : pct >= 75 ? i18n.diskWatch : i18n.diskFree;
+                    var icolor = pct >= 90 ? 'red'         : pct >= 75 ? 'amber'        : 'blue';
                     var card   = document.getElementById('stat-disk');
                     if (card) {
                         var ico = card.querySelector('.dstat-icon');
@@ -373,7 +411,7 @@
                     resolveCard(
                         'stat-disk',
                         pct + '%',
-                        escHtml(dk.used) + ' de ' + escHtml(dk.total) + ' usado',
+                        escHtml(dk.used) + i18n.diskOf + escHtml(dk.total) + i18n.diskUsedSuf,
                         color,
                         label
                     );
