@@ -1727,6 +1727,7 @@ ALERTS_DEFAULT_CHANNEL = os.getenv("ALERTS_DEFAULT_CHANNEL", "telegram")
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 USERS_FILE = DATA_DIR / "users.json"
+_LICENSE_CACHE_PATH = DATA_DIR / "license_cache.json"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 PASSWORD_HASH_PREFIXES = ("$2a$", "$2b$", "$2y$")
@@ -3527,6 +3528,8 @@ def home(request: Request):
     )
     context["users_count"] = len(load_users()) + 1 if context["is_admin"] else None
     context.update(get_alert_stats())
+    context["central_enabled"] = CENTRAL_SUPPORT_ENABLED
+    context["licencia_info"] = _load_license_cache() if CENTRAL_SUPPORT_ENABLED else {}
     return templates.TemplateResponse(request, "index.html", context)
 
 
@@ -10995,6 +10998,28 @@ import time as _time_mod
 _startup_ts: float = _time_mod.time()
 
 
+def _cache_license(info: dict) -> None:
+    """Persiste la info de licencia recibida del heartbeat en license_cache.json."""
+    try:
+        from datetime import datetime as _dt
+        payload = dict(info)
+        payload["cached_at"] = _dt.now().isoformat()
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _LICENSE_CACHE_PATH.write_text(json.dumps(payload), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _load_license_cache() -> dict:
+    """Lee la caché de licencia; devuelve {} si no existe o está corrupta."""
+    try:
+        if _LICENSE_CACHE_PATH.exists():
+            return json.loads(_LICENSE_CACHE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
 def _fire_heartbeat() -> None:
     """Envía el heartbeat a Central en segundo plano. Fallo silencioso."""
     if not CENTRAL_HEARTBEAT_URL or not CENTRAL_SUPPORT_ENABLED:
@@ -11015,7 +11040,14 @@ def _fire_heartbeat() -> None:
             method="POST",
         )
         with _req.urlopen(req, timeout=CENTRAL_SUPPORT_TIMEOUT) as _r:
-            pass  # respuesta ignorada
+            resp_body = _r.read()
+        try:
+            resp_data = _json.loads(resp_body)
+            licencia = resp_data.get("licencia")
+            if isinstance(licencia, dict):
+                _cache_license(licencia)
+        except Exception:
+            pass
     except Exception:
         pass  # silencioso — el heartbeat nunca debe interrumpir el panel
 

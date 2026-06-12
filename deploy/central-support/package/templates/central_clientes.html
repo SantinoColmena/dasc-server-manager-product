@@ -33,15 +33,18 @@
         [data-theme="dark"] .token-box { background:#1a2a0a; border-color:#4d7c0f; }
         [data-theme="dark"] .token-box h3 { color:#d9f99d; }
         [data-theme="dark"] .token-value { background:#0f172a; border-color:#4d7c0f; color:#d9f99d; }
-        [data-theme="dark"] .form-group input { background:#0f172a; border-color:#334155; color:var(--text); }
-        [data-theme="dark"] .form-group input:focus { background:#0f172a; border-color:#4f46e5; }
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select { background:#0f172a; border-color:#334155; color:var(--text); }
+        [data-theme="dark"] .form-group input:focus,
+        [data-theme="dark"] .form-group select:focus { background:#0f172a; border-color:#4f46e5; }
         [data-theme="dark"] .form-group label { color:var(--muted); }
         [data-theme="dark"] .msg { background:#1e1542; color:#a5b4fc; border-color:#4f46e5; }
         [data-theme="dark"] .empty { background:#1e293b; border-color:#334155; }
         [data-theme="dark"] .dark-toggle { background:#1e293b; border:1.5px solid #334155; color:var(--text); cursor:pointer; }
+        [data-theme="dark"] .lic-form { background:#1e293b; border-color:#334155; }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
-        .wrapper { max-width: 1100px; margin: 34px auto; padding: 0 22px 60px; }
+        .wrapper { max-width: 1200px; margin: 34px auto; padding: 0 22px 60px; }
         .hero { background: linear-gradient(135deg, #fff 0%, #eff6ff 100%); border: 1px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 10px; }
         .hero h1 { margin: 0 0 6px; font-size: 26px; }
         .hero p { margin: 0; color: var(--muted); }
@@ -56,16 +59,21 @@
         .panel { background: var(--card); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
         .panel h2 { margin: 0 0 20px; font-size: 18px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--line); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; background: #f8fafc; color: var(--muted); }
-        td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        th { text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--line); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; background: #f8fafc; color: var(--muted); }
+        td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8fbff; }
-        .badge { display: inline-block; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .badge { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
         .badge.activo { background: var(--green-soft); color: #166534; }
         .badge.inactivo { background: var(--red-soft); color: #991b1b; }
+        .badge.soporte-ok { background: #d1fae5; color: #065f46; }
+        .badge.soporte-off { background: #fef3c7; color: #92400e; }
+        .badge.plan-lite { background: #f1f5f9; color: #475569; }
+        .badge.plan-standard { background: #dbeafe; color: #1d4ed8; }
+        .badge.plan-pro { background: #ede9fe; color: #5b21b6; }
         .token-preview { font-family: monospace; font-size: 12px; color: var(--muted); }
-        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn { padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block; }
+        .actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: flex-start; }
+        .btn { padding: 6px 13px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block; }
         .btn-danger { background: var(--red-soft); color: #991b1b; }
         .btn-danger:hover { background: #fecaca; }
         .btn-warning { background: var(--yellow-soft); color: #92400e; }
@@ -74,13 +82,31 @@
         .btn-success:hover { background: #bbf7d0; }
         .btn-primary { background: var(--blue-soft); color: #1d4ed8; }
         .btn-primary:hover { background: #bfdbfe; }
+        .btn-purple { background: #ede9fe; color: #5b21b6; }
+        .btn-purple:hover { background: #ddd6fe; }
         /* Formulario nuevo cliente */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+        .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
-        .form-group input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 14px; background: #f8fafc; }
-        .form-group input:focus { outline: none; border-color: var(--blue); background: #fff; }
+        .form-group input,
+        .form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 14px; background: #f8fafc; color: var(--text); }
+        .form-group input:focus,
+        .form-group select:focus { outline: none; border-color: var(--blue); background: #fff; }
         .empty { padding: 34px; text-align: center; color: var(--muted); background: #f8fafc; border-radius: 14px; border: 1px dashed #cbd5e1; }
-        @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .actions { flex-direction: column; } }
+        /* Formulario inline de licencia */
+        .lic-row { display: none; }
+        .lic-row.open { display: table-row; }
+        .lic-form { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+        @media (max-width: 900px) {
+            .form-grid-4 { grid-template-columns: 1fr 1fr; }
+            .lic-form { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-grid-4 { grid-template-columns: 1fr; }
+            .actions { flex-direction: column; }
+            .lic-form { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -88,7 +114,7 @@
     <!-- Cabecera -->
     <section class="hero">
         <h1>🏢 Gestión de clientes</h1>
-        <p>Alta, baja y rotación de tokens de las instalaciones Vigex conectadas a esta Central.</p>
+        <p>Alta, baja, rotación de tokens y gestión de licencias de las instalaciones Vigex conectadas.</p>
         <p style="margin-top:6px;font-size:13px;color:#94a3b8;">Sesión: {{ current_user }} · {{ current_role }}</p>
     </section>
 
@@ -140,9 +166,31 @@
                            placeholder="Empresa S.L." required maxlength="100">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">
-                ➕ Crear cliente y generar token
-            </button>
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label for="plan">Plan de licencia</label>
+                    <select id="plan" name="plan">
+                        <option value="lite">Lite</option>
+                        <option value="standard" selected>Standard</option>
+                        <option value="pro">Pro</option>
+                        <option value="managed">Managed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expiry_licencia">Licencia válida hasta</label>
+                    <input type="date" id="expiry_licencia" name="expiry_licencia"
+                           title="Dejar vacío para licencia perpetua">
+                </div>
+                <div class="form-group">
+                    <label for="expiry_soporte">Soporte activo hasta</label>
+                    <input type="date" id="expiry_soporte" name="expiry_soporte">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        ➕ Crear cliente
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -157,13 +205,16 @@
                             <th>ID</th>
                             <th>Nombre</th>
                             <th>Estado</th>
-                            <th>Token (preview)</th>
+                            <th>Plan</th>
+                            <th>Soporte hasta</th>
+                            <th>Token</th>
                             <th>Alta</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for c in clientes %}
+                            {% set soporte_ok = c.expiry_soporte and c.expiry_soporte >= now_date %}
                             <tr>
                                 <td><strong>{{ c.id }}</strong></td>
                                 <td>{{ c.nombre }}</td>
@@ -173,18 +224,35 @@
                                     </span>
                                 </td>
                                 <td>
+                                    <span class="badge plan-{{ c.plan or 'lite' }}">
+                                        {{ (c.plan or 'lite') | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if c.expiry_soporte %}
+                                        <span class="badge {{ 'soporte-ok' if soporte_ok else 'soporte-off' }}">
+                                            {{ '✅' if soporte_ok else '⚠️' }} {{ c.expiry_soporte }}
+                                        </span>
+                                    {% else %}
+                                        <span style="color:var(--muted);font-size:12px;">Sin soporte</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     <span class="token-preview">
                                         {{ c.token[:8] }}…{{ c.token[-4:] }}
                                     </span>
                                 </td>
-                                <td style="white-space:nowrap;">{{ c.fecha_alta }}</td>
+                                <td style="white-space:nowrap;font-size:12px;">{{ c.fecha_alta }}</td>
                                 <td>
                                     <div class="actions">
+                                        <!-- Editar licencia -->
+                                        <button type="button" class="btn btn-purple"
+                                                onclick="toggleLic('{{ c.id }}')">🪪 Licencia</button>
                                         <!-- Rotar token -->
                                         <form method="post"
                                               action="/clientes/{{ c.id }}/rotar"
                                               onsubmit="return confirm('¿Rotar token de {{ c.nombre }}? El panel del cliente dejará de conectarse hasta configurar el nuevo token.');">
-                                            <button type="submit" class="btn btn-warning">🔄 Rotar token</button>
+                                            <button type="submit" class="btn btn-warning">🔄 Token</button>
                                         </form>
                                         <!-- Activar / revocar -->
                                         {% if c.id != 'cliente-demo-a' %}
@@ -198,6 +266,40 @@
                                             </form>
                                         {% endif %}
                                     </div>
+                                </td>
+                            </tr>
+                            <!-- Fila inline de edición de licencia -->
+                            <tr class="lic-row" id="lic-{{ c.id }}">
+                                <td colspan="8" style="padding:0 14px 14px;">
+                                    <form method="post" action="/clientes/{{ c.id }}/licencia">
+                                        <div class="lic-form">
+                                            <div class="form-group">
+                                                <label>Plan</label>
+                                                <select name="plan">
+                                                    <option value="lite" {{ 'selected' if (c.plan or 'lite') == 'lite' }}>Lite</option>
+                                                    <option value="standard" {{ 'selected' if c.plan == 'standard' }}>Standard</option>
+                                                    <option value="pro" {{ 'selected' if c.plan == 'pro' }}>Pro</option>
+                                                    <option value="managed" {{ 'selected' if c.plan == 'managed' }}>Managed</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Licencia válida hasta</label>
+                                                <input type="date" name="expiry_licencia"
+                                                       value="{{ c.expiry_licencia or '' }}"
+                                                       title="Vacío = perpetua">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Soporte activo hasta</label>
+                                                <input type="date" name="expiry_soporte"
+                                                       value="{{ c.expiry_soporte or '' }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-success" style="width:100%;">
+                                                    💾 Guardar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -225,6 +327,11 @@
     applyTheme(saved === 'dark' || (!saved && prefersDark));
     btn.addEventListener('click', function () { applyTheme(!isDark()); });
 }());
+
+function toggleLic(clienteId) {
+    var row = document.getElementById('lic-' + clienteId);
+    if (row) row.classList.toggle('open');
+}
 </script>
 </body>
 </html>

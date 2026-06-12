@@ -142,6 +142,50 @@ def db_connect():
     return conn
 
 
+def _migrate_license_columns():
+    """Añade columnas de licencia a central_clients si aún no existen (migración no destructiva)."""
+    with db_connect() as conn:
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(central_clients)").fetchall()}
+        pending = [
+            ("plan",             "TEXT NOT NULL DEFAULT 'lite'"),
+            ("expiry_licencia",  "TEXT"),
+            ("expiry_soporte",   "TEXT"),
+        ]
+        for col, definition in pending:
+            if col not in cols:
+                conn.execute(f"ALTER TABLE central_clients ADD COLUMN {col} {definition}")
+        conn.commit()
+
+
+def _get_license_info(cliente_id: str) -> dict:
+    """Calcula el estado de licencia y soporte de un cliente."""
+    with db_connect() as conn:
+        row = conn.execute(
+            "SELECT plan, expiry_licencia, expiry_soporte FROM central_clients WHERE id = ?",
+            (cliente_id,),
+        ).fetchone()
+    if not row:
+        return {"plan": "lite", "soporte_activo": False, "dias_soporte": 0, "expiry_soporte": ""}
+    plan = row["plan"] or "lite"
+    expiry_soporte = row["expiry_soporte"] or ""
+    soporte_activo = False
+    dias_soporte = 0
+    if expiry_soporte:
+        try:
+            expiry_dt = datetime.strptime(expiry_soporte, "%Y-%m-%d")
+            dias_soporte = (expiry_dt - datetime.now()).days
+            soporte_activo = dias_soporte >= 0
+        except Exception:
+            pass
+    return {
+        "plan": plan,
+        "soporte_activo": soporte_activo,
+        "dias_soporte": max(0, dias_soporte),
+        "expiry_soporte": expiry_soporte,
+        "expiry_licencia": row["expiry_licencia"] or "",
+    }
+
+
 def init_db():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -153,7 +197,10 @@ def init_db():
                 nombre TEXT NOT NULL,
                 token TEXT NOT NULL,
                 activo INTEGER NOT NULL DEFAULT 1,
-                fecha_alta TEXT NOT NULL
+                fecha_alta TEXT NOT NULL,
+                plan TEXT NOT NULL DEFAULT 'lite',
+                expiry_licencia TEXT,
+                expiry_soporte TEXT
             )
             """
         )
@@ -206,23 +253,16 @@ def init_db():
         conn.execute(
             """
             INSERT OR IGNORE INTO central_clients (
-                id,
-                nombre,
-                token,
-                activo,
-                fecha_alta
+                id, nombre, token, activo, fecha_alta
             )
             VALUES (?, ?, ?, 1, ?)
             """,
-            (
-                DEMO_CLIENT_ID,
-                DEMO_CLIENT_NAME,
-                DEMO_CLIENT_TOKEN,
-                now_text(),
-            ),
+            (DEMO_CLIENT_ID, DEMO_CLIENT_NAME, DEMO_CLIENT_TOKEN, now_text()),
         )
 
         conn.commit()
+
+    _migrate_license_columns()
 
 
 def validate_client_token(cliente_id, token):
@@ -953,7 +993,8 @@ def list_clients() -> list:
     with db_connect() as conn:
         rows = conn.execute(
             """
-            SELECT id, nombre, token, activo, fecha_alta
+            SELECT id, nombre, token, activo, fecha_alta,
+                   plan, expiry_licencia, expiry_soporte
             FROM central_clients
             ORDER BY fecha_alta DESC
             """
@@ -961,20 +1002,51 @@ def list_clients() -> list:
     return [dict(row) for row in rows]
 
 
-def add_client(client_id: str, nombre: str) -> dict:
+def add_client(
+    client_id: str,
+    nombre: str,
+    plan: str = "lite",
+    expiry_licencia: str = "",
+    expiry_soporte: str = "",
+) -> dict:
     """Alta de cliente con token seguro (256 bits). Devuelve el dict con el token."""
     token = secrets.token_hex(32)
     now = now_text()
     with db_connect() as conn:
         conn.execute(
             """
-            INSERT INTO central_clients (id, nombre, token, activo, fecha_alta)
-            VALUES (?, ?, ?, 1, ?)
+            INSERT INTO central_clients
+                (id, nombre, token, activo, fecha_alta, plan, expiry_licencia, expiry_soporte)
+            VALUES (?, ?, ?, 1, ?, ?, ?, ?)
             """,
-            (client_id, nombre, token, now),
+            (client_id, nombre, token, now, plan or "lite",
+             expiry_licencia or None, expiry_soporte or None),
         )
         conn.commit()
-    return {"id": client_id, "nombre": nombre, "token": token, "activo": 1, "fecha_alta": now}
+    return {
+        "id": client_id, "nombre": nombre, "token": token, "activo": 1,
+        "fecha_alta": now, "plan": plan or "lite",
+        "expiry_licencia": expiry_licencia, "expiry_soporte": expiry_soporte,
+    }
+
+
+def update_client_license(
+    client_id: str,
+    plan: str,
+    expiry_licencia: str = "",
+    expiry_soporte: str = "",
+) -> None:
+    """Actualiza plan y fechas de expiración de un cliente."""
+    with db_connect() as conn:
+        conn.execute(
+            """
+            UPDATE central_clients
+            SET plan = ?, expiry_licencia = ?, expiry_soporte = ?
+            WHERE id = ?
+            """,
+            (plan or "lite", expiry_licencia or None, expiry_soporte or None, client_id),
+        )
+        conn.commit()
 
 
 def set_client_active(client_id: str, activo: int):
@@ -1011,6 +1083,7 @@ def central_clientes(request: Request):
             "msg": request.query_params.get("msg"),
             "nuevo_token": request.query_params.get("nuevo_token"),
             "nuevo_cliente_id": request.query_params.get("nuevo_cliente_id"),
+            "now_date": datetime.now().strftime("%Y-%m-%d"),
             **get_central_session_context(request),
         },
     )
@@ -1021,6 +1094,9 @@ def central_cliente_nuevo(
     request: Request,
     cliente_id: str = Form(...),
     nombre: str = Form(...),
+    plan: str = Form("lite"),
+    expiry_licencia: str = Form(""),
+    expiry_soporte: str = Form(""),
 ):
     guard = require_admin(request)
     if guard is not None:
@@ -1035,11 +1111,16 @@ def central_cliente_nuevo(
             url=f"/clientes?msg=Ya+existe+un+cliente+con+ID+{cliente_id}",
             status_code=303,
         )
-    cliente = add_client(cliente_id, nombre)
+    cliente = add_client(
+        cliente_id, nombre,
+        plan=plan or "lite",
+        expiry_licencia=expiry_licencia.strip(),
+        expiry_soporte=expiry_soporte.strip(),
+    )
     add_audit_log(
         usuario=request.session.get("central_user", "admin"),
         accion="cliente_nuevo",
-        detalle=f"Nuevo cliente: {nombre} (ID: {cliente_id})",
+        detalle=f"Nuevo cliente: {nombre} (ID: {cliente_id}, plan: {plan})",
     )
     return RedirectResponse(
         url=(
@@ -1047,6 +1128,37 @@ def central_cliente_nuevo(
             f"&nuevo_cliente_id={cliente_id}"
             f"&msg=Cliente+creado+correctamente"
         ),
+        status_code=303,
+    )
+
+
+@app.post("/clientes/{cliente_id}/licencia")
+def central_cliente_licencia(
+    request: Request,
+    cliente_id: str,
+    plan: str = Form("lite"),
+    expiry_licencia: str = Form(""),
+    expiry_soporte: str = Form(""),
+):
+    guard = require_admin(request)
+    if guard is not None:
+        return guard
+    clientes = list_clients()
+    if not any(c["id"] == cliente_id for c in clientes):
+        return RedirectResponse(url="/clientes?msg=Cliente+no+encontrado", status_code=303)
+    update_client_license(
+        cliente_id,
+        plan=plan or "lite",
+        expiry_licencia=expiry_licencia.strip(),
+        expiry_soporte=expiry_soporte.strip(),
+    )
+    add_audit_log(
+        usuario=request.session.get("central_user", "admin"),
+        accion="licencia_actualizada",
+        detalle=f"Cliente {cliente_id}: plan={plan}, soporte_hasta={expiry_soporte or '—'}",
+    )
+    return RedirectResponse(
+        url=f"/clientes?msg=Licencia+actualizada+para+{cliente_id}",
         status_code=303,
     )
 
@@ -1226,7 +1338,20 @@ def receive_heartbeat(
         nombre_cliente=payload.nombre_cliente,
         datos=payload.dict(),
     )
-    return {"ok": True, "mensaje": "Heartbeat registrado"}
+    licencia = _get_license_info(payload.cliente_id)
+    return {"ok": True, "mensaje": "Heartbeat registrado", "licencia": licencia}
+
+
+@app.get("/api/v1/license/status")
+def get_license_status(
+    x_vigex_client_id: Optional[str] = Header(default=None),
+    x_vigex_client_token: Optional[str] = Header(default=None),
+):
+    """Devuelve el estado de licencia de un cliente autenticado."""
+    client_id = (x_vigex_client_id or "").strip()
+    if not client_id or not validate_client_token(client_id, x_vigex_client_token):
+        raise HTTPException(status_code=401, detail="Autenticación requerida")
+    return _get_license_info(client_id)
 
 
 @app.get("/salud", response_class=HTMLResponse)

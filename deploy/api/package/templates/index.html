@@ -106,6 +106,14 @@
     </div>
 </div>
 
+{% if central_enabled and licencia_info and not licencia_info.get('soporte_activo', True) %}
+<div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#92400e;">
+    <i class="fa-solid fa-circle-exclamation" style="font-size:1.1rem;color:#f59e0b;flex-shrink:0;"></i>
+    <span>Tu plan de soporte no está activo. El panel funciona con normalidad pero no recibirás actualizaciones ni atención técnica.
+    <a href="https://vigex.es/#precios" target="_blank" rel="noopener" style="color:#92400e;font-weight:700;margin-left:4px;">Renovar soporte →</a></span>
+</div>
+{% endif %}
+
 <!-- ── Dashboard de estado (R-058 / Ruta 7.2) ── -->
 <div class="status-row" id="status-row">
 
