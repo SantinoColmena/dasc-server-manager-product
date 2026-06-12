@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Cumplimiento NIS2 — Vigex{% endblock %}
+{% block title %}{{ t('cum.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -185,11 +185,9 @@
     <div>
         <h1 class="comp-title">
             <i class="fa-solid fa-scale-balanced" style="color:#6d28d9; margin-right:.4rem;"></i>
-            Cumplimiento NIS2 / ENS / ISO 27001
+            {{ t('cum.page_title') }}
         </h1>
-        <p class="comp-subtitle">
-            Evidencias técnicas automáticas por control normativo · Catálogo v1.0 · Fase 13 (R-093)
-        </p>
+        <p class="comp-subtitle">{{ t('cum.page_subtitle') }}</p>
     </div>
     <span class="comp-badge"><i class="fa-solid fa-flask"></i> Beta — R-093</span>
 </div>
@@ -197,31 +195,26 @@
 <!-- Barra de acciones -->
 <div class="comp-actions">
     {% if is_admin %}
-    <button class="comp-btn" id="btn-recoger" onclick="recogerEvidencias()">
-        <i class="fa-solid fa-rotate"></i> Recoger evidencias ahora
+    <button class="comp-btn" id="btn-recoger">
+        <i class="fa-solid fa-rotate"></i> {{ t('cum.btn_collect') }}
     </button>
     {% endif %}
-    <button class="comp-btn" id="btn-dossier-md" onclick="exportarDossier('md')" style="background:#4f46e5;" title="Descargar en Markdown (para integración técnica)">
+    <button class="comp-btn" id="btn-dossier-md" style="background:#4f46e5;" title="Descargar en Markdown (para integración técnica)">
         <i class="fa-solid fa-file-lines"></i> Exportar MD
     </button>
-    <button class="comp-btn" id="btn-dossier-html" onclick="exportarDossier('html')" style="background:#0f766e;" title="Descargar en HTML — imprime a PDF con Ctrl+P">
+    <button class="comp-btn" id="btn-dossier-html" style="background:#0f766e;" title="Descargar en HTML — imprime a PDF con Ctrl+P">
         <i class="fa-solid fa-file-code"></i> Exportar HTML
     </button>
     <a href="/incidentes" class="comp-btn" style="background:#dc2626; text-decoration:none;">
-        <i class="fa-solid fa-triangle-exclamation"></i> Incidentes NIS2
+        <i class="fa-solid fa-triangle-exclamation"></i> {{ t('cum.btn_incidents') }}
     </a>
-    <span class="comp-last-run" id="ultima-recoleccion">Cargando…</span>
+    <span class="comp-last-run" id="ultima-recoleccion">{{ t('cum.loading') }}</span>
 </div>
 
 <!-- Aviso de rigor -->
 <div class="comp-aviso">
     <i class="fa-solid fa-triangle-exclamation" style="margin-top:.1rem; flex-shrink:0;"></i>
-    <span>
-        <strong>Aviso de rigor:</strong> este módulo muestra la evidencia técnica que Vigex genera
-        automáticamente. <strong>No certifica cumplimiento normativo</strong> — eso requiere una
-        auditoría formal por un organismo acreditado. Antes de presentar este dossier ante un
-        auditor debe validarse contra el texto normativo real (R-096).
-    </span>
+    <span>{{ t('cum.aviso') | safe }}</span>
 </div>
 
 <!-- Banner de atención -->
@@ -239,25 +232,75 @@
 <div class="comp-toolbar">
     <div id="comp-filters" style="display:flex; gap:.4rem; flex-wrap:wrap;"></div>
     <div class="comp-legend">
-        <span class="comp-legend-item"><span class="comp-dot dot-completa"></span> Completa</span>
-        <span class="comp-legend-item"><span class="comp-dot dot-parcial"></span> Parcial</span>
-        <span class="comp-legend-item"><span class="comp-dot dot-ausente"></span> No cubierta</span>
+        <span class="comp-legend-item"><span class="comp-dot dot-completa"></span> {{ t('cum.legend_full') }}</span>
+        <span class="comp-legend-item"><span class="comp-dot dot-parcial"></span> {{ t('cum.legend_partial') }}</span>
+        <span class="comp-legend-item"><span class="comp-dot dot-ausente"></span> {{ t('cum.legend_none') }}</span>
     </div>
 </div>
 
 <!-- Lista de familias -->
 <div class="comp-families" id="comp-families">
-    <div class="comp-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando controles…</div>
+    <div class="comp-loading"><i class="fa-solid fa-spinner fa-spin"></i> {{ t('cum.loading') }}</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<div id="cum-i18n" style="display:none"
+    data-fresh="{{ t('cum.js_fresh') }}"
+    data-expired-badge="{{ t('cum.js_expired_badge') }}"
+    data-noev="{{ t('cum.js_noev') }}"
+    data-nocol="{{ t('cum.js_nocol') }}"
+    data-last-run="{{ t('cum.js_last_run') }}"
+    data-no-ev-yet="{{ t('cum.js_no_ev_yet') }}"
+    data-fresh-card="{{ t('cum.js_fresh_card') }}"
+    data-fresh-of-col="{{ t('cum.js_fresh_of_col') }}"
+    data-expired-card="{{ t('cum.js_expired_card') }}"
+    data-pending-suf="{{ t('cum.js_pending_suf') }}"
+    data-attention="{{ t('cum.js_attention') }}"
+    data-ev-exp-in="{{ t('cum.js_ev_exp_in') }}"
+    data-no-ev-in="{{ t('cum.js_no_ev_in') }}"
+    data-banner-tail="{{ t('cum.js_banner_tail') }}"
+    data-all="{{ t('cum.js_all') }}"
+    data-ev-title="{{ t('cum.js_ev_title') }}"
+    data-no-filter="{{ t('cum.js_no_filter') }}"
+    data-generating="{{ t('cum.js_generating') }}"
+    data-collecting="{{ t('cum.js_collecting') }}"
+    data-collect-btn="{{ t('cum.js_collect_btn') }}"
+    data-net-err="{{ t('cum.js_net_err') }}"
+    data-load-err="{{ t('cum.js_load_err') }}">
+</div>
 <script>
 (function () {
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    let catData   = null;   // /api/cumplimiento/controles
-    let estadoData = null;  // /api/cumplimiento/estado
-    let evData    = {};     // familia_id → {ts, datos_json, sha256, tipo}
+    const _el  = document.getElementById('cum-i18n');
+    const i18n = {
+        fresh:       _el.dataset.fresh,
+        expiredBadge: _el.dataset.expiredBadge,
+        noev:        _el.dataset.noev,
+        nocol:       _el.dataset.nocol,
+        lastRun:     _el.dataset.lastRun,
+        noEvYet:     _el.dataset.noEvYet,
+        freshCard:   _el.dataset.freshCard,
+        freshOfCol:  _el.dataset.freshOfCol,
+        expiredCard: _el.dataset.expiredCard,
+        pendingSuf:  _el.dataset.pendingSuf,
+        attention:   _el.dataset.attention,
+        evExpIn:     _el.dataset.evExpIn,
+        noEvIn:      _el.dataset.noEvIn,
+        bannerTail:  _el.dataset.bannerTail,
+        all:         _el.dataset.all,
+        evTitle:     _el.dataset.evTitle,
+        noFilter:    _el.dataset.noFilter,
+        generating:  _el.dataset.generating,
+        collecting:  _el.dataset.collecting,
+        collectBtn:  _el.dataset.collectBtn,
+        netErr:      _el.dataset.netErr,
+        loadErr:     _el.dataset.loadErr,
+    };
+
+    let catData   = null;
+    let estadoData = null;
+    let evData    = {};
     let activeFilter = 'all';
 
     /* ── Helpers ──────────────────────────────────────────────────── */
@@ -271,10 +314,10 @@
 
     function evBadge(frescura) {
         const map = {
-            fresca:     ['ev-fresca',   'fa-circle-check',  'Fresca'],
-            caducada:   ['ev-caducada', 'fa-clock',         'Caducada'],
-            sin_evidencia: ['ev-noev',  'fa-circle-xmark',  'Sin evidencia'],
-            sin_colector:  ['ev-nocolec','fa-minus',         'Sin colector'],
+            fresca:        ['ev-fresca',   'fa-circle-check',  i18n.fresh],
+            caducada:      ['ev-caducada', 'fa-clock',         i18n.expiredBadge],
+            sin_evidencia: ['ev-noev',     'fa-circle-xmark',  i18n.noev],
+            sin_colector:  ['ev-nocolec',  'fa-minus',         i18n.nocol],
         };
         const [cls, ico, txt] = map[frescura] || map['sin_evidencia'];
         return `<span class="comp-ev-badge ${cls}"><i class="fa-solid ${ico}"></i> ${txt}</span>`;
@@ -314,7 +357,7 @@
             renderLastRun();
         } catch (e) {
             document.getElementById('comp-families').innerHTML =
-                '<div class="comp-loading" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> Error al cargar</div>';
+                `<div class="comp-loading" style="color:#ef4444"><i class="fa-solid fa-circle-xmark"></i> ${i18n.loadErr}</div>`;
         }
     }
 
@@ -323,8 +366,8 @@
         const el = document.getElementById('ultima-recoleccion');
         if (!el) return;
         el.textContent = todas.length
-            ? 'Última recolección: ' + fmt(todas.sort().reverse()[0])
-            : 'Sin evidencias recogidas todavía';
+            ? i18n.lastRun + fmt(todas.sort().reverse()[0])
+            : i18n.noEvYet;
     }
 
     /* ── Tarjetas de estado ─────────────────────────────────────────── */
@@ -333,14 +376,14 @@
         const normaStats = catData.cobertura_por_norma;
         let html = `
         <div class="comp-stat-card fresh">
-            <div class="comp-stat-label">Evidencias frescas</div>
+            <div class="comp-stat-label">${i18n.freshCard}</div>
             <div class="comp-stat-val">${r.fresca}</div>
-            <div class="comp-stat-sub">de ${r.familias_con_colector} familias con colector</div>
+            <div class="comp-stat-sub">${i18n.freshCard.slice(0,2) !== 'de' ? '' : ''}${r.familias_con_colector}${i18n.freshOfCol}</div>
         </div>
         <div class="comp-stat-card stale">
-            <div class="comp-stat-label">Caducadas (&gt;${estadoData.max_age_dias}d)</div>
+            <div class="comp-stat-label">${i18n.expiredCard} (&gt;${estadoData.max_age_dias}d)</div>
             <div class="comp-stat-val">${r.caducada}</div>
-            <div class="comp-stat-sub">${r.sin_evidencia} sin recoger todavía</div>
+            <div class="comp-stat-sub">${r.sin_evidencia}${i18n.pendingSuf}</div>
         </div>`;
 
         for (const [norma, s] of Object.entries(normaStats)) {
@@ -369,11 +412,11 @@
         if (!problemáticas.length || !banner) return;
         const caducadas = problemáticas.filter(f => f.frescura === 'caducada').map(f => f.familia_nombre);
         const sinEv = problemáticas.filter(f => f.frescura === 'sin_evidencia').map(f => f.familia_nombre);
-        let msg = '<strong>Atención:</strong> ';
+        let msg = `<strong>${i18n.attention}</strong> `;
         const partes = [];
-        if (caducadas.length) partes.push(`evidencia caducada en <em>${caducadas.join(', ')}</em>`);
-        if (sinEv.length)     partes.push(`sin evidencia en <em>${sinEv.join(', ')}</em>`);
-        txt.innerHTML = msg + partes.join(' · ') + '. Pulsa "Recoger evidencias ahora" para actualizar.';
+        if (caducadas.length) partes.push(`${i18n.evExpIn} <em>${caducadas.join(', ')}</em>`);
+        if (sinEv.length)     partes.push(`${i18n.noEvIn} <em>${sinEv.join(', ')}</em>`);
+        txt.innerHTML = msg + partes.join(' · ') + i18n.bannerTail;
         banner.classList.add('visible');
     }
 
@@ -381,7 +424,7 @@
     function buildFilters() {
         const normas = [...new Set(catData.controles.map(c => c.norma))];
         const container = document.getElementById('comp-filters');
-        container.innerHTML = '<button class="comp-filter-btn active" data-norma="all">Todas</button>';
+        container.innerHTML = `<button class="comp-filter-btn active" data-norma="all">${i18n.all}</button>`;
         for (const n of normas) {
             const btn = document.createElement('button');
             btn.className = 'comp-filter-btn'; btn.dataset.norma = n; btn.textContent = n;
@@ -404,7 +447,6 @@
         let data = {};
         try { data = JSON.parse(ev.datos_json); } catch {}
 
-        // Renderizado tipo-específico
         let rows = '';
         const kv = (k, v) => v != null
             ? `<div class="comp-ev-kv"><div class="comp-ev-k">${k}</div><div class="comp-ev-v">${v}</div></div>`
@@ -469,7 +511,7 @@
         return `
         <div class="comp-ev-detail">
             <div class="comp-ev-detail-header">
-                <span class="comp-ev-detail-title"><i class="fa-solid fa-database" style="color:#6d28d9;margin-right:.35rem;"></i>Última evidencia recogida</span>
+                <span class="comp-ev-detail-title"><i class="fa-solid fa-database" style="color:#6d28d9;margin-right:.35rem;"></i>${i18n.evTitle}</span>
                 <span class="comp-ev-detail-ts">${fmt(ev.ts)}</span>
             </div>
             <div class="comp-ev-grid">${rows}</div>
@@ -551,7 +593,7 @@
         }
 
         document.getElementById('comp-families').innerHTML =
-            html || '<div class="comp-loading">Sin controles para este filtro</div>';
+            html || `<div class="comp-loading">${i18n.noFilter}</div>`;
     }
 
     /* ── Interacciones ─────────────────────────────────────────────── */
@@ -564,7 +606,7 @@
         const ico   = isMd ? 'fa-file-lines' : 'fa-file-code';
         const label = isMd ? 'Exportar MD' : 'Exportar HTML';
         const btn   = document.getElementById(btnId);
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.generating}`; }
         try {
             const r = await fetch(`/api/cumplimiento/dossier?formato=${fmt}`, { headers: { 'X-CSRF-Token': CSRF } });
             if (!r.ok) {
@@ -580,32 +622,41 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
             URL.revokeObjectURL(url);
-        } catch { alert('Error de red'); }
+        } catch { alert(i18n.netErr); }
         finally {
             if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-solid ${ico}"></i> ${label}`; }
         }
     };
 
-    window.recogerEvidencias = async function () {
-        const btn = document.getElementById('btn-recoger');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recogiendo…'; }
-        try {
-            const r = await fetch('/api/cumplimiento/recoger', {
-                method: 'POST', headers: { 'X-CSRF-Token': CSRF }
-            });
-            if (r.ok) {
-                evData = {};
-                document.getElementById('comp-atencion')?.classList.remove('visible');
-                await loadData();
-            } else {
-                const res = await r.json().catch(() => ({}));
-                alert('Error: ' + (res.detail || r.status));
+    const btnRecoger = document.getElementById('btn-recoger');
+    if (btnRecoger) {
+        btnRecoger.addEventListener('click', async function () {
+            btnRecoger.disabled = true;
+            btnRecoger.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.collecting}`;
+            try {
+                const r = await fetch('/api/cumplimiento/recoger', {
+                    method: 'POST', headers: { 'X-CSRF-Token': CSRF }
+                });
+                if (r.ok) {
+                    evData = {};
+                    document.getElementById('comp-atencion')?.classList.remove('visible');
+                    await loadData();
+                } else {
+                    const res = await r.json().catch(() => ({}));
+                    alert('Error: ' + (res.detail || r.status));
+                }
+            } catch { alert(i18n.netErr); }
+            finally {
+                btnRecoger.disabled = false;
+                btnRecoger.innerHTML = `<i class="fa-solid fa-rotate"></i> ${i18n.collectBtn}`;
             }
-        } catch { alert('Error de red'); }
-        finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recoger evidencias ahora'; }
-        }
-    };
+        });
+    }
+
+    const btnMd   = document.getElementById('btn-dossier-md');
+    const btnHtml = document.getElementById('btn-dossier-html');
+    if (btnMd)   btnMd.addEventListener('click',   () => exportarDossier('md'));
+    if (btnHtml) btnHtml.addEventListener('click',  () => exportarDossier('html'));
 
     loadData();
 })();
