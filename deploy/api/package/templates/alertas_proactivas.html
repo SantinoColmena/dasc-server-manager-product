@@ -1,10 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Notificaciones proactivas — Vigex{% endblock %}
+{% block title %}{{ t('prn.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <meta name="csrf-token" content="{{ csrf_token_value(request) }}">
 <style>
-    /* ── Check cards (Ruta 7.5) ── */
     .check-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -15,7 +14,7 @@
     @media (max-width: 540px) { .check-grid { grid-template-columns: 1fr; } }
 
     .check-card {
-        background: #fff;
+        background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 20px;
@@ -23,27 +22,14 @@
         flex-direction: column;
         gap: 8px;
     }
-    .check-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 4px;
-    }
-    .check-icon {
-        width: 40px; height: 40px;
-        border-radius: 11px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px; flex-shrink: 0;
-    }
+    .check-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .check-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
     .check-icon.teal   { background: #ccfbf1; color: #0d9488; }
     .check-icon.green  { background: #dcfce7; color: #16a34a; }
     .check-icon.indigo { background: #eef2ff; color: #4f46e5; }
     .check-icon.slate  { background: #f1f5f9; color: #475569; }
 
-    .check-badge {
-        font-size: 11px; font-weight: 700;
-        padding: 3px 9px; border-radius: 99px; white-space: nowrap;
-    }
+    .check-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
     .check-badge.ok       { background: #dcfce7; color: #15803d; }
     .check-badge.error    { background: #fee2e2; color: #b91c1c; }
     .check-badge.warn     { background: #fef3c7; color: #b45309; }
@@ -55,7 +41,6 @@
     .check-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
     .check-alerts { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-    /* ── Config grid ── */
     .config-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -63,35 +48,30 @@
         margin-top: 14px;
     }
     .config-item {
-        background: #f8fafc;
+        background: var(--bg);
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 12px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
+        display: flex; flex-direction: column; gap: 3px;
     }
     .config-item-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
     .config-item-value { font-size: 14px; font-weight: 600; color: var(--text); }
 
-    /* ── Alert log ── */
-    .log-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
+    .log-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); }
     .log-table { width: 100%; border-collapse: collapse; min-width: 500px; }
     .log-table th, .log-table td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-    .log-table th { background: #f8fafc; color: #334155; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    .log-table th { background: var(--bg); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
     .log-table tr:last-child td { border-bottom: none; }
     .log-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
     .log-badge.ok    { background: #dcfce7; color: #15803d; }
     .log-badge.error { background: #fee2e2; color: #b91c1c; }
     .log-badge.muted { background: #f1f5f9; color: #64748b; }
 
-    /* ── Channels pill ── */
     .channel-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     .channel-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid; }
     .channel-pill.on  { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
     .channel-pill.off { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
 
-    /* ── Check spinner ── */
     .spin-btn { position: relative; }
     .spin-btn.loading i { animation: btn-spin .7s linear infinite; }
     @keyframes btn-spin { to { transform: rotate(360deg); } }
@@ -100,14 +80,14 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Notificaciones</h3>
+    <h3>{{ t('prn.sidebar_title') }}</h3>
     <p><span class="dot {{ 'ok' if notif_enabled else 'off' }}"></span>
-       Estado: {{ 'Activas' if notif_enabled else 'Desactivadas' }}</p>
-    <p><span class="dot ok"></span> Intervalo: {{ notif_interval_min }} min</p>
+       {{ t('prn.sidebar_active') if notif_enabled else t('prn.sidebar_inactive') }}</p>
+    <p><span class="dot ok"></span> {{ t('prn.sidebar_interval') }}{{ notif_interval_min }} min</p>
     {% if estado.last_run %}
-    <p><span class="dot ok"></span> Última: {{ estado.last_run[11:16] }}</p>
+    <p><span class="dot ok"></span> {{ t('prn.sidebar_last') }}{{ estado.last_run[11:16] }}</p>
     {% endif %}
-    <p><span class="dot off"></span> Ejecuciones: {{ estado.runs_total }}</p>
+    <p><span class="dot off"></span> {{ t('prn.sidebar_runs') }}{{ estado.runs_total }}</p>
 </div>
 {% endblock %}
 
@@ -115,16 +95,16 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Notificaciones automáticas</h2>
-        <p class="page-subtitle">El panel vigila el disco, las copias y los servicios, y te avisa antes de que haya un problema.</p>
+        <h2 class="page-title">{{ t('prn.title') }}</h2>
+        <p class="page-subtitle">{{ t('prn.subtitle') }}</p>
     </div>
     <div class="topbar-actions">
         {% if notif_enabled %}
-        <div class="status-pill"><i class="fa-solid fa-circle-dot" style="color:#22c55e;"></i> Vigilando activamente</div>
+        <div class="status-pill"><i class="fa-solid fa-circle-dot" style="color:#22c55e;"></i> {{ t('prn.pill_active') }}</div>
         {% else %}
-        <div class="status-pill"><i class="fa-solid fa-circle-dot" style="color:#94a3b8;"></i> Desactivadas</div>
+        <div class="status-pill"><i class="fa-solid fa-circle-dot" style="color:#94a3b8;"></i> {{ t('prn.pill_inactive') }}</div>
         {% endif %}
-        <a href="/alertas" class="btn"><i class="fa-solid fa-arrow-left"></i> Volver a Alertas</a>
+        <a href="/alertas" class="btn"><i class="fa-solid fa-arrow-left"></i> {{ t('prn.btn_back') }}</a>
     </div>
 </div>
 
@@ -132,143 +112,136 @@
 <div class="notice warning">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <div>
-        <strong>Las notificaciones proactivas están desactivadas.</strong>
-        Para activarlas, añade <code>NOTIF_ENABLED=true</code> y configura las variables <code>NOTIF_SMTP_*</code> en <code>config.env</code> y reinicia el panel.
+        <strong>{{ t('prn.notice_disabled') }}</strong>
+        {{ t('prn.notice_hint') | safe }}
     </div>
 </div>
 {% endif %}
 
-<!-- ── Estado de las comprobaciones ── -->
 {% set checks = estado.checks %}
 
 <div class="check-grid">
 
-    <!-- Disco -->
     {% set dk = checks.disk %}
     <div class="check-card">
         <div class="check-top">
             <div class="check-icon teal"><i class="fa-solid fa-hard-drive"></i></div>
             <span class="check-badge {% if dk.last_ok is none %}muted{% elif dk.last_ok %}ok{% else %}error{% endif %}">
-                {% if dk.last_ok is none %}Sin datos{% elif dk.last_ok %}OK{% else %}Alerta{% endif %}
+                {% if dk.last_ok is none %}{{ t('prn.badge_nodata') }}{% elif dk.last_ok %}{{ t('prn.badge_ok') }}{% else %}{{ t('prn.badge_alert') }}{% endif %}
             </span>
         </div>
         <div class="check-value">{{ dk.last_value or '—' }}</div>
-        <div class="check-sub">Umbral: {{ notif_threshold }}% · {{ dk.last_ts[11:16] if dk.last_ts else 'Nunca comprobado' }}</div>
-        <div class="check-label">Uso de disco (/)</div>
-        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ dk.alerts_sent }} alerta{{ 's' if dk.alerts_sent != 1 else '' }} enviada{{ 's' if dk.alerts_sent != 1 else '' }}</div>
+        <div class="check-sub">{{ t('prn.check_disk_threshold') }} {{ notif_threshold }}% · {{ dk.last_ts[11:16] if dk.last_ts else t('prn.check_disk_never') }}</div>
+        <div class="check-label">{{ t('prn.check_disk_label') }}</div>
+        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ dk.alerts_sent }}{{ t('prn.alerts_suf_1') if dk.alerts_sent == 1 else t('prn.alerts_suf_n') }}</div>
     </div>
 
-    <!-- Backup -->
     {% set bk = checks.backup %}
     <div class="check-card">
         <div class="check-top">
             <div class="check-icon green"><i class="fa-solid fa-database"></i></div>
             <span class="check-badge {% if bk.last_ok is none %}muted{% elif bk.last_ok %}ok{% else %}error{% endif %}">
-                {% if bk.last_ok is none %}Sin datos{% elif bk.last_ok %}OK{% else %}Alerta{% endif %}
+                {% if bk.last_ok is none %}{{ t('prn.badge_nodata') }}{% elif bk.last_ok %}{{ t('prn.badge_ok') }}{% else %}{{ t('prn.badge_alert') }}{% endif %}
             </span>
         </div>
         <div class="check-value">{{ bk.last_value or '—' }}</div>
-        <div class="check-sub">{{ bk.last_ts[11:16] if bk.last_ts else 'Nunca comprobado' }}</div>
-        <div class="check-label">Último backup</div>
-        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ bk.alerts_sent }} alerta{{ 's' if bk.alerts_sent != 1 else '' }} enviada{{ 's' if bk.alerts_sent != 1 else '' }}</div>
+        <div class="check-sub">{{ bk.last_ts[11:16] if bk.last_ts else t('prn.check_disk_never') }}</div>
+        <div class="check-label">{{ t('prn.check_backup_label') }}</div>
+        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ bk.alerts_sent }}{{ t('prn.alerts_suf_1') if bk.alerts_sent == 1 else t('prn.alerts_suf_n') }}</div>
     </div>
 
-    <!-- Servicios -->
     {% set sv = checks.services %}
     <div class="check-card">
         <div class="check-top">
             <div class="check-icon indigo"><i class="fa-solid fa-server"></i></div>
             <span class="check-badge {% if sv.last_ok is none %}muted{% elif sv.last_ok %}ok{% else %}error{% endif %}">
-                {% if sv.last_ok is none %}Sin datos{% elif sv.last_ok %}OK{% else %}Alerta{% endif %}
+                {% if sv.last_ok is none %}{{ t('prn.badge_nodata') }}{% elif sv.last_ok %}{{ t('prn.badge_ok') }}{% else %}{{ t('prn.badge_alert') }}{% endif %}
             </span>
         </div>
         <div class="check-value">{{ sv.last_value or '—' }}</div>
         <div class="check-sub">
-            {% if sv.inactive_list %}Inactivos: {{ sv.inactive_list|join(', ') }}
-            {% else %}{{ sv.last_ts[11:16] if sv.last_ts else 'Nunca comprobado' }}{% endif %}
+            {% if sv.inactive_list %}{{ t('prn.check_inactive') }} {{ sv.inactive_list|join(', ') }}
+            {% else %}{{ sv.last_ts[11:16] if sv.last_ts else t('prn.check_disk_never') }}{% endif %}
         </div>
-        <div class="check-label">Servicios del servidor</div>
-        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ sv.alerts_sent }} alerta{{ 's' if sv.alerts_sent != 1 else '' }} enviada{{ 's' if sv.alerts_sent != 1 else '' }}</div>
+        <div class="check-label">{{ t('prn.check_services_label') }}</div>
+        <div class="check-alerts"><i class="fa-solid fa-bell" style="font-size:10px;"></i> {{ sv.alerts_sent }}{{ t('prn.alerts_suf_1') if sv.alerts_sent == 1 else t('prn.alerts_suf_n') }}</div>
     </div>
 
 </div>
 
-<!-- ── Canales y configuración ── -->
 <section class="card card-mini" style="margin-bottom:18px;">
     <div class="card-head">
         <div class="card-icon"><i class="fa-solid fa-sliders"></i></div>
         <div class="card-title">
-            <h3>Configuración activa</h3>
-            <p>Leída de <code>config.env</code>. Para cambiar valores, edita el fichero y reinicia el panel. La edición desde el panel llegará en la Ruta 7.6.</p>
+            <h3>{{ t('prn.card_config') }}</h3>
+            <p>{{ t('prn.config_desc') | safe }}</p>
         </div>
     </div>
 
     <div class="channel-pills">
         <span class="channel-pill {{ 'on' if has_telegram else 'off' }}">
             <i class="fa-brands fa-telegram"></i>
-            Telegram {{ 'configurado' if has_telegram else 'sin configurar' }}
+            Telegram {{ t('prn.tg_on') if has_telegram else t('prn.tg_off') }}
         </span>
         <span class="channel-pill {{ 'on' if has_email else 'off' }}">
             <i class="fa-solid fa-envelope"></i>
-            Email {{ 'configurado' if has_email else 'sin configurar' }}
+            Email {{ t('prn.tg_on') if has_email else t('prn.tg_off') }}
         </span>
     </div>
 
     <div class="config-grid">
         <div class="config-item">
-            <div class="config-item-label">Destinatario email</div>
+            <div class="config-item-label">{{ t('prn.cfg_email_to') }}</div>
             <div class="config-item-value">{{ notif_email_to or '—' }}</div>
         </div>
         <div class="config-item">
-            <div class="config-item-label">Servidor SMTP</div>
+            <div class="config-item-label">{{ t('prn.cfg_smtp') }}</div>
             <div class="config-item-value">{{ notif_smtp_host or '—' }}</div>
         </div>
         <div class="config-item">
-            <div class="config-item-label">Umbral de disco</div>
+            <div class="config-item-label">{{ t('prn.cfg_threshold') }}</div>
             <div class="config-item-value">{{ notif_threshold }}%</div>
         </div>
         <div class="config-item">
-            <div class="config-item-label">Intervalo entre checks</div>
-            <div class="config-item-value">{{ notif_interval_min }} minutos</div>
+            <div class="config-item-label">{{ t('prn.cfg_interval') }}</div>
+            <div class="config-item-value">{{ notif_interval_min }}{{ t('prn.cfg_interval_unit') }}</div>
         </div>
         <div class="config-item">
-            <div class="config-item-label">Silencio entre alertas</div>
-            <div class="config-item-value">{{ notif_cooldown_h }} horas</div>
+            <div class="config-item-label">{{ t('prn.cfg_cooldown') }}</div>
+            <div class="config-item-value">{{ notif_cooldown_h }}{{ t('prn.cfg_cooldown_unit') }}</div>
         </div>
         <div class="config-item">
-            <div class="config-item-label">Última ejecución</div>
-            <div class="config-item-value">{{ estado.last_run or 'Aún no' }}</div>
+            <div class="config-item-label">{{ t('prn.cfg_last_run') }}</div>
+            <div class="config-item-value">{{ estado.last_run or t('prn.cfg_never') }}</div>
         </div>
     </div>
 </section>
 
-<!-- ── Acción manual ── -->
 <section class="card card-mini" style="margin-bottom:18px;">
     <div class="card-head">
         <div class="card-icon amber"><i class="fa-solid fa-play"></i></div>
         <div class="card-title">
-            <h3>Ejecutar comprobación ahora</h3>
-            <p>Lanza las tres comprobaciones en este momento sin esperar al siguiente ciclo automático. Los resultados aparecerán arriba al recargar.</p>
+            <h3>{{ t('prn.card_check') }}</h3>
+            <p>{{ t('prn.check_desc') }}</p>
         </div>
     </div>
     <div class="actions" style="flex-direction:row; flex-wrap:wrap;">
         <button class="btn primary spin-btn" id="btn-check-now">
-            <i class="fa-solid fa-rotate-right"></i> Comprobar ahora
+            <i class="fa-solid fa-rotate-right"></i> {{ t('prn.btn_check') }}
         </button>
         <div id="check-result" style="display:none; align-items:center; gap:8px; font-size:13px; color:var(--muted);">
             <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
-            <span id="check-result-text">Comprobación ejecutada.</span>
+            <span id="check-result-text"></span>
         </div>
     </div>
 </section>
 
-<!-- ── Log de alertas enviadas ── -->
 <section class="card card-mini">
     <div class="card-head">
         <div class="card-icon slate"><i class="fa-solid fa-list-check"></i></div>
         <div class="card-title">
-            <h3>Historial de alertas enviadas</h3>
-            <p>Últimas {{ estado.alert_log|length }} alertas despachadas en esta sesión del panel.</p>
+            <h3>{{ t('prn.card_log') }}</h3>
+            <p>{{ t('prn.log_desc_pre') }}{{ estado.alert_log|length }}{{ t('prn.log_desc_suf') }}</p>
         </div>
     </div>
 
@@ -276,10 +249,10 @@
         <table class="log-table">
             <thead>
                 <tr>
-                    <th>Fecha / hora</th>
-                    <th>Tipo</th>
-                    <th>Telegram</th>
-                    <th>Email</th>
+                    <th>{{ t('prn.th_date') }}</th>
+                    <th>{{ t('prn.th_type') }}</th>
+                    <th>{{ t('prn.th_tg') }}</th>
+                    <th>{{ t('prn.th_email') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -290,13 +263,13 @@
                     <td>
                         <span class="log-badge {% if entry.tg %}ok{% else %}muted{% endif %}">
                             <i class="fa-brands fa-telegram"></i>
-                            {{ 'Enviado' if entry.tg else 'No enviado' }}
+                            {{ t('prn.badge_sent') if entry.tg else t('prn.badge_not_sent') }}
                         </span>
                     </td>
                     <td>
                         <span class="log-badge {% if entry.mail %}ok{% else %}muted{% endif %}">
                             <i class="fa-solid fa-envelope"></i>
-                            {{ 'Enviado' if entry.mail else 'No enviado' }}
+                            {{ t('prn.badge_sent') if entry.mail else t('prn.badge_not_sent') }}
                         </span>
                     </td>
                 </tr>
@@ -304,7 +277,7 @@
                 {% if not estado.alert_log %}
                 <tr>
                     <td colspan="4" style="text-align:center; padding:24px; color:var(--muted);">
-                        Sin alertas enviadas en esta sesión. Buena señal. 🎉
+                        {{ t('prn.no_alerts') }}
                     </td>
                 </tr>
                 {% endif %}
@@ -316,9 +289,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<div id="prn-i18n" style="display:none"
+    data-done-pre="{{ t('prn.js_done_pre') }}"
+    data-done-suf="{{ t('prn.js_done_suf') }}"
+    data-error-pre="{{ t('prn.js_error_pre') }}"
+    data-no-conn="{{ t('prn.js_no_conn') }}"
+></div>
 <script>
 (function () {
     "use strict";
+    var _el = document.getElementById('prn-i18n').dataset;
     var btn = document.getElementById('btn-check-now');
     var resultBox = document.getElementById('check-result');
     var resultText = document.getElementById('check-result-text');
@@ -336,15 +316,15 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (data.ok) {
-                resultText.textContent = 'Comprobación ejecutada a las ' + (data.last_run || '').slice(11, 16) + '. Recarga para ver los resultados.';
+                resultText.textContent = _el.donePre + (data.last_run || '').slice(11, 16) + _el.doneSuf;
                 resultBox.style.display = 'flex';
             } else {
-                resultText.textContent = 'Error: ' + (data.error || 'desconocido');
+                resultText.textContent = _el.errorPre + (data.error || 'desconocido');
                 resultBox.style.display = 'flex';
             }
         })
         .catch(function () {
-            resultText.textContent = 'No se pudo conectar con el servidor.';
+            resultText.textContent = _el.noConn;
             resultBox.style.display = 'flex';
         })
         .finally(function () {

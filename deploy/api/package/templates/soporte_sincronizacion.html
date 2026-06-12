@@ -1,26 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Sincronización soporte — Vigex{% endblock %}
+{% block title %}{{ t('sin.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
     .sync-kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:18px; }
-    .sync-kpi-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
-    .sync-kpi-card span { display:block; font-size:13px; color:#57606a; margin-bottom:8px; }
+    .sync-kpi-card { background:var(--panel); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
+    .sync-kpi-card span { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; }
     .sync-kpi-card strong { display:block; font-size:30px; font-weight:800; color:var(--text); }
-    .filter-card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
+    .filter-card { background:var(--panel); border-radius:16px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
     .filter-links { display:flex; flex-wrap:wrap; gap:10px; }
-    .filter-links a { border-radius:999px; padding:8px 12px; text-decoration:none; background:#f6f8fa; color:#24292f; border:1px solid #d0d7de; font-weight:700; font-size:13px; }
+    .filter-links a { border-radius:999px; padding:8px 12px; text-decoration:none; background:var(--bg); color:var(--text); border:1px solid var(--border); font-weight:700; font-size:13px; }
     .filter-links a.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .table-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
+    .table-card { background:var(--panel); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
     .sync-table { width:100%; border-collapse:collapse; }
-    .sync-table th, .sync-table td { padding:12px; border-bottom:1px solid #d8dee4; text-align:left; vertical-align:top; }
-    .sync-table th { font-size:13px; color:#57606a; text-transform:uppercase; }
-    .muted { color:#57606a; font-size:13px; }
+    .sync-table th, .sync-table td { padding:12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+    .sync-table th { font-size:13px; color:var(--muted); text-transform:uppercase; }
+    .muted { color:var(--muted); font-size:13px; }
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; background:#ddf4ff; color:#0969da; }
     .badge.sent { background:#dafbe1; color:#116329; }
     .badge.error { background:#ffebe9; color:#82071e; }
     .badge.disabled { background:#fff8c5; color:#7d4e00; }
-    .badge.no_central { background:#f6f8fa; color:#57606a; border:1px solid #d0d7de; }
+    .badge.no_central { background:var(--bg); color:var(--muted); border:1px solid var(--border); }
     .detail-box { max-width:360px; word-break:break-word; }
     @media (max-width:900px) { .sync-kpi-grid { grid-template-columns:1fr 1fr; } .sync-table { font-size:13px; } }
 </style>
@@ -28,11 +28,11 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Sincronización</h3>
-    <p><span class="dot ok"></span> Total: {{ sync_summary.total }}</p>
-    <p><span class="dot ok"></span> Enviados: {{ sync_summary.sent }}</p>
-    <p><span class="dot warn"></span> Pendientes: {{ sync_summary.error }}</p>
-    <p><span class="dot off"></span> Desactivados: {{ sync_summary.disabled }}</p>
+    <h3>{{ t('sin.sidebar_title') }}</h3>
+    <p><span class="dot ok"></span> {{ t('sin.sidebar_total') }}{{ sync_summary.total }}</p>
+    <p><span class="dot ok"></span> {{ t('sin.sidebar_sent') }}{{ sync_summary.sent }}</p>
+    <p><span class="dot warn"></span> {{ t('sin.sidebar_pending') }}{{ sync_summary.error }}</p>
+    <p><span class="dot off"></span> {{ t('sin.sidebar_disabled') }}{{ sync_summary.disabled }}</p>
 </div>
 {% endblock %}
 
@@ -40,16 +40,16 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Sincronización local-central</h2>
-        <p class="page-subtitle">Cola de tickets enviados al panel central Vigex.</p>
+        <h2 class="page-title">{{ t('sin.title') }}</h2>
+        <p class="page-subtitle">{{ t('sin.subtitle') }}</p>
     </div>
     <div class="topbar-actions">
-        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-list"></i> Tickets</a>
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-list"></i> {{ t('sin.btn_tickets') }}</a>
         {% if sync_summary.pending and sync_summary.pending > 0 %}
         <form method="post" action="/soporte/sincronizacion/reintentar-central" style="display:inline;">
             {{ csrf_input(request) }}
             <button class="btn" type="submit" style="background:#b54708;color:#fff;border-color:#b54708;">
-                <i class="fa-solid fa-rotate"></i> Reintentar pendientes ({{ sync_summary.pending }})
+                <i class="fa-solid fa-rotate"></i> {{ t('sin.btn_retry') }} ({{ sync_summary.pending }})
             </button>
         </form>
         {% endif %}
@@ -61,11 +61,11 @@
 {% endif %}
 
 <div class="sync-kpi-grid">
-    <div class="sync-kpi-card"><span>Total local</span><strong>{{ sync_summary.total }}</strong></div>
-    <div class="sync-kpi-card"><span>Enviados</span><strong>{{ sync_summary.sent }}</strong></div>
-    <div class="sync-kpi-card"><span>Pendientes / error</span><strong>{{ sync_summary.error }}</strong></div>
-    <div class="sync-kpi-card"><span>Desactivados</span><strong>{{ sync_summary.disabled }}</strong></div>
-    <div class="sync-kpi-card"><span>Sin central</span><strong>{{ sync_summary.no_central }}</strong></div>
+    <div class="sync-kpi-card"><span>{{ t('sin.kpi_total') }}</span><strong>{{ sync_summary.total }}</strong></div>
+    <div class="sync-kpi-card"><span>{{ t('sin.kpi_sent') }}</span><strong>{{ sync_summary.sent }}</strong></div>
+    <div class="sync-kpi-card"><span>{{ t('sin.kpi_pending') }}</span><strong>{{ sync_summary.error }}</strong></div>
+    <div class="sync-kpi-card"><span>{{ t('sin.kpi_disabled') }}</span><strong>{{ sync_summary.disabled }}</strong></div>
+    <div class="sync-kpi-card"><span>{{ t('sin.kpi_nocentral') }}</span><strong>{{ sync_summary.no_central }}</strong></div>
 </div>
 
 <div class="filter-card">
@@ -83,8 +83,9 @@
     <table class="sync-table">
         <thead>
             <tr>
-                <th>Ticket local</th><th>Cliente</th><th>Estado central</th>
-                <th>Ticket central</th><th>Última sync</th><th>Detalle</th><th></th>
+                <th>{{ t('sin.th_local') }}</th><th>{{ t('sin.th_cliente') }}</th>
+                <th>{{ t('sin.th_central_state') }}</th><th>{{ t('sin.th_central_ticket') }}</th>
+                <th>{{ t('sin.th_sync_at') }}</th><th>{{ t('sin.th_detail') }}</th><th></th>
             </tr>
         </thead>
         <tbody>
@@ -100,10 +101,10 @@
                     <div class="muted">{{ ticket.contacto }} · {{ ticket.email }}</div>
                 </td>
                 <td>
-                    {% if state == "sent" %}<span class="badge sent">Enviado</span>
-                    {% elif state == "error" %}<span class="badge error">Pendiente / error</span>
-                    {% elif state == "disabled" %}<span class="badge disabled">Desactivado</span>
-                    {% else %}<span class="badge no_central">Sin central</span>
+                    {% if state == "sent" %}<span class="badge sent">{{ t('sin.badge_sent') }}</span>
+                    {% elif state == "error" %}<span class="badge error">{{ t('sin.badge_error') }}</span>
+                    {% elif state == "disabled" %}<span class="badge disabled">{{ t('sin.badge_disabled') }}</span>
+                    {% else %}<span class="badge no_central">{{ t('sin.badge_nocentral') }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -118,7 +119,7 @@
         </tbody>
     </table>
     {% else %}
-    <div class="empty-state"><p>No hay tickets para el filtro seleccionado.</p></div>
+    <div class="empty-state"><p>{{ t('sin.no_tickets') }}</p></div>
     {% endif %}
 </div>
 

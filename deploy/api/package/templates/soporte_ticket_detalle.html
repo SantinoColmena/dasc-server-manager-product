@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}{{ ticket.id }} — Soporte Vigex{% endblock %}
+{% block title %}{{ ticket.id }} — {{ t('tdt.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
-    .detail-card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
+    .detail-card { background:var(--panel); border-radius:16px; padding:22px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
     .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .field { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; }
-    .field span { display:block; color:#57606a; font-size:13px; margin-bottom:4px; }
-    .field select { width:100%; padding:10px; border-radius:10px; border:1px solid #d0d7de; font-family:inherit; }
-    pre { white-space:pre-wrap; word-break:break-word; background:#f6f8fa; border:1px solid #d0d7de; border-radius:12px; padding:14px; font-family:inherit; margin:0; }
-    .history-item { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; margin-bottom:10px; }
-    .history-item span { display:block; color:#57606a; font-size:13px; margin-bottom:4px; }
+    .field { border:1px solid var(--border); border-radius:12px; padding:12px; background:var(--bg); }
+    .field span { display:block; color:var(--muted); font-size:13px; margin-bottom:4px; }
+    .field select { width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); font-family:inherit; background:var(--bg); color:var(--text); }
+    pre { white-space:pre-wrap; word-break:break-word; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px; font-family:inherit; margin:0; color:var(--text); }
+    .history-item { border:1px solid var(--border); border-radius:12px; padding:12px; background:var(--bg); margin-bottom:10px; }
+    .history-item span { display:block; color:var(--muted); font-size:13px; margin-bottom:4px; }
     .sync-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    textarea.externo { width:100%; min-height:360px; padding:12px; border-radius:12px; border:1px solid #d0d7de; box-sizing:border-box; font-family:inherit; font-size:13px; }
-    textarea.respuesta { width:100%; min-height:260px; padding:12px; border-radius:12px; border:1px solid #d0d7de; box-sizing:border-box; font-family:inherit; font-size:13px; }
+    textarea.externo { width:100%; min-height:360px; padding:12px; border-radius:12px; border:1px solid var(--border); box-sizing:border-box; font-family:inherit; font-size:13px; background:var(--bg); color:var(--text); }
+    textarea.respuesta { width:100%; min-height:260px; padding:12px; border-radius:12px; border:1px solid var(--border); box-sizing:border-box; font-family:inherit; font-size:13px; background:var(--bg); color:var(--text); }
     @media (max-width:800px) { .detail-grid, .sync-grid-2 { grid-template-columns:1fr; } }
 </style>
 {% endblock %}
@@ -26,42 +26,42 @@
         <p class="page-subtitle">{{ ticket.tipo }} · {{ ticket.prioridad }} · {{ ticket.estado }}</p>
     </div>
     <div class="topbar-actions">
-        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-arrow-left"></i> Volver a tickets</a>
-        <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> Nuevo ticket</a>
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-arrow-left"></i> {{ t('tdt.btn_back') }}</a>
+        <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> {{ t('tdt.btn_new') }}</a>
     </div>
 </div>
 
 {% if ok == "1" %}
-<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>Ticket actualizado correctamente.</div></div>
+<div class="notice success"><i class="fa-solid fa-circle-check"></i><div>{{ t('tdt.ok_updated') }}</div></div>
 {% elif ok == "0" %}
-<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>No se pudo actualizar el ticket.</div></div>
+<div class="notice error"><i class="fa-solid fa-triangle-exclamation"></i><div>{{ t('tdt.err_update') }}</div></div>
 {% endif %}
 
 <div class="detail-card">
-    <h2 style="margin:0 0 14px;">Información del ticket</h2>
+    <h2 style="margin:0 0 14px;">{{ t('tdt.card_info') }}</h2>
     <div class="detail-grid">
-        <div class="field"><span>Cliente</span>{{ ticket.cliente }}</div>
-        <div class="field"><span>Contacto</span>{{ ticket.contacto }}</div>
-        <div class="field"><span>Email</span>{{ ticket.email }}</div>
-        <div class="field"><span>Teléfono</span>{{ ticket.telefono or "-" }}</div>
-        <div class="field"><span>Servicio</span>{{ ticket.servicio }}</div>
-        <div class="field"><span>Canal</span>{{ ticket.canal }}</div>
-        <div class="field"><span>Fecha apertura</span>{{ ticket.fecha_apertura }}</div>
-        <div class="field"><span>Creado por</span>{{ ticket.creado_por }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_cliente') }}</span>{{ ticket.cliente }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_contacto') }}</span>{{ ticket.contacto }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_email') }}</span>{{ ticket.email }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_telefono') }}</span>{{ ticket.telefono or "-" }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_servicio') }}</span>{{ ticket.servicio }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_canal') }}</span>{{ ticket.canal }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_fecha') }}</span>{{ ticket.fecha_apertura }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_creado') }}</span>{{ ticket.creado_por }}</div>
     </div>
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 6px;">Actualizar estado y prioridad</h2>
+    <h2 style="margin:0 0 6px;">{{ t('tdt.card_estado') }}</h2>
     <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">
         <i class="fa-solid fa-circle-info"></i>
-        La nota es <strong>obligatoria</strong> — quedará en el historial del ticket.
+        {{ t('tdt.nota_obligatoria') | safe }}
     </p>
     <form method="post" action="/soporte/tickets/{{ ticket.id }}/estado" id="form-estado">
         {{ csrf_input(request) }}
         <div class="detail-grid">
             <div class="field">
-                <span>Estado</span>
+                <span>{{ t('tdt.lbl_estado') }}</span>
                 <select name="estado">
                     {% for item in support_statuses %}
                     <option value="{{ item }}" {% if ticket.estado == item %}selected{% endif %}>{{ item }}</option>
@@ -69,7 +69,7 @@
                 </select>
             </div>
             <div class="field">
-                <span>Prioridad</span>
+                <span>{{ t('tdt.lbl_prioridad') }}</span>
                 <select name="prioridad">
                     {% for item in support_priorities %}
                     <option value="{{ item }}" {% if ticket.prioridad == item %}selected{% endif %}>{{ item }}</option>
@@ -79,13 +79,13 @@
         </div>
         <div style="margin-top:14px;">
             <span style="display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;">
-                Nota / Respuesta al cliente <span style="color:#ef4444;">*</span>
+                {{ t('tdt.lbl_nota') }} <span style="color:#ef4444;">*</span>
             </span>
             <textarea
                 name="nota"
                 id="nota-respuesta"
                 class="respuesta"
-                placeholder="Escribe aquí el motivo del cambio, la respuesta al cliente o las acciones tomadas…"
+                placeholder="{{ t('tdt.ph_nota') }}"
                 rows="4"
                 required
                 oninput="document.getElementById('btn-guardar-estado').disabled = !this.value.trim();"
@@ -93,66 +93,66 @@
         </div>
         <div style="margin-top:12px;">
             <button class="btn primary" id="btn-guardar-estado" type="submit" disabled>
-                <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+                <i class="fa-solid fa-floppy-disk"></i> {{ t('tdt.btn_guardar') }}
             </button>
         </div>
     </form>
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 14px;">Descripción</h2>
+    <h2 style="margin:0 0 14px;">{{ t('tdt.card_desc') }}</h2>
     <pre>{{ ticket.descripcion }}</pre>
-    <h2 style="margin:14px 0 10px;">Evidencia</h2>
-    <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+    <h2 style="margin:14px 0 10px;">{{ t('tdt.card_evidencia') }}</h2>
+    <pre>{{ ticket.evidencia or t('tdt.evidencia_vacia') }}</pre>
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 10px;">Resumen para Jira/Zammad</h2>
-    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">Resumen técnico preparado para copiarlo en una herramienta externa de ticketing.</p>
+    <h2 style="margin:0 0 10px;">{{ t('tdt.card_jira') }}</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">{{ t('tdt.jira_desc') }}</p>
     <textarea class="externo" id="resumen-externo" readonly>{{ external_summary_text }}</textarea>
     <div style="margin-top:12px;">
         <button class="btn primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('resumen-externo').value)">
-            <i class="fa-solid fa-copy"></i> Copiar resumen
+            <i class="fa-solid fa-copy"></i> {{ t('tdt.btn_copy_jira') }}
         </button>
     </div>
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 10px;">Plantillas de respuesta</h2>
-    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">Selecciona una respuesta tipo para copiarla y enviarla al cliente.</p>
+    <h2 style="margin:0 0 10px;">{{ t('tdt.card_plantillas') }}</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 12px;">{{ t('tdt.plantillas_desc') }}</p>
     <form method="get" action="/soporte/tickets/{{ ticket.id }}">
         <div class="detail-grid">
             <div class="field">
-                <span>Plantilla</span>
-                <select name="plantilla" style="width:100%;padding:10px;border-radius:10px;border:1px solid #d0d7de;">
-                    <option value="">Seleccionar plantilla</option>
+                <span>{{ t('tdt.lbl_plantilla') }}</span>
+                <select name="plantilla" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);">
+                    <option value="">{{ t('tdt.opt_plantilla') }}</option>
                     {% for item in response_templates %}
                     <option value="{{ item.key }}" {% if selected_template_key == item.key %}selected{% endif %}>{{ item.titulo }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="field">
-                <span>Uso recomendado</span>
-                {% if selected_template %}{{ selected_template.uso }}{% else %}Selecciona una plantilla para ver su uso.{% endif %}
+                <span>{{ t('tdt.lbl_uso') }}</span>
+                {% if selected_template %}{{ selected_template.uso }}{% else %}{{ t('tdt.uso_default') }}{% endif %}
             </div>
         </div>
         <div style="margin-top:16px;">
-            <button class="btn" type="submit"><i class="fa-solid fa-bolt"></i> Generar respuesta</button>
+            <button class="btn" type="submit"><i class="fa-solid fa-bolt"></i> {{ t('tdt.btn_generar') }}</button>
         </div>
     </form>
     {% if selected_response_text %}
-    <h3 style="margin:18px 0 10px;">Respuesta generada</h3>
+    <h3 style="margin:18px 0 10px;">{{ t('tdt.h_respuesta') }}</h3>
     <textarea class="respuesta" id="respuesta-generada" readonly>{{ selected_response_text }}</textarea>
     <div style="margin-top:12px;">
         <button class="btn primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('respuesta-generada').value)">
-            <i class="fa-solid fa-copy"></i> Copiar respuesta
+            <i class="fa-solid fa-copy"></i> {{ t('tdt.btn_copy_resp') }}
         </button>
     </div>
     {% endif %}
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 14px;">Historial interno</h2>
+    <h2 style="margin:0 0 14px;">{{ t('tdt.card_historial') }}</h2>
     {% if history %}
     {% for item in history %}
     <div class="history-item">
@@ -162,26 +162,26 @@
     </div>
     {% endfor %}
     {% else %}
-    <p style="color:var(--muted);">No hay cambios registrados todavía.</p>
+    <p style="color:var(--muted);">{{ t('tdt.no_historial') }}</p>
     {% endif %}
 </div>
 
 <div class="detail-card">
-    <h2 style="margin:0 0 14px;">Sincronización central</h2>
+    <h2 style="margin:0 0 14px;">{{ t('tdt.card_sync') }}</h2>
     {% if ticket.central_ticket_id %}
     <form method="post" action="/soporte/tickets/{{ ticket.id }}/sync-central" style="margin-bottom:14px;">
         {{ csrf_input(request) }}
-        <button class="btn" type="submit"><i class="fa-solid fa-rotate"></i> Sincronizar estado desde central</button>
+        <button class="btn" type="submit"><i class="fa-solid fa-rotate"></i> {{ t('tdt.btn_sync_central') }}</button>
     </form>
     {% endif %}
     <div class="sync-grid-2">
         <div class="field">
-            <span>Ticket central</span>
-            {% if ticket.central_ticket_id %}{{ ticket.central_ticket_id }}{% else %}Sin referencia central{% endif %}
+            <span>{{ t('tdt.lbl_ticket_central') }}</span>
+            {% if ticket.central_ticket_id %}{{ ticket.central_ticket_id }}{% else %}{{ t('tdt.sin_central') }}{% endif %}
         </div>
-        <div class="field"><span>Estado sincronización</span>{{ ticket.central_sync_status or "No sincronizado" }}</div>
-        <div class="field"><span>Última sincronización</span>{{ ticket.central_sync_at or "-" }}</div>
-        <div class="field"><span>Detalle sincronización</span>{{ ticket.central_sync_detail or "-" }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_sync_status') }}</span>{{ ticket.central_sync_status or t('tdt.no_sync') }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_sync_at') }}</span>{{ ticket.central_sync_at or "-" }}</div>
+        <div class="field"><span>{{ t('tdt.lbl_sync_detail') }}</span>{{ ticket.central_sync_detail or "-" }}</div>
     </div>
 </div>
 

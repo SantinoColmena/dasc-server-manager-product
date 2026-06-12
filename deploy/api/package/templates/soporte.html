@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Soporte — Vigex{% endblock %}
+{% block title %}{{ t('sop.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -10,23 +10,28 @@
         margin-top: 18px;
     }
     .support-card {
-        background: #ffffff;
+        background: var(--panel);
         border-radius: 16px;
         padding: 22px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.08);
         border: 1px solid var(--border);
     }
     .support-card h2 { margin: 0 0 14px; font-size: 18px; }
-    .support-form label { display:block; font-weight:600; margin-top:14px; margin-bottom:6px; }
+    .support-form label { display:block; font-weight:600; margin-top:14px; margin-bottom:6px; color:var(--text); }
     .support-form input,
     .support-form select,
-    .support-form textarea { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #d0d7de; border-radius:10px; font-size:14px; font-family:inherit; }
+    .support-form textarea {
+        width:100%; box-sizing:border-box; padding:10px 12px;
+        border:1px solid var(--border); border-radius:10px;
+        font-size:14px; font-family:inherit;
+        background:var(--bg); color:var(--text);
+    }
     .support-form textarea { min-height:120px; resize:vertical; }
     .support-actions { margin-top:18px; display:flex; gap:12px; align-items:center; }
     .ticket-list { display:grid; gap:12px; margin-top:12px; }
-    .ticket-item { border:1px solid #d0d7de; border-radius:12px; padding:12px; background:#f6f8fa; }
+    .ticket-item { border:1px solid var(--border); border-radius:12px; padding:12px; background:var(--bg); }
     .ticket-item strong { display:block; margin-bottom:4px; }
-    .ticket-meta { font-size:13px; color:#57606a; }
+    .ticket-meta { font-size:13px; color:var(--muted); }
     .ticket-item a { color: var(--primary); text-decoration: none; font-weight: 600; }
     .ticket-item a:hover { text-decoration: underline; }
     @media (max-width:850px) { .support-grid { grid-template-columns:1fr; } }
@@ -37,12 +42,12 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Soporte Vigex</h2>
-        <p class="page-subtitle">¿Tienes algún problema o duda? Cuéntanoslo aquí y te ayudamos.</p>
+        <h2 class="page-title">{{ t('sop.title') }}</h2>
+        <p class="page-subtitle">{{ t('sop.subtitle') }}</p>
     </div>
     <div class="topbar-actions">
         {% if local_internal_support_enabled %}
-        <a href="/soporte/tickets" class="btn primary"><i class="fa-solid fa-list"></i> Gestionar tickets</a>
+        <a href="/soporte/tickets" class="btn primary"><i class="fa-solid fa-list"></i> {{ t('sop.btn_tickets') }}</a>
         {% endif %}
     </div>
 </div>
@@ -51,75 +56,75 @@
 <div class="notice success">
     <i class="fa-solid fa-circle-check"></i>
     <div>
-        Solicitud registrada correctamente.
+        {{ t('sop.ok_registered') }}
         {% if ticket_id %}
-            Referencia interna: <strong>{{ ticket_id }}</strong>.
-            <a href="/soporte/estado/{{ ticket_id }}" style="color:var(--successText);font-weight:700;">Ver estado</a>
+            {{ t('sop.ok_ref') }} <strong>{{ ticket_id }}</strong>.
+            <a href="/soporte/estado/{{ ticket_id }}" style="color:var(--successText);font-weight:700;">{{ t('sop.ok_see') }}</a>
         {% endif %}
     </div>
 </div>
 {% elif ok == "0" %}
 <div class="notice error">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <div>{{ msg or "No se pudo registrar la solicitud." }}</div>
+    <div>{{ msg or t('sop.err_save') }}</div>
 </div>
 {% endif %}
 
 <div class="support-grid">
     <div class="support-card">
-        <h2>Nueva solicitud</h2>
+        <h2>{{ t('sop.card_new') }}</h2>
 
         <form class="support-form" method="post" action="/soporte">
             {{ csrf_input(request) }}
 
-            <label>Empresa *</label>
+            <label>{{ t('sop.lbl_empresa') }}</label>
             <input type="text" name="empresa" required>
 
-            <label>Persona de contacto *</label>
+            <label>{{ t('sop.lbl_contacto') }}</label>
             <input type="text" name="contacto" required>
 
-            <label>Email *</label>
+            <label>{{ t('sop.lbl_email') }}</label>
             <input type="email" name="email" required>
 
-            <label>Teléfono</label>
+            <label>{{ t('sop.lbl_telefono') }}</label>
             <input type="text" name="telefono">
 
-            <label>Tipo de solicitud</label>
+            <label>{{ t('sop.lbl_tipo') }}</label>
             <select name="tipo">
                 {% for item in support_types %}
                 <option value="{{ item }}">{{ item }}</option>
                 {% endfor %}
             </select>
 
-            <label>Prioridad percibida</label>
+            <label>{{ t('sop.lbl_prioridad') }}</label>
             <select name="prioridad">
                 {% for item in support_priorities %}
                 <option value="{{ item }}">{{ item }}</option>
                 {% endfor %}
             </select>
 
-            <label>Servicio afectado</label>
+            <label>{{ t('sop.lbl_servicio') }}</label>
             <select name="servicio">
                 {% for item in support_services %}
                 <option value="{{ item }}">{{ item }}</option>
                 {% endfor %}
             </select>
 
-            <label>Descripción *</label>
-            <textarea name="descripcion" required placeholder="Explica qué ocurre, desde cuándo y qué impacto tiene."></textarea>
+            <label>{{ t('sop.lbl_desc') }}</label>
+            <textarea name="descripcion" required placeholder="{{ t('sop.ph_desc') }}"></textarea>
 
-            <label>Evidencia opcional</label>
-            <textarea name="evidencia" placeholder="Pega aquí texto de error, enlaces internos o notas de captura."></textarea>
+            <label>{{ t('sop.lbl_evidencia') }}</label>
+            <textarea name="evidencia" placeholder="{{ t('sop.ph_evidencia') }}"></textarea>
 
             <div class="support-actions">
-                <button class="btn primary" type="submit"><i class="fa-solid fa-ticket"></i> Crear ticket</button>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-ticket"></i> {{ t('sop.btn_create') }}</button>
             </div>
         </form>
     </div>
 
     <div class="support-card">
-        <h2>Últimas solicitudes</h2>
-        <p class="ticket-meta">Seguimiento básico de solicitudes registradas en este panel.</p>
+        <h2>{{ t('sop.card_last') }}</h2>
+        <p class="ticket-meta">{{ t('sop.card_last_desc') }}</p>
 
         {% if tickets %}
         <div class="ticket-list">
@@ -131,13 +136,13 @@
                 </div>
                 <div>{{ ticket.cliente }} - {{ ticket.tipo }}</div>
                 <div style="margin-top:8px;">
-                    <a href="/soporte/estado/{{ ticket.id }}">Ver estado</a>
+                    <a href="/soporte/estado/{{ ticket.id }}">{{ t('sop.ticket_see') }}</a>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p style="margin-top:12px;color:var(--muted);">No hay tickets registrados todavía.</p>
+        <p style="margin-top:12px;color:var(--muted);">{{ t('sop.no_tickets') }}</p>
         {% endif %}
     </div>
 </div>

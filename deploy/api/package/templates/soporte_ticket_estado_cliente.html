@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ ticket.id }} - Estado de solicitud Vigex</title>
+    <title>{{ ticket.id }} — {{ t('est.card_datos') }} — Vigex</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -188,13 +188,13 @@
 <body>
     <div class="client-wrapper">
         <div class="client-actions">
-            <a href="/soporte" class="client-button secondary">Volver a soporte</a>
-            <a href="/" class="client-button secondary">Volver al panel</a>
+            <a href="/soporte" class="client-button secondary">{{ t('est.btn_back_sop') }}</a>
+            <a href="/" class="client-button secondary">{{ t('est.btn_back_panel') }}</a>
         </div>
 
         <section class="client-card hero">
             <h1>{{ ticket.id }}</h1>
-            <p class="muted">Seguimiento de la solicitud registrada en el panel Vigex.</p>
+            <p class="muted">{{ t('est.tracking_sub') }}</p>
 
             <div class="badge-row">
                 <span class="badge state">{{ ticket.estado }}</span>
@@ -207,60 +207,60 @@
                 <div class="progress-bar">
                     <div class="progress-fill"></div>
                 </div>
-                <p class="muted">Última actualización: {{ ticket.fecha_actualizacion }}</p>
+                <p class="muted">{{ t('est.last_update') }} {{ ticket.fecha_actualizacion }}</p>
             </div>
         </section>
 
         <section class="client-card">
-            <h2>Datos de la solicitud</h2>
+            <h2>{{ t('est.card_datos') }}</h2>
 
             <div class="info-grid">
                 <div class="field">
-                    <span>Empresa</span>
+                    <span>{{ t('est.lbl_empresa') }}</span>
                     <strong>{{ ticket.cliente }}</strong>
                 </div>
                 <div class="field">
-                    <span>Persona de contacto</span>
+                    <span>{{ t('est.lbl_contacto') }}</span>
                     <strong>{{ ticket.contacto }}</strong>
                 </div>
                 <div class="field">
-                    <span>Email</span>
+                    <span>{{ t('est.lbl_email') }}</span>
                     <strong>{{ ticket.email }}</strong>
                 </div>
                 <div class="field">
-                    <span>Teléfono</span>
+                    <span>{{ t('est.lbl_telefono') }}</span>
                     <strong>{{ ticket.telefono or "-" }}</strong>
                 </div>
                 <div class="field">
-                    <span>Servicio afectado</span>
+                    <span>{{ t('est.lbl_servicio') }}</span>
                     <strong>{{ ticket.servicio }}</strong>
                 </div>
                 <div class="field">
-                    <span>Fecha de apertura</span>
+                    <span>{{ t('est.lbl_fecha') }}</span>
                     <strong>{{ ticket.fecha_apertura }}</strong>
                 </div>
             </div>
         </section>
 
         <section class="client-card">
-            <h2>Descripción enviada</h2>
+            <h2>{{ t('est.card_desc') }}</h2>
             <pre>{{ ticket.descripcion }}</pre>
 
-            <h2 style="margin-top:18px;">Evidencia aportada</h2>
-            <pre>{{ ticket.evidencia or "Sin evidencia registrada." }}</pre>
+            <h2 style="margin-top:18px;">{{ t('est.card_evidencia') }}</h2>
+            <pre>{{ ticket.evidencia or t('est.evidencia_vacia') }}</pre>
         </section>
 
         <section class="client-card">
-            <h2>Seguimiento</h2>
+            <h2>{{ t('est.card_seguimiento') }}</h2>
 
             <div class="timeline">
                 <div class="timeline-item">
-                    <strong>Solicitud registrada</strong>
+                    <strong>{{ t('est.timeline_registered') }}</strong>
                     <div class="muted">{{ ticket.fecha_apertura }}</div>
-                    <div>El equipo Vigex ha recibido la solicitud.</div>
+                    <div>{{ t('est.timeline_team_recv') }}</div>
                 </div>
                 <div class="timeline-item">
-                    <strong>Estado actual: {{ ticket.estado }}</strong>
+                    <strong>{{ t('est.timeline_current_pre') }} {{ ticket.estado }}</strong>
                     <div class="muted">{{ ticket.fecha_actualizacion }}</div>
                     <div>{{ progress.label }}</div>
                 </div>
@@ -270,20 +270,19 @@
         {% if ticket.estado == "Pendiente cliente" %}
         <section class="client-card">
             <div class="notice">
-                El equipo Vigex necesita información adicional para continuar con la solicitud.
+                {{ t('est.pending_notice') }}
             </div>
         </section>
         {% endif %}
 
         <section class="client-card">
-            <h2>Información para el cliente</h2>
+            <h2>{{ t('est.card_info') }}</h2>
             <p>
-                Esta vista muestra el estado actual de la solicitud. Para añadir información adicional,
-                responde por el canal acordado con el equipo Vigex indicando la referencia
+                {{ t('est.info_text') }}
                 <strong>{{ ticket.id }}</strong>.
             </p>
             <p class="muted">
-                La gestión técnica interna, plantillas de respuesta y sincronización central están reservadas al equipo Vigex.
+                {{ t('est.info_muted') }}
             </p>
         </section>
     </div>

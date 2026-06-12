@@ -1,43 +1,36 @@
 {% extends "base.html" %}
+{% block title %}{{ t('faq.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* ── FAQ / IA de triage (Ruta 8.6) ── */
     .faq-header {
         display: flex; align-items: flex-start; justify-content: space-between;
         flex-wrap: wrap; gap: .75rem; margin-bottom: 1.75rem;
     }
-    .faq-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
-    .faq-subtitle { color: #6b7280; font-size: .95rem; margin: .25rem 0 0; }
+    .faq-title    { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0; }
+    .faq-subtitle { color: var(--muted); font-size: .95rem; margin: .25rem 0 0; }
 
-    /* ── Buscador ── */
-    .faq-search-wrap {
-        position: relative; max-width: 480px;
-    }
+    .faq-search-wrap { position: relative; max-width: 480px; }
     .faq-search-icon {
         position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
-        color: #9ca3af; font-size: .9rem; pointer-events: none;
+        color: var(--muted); font-size: .9rem; pointer-events: none;
     }
     .faq-search {
         width: 100%; padding: .6rem 1rem .6rem 2.4rem;
-        border: 1.5px solid #d1d5db; border-radius: 10px;
-        font-size: .9rem; font-family: inherit; color: #1e1b4b;
-        background: #fff; transition: border-color .15s;
+        border: 1.5px solid var(--border); border-radius: 10px;
+        font-size: .9rem; font-family: inherit; color: var(--text);
+        background: var(--panel); transition: border-color .15s;
         box-sizing: border-box;
     }
     .faq-search:focus { outline: none; border-color: #4f46e5; }
 
-    /* ── Estado de búsqueda ── */
-    .faq-search-info {
-        font-size: .8rem; color: #6b7280; margin: .5rem 0 1.25rem;
-    }
+    .faq-search-info { font-size: .8rem; color: var(--muted); margin: .5rem 0 1.25rem; }
     .faq-search-info strong { color: #4f46e5; }
 
-    /* ── Acordeón de preguntas ── */
     .faq-list { display: flex; flex-direction: column; gap: .75rem; }
 
     .faq-item {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
         overflow: hidden; transition: border-color .15s, box-shadow .15s;
     }
     .faq-item:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,.07); }
@@ -54,41 +47,33 @@
         display: flex; align-items: center; justify-content: center;
         font-size: .82rem; flex-shrink: 0;
     }
-    .faq-q-text {
-        flex: 1; font-size: .92rem; font-weight: 600; color: #1e1b4b;
-    }
+    .faq-q-text { flex: 1; font-size: .92rem; font-weight: 600; color: var(--text); }
     .faq-q-chevron {
-        color: #9ca3af; font-size: .8rem; flex-shrink: 0;
+        color: var(--muted); font-size: .8rem; flex-shrink: 0;
         transition: transform .2s;
     }
     .faq-item.open .faq-q-chevron { transform: rotate(180deg); }
 
-    .faq-a {
-        max-height: 0; overflow: hidden; transition: max-height .25s ease;
-    }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
     .faq-item.open .faq-a { max-height: 800px; }
     .faq-a-inner {
         padding: 0 1.25rem 1.1rem 4rem;
-        font-size: .87rem; color: #374151; line-height: 1.65;
+        font-size: .87rem; color: var(--text); line-height: 1.65;
     }
     .faq-a-inner code {
-        background: #f3f4f6; padding: .1rem .35rem; border-radius: 4px;
+        background: var(--bg); padding: .1rem .35rem; border-radius: 4px;
         font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #4f46e5;
     }
-    .faq-a-inner strong { color: #1e1b4b; }
+    .faq-a-inner strong { color: var(--text); }
 
-    /* ── Vacío ── */
-    .faq-empty {
-        text-align: center; padding: 3rem 1rem; color: #9ca3af;
-    }
+    .faq-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
     .faq-empty i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
     .faq-empty p { font-size: .9rem; margin: 0; }
     .faq-empty a { color: #4f46e5; }
 
-    /* ── Panel de categorías (sidebar rápido) ── */
     .faq-cat-badge {
         display: inline-flex; align-items: center; gap: .3rem;
-        background: #f3f4f6; color: #6b7280;
+        background: var(--bg); color: var(--muted);
         padding: .25rem .65rem; border-radius: 99px;
         font-size: .72rem; font-weight: 600; white-space: nowrap;
     }
@@ -105,15 +90,14 @@
 
 <div class="faq-header">
     <div>
-        <h1 class="faq-title">Preguntas frecuentes</h1>
-        <p class="faq-subtitle">Encuentra respuesta rápida a los problemas más habituales de Vigex.</p>
+        <h1 class="faq-title">{{ t('faq.title') }}</h1>
+        <p class="faq-subtitle">{{ t('faq.subtitle') }}</p>
     </div>
     <a href="/soporte" class="btn" style="font-size:.85rem;">
-        <i class="fa-solid fa-headset"></i> Abrir ticket
+        <i class="fa-solid fa-headset"></i> {{ t('faq.btn_ticket') }}
     </a>
 </div>
 
-<!-- ── Buscador ── -->
 <form method="get" action="/soporte/faq" id="faq-form">
     <div class="faq-search-wrap">
         <i class="fa-solid fa-magnifying-glass faq-search-icon"></i>
@@ -122,7 +106,7 @@
             name="q"
             id="faq-search-input"
             class="faq-search"
-            placeholder="Busca por palabras clave: backup, disco, telegram, SSH…"
+            placeholder="{{ t('faq.ph_search') }}"
             value="{{ faq_query | e }}"
             autocomplete="off"
         >
@@ -131,15 +115,14 @@
 
 {% if faq_query %}
 <p class="faq-search-info">
-    <strong>{{ faq_entries | length }}</strong> resultado(s) para
+    <strong>{{ faq_entries | length }}</strong> {{ t('faq.results_count_pre') }}
     "<strong>{{ faq_query | e }}</strong>".
-    <a href="/soporte/faq">Ver todas</a>
+    <a href="/soporte/faq">{{ t('faq.see_all') }}</a>
 </p>
 {% else %}
-<p class="faq-search-info">{{ faq_entries | length }} preguntas disponibles.</p>
+<p class="faq-search-info">{{ faq_entries | length }} {{ t('faq.count_available') }}</p>
 {% endif %}
 
-<!-- ── Lista de preguntas ── -->
 <div class="faq-list" id="faq-list">
     {% if faq_entries %}
         {% for entry in faq_entries %}
@@ -180,10 +163,12 @@
     {% else %}
     <div class="faq-empty">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <p>No se encontraron resultados para "<strong>{{ faq_query | e }}</strong>".</p>
+        <p>{{ t('faq.no_results_pre') }}<strong>{{ faq_query | e }}</strong>{{ t('faq.no_results_suf') }}</p>
         <p style="margin-top:.5rem;">
-            <a href="/soporte/faq">Ver todas las preguntas</a> o
-            <a href="/soporte">abrir un ticket</a> si no encuentras respuesta.
+            <a href="/soporte/faq">{{ t('faq.no_results_link1') }}</a>
+            {{ t('faq.no_results_or') }}
+            <a href="/soporte">{{ t('faq.no_results_link2') }}</a>
+            {{ t('faq.no_results_suffix') }}
         </p>
     </div>
     {% endif %}
@@ -193,11 +178,11 @@
 
 {% block sidebar_info %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Preguntas</span>
+    <span class="sidebar-info-label">{{ t('faq.sidebar_total') }}</span>
     <span>{{ faq_todos | length }}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Resultados</span>
+    <span class="sidebar-info-label">{{ t('faq.sidebar_results') }}</span>
     <span>{{ faq_entries | length }}</span>
 </div>
 {% endblock %}
@@ -207,13 +192,10 @@
 (function () {
     'use strict';
 
-    // ── Acordeón ──────────────────────────────────────────────────────────────
     function toggleFaq(id) {
         var item = document.getElementById('faq-' + id);
         if (!item) return;
         var open = item.classList.toggle('open');
-
-        // Cerrar los demás (comportamiento acordeón)
         document.querySelectorAll('.faq-item.open').forEach(function (el) {
             if (el.id !== 'faq-' + id) el.classList.remove('open');
         });
@@ -223,7 +205,6 @@
     }
     window.toggleFaq = toggleFaq;
 
-    // ── Búsqueda en tiempo real (debounce 350 ms) ─────────────────────────────
     var searchInput = document.getElementById('faq-search-input');
     var faqForm     = document.getElementById('faq-form');
     var debounceTimer;
@@ -237,7 +218,6 @@
         });
     }
 
-    // ── Abrir la primera si hay búsqueda activa y solo hay un resultado ───────
     var items = document.querySelectorAll('.faq-item');
     var query = {{ ('true' if faq_query else 'false') }};
     if (query && items.length === 1) {

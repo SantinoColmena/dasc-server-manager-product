@@ -1,92 +1,75 @@
 {% extends "base.html" %}
+{% block title %}{{ t('sal.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* ── Integridad de copias (Ruta 7.9) ── */
     .salud-header {
         display: flex; align-items: center; justify-content: space-between;
         flex-wrap: wrap; gap: .75rem; margin-bottom: 1.75rem;
     }
-    .salud-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
-    .salud-subtitle { color: #6b7280; font-size: .95rem; margin: .2rem 0 0; }
-    .salud-ts       { font-size: .78rem; color: #9ca3af; }
+    .salud-title    { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0; }
+    .salud-subtitle { color: var(--muted); font-size: .95rem; margin: .2rem 0 0; }
+    .salud-ts       { font-size: .78rem; color: var(--muted); }
 
-    /* ── KPI cards ── */
     .salud-kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .salud-kpi-card {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
         padding: 1.1rem 1.25rem;
         display: flex; flex-direction: column; gap: .25rem;
     }
-    .salud-kpi-card .kpi-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
-    .salud-kpi-card .kpi-val   { font-size: 1.6rem; font-weight: 800; color: #1e1b4b; line-height: 1; }
-    .salud-kpi-card .kpi-sub   { font-size: .75rem; color: #6b7280; }
-    .salud-kpi-card.good  { border-left: 3px solid #10b981; }
-    .salud-kpi-card.warn  { border-left: 3px solid #f59e0b; }
-    .salud-kpi-card.bad   { border-left: 3px solid #ef4444; }
+    .salud-kpi-card .kpi-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .salud-kpi-card .kpi-val   { font-size: 1.6rem; font-weight: 800; color: var(--text); line-height: 1; }
+    .salud-kpi-card .kpi-sub   { font-size: .75rem; color: var(--muted); }
+    .salud-kpi-card.good    { border-left: 3px solid #10b981; }
+    .salud-kpi-card.warn    { border-left: 3px solid #f59e0b; }
+    .salud-kpi-card.bad     { border-left: 3px solid #ef4444; }
     .salud-kpi-card.neutral { border-left: 3px solid #6366f1; }
 
-    /* ── Sección base ── */
     .salud-section { margin-bottom: 1.5rem; }
     .salud-section-title {
         font-size: .78rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .06em; color: #9ca3af; margin: 0 0 .75rem;
+        letter-spacing: .06em; color: var(--muted); margin: 0 0 .75rem;
     }
-    .salud-card {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-        overflow: hidden;
-    }
+    .salud-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .salud-card-header {
         display: flex; align-items: center; gap: .85rem;
-        padding: 1.1rem 1.25rem; border-bottom: 1px solid #f3f4f6;
+        padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--border);
     }
-    .salud-card-icon {
-        width: 36px; height: 36px; border-radius: 9px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: .9rem; flex-shrink: 0;
-    }
+    .salud-card-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; }
     .salud-card-icon.green  { background: #d1fae5; color: #065f46; }
     .salud-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
     .salud-card-icon.amber  { background: #fffbeb; color: #b45309; }
     .salud-card-icon.red    { background: #fee2e2; color: #b91c1c; }
-    .salud-card-title { font-size: .95rem; font-weight: 600; color: #1e1b4b; margin: 0; }
-    .salud-card-desc  { font-size: .78rem; color: #6b7280; margin: .1rem 0 0; }
+    .salud-card-title { font-size: .95rem; font-weight: 600; color: var(--text); margin: 0; }
+    .salud-card-desc  { font-size: .78rem; color: var(--muted); margin: .1rem 0 0; }
 
-    /* ── Tabla de backups ── */
     .salud-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
     .salud-table th {
         font-size: .72rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .04em; color: #6b7280;
+        letter-spacing: .04em; color: var(--muted);
         padding: .6rem .85rem; text-align: left;
-        background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+        background: var(--bg); border-bottom: 1px solid var(--border);
     }
     .salud-table td {
-        padding: .55rem .85rem; color: #374151;
-        border-bottom: 1px solid #f3f4f6; vertical-align: middle;
+        padding: .55rem .85rem; color: var(--text);
+        border-bottom: 1px solid var(--border); vertical-align: middle;
     }
     .salud-table tr:last-child td { border-bottom: none; }
-    .salud-table tr:hover td { background: #f9fafb; }
+    .salud-table tr:hover td { background: var(--bg); }
 
-    /* Pills */
     .pill   { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .6rem; border-radius: 99px; font-size: .72rem; font-weight: 600; white-space: nowrap; }
     .pill-g { background: #d1fae5; color: #065f46; }
     .pill-r { background: #fee2e2; color: #b91c1c; }
     .pill-y { background: #fef3c7; color: #b45309; }
-    .pill-s { background: #f3f4f6; color: #6b7280; }
+    .pill-s { background: var(--bg); color: var(--muted); }
 
-    /* Código SHA */
     .sha-code { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: #4f46e5; }
 
-    /* ── DB tables ── */
     .db-table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .75rem; padding: 1.1rem 1.25rem; }
-    .db-table-item {
-        background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 9px;
-        padding: .75rem .9rem;
-    }
-    .db-table-item .dbt-name  { font-size: .82rem; font-weight: 600; color: #1e1b4b; margin-bottom: .3rem; }
-    .db-table-item .dbt-meta  { font-size: .72rem; color: #6b7280; }
+    .db-table-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: .75rem .9rem; }
+    .db-table-item .dbt-name { font-size: .82rem; font-weight: 600; color: var(--text); margin-bottom: .3rem; }
+    .db-table-item .dbt-meta { font-size: .72rem; color: var(--muted); }
 
-    /* ── Banner error ── */
     .salud-error {
         display: flex; align-items: flex-start; gap: .65rem;
         padding: .85rem 1rem; background: #fff7ed; border: 1px solid #fed7aa;
@@ -94,15 +77,14 @@
         margin-bottom: 1rem;
     }
 
-    /* ── Botón refrescar ── */
     .btn-refresh {
         display: inline-flex; align-items: center; gap: .45rem;
-        background: #fff; border: 1.5px solid #d1d5db; color: #374151;
+        background: var(--panel); border: 1.5px solid var(--border); color: var(--text);
         padding: .45rem 1rem; border-radius: 8px;
         font-size: .85rem; font-weight: 500; cursor: pointer;
         transition: all .15s;
     }
-    .btn-refresh:hover { background: #f9fafb; border-color: #4f46e5; color: #4f46e5; }
+    .btn-refresh:hover { background: var(--bg); border-color: #4f46e5; color: #4f46e5; }
     .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
 
     @media (max-width: 900px) { .salud-kpi { grid-template-columns: 1fr 1fr; } }
@@ -116,73 +98,70 @@
 
 <div class="salud-header">
     <div>
-        <h1 class="salud-title">Integridad de copias</h1>
-        <p class="salud-subtitle">Verifica que tus copias de seguridad están sanas y tienen su checksum.</p>
+        <h1 class="salud-title">{{ t('sal.title') }}</h1>
+        <p class="salud-subtitle">{{ t('sal.subtitle') }}</p>
     </div>
     <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <span class="salud-ts"><i class="fa-solid fa-clock"></i> Actualizado: {{ d.ts }}</span>
+        <span class="salud-ts"><i class="fa-solid fa-clock"></i> {{ t('sal.updated') }} {{ d.ts }}</span>
         <button class="btn-refresh" id="btn-refresh" onclick="refrescarSalud()">
-            <i class="fa-solid fa-rotate-right"></i> Verificar ahora
+            <i class="fa-solid fa-rotate-right"></i> {{ t('sal.btn_refresh') }}
         </button>
         <a class="btn" href="/backups" style="font-size:.85rem;">
-            <i class="fa-solid fa-arrow-left"></i> Copias
+            <i class="fa-solid fa-arrow-left"></i> {{ t('sal.btn_back') }}
         </a>
     </div>
 </div>
 
-<!-- ── KPI cards ── -->
 <div class="salud-kpi">
     {% set total = resumen.get('total', 0) %}
     {% set errores = resumen.get('errores', 0) %}
     {% set sin_sha = resumen.get('sin_sha', 0) %}
 
     <div class="salud-kpi-card {% if errores == 0 and total > 0 %}good{% elif errores > 0 %}bad{% else %}neutral{% endif %}">
-        <span class="kpi-label">Copias analizadas</span>
+        <span class="kpi-label">{{ t('sal.kpi_analyzed') }}</span>
         <span class="kpi-val">{{ total }}</span>
-        <span class="kpi-sub">Últimas 30 entradas del historial</span>
+        <span class="kpi-sub">{{ t('sal.kpi_analyzed_sub') }}</span>
     </div>
 
     <div class="salud-kpi-card {% if errores == 0 %}good{% else %}bad{% endif %}">
-        <span class="kpi-label">Errores detectados</span>
+        <span class="kpi-label">{{ t('sal.kpi_errors') }}</span>
         <span class="kpi-val {% if errores > 0 %}style="color:#b91c1c"{% endif %}">{{ errores }}</span>
-        <span class="kpi-sub">Copias con estado distinto de OK</span>
+        <span class="kpi-sub">{{ t('sal.kpi_errors_sub') }}</span>
     </div>
 
     <div class="salud-kpi-card {% if sin_sha == 0 and total > 0 %}good{% elif sin_sha > 0 %}warn{% else %}neutral{% endif %}">
-        <span class="kpi-label">SHA256 presentes</span>
+        <span class="kpi-label">{{ t('sal.kpi_sha') }}</span>
         <span class="kpi-val">{{ resumen.get('checksums_ok', 0) }}</span>
-        <span class="kpi-sub">De {{ total }} — {{ sin_sha }} sin checksum</span>
+        <span class="kpi-sub">{{ t('sal.kpi_sha_sub_pre') }}{{ total }} — {{ sin_sha }}{{ t('sal.kpi_sha_sub_suf') }}</span>
     </div>
 
     <div class="salud-kpi-card {% if d.db_tables and not d.db_error %}good{% elif d.db_error %}warn{% else %}neutral{% endif %}">
-        <span class="kpi-label">Tablas BD</span>
+        <span class="kpi-label">{{ t('sal.kpi_tables') }}</span>
         <span class="kpi-val">{{ d.db_tables | length }}</span>
-        <span class="kpi-sub">{% if d.db_error %}Sin acceso a la BD{% else %}Comprobadas con SHOW TABLE STATUS{% endif %}</span>
+        <span class="kpi-sub">{% if d.db_error %}{{ t('sal.kpi_tables_noaccess') }}{% else %}{{ t('sal.kpi_tables_checked') }}{% endif %}</span>
     </div>
 </div>
 
-<!-- ── Errores de acceso ── -->
 {% if d.ssh_error %}
 <div class="salud-error">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>No se pudo leer el historial de backups vía SSH: <code>{{ d.ssh_error }}</code></span>
+    <span>{{ t('sal.ssh_error_pre') }} <code>{{ d.ssh_error }}</code></span>
 </div>
 {% endif %}
 
-<!-- ── Tabla de backups ── -->
 <div class="salud-section">
-    <p class="salud-section-title">Historial de copias — integridad</p>
+    <p class="salud-section-title">{{ t('sal.section_backups') }}</p>
     <div class="salud-card">
         <div class="salud-card-header">
             <div class="salud-card-icon {% if resumen.get('errores', 0) == 0 and d.backups %}green{% elif resumen.get('errores', 0) > 0 %}red{% else %}indigo{% endif %}">
                 <i class="fa-solid fa-shield-check"></i>
             </div>
             <div>
-                <p class="salud-card-title">Verificación de copias</p>
+                <p class="salud-card-title">{{ t('sal.card_backup_title') }}</p>
                 <p class="salud-card-desc">
-                    Estado de cada copia según history.tsv.
+                    {{ t('sal.card_backup_desc') }}
                     {% if resumen.get('sin_sha', 0) > 0 %}
-                        <span style="color:#b45309;">{{ resumen.get('sin_sha',0) }} sin SHA256 — creadas antes de activar la verificación.</span>
+                        <span style="color:#b45309;">{{ resumen.get('sin_sha',0) }} {{ t('sal.sha_missing_pre') }}</span>
                     {% endif %}
                 </p>
             </div>
@@ -193,19 +172,19 @@
         <table class="salud-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>BD</th>
-                    <th>Estado</th>
-                    <th>SHA256</th>
-                    <th>Tamaño</th>
+                    <th>{{ t('sal.th_id') }}</th>
+                    <th>{{ t('sal.th_date') }}</th>
+                    <th>{{ t('sal.th_type') }}</th>
+                    <th>{{ t('sal.th_db') }}</th>
+                    <th>{{ t('sal.th_state') }}</th>
+                    <th>{{ t('sal.th_sha') }}</th>
+                    <th>{{ t('sal.th_size') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in d.backups %}
                 <tr>
-                    <td style="font-family:monospace;font-size:.78rem;color:#6b7280;">{{ b.id }}</td>
+                    <td style="font-family:monospace;font-size:.78rem;color:var(--muted);">{{ b.id }}</td>
                     <td>{{ b.fecha }}</td>
                     <td>{{ b.tipo }}</td>
                     <td>{{ b.db }}</td>
@@ -223,67 +202,66 @@
                         <span class="pill pill-s">—</span>
                         {% endif %}
                     </td>
-                    <td style="color:#6b7280;">{{ b.size }}</td>
+                    <td style="color:var(--muted);">{{ b.size }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         </div>
         {% elif d.ssh_error %}
-        <p style="padding:1.25rem;color:#9ca3af;font-size:.87rem;margin:0;">
-            No se pudo conectar al servidor de backups para leer el historial.
+        <p style="padding:1.25rem;color:var(--muted);font-size:.87rem;margin:0;">
+            {{ t('sal.no_ssh') }}
         </p>
         {% else %}
-        <p style="padding:1.25rem;color:#9ca3af;font-size:.87rem;margin:0;">
-            Aún no hay copias registradas en el historial.
+        <p style="padding:1.25rem;color:var(--muted);font-size:.87rem;margin:0;">
+            {{ t('sal.no_backups') }}
         </p>
         {% endif %}
     </div>
 </div>
 
-<!-- ── Tablas de la BD ── -->
 <div class="salud-section">
-    <p class="salud-section-title">Base de datos de logs</p>
+    <p class="salud-section-title">{{ t('sal.section_db') }}</p>
     <div class="salud-card">
         <div class="salud-card-header">
             <div class="salud-card-icon {% if d.db_tables and not d.db_error %}green{% else %}amber{% endif %}">
                 <i class="fa-solid fa-database"></i>
             </div>
             <div>
-                <p class="salud-card-title">Estado de tablas ({{ LOGS_DB_NAME if LOGS_DB_NAME else 'vigex_logs' }})</p>
+                <p class="salud-card-title">{{ t('sal.section_db') }} ({{ LOGS_DB_NAME if LOGS_DB_NAME else 'vigex_logs' }})</p>
                 <p class="salud-card-desc">
                     {% if d.db_error %}
-                        No se pudo conectar: {{ d.db_error }}
+                        {{ t('sal.card_db_desc_noaccess') }} {{ d.db_error }}
                     {% else %}
-                        Resultado de <code>SHOW TABLE STATUS</code> — sin indicadores de corrupción.
+                        {{ t('sal.card_db_desc_ok') | safe }}
                     {% endif %}
                 </p>
             </div>
         </div>
         {% if d.db_tables %}
         <div class="db-table-grid">
-            {% for t in d.db_tables %}
+            {% for t_item in d.db_tables %}
             <div class="db-table-item">
                 <div class="dbt-name">
                     <i class="fa-solid fa-table" style="color:#4f46e5;font-size:.75rem;"></i>
-                    {{ t.nombre }}
-                    {% if not t.ok %}
+                    {{ t_item.nombre }}
+                    {% if not t_item.ok %}
                     <span class="pill pill-r" style="margin-left:.3rem;">Error</span>
                     {% endif %}
                 </div>
                 <div class="dbt-meta">
-                    {{ '{:,}'.format(t.filas) }} filas · {{ t.size_mb }} MB
+                    {{ '{:,}'.format(t_item.filas) }} filas · {{ t_item.size_mb }} MB
                 </div>
             </div>
             {% endfor %}
         </div>
         {% elif d.db_error %}
-        <p style="padding:1.25rem;color:#9ca3af;font-size:.87rem;margin:0;">
+        <p style="padding:1.25rem;color:var(--muted);font-size:.87rem;margin:0;">
             <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>
-            Sin conexión a la base de datos. Comprueba <code>LOGS_DB_*</code> en <code>config.env</code>.
+            {{ t('sal.no_db') | safe }}
         </p>
         {% else %}
-        <p style="padding:1.25rem;color:#9ca3af;font-size:.87rem;margin:0;">Sin tablas detectadas.</p>
+        <p style="padding:1.25rem;color:var(--muted);font-size:.87rem;margin:0;">{{ t('sal.no_tables') }}</p>
         {% endif %}
     </div>
 </div>
@@ -292,15 +270,15 @@
 
 {% block sidebar_info %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Copias OK</span>
+    <span class="sidebar-info-label">{{ t('sal.sidebar_ok') }}</span>
     <span>{{ datos.resumen.get('total',0) - datos.resumen.get('errores',0) }} / {{ datos.resumen.get('total',0) }}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Con SHA256</span>
+    <span class="sidebar-info-label">{{ t('sal.sidebar_sha') }}</span>
     <span>{{ datos.resumen.get('checksums_ok',0) }}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Tablas BD</span>
+    <span class="sidebar-info-label">{{ t('sal.sidebar_tables') }}</span>
     <span>{{ datos.db_tables | length }}</span>
 </div>
 {% endblock %}
@@ -313,8 +291,7 @@
         var btn = document.getElementById('btn-refresh');
         if (!btn) return;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando…';
-        // Recarga la página completa para obtener datos frescos de SSH/BD
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ t("sal.verifying") }}';
         setTimeout(function () { window.location.reload(); }, 300);
     }
     window.refrescarSalud = refrescarSalud;

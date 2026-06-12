@@ -1,23 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Tickets de soporte — Vigex{% endblock %}
+{% block title %}{{ t('tic.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
     .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
-    .summary-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); font-size:14px; color:var(--muted); }
+    .summary-card { background:var(--panel); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); font-size:14px; color:var(--muted); }
     .summary-card strong { display:block; font-size:26px; font-weight:800; color:var(--text); margin-top:6px; }
-    .filter-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
+    .filter-card { background:var(--panel); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); margin-bottom:18px; }
     .filter-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1.5fr auto; gap:10px; align-items:end; }
-    .filter-grid label { display:block; font-weight:700; margin-bottom:6px; font-size:13px; }
-    .filter-grid input, .filter-grid select { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #d0d7de; border-radius:10px; font-family:inherit; }
-    .tickets-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
+    .filter-grid label { display:block; font-weight:700; margin-bottom:6px; font-size:13px; color:var(--text); }
+    .filter-grid input, .filter-grid select { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-family:inherit; background:var(--bg); color:var(--text); }
+    .tickets-card { background:var(--panel); border-radius:16px; padding:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08); border:1px solid var(--border); }
     .tickets-table { width:100%; border-collapse:collapse; }
-    .tickets-table th, .tickets-table td { padding:12px; border-bottom:1px solid #d8dee4; text-align:left; vertical-align:top; }
-    .tickets-table th { font-size:13px; color:#57606a; text-transform:uppercase; }
+    .tickets-table th, .tickets-table td { padding:12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+    .tickets-table th { font-size:13px; color:var(--muted); text-transform:uppercase; }
     .ticket-id { font-weight:800; }
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; background:#ddf4ff; color:#0969da; }
     .badge.priority { background:#fff8c5; color:#9a6700; }
-    .muted { color:#57606a; font-size:13px; }
+    .muted { color:var(--muted); font-size:13px; }
     @media (max-width:900px) { .summary-grid, .filter-grid { grid-template-columns:1fr; } .tickets-table { font-size:13px; } }
 </style>
 {% endblock %}
@@ -27,67 +27,67 @@
 <div class="topbar">
     <div>
         {% if modo_reportes %}
-        <h2 class="page-title">Reportes del panel</h2>
-        <p class="page-subtitle">Bugs, sugerencias y preguntas enviadas desde el botón de reporte.</p>
+        <h2 class="page-title">{{ t('tic.title_reportes') }}</h2>
+        <p class="page-subtitle">{{ t('tic.sub_reportes') }}</p>
         {% else %}
-        <h2 class="page-title">Tickets de soporte</h2>
-        <p class="page-subtitle">Vista interna para el equipo Vigex.</p>
+        <h2 class="page-title">{{ t('tic.title_soporte') }}</h2>
+        <p class="page-subtitle">{{ t('tic.sub_soporte') }}</p>
         {% endif %}
     </div>
     <div class="topbar-actions">
         {% if modo_reportes %}
-        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-headset"></i> Ver tickets</a>
+        <a href="/soporte/tickets" class="btn"><i class="fa-solid fa-headset"></i> {{ t('tic.btn_ver_tickets') }}</a>
         {% else %}
-        <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> Nuevo ticket</a>
-        <a href="/soporte/reportes" class="btn"><i class="fa-solid fa-flag"></i> Ver reportes</a>
-        <a href="/soporte/sincronizacion" class="btn"><i class="fa-solid fa-rotate"></i> Sincronización</a>
+        <a href="/soporte" class="btn primary"><i class="fa-solid fa-plus"></i> {{ t('tic.btn_nuevo') }}</a>
+        <a href="/soporte/reportes" class="btn"><i class="fa-solid fa-flag"></i> {{ t('tic.btn_reportes') }}</a>
+        <a href="/soporte/sincronizacion" class="btn"><i class="fa-solid fa-rotate"></i> {{ t('tic.btn_sync') }}</a>
         {% endif %}
     </div>
 </div>
 
 <div class="summary-grid">
-    <div class="summary-card">Total tickets<strong>{{ counts.total }}</strong></div>
-    <div class="summary-card">Abiertos<strong>{{ counts.por_estado.get("Abierto", 0) }}</strong></div>
-    <div class="summary-card">Cerrados<strong>{{ counts.por_estado.get("Cerrado", 0) }}</strong></div>
-    <div class="summary-card">Pendientes central<strong>{{ central_sync_summary.error if central_sync_summary else central_pending_count }}</strong></div>
+    <div class="summary-card">{{ t('tic.kpi_total') }}<strong>{{ counts.total }}</strong></div>
+    <div class="summary-card">{{ t('tic.kpi_open') }}<strong>{{ counts.por_estado.get("Abierto", 0) }}</strong></div>
+    <div class="summary-card">{{ t('tic.kpi_closed') }}<strong>{{ counts.por_estado.get("Cerrado", 0) }}</strong></div>
+    <div class="summary-card">{{ t('tic.kpi_central') }}<strong>{{ central_sync_summary.error if central_sync_summary else central_pending_count }}</strong></div>
 </div>
 
 <div class="filter-card">
     <form method="get" action="{{ '/soporte/reportes' if modo_reportes else '/soporte/tickets' }}">
         <div class="filter-grid">
             <div>
-                <label>Estado</label>
+                <label>{{ t('tic.filter_estado') }}</label>
                 <select name="estado">
-                    <option value="">Todos</option>
+                    <option value="">{{ t('tic.filter_todos') }}</option>
                     {% for item in support_statuses %}
                     <option value="{{ item }}" {% if filters.estado == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label>Prioridad</label>
+                <label>{{ t('tic.filter_prioridad') }}</label>
                 <select name="prioridad">
-                    <option value="">Todas</option>
+                    <option value="">{{ t('tic.filter_todas') }}</option>
                     {% for item in support_priorities %}
                     <option value="{{ item }}" {% if filters.prioridad == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label>Tipo</label>
+                <label>{{ t('tic.filter_tipo') }}</label>
                 <select name="tipo">
-                    <option value="">Todos</option>
+                    <option value="">{{ t('tic.filter_todos') }}</option>
                     {% for item in support_types %}
                     <option value="{{ item }}" {% if filters.tipo == item %}selected{% endif %}>{{ item }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label>Búsqueda</label>
-                <input type="text" name="q" value="{{ filters.q }}" placeholder="ID, cliente, email, servicio...">
+                <label>{{ t('tic.filter_q') }}</label>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="{{ t('tic.filter_ph_q') }}">
             </div>
             <div>
-                <button class="btn primary" type="submit"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-filter"></i> {{ t('tic.btn_filter') }}</button>
             </div>
         </div>
     </form>
@@ -101,7 +101,7 @@
         {{ csrf_input(request) }}
         <button class="btn" type="submit">
             <i class="fa-solid fa-rotate"></i>
-            Reintentar envío central pendiente ({{ central_pending_count }})
+            {{ t('tic.btn_retry') }} ({{ central_pending_count }})
         </button>
     </form>
     {% endif %}
@@ -109,8 +109,10 @@
     <table class="tickets-table">
         <thead>
             <tr>
-                <th>ID</th><th>CENTRAL</th><th>Cliente</th><th>Tipo</th>
-                <th>Prioridad</th><th>Estado</th><th>Servicio</th><th>Fecha</th><th></th>
+                <th>{{ t('tic.th_id') }}</th><th>{{ t('tic.th_central') }}</th>
+                <th>{{ t('tic.th_cliente') }}</th><th>{{ t('tic.th_tipo') }}</th>
+                <th>{{ t('tic.th_prioridad') }}</th><th>{{ t('tic.th_estado') }}</th>
+                <th>{{ t('tic.th_servicio') }}</th><th>{{ t('tic.th_fecha') }}</th><th></th>
             </tr>
         </thead>
         <tbody>
@@ -122,7 +124,7 @@
                     <strong>{{ ticket.central_ticket_id }}</strong>
                     <div class="muted">{{ ticket.central_sync_status or "sent" }}</div>
                     {% else %}
-                    <span class="muted">Sin central</span>
+                    <span class="muted">{{ t('tic.sin_central') }}</span>
                     {% endif %}
                 </td>
                 <td>
@@ -144,7 +146,7 @@
     </table>
     {% else %}
     <div class="empty-state">
-        <p>No hay tickets que coincidan con los filtros seleccionados.</p>
+        <p>{{ t('tic.no_tickets') }}</p>
     </div>
     {% endif %}
 </div>
