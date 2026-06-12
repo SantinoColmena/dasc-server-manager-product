@@ -7407,7 +7407,7 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cuál es la versión actual de Vigex y qué incluye?\n"
         ),
         "respuesta": (
-            "La versión actual de Vigex es **v1.0-rc1** (Release Candidate 1), correspondiente a la Fase 6 del proyecto (primera fase de ventas). Esta versión incluye todas las funcionalidades core: backups automatizados, restauración con verificación SHA256, gestión de servicios systemd, logs centralizados en MariaDB, alertas por Telegram y email, monitoreo con Grafana/Cacti, informes automáticos, terminal web, soporte con tickets, Vigex Central Support para gestión multicliente, e Inteligencia Artificial integrada (Asistente IA con RAG). Puedes ver la versión instalada en el footer del panel o ejecutando en el servidor: `head -5 /opt/vigex/api/main.py`.\n"
+            "La versión actual de Vigex es **v1.1-rc1**, que incluye todas las funcionalidades core: backups automatizados, restauración con verificación SHA256, gestión de servicios systemd, logs centralizados en MariaDB, alertas por Telegram (@VigexPanelBot centralizado) y email, monitoreo, informes automáticos, terminal web, tickets de soporte, Vigex Central Support para gestión multicliente, Asistente IA con RAG (5 proveedores LLM), módulo de **Cumplimiento NIS2/ENS/ISO 27001** con evidencias auditables, gestión de **Incidentes NIS2** con cuenta atrás, instalador **Docker para Windows** (VigexSetup.exe) y soporte para servidores Windows gestionados via **Vigex Agent**. Puedes ver la versión en el footer del panel.\n"
         ),
         "palabras_clave": ["versión", "version", "actual", "rc1", "fase", "instalada", "numero", "incluye"],
     },
@@ -7433,18 +7433,20 @@ _FAQ_ENTRIES: list[dict] = [
         "respuesta": (
             "El panel tiene los siguientes módulos accesibles desde el menú lateral:\n"
             "\n"
-            "• **Dashboard** — resumen del estado: disco, servicios activos, último backup.\n"
+            "• **Panel** — dashboard con resumen de estado: disco, servicios activos, último backup.\n"
             "• **Copias** — historial de backups, lanzar copia manual, verificar integridad.\n"
-            "• **Restauración** — restaurar desde cualquier copia con verificación SHA256 previa.\n"
+            "• **Recuperación** — restaurar desde cualquier copia con verificación SHA256 previa.\n"
             "• **Servicios** — ver y controlar servicios systemd del servidor remoto.\n"
             "• **Logs** — consulta de logs centralizados desde la base de datos MariaDB.\n"
-            "• **Alertas** — umbrales y canales de notificación (Telegram y/o email).\n"
+            "• **Alertas** — destinatarios Telegram, canales de notificación y umbrales.\n"
             "• **Monitoreo** — integración con Grafana o Cacti para gráficas en tiempo real.\n"
-            "• **Informes** — generación y envío automático de informes operacionales.\n"
             "• **Terminal** — terminal web con comandos SSH controlados al servidor.\n"
-            "• **Soporte** — sistema de tickets de soporte técnico con estado y seguimiento.\n"
-            "• **Asistente IA** — chat inteligente con RAG sobre documentación Vigex.\n"
-            "• **Admin** — gestión de usuarios, permisos y configuración (solo administrador).\n"
+            "• **Asistente** — chat inteligente con RAG sobre documentación Vigex.\n"
+            "• **Cumplimiento** — cobertura NIS2/ENS/ISO 27001 con evidencias auditables.\n"
+            "• **Incidentes NIS2** — ciclo de vida de incidentes de seguridad con cuenta atrás.\n"
+            "• **Tickets** — sistema de tickets de soporte con estado y seguimiento.\n"
+            "• **Informes** — generación y envío automático de informes operacionales.\n"
+            "• **Usuarios / Accesos / Configuración** — gestión administrativa (solo administrador).\n"
         ),
         "palabras_clave": ["módulos", "secciones", "menu", "panel", "funciones", "dashboard", "partes", "copias", "logs"],
     },
@@ -7504,9 +7506,11 @@ _FAQ_ENTRIES: list[dict] = [
             "¿En qué sistemas operativos funciona Vigex?\n"
         ),
         "respuesta": (
-            "Vigex está diseñado y probado para **Ubuntu 22.04 LTS** en los servidores donde se instala. También debería funcionar en Ubuntu 20.04 y Debian 11/12, aunque no están oficialmente soportados. Los scripts de instalación asumen `apt` como gestor de paquetes y `systemd` como gestor de servicios.\n"
+            "Vigex está diseñado y probado para **Ubuntu 22.04 LTS** en los servidores Linux donde se instala. También debería funcionar en Ubuntu 20.04 y Debian 11/12, aunque no están oficialmente soportados. Los scripts de instalación asumen `apt` y `systemd`.\n"
             "\n"
-            "El **panel web** es compatible con cualquier navegador moderno (Chrome, Firefox, Edge, Safari) desde cualquier sistema operativo: Windows, Mac o Linux. Las herramientas de validación y desarrollo (PowerShell) corren en Windows.\n"
+            "Desde **v1.1-rc1**, el panel también puede instalarse en **Windows 10/11** mediante el instalador `VigexSetup.exe` (R-099), que configura Docker automáticamente y despliega el panel en `localhost:8000`. Los servidores gestionados siguen siendo Linux (o Windows con Vigex Agent).\n"
+            "\n"
+            "El **panel web** es compatible con cualquier navegador moderno desde Windows, Mac o Linux.\n"
         ),
         "palabras_clave": ["sistema operativo", "ubuntu", "debian", "linux", "compatible", "so", "navegador", "windows"],
     },
@@ -7518,19 +7522,20 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cómo se instala Vigex paso a paso?\n"
         ),
         "respuesta": (
-            "Instalación general (perfil Standard recomendado):\n"
+            "**Opción A — Panel en Windows (Docker):** descarga `VigexSetup.exe`, ejecútalo como Administrador. El instalador configura Docker y despliega el panel en `http://localhost:8000` automáticamente.\n"
+            "\n"
+            "**Opción B — Panel en Linux (perfil Standard recomendado):**\n"
             "\n"
             "1. Clona el repositorio o descarga el paquete de instalación.\n"
-            "2. Selecciona el perfil: `bash scripts/generar_config_perfil.sh` y elige `standard`.\n"
-            "3. En el servidor del panel, ejecuta como root:\n"
+            "2. En el servidor del panel, ejecuta como root:\n"
             "   `sudo bash deploy/api/install_vigex_api.sh`\n"
             "   El instalador pide las IPs de los servidores, genera claves SSH y crea el servicio systemd.\n"
-            "4. En el servidor de BD (si perfil dual/pro):\n"
-            "   `sudo bash deploy/db/install_vigex_db.sh`\n"
-            "5. En el servidor de backups:\n"
-            "   `sudo bash deploy/backup-services/instalar_backup_services.sh`\n"
-            "6. Instala el proxy HTTPS:\n"
-            "   `sudo bash deploy/proxy/install_vigex_proxy.sh`\n"
+            "3. En el servidor de BD (si perfil dual/pro):\n"
+            "   `sudo bash deploy/db/install_db.sh`\n"
+            "4. En el servidor de backups:\n"
+            "   `sudo bash deploy/backup-services/install_backup_services.sh`\n"
+            "5. Instala el proxy HTTPS:\n"
+            "   `sudo bash deploy/proxy/install_reverse_proxy.sh`\n"
             "\n"
             "El panel queda disponible en `https://IP_SERVIDOR`. Entra con el usuario `admin` y la contraseña que indicaste durante la instalación.\n"
         ),
@@ -7574,7 +7579,8 @@ _FAQ_ENTRIES: list[dict] = [
             "• `SSH_USER`, `SERVICIOS_HOST`, `BACKUPS_HOST` — conexión SSH remota.\n"
             "• `VIGEX_SSH_ALLOWED_HOSTS` — lista blanca de IPs SSH permitidas.\n"
             "• `LOGS_DB_HOST/NAME/USER/PASS` — conexión a BD de logs MariaDB.\n"
-            "• `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` — alertas Telegram.\n"
+            "• `VIGEX_TELEGRAM_MODE` — `central` (usa @VigexPanelBot, recomendado) o `local` (bot propio).\n"
+            "• `TELEGRAM_CHAT_ID` — Chat ID del cliente (obtenido con `/chatid` a @VigexPanelBot).\n"
             "• `NOTIF_SMTP_*` — SMTP para alertas y informes por email.\n"
             "• `VIGEX_RAG_*` — Asistente IA (proveedor, modelo, clave API).\n"
             "• `CENTRAL_SUPPORT_*` — conexión a Vigex Central Support.\n"
@@ -7611,15 +7617,16 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cómo actualizo Vigex a una nueva versión?\n"
         ),
         "respuesta": (
-            "Desde el servidor Linux, ejecuta como root:\n"
+            "**Panel en Linux:** ejecuta como root en el servidor:\n"
             "`sudo bash /ruta/al/repo/deploy/api/update_vigex_api.sh`\n"
+            "El script preserva `config.env`, las claves SSH y los datos. Antes de actualizar:\n"
+            "1. Lanza una copia manual: Copias → **Ejecutar ahora**.\n"
+            "2. Revisa el CHANGELOG en `docs/ROADMAP.md` para cambios incompatibles.\n"
             "\n"
-            "El script preserva `config.env`, las claves SSH, los datos y la base de datos. Antes de actualizar es recomendable:\n"
-            "1. Hacer una copia de seguridad manual desde el panel (Copias → Nueva copia).\n"
-            "2. Anotar la versión actual: `head -5 /opt/vigex/api/main.py`.\n"
-            "3. Revisar el CHANGELOG en `docs/ROADMAP.md` para cambios incompatibles.\n"
+            "**Panel en Windows (Docker):** haz doble clic en `C:\\ProgramData\\Vigex\\vigex-update.bat` o ejecuta en PowerShell como Administrador:\n"
+            "`C:\\ProgramData\\Vigex\\VigexSetup.ps1 -Update`\n"
             "\n"
-            "Desde Windows puedes usar: `tools\\windows\\instalar_vigex_windows.ps1` y seleccionar la opción 2 (Actualizar). Si el servicio falla después, revisa los logs con `journalctl -u vigex-api -n 50`.\n"
+            "Si el servicio falla tras actualizar, revisa los logs con `journalctl -u vigex-api -n 50`.\n"
         ),
         "palabras_clave": ["actualizar", "update", "nueva", "version", "upgrade", "actualización"],
     },
@@ -7638,7 +7645,7 @@ _FAQ_ENTRIES: list[dict] = [
             "• **Fallo SSH**: prueba `sudo -u vigex ssh -i /opt/vigex/api/.ssh/id_rsa_vigex vigex@IP_BACKUPS hostname`.\n"
             "• **Error en el script**: revisa `journalctl -u vigex-api -n 100` en el panel.\n"
             "\n"
-            "Para lanzar una copia manual: botón **Nueva copia** en la sección Copias. Si el error persiste, abre un ticket en Soporte con el mensaje de error completo.\n"
+            "Para lanzar una copia manual: botón **Ejecutar ahora** en la sección Copias. Si el error persiste, abre un ticket en Soporte con el mensaje de error completo.\n"
         ),
         "palabras_clave": ["backup", "copia", "fallo", "error", "rojo", "historial", "fallida"],
     },
@@ -7678,7 +7685,7 @@ _FAQ_ENTRIES: list[dict] = [
             "Ejemplo de cron para backup diario a las 2:00 AM:\n"
             "`0 2 * * * /opt/vigex/api/scripts/run_backup.sh >> /var/log/vigex/backup.log 2>&1`\n"
             "\n"
-            "También puedes lanzar copias manuales desde el panel en cualquier momento: **Copias → Nueva copia**. El historial con fecha, estado e integridad queda registrado en la pantalla de Copias.\n"
+            "También puedes lanzar copias manuales desde el panel en cualquier momento: **Copias → Ejecutar ahora**. El historial con fecha, estado e integridad queda registrado en la pantalla de Copias.\n"
         ),
         "palabras_clave": ["programar", "cron", "automático", "automatico", "diario", "semanal", "horario", "backup"],
     },
@@ -7709,11 +7716,11 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cómo verifica Vigex la integridad de las copias de seguridad?\n"
         ),
         "respuesta": (
-            "Vigex calcula y almacena un **checksum SHA256** de cada copia de seguridad en el momento de su creación. Puedes verificar la integridad en cualquier momento desde:\n"
+            "Vigex calcula y almacena un **checksum SHA256** de cada copia de seguridad en el momento de su creación. Puedes verificar la integridad desde:\n"
             "\n"
-            "**Copias → Integridad** — muestra el estado de verificación de cada backup. Un check verde indica que el fichero no ha sido modificado ni corrompido. Un check rojo indica discrepancia en el hash (posible corrupción).\n"
+            "**Copias → Integridad** (ruta `/copias/salud`) — muestra el estado de verificación de cada backup. Un icono verde indica que el fichero no ha sido modificado ni corrompido. Un icono rojo indica discrepancia en el hash (posible corrupción). Pulsa **Verificar** para relanzar la comprobación.\n"
             "\n"
-            "Vigex verifica automáticamente el checksum antes de iniciar cualquier restauración. Si el hash no coincide, la restauración se bloquea para evitar restaurar datos corruptos. Para regenerar el checksum de una copia (si se movió el fichero), usa el botón 'Recalcular hash' en la pantalla de integridad.\n"
+            "Vigex verifica automáticamente el checksum antes de iniciar cualquier restauración. Si el hash no coincide, la restauración se bloquea para evitar restaurar datos corruptos.\n"
         ),
         "palabras_clave": ["integridad", "sha256", "checksum", "hash", "verificar", "corrupto", "validar"],
     },
@@ -7894,15 +7901,14 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cómo añado un servicio para que Vigex lo monitoree y alerte?\n"
         ),
         "respuesta": (
-            "Para añadir un servicio al monitoreo de alertas:\n"
+            "Vigex monitoriza automáticamente todos los servicios systemd gestionados en el servidor de servicios — no hay una lista manual. El sistema consulta el estado de todos ellos periódicamente (cada `NOTIF_CHECK_INTERVAL` segundos, por defecto 15 minutos). Si detecta algún servicio caído, envía alerta por Telegram y/o email.\n"
             "\n"
-            "1. Ve a **Alertas** en el menú lateral.\n"
-            "2. Busca la sección 'Servicios monitoreados'.\n"
-            "3. Añade el nombre del servicio systemd (ej: `nginx`, `mysql`, `php8.1-fpm`).\n"
-            "4. Configura el umbral de tiempo de caída antes de alertar.\n"
-            "5. Activa la alerta para ese servicio.\n"
+            "Para que las alertas proactivas funcionen:\n"
+            "1. Activa `NOTIF_ENABLED=true` en `config.env`.\n"
+            "2. Configura al menos un canal: SMTP para email o un destinatario Telegram en **Alertas**.\n"
+            "3. El estado en tiempo real lo ves en **Alertas → Notificaciones automáticas** (botón en la misma pantalla de Alertas).\n"
             "\n"
-            "Vigex comprobará periódicamente (cada `NOTIF_CHECK_INTERVAL` segundos, por defecto 15 minutos) el estado del servicio y enviará alerta por Telegram y/o email si lo detecta caído. El cooldown evita spam de alertas (configurable con `NOTIF_COOLDOWN`, por defecto 4 horas).\n"
+            "El cooldown (`NOTIF_COOLDOWN`) evita spam de alertas repetidas (por defecto 4 horas).\n"
         ),
         "palabras_clave": ["añadir servicio", "monitoreo", "alertas", "vigilar", "notificación", "servicio"],
     },
@@ -7954,7 +7960,7 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Qué base de datos usa Vigex para los logs? ¿Cómo se configura?\n"
         ),
         "respuesta": (
-            "Vigex usa **MariaDB** (compatible con MySQL) como base de datos centralizada para logs. El instalador `deploy/db/install_vigex_db.sh` crea la BD, el usuario y los permisos necesarios automáticamente.\n"
+            "Vigex usa **MariaDB** (compatible con MySQL) como base de datos centralizada para logs. El instalador `deploy/db/install_db.sh` crea la BD, el usuario y los permisos necesarios automáticamente.\n"
             "\n"
             "Estructura principal:\n"
             "• **BD**: `vigex_logs` (configurable con `LOGS_DB_NAME`).\n"
@@ -7999,20 +8005,19 @@ _FAQ_ENTRIES: list[dict] = [
             "No recibo alertas por Telegram. ¿Cómo lo configuro?\n"
         ),
         "respuesta": (
-            "Pasos para configurar Telegram:\n"
+            "Vigex usa el bot centralizado **@VigexPanelBot** — no tienes que crear ningún bot propio ni pedir un token. Solo necesitas tu Chat ID. Pasos:\n"
             "\n"
-            "1. Crea un bot con `@BotFather` en Telegram → `/newbot` → copia el token.\n"
-            "2. Envía un mensaje al bot y obtén tu chat ID:\n"
-            "   `https://api.telegram.org/bot<TOKEN>/getUpdates`\n"
-            "   Busca `\"chat\":{\"id\":XXXXXXX}` en la respuesta.\n"
-            "3. Edita `config.env` en el servidor:\n"
-            "   `nano /opt/vigex/api/config.env`\n"
-            "   Configura: `TELEGRAM_BOT_TOKEN=tu_token` y `TELEGRAM_CHAT_ID=tu_chat_id`.\n"
-            "4. Activa las notificaciones: `NOTIF_ENABLED=true`.\n"
-            "5. Reinicia: `systemctl restart vigex-api`.\n"
-            "6. Prueba desde el panel: **Alertas → Probar alertas Telegram**.\n"
+            "1. Abre Telegram, busca **@VigexPanelBot** y pulsa **Iniciar**.\n"
+            "2. Escribe `/chatid` — el bot te responde con tu número de Chat ID.\n"
+            "3. En el panel, ve a **Alertas** → sección **Destinatarios Telegram**:\n"
+            "   - Rellena Empresa, Nombre visible, Tipo (Usuario individual / Grupo) y Chat ID.\n"
+            "   - Pulsa **Guardar destinatario**.\n"
+            "4. En la tabla de destinatarios, haz clic en **Por defecto** (★) junto al destinatario.\n"
+            "5. Pulsa **Enviar prueba al destino por defecto** — deberías recibir un mensaje.\n"
             "\n"
-            "Si sigue sin llegar, comprueba que el bot no está bloqueado y que el token y chat ID son correctos (el chat ID puede ser negativo para grupos).\n"
+            "Si no llega: confirma que pulsaste **Iniciar** con el bot, que el Chat ID no tiene espacios, y que el destinatario tiene marcado ★ Por defecto.\n"
+            "\n"
+            "Para grupos: añade @VigexPanelBot al grupo, escribe `/chatid` en el grupo, usa ese ID (puede ser negativo) con Tipo = Grupo.\n"
         ),
         "palabras_clave": ["telegram", "alerta", "notificación", "bot", "token", "chatid", "configurar"],
     },
@@ -8040,7 +8045,7 @@ _FAQ_ENTRIES: list[dict] = [
             "\n"
             "**Para otros proveedores**: consulta la configuración SMTP específica (Outlook usa smtp-mail.outlook.com:587, Yahoo usa smtp.mail.yahoo.com:587).\n"
             "\n"
-            "Prueba el envío desde: **Alertas → Probar alertas → Email**. Reinicia el servicio tras cualquier cambio en config.env.\n"
+            "Para probar el envío: activa `NOTIF_ENABLED=true`, guarda y reinicia (`systemctl restart vigex-api`). Luego en el panel ve a **Alertas → Notificaciones automáticas** y pulsa el botón **Comprobar ahora** — si las condiciones de alerta se cumplen, enviará también por email. Reinicia el servicio tras cualquier cambio en config.env.\n"
         ),
         "palabras_clave": ["email", "correo", "smtp", "gmail", "alerta", "notificación", "envío", "configurar"],
     },
@@ -8683,10 +8688,7 @@ _FAQ_ENTRIES: list[dict] = [
             "\n"
             "`head -5 /opt/vigex/api/main.py`\n"
             "\n"
-            "o buscando en config.env:\n"
-            "`grep VIGEX_VERSION /opt/vigex/api/config.env`\n"
-            "\n"
-            "La versión actual del producto es **v1.0-rc1**. Para comparar con la última versión disponible, consulta el fichero `docs/ROADMAP.md` del repositorio o la página oficial de Vigex.\n"
+            "La versión actual del producto es **v1.1-rc1**. Para comparar con la última versión disponible, consulta el fichero `docs/ROADMAP.md` del repositorio o la página oficial de Vigex.\n"
         ),
         "palabras_clave": ["versión", "version", "instalada", "vigex", "actual", "numero", "comprobar"],
     },
@@ -8743,7 +8745,7 @@ _FAQ_ENTRIES: list[dict] = [
         "respuesta": (
             "La base de datos de logs usa **MariaDB**. La instalación se hace con el script incluido en el repositorio:\n"
             "\n"
-            "`sudo bash deploy/db/install_vigex_db.sh`\n"
+            "`sudo bash deploy/db/install_db.sh`\n"
             "\n"
             "El script realiza automáticamente:\n"
             "• Instalación de MariaDB si no está presente.\n"
@@ -8792,7 +8794,7 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cómo funciona el proxy nginx de Vigex?\n"
         ),
         "respuesta": (
-            "Vigex incluye un instalador de proxy nginx (`deploy/proxy/install_vigex_proxy.sh`) que configura nginx como reverse proxy delante de Uvicorn:\n"
+            "Vigex incluye un instalador de proxy nginx (`deploy/proxy/install_reverse_proxy.sh`) que configura nginx como reverse proxy delante de Uvicorn:\n"
             "\n"
             "• nginx escucha en el puerto 443 (HTTPS) y 80 (redirige a HTTPS).\n"
             "• Las peticiones HTTPS se pasan al Uvicorn local en el puerto 8000.\n"

@@ -68,8 +68,8 @@ Un usuario estándar puede ver:
 
 | Sección | Para qué sirve |
 |---|---|
-| **Copias de seguridad** | Ver el historial de backups, lanzar una copia manual, comprobar el resultado |
-| **Restauración** | Recuperar datos de una copia anterior (acción delicada, consultar al técnico) |
+| **Copias** | Ver el historial de backups, lanzar una copia manual, comprobar el resultado |
+| **Recuperación** | Recuperar datos de una copia anterior (acción delicada, consultar al técnico) |
 | **Logs** | Ver eventos del sistema: quién accedió, qué acciones se ejecutaron, si hubo errores |
 | **Alertas** | Configurar notificaciones por Telegram (@VigexPanelBot) o email |
 | **Servicios** | Ver y controlar el estado de servicios del servidor (si tienes permiso) |

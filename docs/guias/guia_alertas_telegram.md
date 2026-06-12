@@ -30,25 +30,30 @@ Solo necesitas dos cosas:
 
 ---
 
-## Paso 2 — Configurar el Chat ID en el panel
+## Paso 2 — Añadir el Chat ID como destinatario
 
 1. Accede al panel Vigex con tu usuario y contraseña.
 2. En el menú lateral, ve a **Alertas**.
-3. En el campo **Telegram Chat ID**, pega el número que obtuviste en el paso anterior.
-4. Asegúrate de que el **Canal por defecto** esté seleccionado como **Telegram**.
-5. Pulsa **Guardar configuración**.
+3. Baja hasta la sección **Destinatarios Telegram** y rellena el formulario:
+   - **Empresa** — nombre de tu empresa (ej: "Mi Empresa").
+   - **Nombre visible** — etiqueta para identificar este destino (ej: "Alertas IT").
+   - **Tipo** — selecciona **Usuario individual** si es tu chat personal, o **Grupo** si añadiste el bot a un grupo.
+   - **Chat ID** — pega el número obtenido en el Paso 1.
+4. Pulsa **Guardar destinatario**.
+5. En la tabla de destinatarios, haz clic en el botón **Por defecto** (estrella ★) junto al destinatario recién creado.
 
 ---
 
 ## Paso 3 — Probar que funciona
 
-1. En la misma pantalla de **Alertas**, pulsa el botón **Enviar alerta de prueba**.
+1. En la parte superior de la pantalla **Alertas**, pulsa **Enviar prueba al destino por defecto**.
 2. Deberías recibir en Telegram un mensaje de prueba de **@VigexPanelBot**
    en pocos segundos.
 
 Si no recibes el mensaje en 30 segundos, revisa:
+- Que hayas pulsado **Por defecto** en el destinatario correcto.
 - Que el Chat ID sea correcto (sin espacios ni guiones).
-- Que hayas guardado la configuración antes de probar.
+- Que hayas pulsado **Iniciar** con @VigexPanelBot antes de enviar.
 - Que no hayas bloqueado al bot en Telegram.
 
 ---

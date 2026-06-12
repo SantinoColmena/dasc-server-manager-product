@@ -131,10 +131,11 @@ El sistema envía notificaciones automáticas cuando ocurren eventos importantes
 Vigex usa el bot centralizado **@VigexPanelBot** para enviar alertas a Telegram.
 Para configurarlo:
 
-1. Busca **@VigexPanelBot** en Telegram y pulsa Iniciar.
-2. Escribe `/chatid` — el bot te devuelve un número (tu Chat ID).
-3. En el panel: **Alertas → Telegram Chat ID** → pega ese número → Guardar.
-4. Pulsa **Enviar alerta de prueba** para verificar que llega.
+1. Busca **@VigexPanelBot** en Telegram y pulsa **Iniciar**.
+2. Escribe `/chatid` — el bot te devuelve tu Chat ID (un número).
+3. En el panel: ve a **Alertas → sección "Destinatarios Telegram"** → rellena Empresa, Nombre visible, Tipo y Chat ID → pulsa **Guardar destinatario**.
+4. Haz clic en el botón **Por defecto** (★) junto al destinatario.
+5. Pulsa **Enviar prueba al destino por defecto** para verificar que llega.
 
 También puedes recibir alertas por **email** desde la misma pantalla.
 Consulta la guía completa: [`docs/guias/guia_alertas_telegram.md`](../guias/guia_alertas_telegram.md).
