@@ -1,32 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Logs de sesión — Vigex{% endblock %}
+{% block title %}{{ t('log.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
 <style>
-    .auth-log-table-wrap { width:100%; overflow-x:auto; border-radius:14px; border:1px solid var(--border); background:#fff; }
+    .auth-log-table-wrap { width:100%; overflow-x:auto; border-radius:14px; border:1px solid var(--border); background:var(--panel); }
     .auth-log-table { width:100%; border-collapse:collapse; min-width:980px; }
     .auth-log-table th, .auth-log-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--border); vertical-align:top; font-size:13px; }
-    .auth-log-table th { background:#f8fafc; color:#334155; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+    .auth-log-table th { background:var(--bg); color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
     .auth-log-table tr:last-child td { border-bottom:none; }
-    .badge-auth { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid var(--border); background:#f8fafc; color:#334155; white-space:nowrap; }
-    .badge-auth.login { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
-    .badge-auth.logout { background:#f8fafc; color:#475569; border-color:#cbd5e1; }
-    .badge-auth.ok { background:var(--successBg); color:var(--successText); border-color:var(--successBorder); }
-    .badge-auth.error { background:var(--dangerBg); color:var(--dangerText); border-color:var(--dangerBorder); }
-    .ua-cell { max-width:300px; color:var(--muted); word-break:break-word; }
-    .detail-cell { max-width:240px; color:#334155; word-break:break-word; }
+    .badge-auth { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid var(--border); background:var(--bg); color:var(--text); white-space:nowrap; }
+    .badge-auth.login  { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .badge-auth.logout { background:var(--bg); color:var(--muted); border-color:var(--border); }
+    .badge-auth.ok     { background:var(--successBg); color:var(--successText); border-color:var(--successBorder); }
+    .badge-auth.error  { background:var(--dangerBg);  color:var(--dangerText);  border-color:var(--dangerBorder); }
+    [data-theme="dark"] .badge-auth.login { background:#1e3a5f; color:#93c5fd; border-color:#1d4ed8; }
+    .ua-cell     { max-width:300px; color:var(--muted); word-break:break-word; }
+    .detail-cell { max-width:240px; color:var(--text);  word-break:break-word; }
 </style>
 {% endblock %}
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Auditoría</h3>
-    <p><span class="dot ok"></span> Registros: {{ auth_logs_total }}</p>
-    <p><span class="dot ok"></span> Logins: {{ auth_logs_login }}</p>
-    <p><span class="dot off"></span> Logouts: {{ auth_logs_logout }}</p>
+    <h3>{{ t('log.sidebar_title') }}</h3>
+    <p><span class="dot ok"></span> {{ t('log.sidebar_records') }}{{ auth_logs_total }}</p>
+    <p><span class="dot ok"></span> {{ t('log.sidebar_logins') }}{{ auth_logs_login }}</p>
+    <p><span class="dot off"></span> {{ t('log.sidebar_logouts') }}{{ auth_logs_logout }}</p>
     {% if auth_logs_last %}
-    <p><span class="dot warn"></span> Último: {{ auth_logs_last }}</p>
+    <p><span class="dot warn"></span> {{ t('log.sidebar_last') }}{{ auth_logs_last }}</p>
     {% endif %}
 </div>
 {% endblock %}
@@ -35,26 +36,28 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Auditoría de sesiones</h2>
-        <p class="page-subtitle">Registro de quién ha accedido al panel, cuándo y desde dónde.</p>
+        <h2 class="page-title">{{ t('log.title') }}</h2>
+        <p class="page-subtitle">{{ t('log.subtitle') }}</p>
     </div>
     <div class="topbar-actions">
-        <a class="btn" href="/admin/usuarios"><i class="fa-solid fa-arrow-left"></i> Volver a Administración</a>
-        <div class="status-pill"><i class="fa-solid fa-crown"></i> Solo admin</div>
+        <a class="btn" href="/admin/usuarios">
+            <i class="fa-solid fa-arrow-left"></i> {{ t('log.btn_back') }}
+        </a>
+        <div class="status-pill"><i class="fa-solid fa-crown"></i> {{ t('log.role_pill') }}</div>
     </div>
 </div>
 
 <div class="kpi-grid">
     <div class="kpi-card">
-        <div><div class="kpi-label">Registros mostrados</div><div class="kpi-value">{{ auth_logs_total }}</div></div>
+        <div><div class="kpi-label">{{ t('log.kpi_shown') }}</div><div class="kpi-value">{{ auth_logs_total }}</div></div>
         <i class="fa-solid fa-list-check"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Correctos</div><div class="kpi-value ok">{{ auth_logs_ok }}</div></div>
+        <div><div class="kpi-label">{{ t('log.kpi_ok') }}</div><div class="kpi-value ok">{{ auth_logs_ok }}</div></div>
         <i class="fa-solid fa-circle-check"></i>
     </div>
     <div class="kpi-card">
-        <div><div class="kpi-label">Fallidos</div><div class="kpi-value">{{ auth_logs_error }}</div></div>
+        <div><div class="kpi-label">{{ t('log.kpi_failed') }}</div><div class="kpi-value">{{ auth_logs_error }}</div></div>
         <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
 </div>
@@ -63,8 +66,8 @@
     <div class="card-head">
         <div class="card-icon red"><i class="fa-solid fa-shield-halved"></i></div>
         <div class="card-title">
-            <h3>Movimientos de autenticación</h3>
-            <p>Inicios de sesión correctos, intentos fallidos y cierres de sesión de cualquier usuario.</p>
+            <h3>{{ t('log.card_title') }}</h3>
+            <p>{{ t('log.card_desc') }}</p>
         </div>
     </div>
 
@@ -72,8 +75,14 @@
         <table class="auth-log-table">
             <thead>
                 <tr>
-                    <th>Fecha</th><th>Acción</th><th>Resultado</th><th>Usuario</th>
-                    <th>Rol</th><th>IP origen</th><th>Navegador / Cliente</th><th>Detalle</th>
+                    <th>{{ t('log.th_date') }}</th>
+                    <th>{{ t('log.th_action') }}</th>
+                    <th>{{ t('log.th_result') }}</th>
+                    <th>{{ t('log.th_user') }}</th>
+                    <th>{{ t('log.th_role') }}</th>
+                    <th>{{ t('log.th_ip') }}</th>
+                    <th>{{ t('log.th_ua') }}</th>
+                    <th>{{ t('log.th_detail') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,7 +112,9 @@
                 {% endfor %}
                 {% if not auth_logs %}
                 <tr>
-                    <td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">Todavía no hay logs de inicio o cierre de sesión.</td>
+                    <td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">
+                        {{ t('log.no_logs') }}
+                    </td>
                 </tr>
                 {% endif %}
             </tbody>
