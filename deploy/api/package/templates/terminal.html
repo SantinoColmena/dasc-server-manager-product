@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Terminal — Vigex{% endblock %}
+{% block title %}{{ t('nav.terminal') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <!-- Token CSRF para fetch API de la terminal -->
@@ -35,12 +35,12 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Terminal</h3>
+    <h3>{{ t('nav.terminal') }}</h3>
     <p><span class="dot ok"></span> Timeout: {{ terminal_timeout }}s</p>
     {% if selected_machine %}
-    <p><span class="dot ok"></span> Máquina: {{ selected_machine.label }}</p>
+    <p><span class="dot ok"></span> {{ t('term.sidebar_machine') }}: {{ selected_machine.label }}</p>
     {% else %}
-    <p><span class="dot warn"></span> Elige una máquina para empezar</p>
+    <p><span class="dot warn"></span> {{ t('term.sidebar_hint') }}</p>
     {% endif %}
 </div>
 {% endblock %}
@@ -49,8 +49,8 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Terminal remota</h2>
-        <p class="page-subtitle">Elige la máquina y ejecuta lo que necesites, directamente desde el navegador.</p>
+        <h2 class="page-title">{{ t('term.page_title') }}</h2>
+        <p class="page-subtitle">{{ t('term.page_subtitle') }}</p>
     </div>
 </div>
 
@@ -76,19 +76,19 @@
             <i class="fa-solid fa-terminal"></i>
             <span>{{ selected_machine.label }}</span>
         </div>
-        <div class="terminal-meta">Host: {{ selected_machine.host }} · Modo: {{ selected_machine.mode }}</div>
+        <div class="terminal-meta">Host: {{ selected_machine.host }} · {{ t('term.mode_label') }} {{ selected_machine.mode }}</div>
     </div>
     <div class="terminal-body">
-        <div id="terminalOutput" class="terminal-output">Vigex Terminal preparada.
-Máquina seleccionada: {{ selected_machine.label }}
+        <div id="terminalOutput" class="terminal-output">{{ t('term.ready') }}
+{{ t('term.machine_sel') }} {{ selected_machine.label }}
 Host: {{ selected_machine.host }}
-Escribe un comando y pulsa Enter.
+{{ t('term.hint') }}
 </div>
 
         <form id="terminalForm" class="terminal-input-row">
             <div class="terminal-prompt">{{ user }}@{{ selected_machine.key }}:$</div>
             <input id="terminalCommand" class="terminal-input" type="text" name="command" autocomplete="off" placeholder="Ej: hostname && whoami && date" autofocus>
-            <button id="terminalRunBtn" class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Ejecutar</button>
+            <button id="terminalRunBtn" class="btn primary" type="submit"><i class="fa-solid fa-play"></i> {{ t('term.btn_run') }}</button>
         </form>
 
         <div class="quick-commands">
@@ -96,13 +96,13 @@ Escribe un comando y pulsa Enter.
             <button type="button" data-command="pwd && ls -la">pwd + ls</button>
             <button type="button" data-command="df -h">df -h</button>
             <button type="button" data-command="free -h">free -h</button>
-            <button type="button" data-command="systemctl --failed --no-pager">servicios fallidos</button>
-            <button type="button" data-command="ip -br a">interfaces</button>
+            <button type="button" data-command="systemctl --failed --no-pager">{{ t('term.quick_failed') }}</button>
+            <button type="button" data-command="ip -br a">{{ t('term.quick_ifaces') }}</button>
         </div>
 
         <div class="terminal-warning">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            Recuerda: estos comandos son reales y se ejecutan en el servidor. Los que tarden más del tiempo límite se cortarán automáticamente.
+            {{ t('term.warning') }}
         </div>
     </div>
 </section>
@@ -111,8 +111,8 @@ Escribe un comando y pulsa Enter.
     <div class="card-head">
         <div class="card-icon violet"><i class="fa-solid fa-terminal"></i></div>
         <div class="card-title">
-            <h3>Selecciona una máquina</h3>
-            <p>Elige Main, Backup o Database para abrir la terminal correspondiente.</p>
+            <h3>{{ t('term.select_title') }}</h3>
+            <p>{{ t('term.select_desc') }}</p>
         </div>
     </div>
 </section>
@@ -122,12 +122,22 @@ Escribe un comando y pulsa Enter.
 
 {% block extra_js %}
 {% if selected_machine %}
+<div id="term-i18n" style="display:none"
+    data-running="{{ t('term.js_running') }}"
+    data-run="{{ t('term.js_run') }}"
+    data-err-cmd="{{ t('term.js_err_cmd') }}"
+    data-err-conn="{{ t('term.js_err_conn') }}">
+</div>
 <script>
 const terminalForm = document.getElementById('terminalForm');
 const terminalCommand = document.getElementById('terminalCommand');
 const terminalOutput = document.getElementById('terminalOutput');
 const terminalRunBtn = document.getElementById('terminalRunBtn');
 const selectedMachine = '{{ selected_machine.key }}';
+const i18n = (function() {
+    const el = document.getElementById('term-i18n');
+    return { running: el.dataset.running, run: el.dataset.run, errCmd: el.dataset.errCmd, errConn: el.dataset.errConn };
+})();
 
 function appendTerminal(text, className) {
     const line = document.createElement('div');
@@ -145,7 +155,7 @@ async function runCommand(command) {
     terminalCommand.value = '';
     terminalCommand.disabled = true;
     terminalRunBtn.disabled = true;
-    terminalRunBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ejecutando';
+    terminalRunBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.running}`;
 
     const formData = new FormData();
     formData.append('machine', selectedMachine);
@@ -161,18 +171,18 @@ async function runCommand(command) {
         const data = await response.json();
 
         if (!response.ok || data.ok === false) {
-            appendTerminal(data.error || data.text || 'ERROR ejecutando el comando.', 'terminal-line-error');
+            appendTerminal(data.error || data.text || i18n.errCmd, 'terminal-line-error');
         } else {
             if (data.stdout) appendTerminal(data.stdout.trimEnd(), 'terminal-line-ok');
             if (data.stderr) appendTerminal(data.stderr.trimEnd(), 'terminal-line-error');
             appendTerminal(`[exit code: ${data.code}] ${data.finished_at}`, data.ok ? 'terminal-line-ok' : 'terminal-line-error');
         }
     } catch (error) {
-        appendTerminal(`ERROR de conexión: ${error}`, 'terminal-line-error');
+        appendTerminal(`${i18n.errConn} ${error}`, 'terminal-line-error');
     } finally {
         terminalCommand.disabled = false;
         terminalRunBtn.disabled = false;
-        terminalRunBtn.innerHTML = '<i class="fa-solid fa-play"></i> Ejecutar';
+        terminalRunBtn.innerHTML = `<i class="fa-solid fa-play"></i> ${i18n.run}`;
         terminalCommand.focus();
     }
 }
