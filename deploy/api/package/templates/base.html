@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ lang | default('es') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,14 @@
     <!-- CSRF global (R-063: disponible en todas las páginas para el modal de bug report) -->
     <meta name="csrf-token" content="{{ csrf_token_value(request) }}">
 
+    <!-- i18n: selector de idioma (R-096) -->
+    <style>
+    .lang-switcher{display:flex;gap:.15rem;margin-right:.4rem}
+    .ls-btn{font-size:.68rem;font-weight:700;padding:.18rem .42rem;border-radius:4px;text-decoration:none;color:var(--muted);border:1px solid var(--border);background:transparent;transition:all .15s;letter-spacing:.03em;cursor:pointer}
+    .ls-btn:hover{color:var(--text);border-color:var(--text)}
+    .ls-active{background:#6d28d9!important;color:#fff!important;border-color:#6d28d9!important}
+    </style>
+
     <!-- Bloque para CSS y meta-tags adicionales por plantilla -->
     {% block extra_head %}{% endblock %}
 </head>
@@ -39,14 +47,23 @@
         </div>
     </a>
     {% block header_center %}{% endblock %}
+
+    <!-- Selector de idioma (R-096) -->
+    <div class="lang-switcher">
+        <a href="/set-lang?lang=es&amp;next={{ request.url.path }}"
+           class="ls-btn{% if (lang | default('es')) == 'es' %} ls-active{% endif %}">ES</a>
+        <a href="/set-lang?lang=ca&amp;next={{ request.url.path }}"
+           class="ls-btn{% if (lang | default('es')) == 'ca' %} ls-active{% endif %}">CA</a>
+    </div>
+
     <!-- Toggle modo oscuro/claro (R-083 / Ruta 10.7) -->
     <button class="dark-mode-toggle" id="dark-mode-toggle"
-            title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+            title="{{ t('header.dark_toggle') }}" aria-label="{{ t('header.dark_toggle') }}">
         <i class="fa-solid fa-moon" id="dark-mode-icon"></i>
     </button>
 
     <!-- Botón hamburguesa — visible solo en mobile (Ruta 7.3) -->
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir menú" aria-expanded="false">
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="{{ t('header.open_menu') }}" aria-expanded="false">
         <i class="fa-solid fa-bars"></i>
     </button>
 </header>
@@ -74,83 +91,83 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <h2>Navegación</h2>
+        <h2>{{ t('nav.title') }}</h2>
 
         <nav class="menu">
             <a href="/" class="{{ 'active' if current_path == '/' else '' }}">
-                <i class="fa-solid fa-house"></i> Panel
+                <i class="fa-solid fa-house"></i> {{ t('nav.panel') }}
             </a>
 
             <a href="/monitoreo" class="{{ 'active' if current_path.startswith('/monitoreo') else '' }}">
-                <i class="fa-solid fa-chart-area"></i> Monitoreo
+                <i class="fa-solid fa-chart-area"></i> {{ t('nav.monitoreo') }}
             </a>
 
             {% if can_backups %}
             <a href="/backups" class="{{ 'active' if current_path.startswith('/backups') else '' }}">
-                <i class="fa-solid fa-database"></i> Copias
+                <i class="fa-solid fa-database"></i> {{ t('nav.copias') }}
             </a>
             {% endif %}
 
             {% if can_logs %}
             <a href="/logs" class="{{ 'active' if current_path.startswith('/logs') else '' }}">
-                <i class="fa-solid fa-file-lines"></i> Logs
+                <i class="fa-solid fa-file-lines"></i> {{ t('nav.logs') }}
             </a>
             {% endif %}
 
             {% if can_servicios %}
             <a href="/servicios" class="{{ 'active' if current_path.startswith('/servicios') else '' }}">
-                <i class="fa-solid fa-server"></i> Servicios
+                <i class="fa-solid fa-server"></i> {{ t('nav.servicios') }}
             </a>
             {% endif %}
 
             {% if can_terminal %}
             <a href="/terminal" class="{{ 'active' if current_path.startswith('/terminal') else '' }}">
-                <i class="fa-solid fa-terminal"></i> Terminal
+                <i class="fa-solid fa-terminal"></i> {{ t('nav.terminal') }}
             </a>
             {% endif %}
 
             {% if can_alertas %}
             <a href="/alertas" class="{{ 'active' if current_path.startswith('/alertas') else '' }}">
-                <i class="fa-solid fa-bell"></i> Alertas
+                <i class="fa-solid fa-bell"></i> {{ t('nav.alertas') }}
             </a>
             {% endif %}
 
             <a href="/asistente" class="{{ 'active' if current_path.startswith('/asistente') else '' }}">
-                <i class="fa-solid fa-robot"></i> Asistente
+                <i class="fa-solid fa-robot"></i> {{ t('nav.asistente') }}
             </a>
 
             <a href="/recuperacion" class="{{ 'active' if current_path == '/recuperacion' else '' }}">
-                <i class="fa-solid fa-shield-halved"></i> Recuperación
+                <i class="fa-solid fa-shield-halved"></i> {{ t('nav.recuperacion') }}
             </a>
 
             {% if can_cumplimiento %}
             <a href="/cumplimiento" class="{{ 'active' if current_path == '/cumplimiento' else '' }}">
-                <i class="fa-solid fa-scale-balanced"></i> Cumplimiento
+                <i class="fa-solid fa-scale-balanced"></i> {{ t('nav.cumplimiento') }}
             </a>
             <a href="/incidentes" class="{{ 'active' if current_path.startswith('/incidentes') else '' }}" style="padding-left:1.8rem;font-size:.83rem;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Incidentes NIS2
+                <i class="fa-solid fa-triangle-exclamation"></i> {{ t('nav.incidentes') }}
             </a>
             {% endif %}
 
             {% if is_admin %}
-            <div class="menu-section">Admin</div>
+            <div class="menu-section">{{ t('nav.admin') }}</div>
             <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') and not current_path.startswith('/soporte/reportes') else '' }}">
-                <i class="fa-solid fa-headset"></i> Tickets
+                <i class="fa-solid fa-headset"></i> {{ t('nav.tickets') }}
             </a>
             <a href="/soporte/reportes" class="{{ 'active' if current_path.startswith('/soporte/reportes') else '' }}">
-                <i class="fa-solid fa-flag"></i> Reportes
+                <i class="fa-solid fa-flag"></i> {{ t('nav.reportes') }}
             </a>
             <a href="/admin/usuarios" class="{{ 'active' if current_path == '/admin/usuarios' else '' }}">
-                <i class="fa-solid fa-user-shield"></i> Usuarios
+                <i class="fa-solid fa-user-shield"></i> {{ t('nav.usuarios') }}
             </a>
             <a href="/admin/login-logs" class="{{ 'active' if current_path.startswith('/admin/login-logs') else '' }}">
-                <i class="fa-solid fa-right-to-bracket"></i> Accesos
+                <i class="fa-solid fa-right-to-bracket"></i> {{ t('nav.accesos') }}
             </a>
             <a href="/configuracion" class="{{ 'active' if current_path == '/configuracion' else '' }}">
-                <i class="fa-solid fa-gear"></i> Configuración
+                <i class="fa-solid fa-gear"></i> {{ t('nav.configuracion') }}
             </a>
             <a href="/informes" class="{{ 'active' if current_path == '/informes' else '' }}">
-                <i class="fa-solid fa-file-lines"></i> Informes
+                <i class="fa-solid fa-file-lines"></i> {{ t('nav.informes') }}
             </a>
             {% endif %}
         </nav>
@@ -166,11 +183,11 @@
                 <div class="user-avatar">{{ (user or 'U')[0] | upper }}</div>
                 <div class="user-info">
                     <span class="user-name">{{ user or 'Usuario' }}</span>
-                    <span class="user-role">{{ role_label or 'Usuario' }}</span>
+                    <span class="user-role">{{ role_label or t('sidebar.user_default') }}</span>
                 </div>
             </div>
             <form method="post" action="/logout" class="logout-form">
-                <button type="submit" class="btn-logout" title="Cerrar sesión">
+                <button type="submit" class="btn-logout" title="{{ t('sidebar.logout') }}">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </form>
@@ -188,7 +205,7 @@
 <!-- /LAYOUT -->
 
 <!-- ── Botón flotante + modal "Reportar problema" (R-063 / Ruta 7.8) ── -->
-<button class="fab-report" id="fab-report" title="Reportar un problema" aria-label="Reportar problema">
+<button class="fab-report" id="fab-report" title="{{ t('fab.btn_title') }}" aria-label="{{ t('fab.btn_title') }}">
     <i class="fa-solid fa-flag"></i>
 </button>
 
@@ -197,8 +214,8 @@
         <div class="fab-modal-header">
             <div class="fab-modal-icon"><i class="fa-solid fa-flag"></i></div>
             <div>
-                <h3 id="fab-modal-title">Reportar un problema</h3>
-                <p>Cuéntanos qué ha fallado. El sistema adjuntará el contexto automáticamente.</p>
+                <h3 id="fab-modal-title">{{ t('fab.modal_title') }}</h3>
+                <p>{{ t('fab.modal_subtitle') }}</p>
             </div>
             <button class="fab-modal-close" id="fab-modal-close" aria-label="Cerrar">
                 <i class="fa-solid fa-xmark"></i>
@@ -209,22 +226,22 @@
             <div class="fab-tipo-group">
                 <label class="fab-tipo-chip" data-tipo="bug">
                     <input type="radio" name="fab-tipo" value="bug" checked>
-                    <i class="fa-solid fa-bug"></i> Bug
+                    <i class="fa-solid fa-bug"></i> {{ t('fab.tipo_bug') }}
                 </label>
                 <label class="fab-tipo-chip" data-tipo="sugerencia">
                     <input type="radio" name="fab-tipo" value="sugerencia">
-                    <i class="fa-solid fa-lightbulb"></i> Sugerencia
+                    <i class="fa-solid fa-lightbulb"></i> {{ t('fab.tipo_sug') }}
                 </label>
                 <label class="fab-tipo-chip" data-tipo="pregunta">
                     <input type="radio" name="fab-tipo" value="pregunta">
-                    <i class="fa-solid fa-circle-question"></i> Pregunta
+                    <i class="fa-solid fa-circle-question"></i> {{ t('fab.tipo_preg') }}
                 </label>
             </div>
 
             <textarea
                 id="fab-desc"
                 class="fab-textarea"
-                placeholder="Describe el problema con el mayor detalle posible: qué hiciste, qué esperabas y qué ocurrió..."
+                placeholder="{{ t('fab.textarea_ph') }}"
                 maxlength="2000"
                 rows="5"
             ></textarea>
@@ -232,14 +249,16 @@
 
             <div class="fab-context-note">
                 <i class="fa-solid fa-circle-info"></i>
-                El sistema incluirá automáticamente: página actual, usuario, estado del disco y alertas recientes.
+                {{ t('fab.context_note') }}
             </div>
         </div>
 
         <div class="fab-modal-footer">
-            <button class="fab-btn-cancel" id="fab-btn-cancel">Cancelar</button>
-            <button class="fab-btn-send" id="fab-btn-send">
-                <i class="fa-solid fa-paper-plane"></i> Enviar reporte
+            <button class="fab-btn-cancel" id="fab-btn-cancel">{{ t('fab.cancel') }}</button>
+            <button class="fab-btn-send" id="fab-btn-send"
+                    data-text-send="{{ t('fab.send') }}"
+                    data-text-sending="{{ t('fab.sending') }}">
+                <i class="fa-solid fa-paper-plane"></i> {{ t('fab.send') }}
             </button>
         </div>
 
@@ -347,7 +366,7 @@
         if (chars) chars.textContent = '0';
         result.style.display = 'none';
         btnSend.disabled = false;
-        btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+        btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (btnSend.dataset.textSend || 'Enviar reporte');
         setTimeout(function () { textarea.focus(); }, 80);
     }
     function closeModal() {
@@ -406,7 +425,7 @@
             var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
             btnSend.disabled = true;
-            btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando…';
+            btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (btnSend.dataset.textSending || 'Enviando…');
 
             fetch('/reportar-problema', {
                 method: 'POST',
@@ -424,7 +443,7 @@
                     result.className = 'fab-result error';
                     result.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.msg || 'Error al enviar.');
                     btnSend.disabled = false;
-                    btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+                    btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (btnSend.dataset.textSend || 'Enviar reporte');
                 }
             })
             .catch(function () {
@@ -432,7 +451,7 @@
                 result.className = 'fab-result error';
                 result.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Error de red.';
                 btnSend.disabled = false;
-                btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar reporte';
+                btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + (btnSend.dataset.textSend || 'Enviar reporte');
             });
         });
     }

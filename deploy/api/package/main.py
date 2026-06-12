@@ -101,6 +101,57 @@ SECRET_KEY = os.getenv("SECRET_KEY", "cambia-esta-clave-por-una-segura")
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 
+# ── i18n — traducciones ES / CA (R-096) ──────────────────────────────
+DEFAULT_LANG    = "es"
+SUPPORTED_LANGS = ("es", "ca")
+_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "es": {
+        "nav.title": "Navegación", "nav.panel": "Panel", "nav.monitoreo": "Monitoreo",
+        "nav.copias": "Copias", "nav.logs": "Logs", "nav.servicios": "Servicios",
+        "nav.terminal": "Terminal", "nav.alertas": "Alertas", "nav.asistente": "Asistente",
+        "nav.recuperacion": "Recuperación", "nav.cumplimiento": "Cumplimiento",
+        "nav.incidentes": "Incidentes NIS2", "nav.admin": "Admin",
+        "nav.tickets": "Tickets", "nav.reportes": "Reportes", "nav.usuarios": "Usuarios",
+        "nav.accesos": "Accesos", "nav.configuracion": "Configuración", "nav.informes": "Informes",
+        "sidebar.role_admin": "Administrador", "sidebar.role_user": "Usuario",
+        "sidebar.user_default": "Usuario", "sidebar.logout": "Cerrar sesión",
+        "header.dark_toggle": "Cambiar modo claro/oscuro", "header.open_menu": "Abrir menú",
+        "fab.btn_title": "Reportar un problema", "fab.modal_title": "Reportar un problema",
+        "fab.modal_subtitle": "Cuéntanos qué ha fallado. El sistema adjuntará el contexto automáticamente.",
+        "fab.tipo_bug": "Bug", "fab.tipo_sug": "Sugerencia", "fab.tipo_preg": "Pregunta",
+        "fab.textarea_ph": "Describe el problema con el mayor detalle posible: qué hiciste, qué esperabas y qué ocurrió...",
+        "fab.context_note": "El sistema incluirá automáticamente: página actual, usuario, estado del disco y alertas recientes.",
+        "fab.cancel": "Cancelar", "fab.send": "Enviar reporte", "fab.sending": "Enviando…",
+    },
+    "ca": {
+        "nav.title": "Navegació", "nav.panel": "Tauler", "nav.monitoreo": "Monitoratge",
+        "nav.copias": "Còpies", "nav.logs": "Registres", "nav.servicios": "Serveis",
+        "nav.terminal": "Terminal", "nav.alertas": "Alertes", "nav.asistente": "Assistent",
+        "nav.recuperacion": "Recuperació", "nav.cumplimiento": "Compliment",
+        "nav.incidentes": "Incidents NIS2", "nav.admin": "Admin",
+        "nav.tickets": "Tiquets", "nav.reportes": "Reportes", "nav.usuarios": "Usuaris",
+        "nav.accesos": "Accessos", "nav.configuracion": "Configuració", "nav.informes": "Informes",
+        "sidebar.role_admin": "Administrador", "sidebar.role_user": "Usuari",
+        "sidebar.user_default": "Usuari", "sidebar.logout": "Tancar sessió",
+        "header.dark_toggle": "Canviar mode clar/fosc", "header.open_menu": "Obrir menú",
+        "fab.btn_title": "Informar d'un problema", "fab.modal_title": "Informar d'un problema",
+        "fab.modal_subtitle": "Explica'ns què ha fallat. El sistema adjuntarà el context automàticament.",
+        "fab.tipo_bug": "Error", "fab.tipo_sug": "Suggeriment", "fab.tipo_preg": "Pregunta",
+        "fab.textarea_ph": "Descriu el problema amb el màxim detall possible: què has fet, què esperaves i què ha passat...",
+        "fab.context_note": "El sistema inclourà automàticament: pàgina actual, usuari, estat del disc i alertes recents.",
+        "fab.cancel": "Cancel·lar", "fab.send": "Enviar informe", "fab.sending": "Enviant…",
+    },
+}
+
+
+def _build_t(lang: str):
+    """Devuelve una función t(key) que resuelve la traducción para el idioma dado."""
+    es     = _TRANSLATIONS.get("es", {})
+    ov     = _TRANSLATIONS.get(lang, {}) if lang != "es" else {}
+    merged = {**es, **ov}
+    return lambda key: merged.get(key, key)
+
+
 templates = Jinja2Templates(directory="templates")
 
 
@@ -111,6 +162,8 @@ def csrf_input(request: Request):
 
 templates.env.globals["csrf_input"] = csrf_input
 templates.env.globals["csrf_token_value"] = get_csrf_token
+templates.env.globals["t"]    = _build_t("es")   # default ES; sobrescrito por get_common_context
+templates.env.globals["lang"] = "es"
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # =====================
@@ -763,11 +816,13 @@ def get_common_context(request: Request) -> dict[str, Any]:
     perms = get_permissions(request)
     admin = is_admin(request)
     effective_keys = list(AVAILABLE_PERMISSIONS.keys()) if admin else perms
+    lang  = request.session.get("lang", DEFAULT_LANG)
+    t_fn  = _build_t(lang)
 
     return {
         "user": request.session.get("user"),
         "is_admin": admin,
-        "role_label": "Administrador" if admin else "Usuario",
+        "role_label": t_fn("sidebar.role_admin") if admin else t_fn("sidebar.role_user"),
         "can_logs": admin or "logs" in perms,
         "can_backups": admin or "backups" in perms,
         "can_servicios": admin or "servicios" in perms,
@@ -777,6 +832,8 @@ def get_common_context(request: Request) -> dict[str, Any]:
         "permission_labels": permission_labels_from_keys(effective_keys),
         "permissions_count": len(effective_keys),
         "auto_logout_minutes": AUTO_LOGOUT_MINUTES,
+        "lang": lang,
+        "t": t_fn,
     }
 
 
@@ -2214,6 +2271,15 @@ def logout_post(request: Request):
     )
     request.session.clear()
     return RedirectResponse(url="/login", status_code=303)
+
+
+@app.get("/set-lang")
+def set_lang(request: Request, lang: str = "es", next: str = "/"):
+    """Guarda la preferencia de idioma en sesión y redirige a la página anterior."""
+    if lang in SUPPORTED_LANGS:
+        request.session["lang"] = lang
+    safe_next = next if (next.startswith("/") and " " not in next and "\n" not in next) else "/"
+    return RedirectResponse(url=safe_next, status_code=303)
 
 
 # =====================
