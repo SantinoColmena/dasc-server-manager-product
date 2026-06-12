@@ -50,11 +50,11 @@ func getWindowsLogs(source string, limit int) ([]LogEntry, error) {
 				default { "verbose" }
 			}
 			[PSCustomObject]@{
-				Time    = $_.TimeCreated.ToUniversalTime().ToString('o')
-				Level   = $level
-				Source  = $_.ProviderName
-				EventID = $_.Id
-				Message = ($_.Message -replace '\r?\n', ' ' -replace '\s+', ' ').Trim()[0..255] -join ''
+				time     = $_.TimeCreated.ToUniversalTime().ToString('o')
+				level    = $level
+				source   = $_.ProviderName
+				event_id = $_.Id
+				message  = ($_.Message -replace '\r?\n', ' ' -replace '\s+', ' ').Trim()[0..255] -join ''
 			}
 		} | ConvertTo-Json -Compress
 	`, source, limit)

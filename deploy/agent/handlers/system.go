@@ -90,17 +90,18 @@ func getSystemInfo() (*SystemInfo, error) {
 }
 
 func getDiskInfo() ([]DiskInfo, error) {
+	// Los nombres de campo deben coincidir con los json tags del struct (snake_case)
 	script := `
 		Get-PSDrive -PSProvider FileSystem |
 		Where-Object { $_.Used -ne $null -and $_.Root -match '^[A-Z]:\\$' } |
 		ForEach-Object {
 			$total = $_.Used + $_.Free
 			[PSCustomObject]@{
-				Drive       = $_.Root
-				TotalGB     = [math]::Round($total / 1GB, 2)
-				UsedGB      = [math]::Round($_.Used / 1GB, 2)
-				FreeGB      = [math]::Round($_.Free / 1GB, 2)
-				PercentUsed = if ($total -gt 0) { [math]::Round($_.Used / $total * 100, 1) } else { 0 }
+				drive        = $_.Root
+				total_gb     = [math]::Round($total / 1GB, 2)
+				used_gb      = [math]::Round($_.Used / 1GB, 2)
+				free_gb      = [math]::Round($_.Free / 1GB, 2)
+				percent_used = if ($total -gt 0) { [math]::Round($_.Used / $total * 100, 1) } else { 0 }
 			}
 		} | ConvertTo-Json -Compress
 	`
@@ -119,9 +120,12 @@ func getDiskInfo() ([]DiskInfo, error) {
 	return disks, nil
 }
 
-// runPS ejecuta un script de PowerShell y devuelve stdout.
+// runPS ejecuta un script de PowerShell y devuelve stdout en UTF-8.
+// PS 5.1 en pipe usa ASCII por defecto; forzamos UTF-8 en cada invocación.
 func runPS(script string) ([]byte, error) {
-	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", script)
+	const utf8Prefix = "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n" +
+		"$OutputEncoding = [System.Text.Encoding]::UTF8\n"
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", utf8Prefix+script)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("powershell: %w", err)
