@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Monitoreo — Vigex{% endblock %}
+{% block title %}{{ t('nav.monitoreo') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -146,10 +146,10 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Monitoreo</h3>
-    <p><span class="dot ok"></span> Auto-refresh: 30 s</p>
-    <p><span class="dot ok"></span> Servidor: {{ monitor_host }}</p>
-    <p><span class="dot warn"></span> <span id="sb-reads">0</span> lecturas</p>
+    <h3>{{ t('nav.monitoreo') }}</h3>
+    <p><span class="dot ok"></span> {{ t('mon.autorefresh') }}</p>
+    <p><span class="dot ok"></span> {{ t('mon.server_label') }}: {{ monitor_host }}</p>
+    <p><span class="dot warn"></span> <span id="sb-reads">0</span> {{ t('mon.reads_label') }}</p>
 </div>
 {% endblock %}
 
@@ -157,16 +157,16 @@
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Estado del servidor</h2>
-        <p class="page-subtitle">CPU, memoria, disco y actividad en tiempo real. Sin necesidad de abrir nada más.</p>
+        <h2 class="page-title">{{ t('mon.page_title') }}</h2>
+        <p class="page-subtitle">{{ t('mon.page_subtitle') }}</p>
     </div>
     <div class="topbar-actions">
         <div class="refresh-pill">
             <div class="refresh-dot"></div>
-            <span id="refresh-lbl">Cargando…</span>
+            <span id="refresh-lbl">{{ t('mon.loading') }}</span>
         </div>
         <button class="btn" id="btn-refresh">
-            <i class="fa-solid fa-rotate-right"></i> Actualizar ya
+            <i class="fa-solid fa-rotate-right"></i> {{ t('mon.refresh_btn') }}
         </button>
     </div>
 </div>
@@ -179,8 +179,8 @@
             <div class="metric-icon indigo"><i class="fa-solid fa-microchip"></i></div>
             <span class="metric-badge muted">—</span>
         </div>
-        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
-        <div class="metric-label">Carga (1 min)</div>
+        <div class="metric-loading"><div class="metric-spinner"></div> {{ t('mon.connecting') }}</div>
+        <div class="metric-label">{{ t('mon.label_load') }}</div>
     </div>
 
     <div class="metric-card" id="metric-mem">
@@ -188,8 +188,8 @@
             <div class="metric-icon blue"><i class="fa-solid fa-memory"></i></div>
             <span class="metric-badge muted">—</span>
         </div>
-        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
-        <div class="metric-label">Memoria RAM</div>
+        <div class="metric-loading"><div class="metric-spinner"></div> {{ t('mon.connecting') }}</div>
+        <div class="metric-label">{{ t('mon.label_mem') }}</div>
     </div>
 
     <div class="metric-card" id="metric-disk">
@@ -197,17 +197,17 @@
             <div class="metric-icon teal"><i class="fa-solid fa-hard-drive"></i></div>
             <span class="metric-badge muted">—</span>
         </div>
-        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
-        <div class="metric-label">Disco principal (/)</div>
+        <div class="metric-loading"><div class="metric-spinner"></div> {{ t('mon.connecting') }}</div>
+        <div class="metric-label">{{ t('mon.label_disk') }}</div>
     </div>
 
     <div class="metric-card" id="metric-uptime">
         <div class="metric-top">
             <div class="metric-icon slate"><i class="fa-solid fa-clock"></i></div>
-            <span class="metric-badge ok">Activo</span>
+            <span class="metric-badge ok">{{ t('mon.badge_active') }}</span>
         </div>
-        <div class="metric-loading"><div class="metric-spinner"></div> Conectando…</div>
-        <div class="metric-label">Tiempo activo</div>
+        <div class="metric-loading"><div class="metric-spinner"></div> {{ t('mon.connecting') }}</div>
+        <div class="metric-label">{{ t('mon.label_uptime') }}</div>
     </div>
 
 </div>
@@ -218,13 +218,13 @@
         <div>
             <div class="chart-title">
                 <i class="fa-solid fa-chart-area" style="color:#4f46e5; margin-right:7px;"></i>
-                Carga del sistema — historial de esta sesión
+                {{ t('mon.chart_title') }}
             </div>
             <div class="chart-subtitle">
-                Una lectura cada 30 segundos. El historial se borra al salir de la página.
+                {{ t('mon.chart_subtitle') }}
             </div>
         </div>
-        <span class="metric-badge muted" id="chart-reads-badge">0 lecturas</span>
+        <span class="metric-badge muted" id="chart-reads-badge">0{{ t('mon.reads_pl') }}</span>
     </div>
     <div class="chart-wrap">
         <canvas id="loadChart"></canvas>
@@ -236,22 +236,22 @@
     <div class="card-head">
         <div class="card-icon"><i class="fa-solid fa-circle-info"></i></div>
         <div class="card-title">
-            <h3>Promedios de carga del procesador</h3>
-            <p>Un valor &lt; 1.0 es ideal. Por encima de los núcleos disponibles el servidor empieza a hacer cola.</p>
+            <h3>{{ t('mon.load_avg_title') }}</h3>
+            <p>{{ t('mon.load_avg_desc') }}</p>
         </div>
     </div>
     <div class="load-detail-grid">
         <div class="load-box">
             <div class="load-box-val" id="detail-load1">—</div>
-            <div class="load-box-lbl">1 minuto</div>
+            <div class="load-box-lbl">{{ t('mon.load_1min') }}</div>
         </div>
         <div class="load-box">
             <div class="load-box-val" id="detail-load5">—</div>
-            <div class="load-box-lbl">5 minutos</div>
+            <div class="load-box-lbl">{{ t('mon.load_5min') }}</div>
         </div>
         <div class="load-box">
             <div class="load-box-val" id="detail-load15">—</div>
-            <div class="load-box-lbl">15 minutos</div>
+            <div class="load-box-lbl">{{ t('mon.load_15min') }}</div>
         </div>
     </div>
 </section>
@@ -259,9 +259,58 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Strings i18n para el JS de monitoreo -->
+<div id="mon-i18n" style="display:none"
+     data-no-data="{{ t('mon.no_data') }}"
+     data-load-sub="{{ t('mon.load_sub') }}"
+     data-load-high="{{ t('mon.load_high') }}"
+     data-load-med="{{ t('mon.load_med') }}"
+     data-load-ok="{{ t('mon.load_ok') }}"
+     data-mem-full="{{ t('mon.mem_full') }}"
+     data-mem-of="{{ t('mon.mem_of') }}"
+     data-mem-used-suf="{{ t('mon.mem_used_suf') }}"
+     data-disk-full="{{ t('mon.disk_full') }}"
+     data-disk-watch="{{ t('mon.disk_watch') }}"
+     data-disk-free="{{ t('mon.disk_free') }}"
+     data-disk-of="{{ t('mon.disk_of') }}"
+     data-disk-used-suf="{{ t('mon.disk_used_suf') }}"
+     data-reads-sg="{{ t('mon.reads_sg') }}"
+     data-reads-pl="{{ t('mon.reads_pl') }}"
+     data-refresh-in="{{ t('mon.refresh_in') }}"
+     data-refresh-s="{{ t('mon.refresh_s') }}"
+     data-refreshing="{{ t('mon.refreshing') }}"
+     data-uptime-sub="{{ t('mon.uptime_sub') }}"
+     data-badge-active="{{ t('mon.badge_active') }}"
+></div>
 <script>
 (function () {
     "use strict";
+
+    /* ── Strings i18n desde data attributes ────────────────────── */
+    var _el = document.getElementById('mon-i18n');
+    var _d  = _el ? _el.dataset : {};
+    var i18n = {
+        noData:      _d.noData      || 'Sin datos del servidor',
+        loadSub:     _d.loadSub     || 'Promedio del último minuto',
+        loadHigh:    _d.loadHigh    || 'Alta',
+        loadMed:     _d.loadMed     || 'Moderada',
+        loadOk:      _d.loadOk      || 'Normal',
+        memFull:     _d.memFull     || 'Llena',
+        memOf:       _d.memOf       || ' de ',
+        memUsedSuf:  _d.memUsedSuf  || ' usada',
+        diskFull:    _d.diskFull    || 'Lleno',
+        diskWatch:   _d.diskWatch   || 'Vigilar',
+        diskFree:    _d.diskFree    || 'Libre',
+        diskOf:      _d.diskOf      || ' de ',
+        diskUsedSuf: _d.diskUsedSuf || ' usado',
+        readsSg:     _d.readsSg     || ' lectura',
+        readsPl:     _d.readsPl     || ' lecturas',
+        refreshIn:   _d.refreshIn   || 'Actualizando en ',
+        refreshS:    _d.refreshS    || ' s',
+        refreshing:  _d.refreshing  || 'Actualizando…',
+        uptimeSub:   _d.uptimeSub   || 'Tiempo sin reinicios',
+        badgeActive: _d.badgeActive || 'Activo',
+    };
 
     /* ── Constantes ─────────────────────────────────────────────── */
     var REFRESH_SEC = 30;
@@ -371,7 +420,7 @@
 
         totalReads++;
         var badge = document.getElementById('chart-reads-badge');
-        if (badge) badge.textContent = totalReads + ' lectura' + (totalReads !== 1 ? 's' : '');
+        if (badge) badge.textContent = totalReads + (totalReads !== 1 ? i18n.readsPl : i18n.readsSg);
         var sbReads = document.getElementById('sb-reads');
         if (sbReads) sbReads.textContent = totalReads;
     }
@@ -408,7 +457,7 @@
     }
 
     function ndMetric(cardId) {
-        resolveMetric(cardId, '—', 'Sin datos del servidor', null, 'muted', 'N/D');
+        resolveMetric(cardId, '—', i18n.noData, null, 'muted', 'N/D');
     }
 
     /* ── Fetch de métricas ──────────────────────────────────────── */
@@ -421,10 +470,10 @@
                 var ld = data.load || {};
                 if (ld.available) {
                     var loadColor = ld.load1 >= 2.0 ? 'error' : ld.load1 >= 1.0 ? 'warn' : 'ok';
-                    var loadLabel = ld.load1 >= 2.0 ? 'Alta' : ld.load1 >= 1.0 ? 'Moderada' : 'Normal';
+                    var loadLabel = ld.load1 >= 2.0 ? i18n.loadHigh : ld.load1 >= 1.0 ? i18n.loadMed : i18n.loadOk;
                     resolveMetric('metric-load',
                         String(ld.load1.toFixed(2)),
-                        'Promedio del último minuto',
+                        i18n.loadSub,
                         null, loadColor, loadLabel
                     );
                     pushChartPoint(ld.load1, ld.load5, ld.load15);
@@ -440,10 +489,10 @@
                 var mem = data.mem || {};
                 if (mem.available) {
                     var memColor = mem.percent >= 90 ? 'error' : mem.percent >= 75 ? 'warn' : 'ok';
-                    var memLabel = mem.percent >= 90 ? 'Llena' : mem.percent >= 75 ? 'Vigilar' : 'OK';
+                    var memLabel = mem.percent >= 90 ? i18n.memFull : mem.percent >= 75 ? i18n.diskWatch : 'OK';
                     resolveMetric('metric-mem',
                         mem.percent + '%',
-                        mem.used_hr + ' de ' + mem.total_hr + ' usada',
+                        mem.used_hr + i18n.memOf + mem.total_hr + i18n.memUsedSuf,
                         mem.percent, memColor, memLabel
                     );
                 } else { ndMetric('metric-mem'); }
@@ -452,7 +501,7 @@
                 var dk = data.disk || {};
                 if (dk.available) {
                     var dkColor = dk.percent >= 90 ? 'error' : dk.percent >= 75 ? 'warn' : 'ok';
-                    var dkLabel = dk.percent >= 90 ? 'Lleno' : dk.percent >= 75 ? 'Vigilar' : 'Libre';
+                    var dkLabel = dk.percent >= 90 ? i18n.diskFull : dk.percent >= 75 ? i18n.diskWatch : i18n.diskFree;
                     var card = document.getElementById('metric-disk');
                     if (card) {
                         var ico = card.querySelector('.metric-icon');
@@ -460,7 +509,7 @@
                     }
                     resolveMetric('metric-disk',
                         dk.percent + '%',
-                        dk.used + ' de ' + dk.total + ' usado',
+                        dk.used + i18n.diskOf + dk.total + i18n.diskUsedSuf,
                         dk.percent, dkColor, dkLabel
                     );
                 } else { ndMetric('metric-disk'); }
@@ -470,8 +519,8 @@
                 if (up.available) {
                     resolveMetric('metric-uptime',
                         up.label || '—',
-                        'Tiempo sin reinicios',
-                        null, 'ok', 'Activo'
+                        i18n.uptimeSub,
+                        null, 'ok', i18n.badgeActive
                     );
                 } else { ndMetric('metric-uptime'); }
 
@@ -490,13 +539,13 @@
         if (timerHandle) clearInterval(timerHandle);
         countdown = REFRESH_SEC;
         var lbl = document.getElementById('refresh-lbl');
-        if (lbl) lbl.textContent = 'Actualizando en ' + countdown + ' s';
+        if (lbl) lbl.textContent = i18n.refreshIn + countdown + i18n.refreshS;
 
         timerHandle = setInterval(function () {
             countdown--;
             if (lbl) lbl.textContent = countdown > 0
-                ? 'Actualizando en ' + countdown + ' s'
-                : 'Actualizando…';
+                ? i18n.refreshIn + countdown + i18n.refreshS
+                : i18n.refreshing;
             if (countdown <= 0) {
                 clearInterval(timerHandle);
                 fetchMetrics();
@@ -510,7 +559,7 @@
         btnRefresh.addEventListener('click', function () {
             if (timerHandle) clearInterval(timerHandle);
             var lbl = document.getElementById('refresh-lbl');
-            if (lbl) lbl.textContent = 'Actualizando…';
+            if (lbl) lbl.textContent = i18n.refreshing;
             fetchMetrics();
         });
     }
