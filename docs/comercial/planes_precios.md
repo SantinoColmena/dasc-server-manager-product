@@ -116,6 +116,23 @@ Vigex es la única opción del segmento que combina monitorización + copias + a
 
 ---
 
+## Payment Links de Stripe (activos)
+
+| Producto | Precio | URL |
+|----------|--------|-----|
+| Vigex Lite — Licencia | €179 one-time | https://buy.stripe.com/3cI7sK7Z4chGdscdrlcjS03 |
+| Vigex Standard — Licencia | €299 one-time | https://buy.stripe.com/8x27sKdjo81q5ZK2MHcjS04 |
+| Vigex Pro — Licencia | €499 one-time | https://buy.stripe.com/6oU4gy6V0a9yfAkfztcjS05 |
+| Vigex Soporte Básico | €19/mes | https://buy.stripe.com/9B63cufrwdlKdsc5YTcjS06 |
+| Vigex Soporte Plus | €39/mes | https://buy.stripe.com/cNifZgdjo95u1Ju0EzcjS07 |
+| Vigex Soporte Premium | €59/mes | https://buy.stripe.com/aFa7sK7Z4gxW4VGaf9cjS08 |
+| Vigex Soporte Básico Pro | €29/mes | https://buy.stripe.com/aFa6oG5QWdlKgEodrlcjS09 |
+
+> Los links de soporte (€19–€59/mes) se ofrecen durante el onboarding, no en la landing principal.
+> El Soporte Básico Pro (€29/mes) es exclusivo para clientes del plan Pro.
+
+---
+
 ## Política de piloto / introducción
 
 - **Demo técnica gratuita**: 30–60 minutos en entorno controlado, sin acceso a datos reales.
