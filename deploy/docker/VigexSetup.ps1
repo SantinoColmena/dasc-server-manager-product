@@ -25,7 +25,7 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference    = "SilentlyContinue"   # acelera Invoke-WebRequest
 
 # ── Constantes ─────────────────────────────────────────────────────────────────
-$VIGEX_IMAGE       = "vigex/panel:latest"
+$VIGEX_IMAGE       = "scolmena/vigex-panel:latest"
 $CONTAINER_NAME    = "vigex-panel"
 $SERVICE_NAME      = "VigexDockerAutostart"
 $LOG_FILE          = "$InstallDir\install.log"

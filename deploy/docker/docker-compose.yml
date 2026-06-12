@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile
-    image: vigex/panel:latest
+    image: scolmena/vigex-panel:latest
     container_name: vigex-panel
     restart: unless-stopped
     ports:
