@@ -5,197 +5,134 @@
 <style>
     /* ── Informes periódicos (Ruta 7.7) ── */
     .inf-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-bottom: 1.75rem;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.75rem;
     }
-    .inf-title    { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
-    .inf-subtitle { color: #6b7280; font-size: 0.95rem; margin: 0.2rem 0 0; }
+    .inf-title    { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0; }
+    .inf-subtitle { color: var(--muted); font-size: 0.95rem; margin: 0.2rem 0 0; }
 
     .inf-section-title {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: #9ca3af;
-        margin: 0 0 0.75rem;
+        font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--muted); margin: 0 0 0.75rem;
     }
 
     /* ── Tarjetas ── */
     .inf-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
     }
-    .inf-card-header {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.25rem;
-    }
+    .inf-card-header { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.25rem; }
     .inf-card-icon {
-        width: 40px; height: 40px;
-        border-radius: 10px;
+        width: 40px; height: 40px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1rem; flex-shrink: 0;
     }
     .inf-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
     .inf-card-icon.violet { background: #f5f3ff; color: #7c3aed; }
-    .inf-card-icon.slate  { background: #f8fafc; color: #475569; }
-    .inf-card-title { font-size: 1rem; font-weight: 600; color: #1e1b4b; margin: 0; }
-    .inf-card-desc  { font-size: 0.82rem; color: #6b7280; margin: 0.15rem 0 0; }
+    .inf-card-icon.slate  { background: var(--bg); color: var(--muted); }
+    [data-theme="dark"] .inf-card-icon.indigo { background: #1e1b4b; color: #a5b4fc; }
+    [data-theme="dark"] .inf-card-icon.violet { background: #1a0533; color: #c4b5fd; }
+    .inf-card-title { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+    .inf-card-desc  { font-size: 0.82rem; color: var(--muted); margin: 0.15rem 0 0; }
 
     /* ── Formulario ── */
     .inf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
 
     .inf-field label {
-        display: block;
-        font-size: 0.8rem; font-weight: 600;
-        color: #374151; margin-bottom: 0.35rem;
+        display: block; font-size: 0.8rem; font-weight: 600;
+        color: var(--text); margin-bottom: 0.35rem;
     }
     .inf-field select {
-        width: 100%;
-        padding: 0.55rem 0.75rem;
-        border: 1.5px solid #d1d5db;
-        border-radius: 8px;
+        width: 100%; padding: 0.55rem 0.75rem;
+        border: 1.5px solid var(--border); border-radius: 8px;
         font-size: 0.9rem; font-family: inherit;
-        color: #1e1b4b; background: #f9fafb;
-        cursor: pointer;
-        transition: border-color .15s;
-        box-sizing: border-box;
-        appearance: none;
+        color: var(--text); background: var(--bg); cursor: pointer;
+        transition: border-color .15s; box-sizing: border-box; appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        padding-right: 2rem;
+        background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem;
     }
-    .inf-field select:focus { outline: none; border-color: #4f46e5; background-color: #fff; }
+    .inf-field select:focus { outline: none; border-color: #4f46e5; }
 
     /* ── Toggle switch ── */
     .inf-toggle-row {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.25rem;
-        padding: 0.9rem 1rem;
-        background: #f9fafb;
-        border-radius: 10px;
-        border: 1.5px solid #e5e7eb;
+        display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.25rem;
+        padding: 0.9rem 1rem; background: var(--bg);
+        border-radius: 10px; border: 1.5px solid var(--border);
     }
-    .inf-toggle-row label {
-        font-size: 0.9rem; font-weight: 600; color: #1e1b4b; cursor: pointer;
-    }
-    .inf-toggle-row .toggle-hint {
-        font-size: 0.78rem; color: #6b7280; margin-left: auto;
-    }
-    .toggle-switch {
-        position: relative; display: inline-block;
-        width: 44px; height: 24px; flex-shrink: 0;
-    }
+    .inf-toggle-row label { font-size: 0.9rem; font-weight: 600; color: var(--text); cursor: pointer; }
+    .inf-toggle-row .toggle-hint { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-        position: absolute; cursor: pointer; inset: 0;
-        background: #d1d5db; border-radius: 24px; transition: .2s;
-    }
-    .toggle-slider:before {
-        content: ""; position: absolute;
-        width: 18px; height: 18px; left: 3px; bottom: 3px;
-        background: #fff; border-radius: 50%; transition: .2s;
-    }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 24px; transition: .2s; }
+    .toggle-slider:before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s; }
     input:checked + .toggle-slider { background: #4f46e5; }
     input:checked + .toggle-slider:before { transform: translateX(20px); }
 
-    /* ── Checkboxes de secciones ── */
-    .secciones-grid {
-        display: flex; gap: 0.75rem; flex-wrap: wrap;
-    }
+    /* ── Chips de secciones ── */
+    .secciones-grid { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .seccion-chip {
         display: flex; align-items: center; gap: 0.5rem;
-        padding: 0.4rem 0.85rem;
-        background: #f3f4f6; border: 1.5px solid #e5e7eb;
-        border-radius: 8px; cursor: pointer;
-        font-size: 0.82rem; font-weight: 500; color: #374151;
-        transition: all .15s;
-        user-select: none;
+        padding: 0.4rem 0.85rem; background: var(--bg);
+        border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer;
+        font-size: 0.82rem; font-weight: 500; color: var(--text);
+        transition: all .15s; user-select: none;
     }
     .seccion-chip input { display: none; }
-    .seccion-chip.checked {
-        background: #eef2ff; border-color: #4f46e5; color: #4f46e5;
-    }
+    .seccion-chip.checked { background: #eef2ff; border-color: #4f46e5; color: #4f46e5; }
+    [data-theme="dark"] .seccion-chip.checked { background: #1e1b4b; border-color: #818cf8; color: #a5b4fc; }
     .seccion-chip i { font-size: 0.85rem; }
 
     /* ── Botones ── */
-    .inf-actions {
-        display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
-        margin-top: 1.25rem;
-    }
+    .inf-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem; }
     .btn-inf-save {
         background: #4f46e5; color: #fff; border: none;
         padding: 0.6rem 1.35rem; border-radius: 8px;
         font-size: 0.88rem; font-weight: 600; cursor: pointer;
-        display: inline-flex; align-items: center; gap: 0.5rem;
-        transition: background .15s;
+        display: inline-flex; align-items: center; gap: 0.5rem; transition: background .15s;
     }
-    .btn-inf-save:hover { background: #4338ca; }
+    .btn-inf-save:hover    { background: #4338ca; }
     .btn-inf-save:disabled { background: #a5b4fc; cursor: not-allowed; }
-
     .btn-inf-send {
-        background: #fff; color: #4f46e5;
-        border: 1.5px solid #4f46e5;
+        background: var(--panel); color: #4f46e5; border: 1.5px solid #4f46e5;
         padding: 0.6rem 1.35rem; border-radius: 8px;
         font-size: 0.88rem; font-weight: 600; cursor: pointer;
-        display: inline-flex; align-items: center; gap: 0.5rem;
-        transition: all .15s;
+        display: inline-flex; align-items: center; gap: 0.5rem; transition: all .15s;
     }
-    .btn-inf-send:hover { background: #eef2ff; }
+    .btn-inf-send:hover    { background: #eef2ff; }
     .btn-inf-send:disabled { opacity: .5; cursor: not-allowed; }
-
-    .inf-feedback {
-        font-size: 0.875rem; display: none; align-items: center; gap: 0.5rem;
-    }
+    .inf-feedback { font-size: 0.875rem; display: none; align-items: center; gap: 0.5rem; }
     .inf-feedback.visible { display: flex; }
-    .inf-feedback.ok    { color: #065f46; }
-    .inf-feedback.error { color: #991b1b; }
+    .inf-feedback.ok    { color: var(--successText); }
+    .inf-feedback.error { color: var(--dangerText); }
 
     /* ── Historial ── */
     .hist-table { width: 100%; border-collapse: collapse; }
     .hist-table th {
         font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: .04em; color: #6b7280;
-        padding: 0.5rem 0.75rem; text-align: left;
-        border-bottom: 1px solid #e5e7eb;
+        letter-spacing: .04em; color: var(--muted);
+        padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border);
     }
-    .hist-table td {
-        padding: 0.55rem 0.75rem; font-size: 0.85rem; color: #374151;
-        border-bottom: 1px solid #f3f4f6;
-    }
-    .pill-ok  { background: #d1fae5; color: #065f46; font-size:.72rem; padding:.1rem .5rem; border-radius:99px; font-weight:600; }
-    .pill-err { background: #fee2e2; color: #b91c1c; font-size:.72rem; padding:.1rem .5rem; border-radius:99px; font-weight:600; }
+    .hist-table td { padding: 0.55rem 0.75rem; font-size: 0.85rem; color: var(--text); border-bottom: 1px solid var(--border); }
+    .pill-ok  { background: var(--successBg); color: var(--successText); font-size:.72rem; padding:.1rem .5rem; border-radius:99px; font-weight:600; }
+    .pill-err { background: var(--dangerBg);  color: var(--dangerText);  font-size:.72rem; padding:.1rem .5rem; border-radius:99px; font-weight:600; }
 
     /* ── Estado resumen ── */
     .inf-status-strip {
         display: flex; gap: 1.5rem; flex-wrap: wrap;
-        padding: 0.9rem 1rem; background: #f9fafb;
-        border-radius: 10px; border: 1px solid #e5e7eb;
-        margin-bottom: 1.25rem;
-        font-size: 0.82rem; color: #374151;
+        padding: 0.9rem 1rem; background: var(--bg);
+        border-radius: 10px; border: 1px solid var(--border);
+        margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text);
     }
     .inf-status-item { display: flex; flex-direction: column; gap: 0.1rem; }
-    .inf-status-item .slabel { font-size: 0.72rem; text-transform: uppercase; letter-spacing:.04em; color:#9ca3af; font-weight:700; }
-    .inf-status-item .sval   { font-weight: 600; color: #1e1b4b; }
+    .inf-status-item .slabel { font-size: 0.72rem; text-transform: uppercase; letter-spacing:.04em; color: var(--muted); font-weight:700; }
+    .inf-status-item .sval   { font-weight: 600; color: var(--text); }
 
     /* ── Banner canal sin configurar ── */
     .inf-banner {
         display: flex; align-items: flex-start; gap: 0.75rem;
-        padding: 0.9rem 1.1rem;
-        background: #fffbeb; border: 1px solid #fde68a;
-        border-radius: 10px; font-size: 0.85rem; color: #92400e;
-        margin-bottom: 1.25rem;
+        padding: 0.9rem 1.1rem; background: var(--warningBg);
+        border: 1px solid var(--warningBorder); border-radius: 10px;
+        font-size: 0.85rem; color: var(--warningText); margin-bottom: 1.25rem;
     }
     .inf-banner i { margin-top: 0.05rem; flex-shrink: 0; }
 
@@ -207,129 +144,125 @@
 {% block content %}
 <div class="inf-header">
     <div>
-        <h1 class="inf-title">Informes periódicos</h1>
-        <p class="inf-subtitle">El panel genera y envía resúmenes de estado de forma automática. Sin entrar al panel.</p>
+        <h1 class="inf-title">{{ t('inf.page_title') }}</h1>
+        <p class="inf-subtitle">{{ t('inf.page_subtitle') }}</p>
     </div>
     {% if cfg.ultimo_envio %}
-    <div style="font-size:.82rem;color:#6b7280;">
-        Último envío: <strong>{{ cfg.ultimo_envio }}</strong>
+    <div style="font-size:.82rem;color:var(--muted);">
+        {{ t('inf.last_send_pre') }}<strong>{{ cfg.ultimo_envio }}</strong>
     </div>
     {% endif %}
 </div>
 
-<!-- Banner si ningún canal está configurado -->
 {% if not email_ok and not telegram_ok %}
 <div class="inf-banner">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>
-        No hay ningún canal de envío configurado. Para recibir informes,
-        configura <code>NOTIF_SMTP_*</code> (email) o <code>TELEGRAM_BOT_TOKEN</code>
-        en <code>config.env</code> y reinicia el panel.
-    </span>
+    <span>{{ t('inf.banner_no_channel') | safe }}</span>
 </div>
 {% endif %}
 
 <!-- ── Configuración ── -->
 <div style="margin-bottom:1.5rem;">
-    <p class="inf-section-title">Configuración</p>
+    <p class="inf-section-title">{{ t('inf.sec_config') }}</p>
     <div class="inf-card">
         <div class="inf-card-header">
             <div class="inf-card-icon indigo"><i class="fa-solid fa-calendar-days"></i></div>
             <div>
-                <p class="inf-card-title">Planificación de informes</p>
-                <p class="inf-card-desc">Elige con qué frecuencia, por qué canal y qué incluir en cada informe.</p>
+                <p class="inf-card-title">{{ t('inf.card_plan_title') }}</p>
+                <p class="inf-card-desc">{{ t('inf.card_plan_desc') }}</p>
             </div>
         </div>
 
-        <!-- Estado actual rápido -->
         <div class="inf-status-strip">
             <div class="inf-status-item">
-                <span class="slabel">Estado</span>
+                <span class="slabel">{{ t('inf.slbl_estado') }}</span>
                 <span class="sval" id="estado-val">
-                    {% if cfg.enabled %}<span style="color:#065f46;">Activos</span>{% else %}<span style="color:#9ca3af;">Desactivados</span>{% endif %}
+                    {% if cfg.enabled %}<span style="color:var(--successText);">{{ t('inf.st_active') }}</span>
+                    {% else %}<span style="color:var(--muted);">{{ t('inf.st_off') }}</span>{% endif %}
                 </span>
             </div>
             <div class="inf-status-item">
-                <span class="slabel">Frecuencia</span>
+                <span class="slabel">{{ t('inf.slbl_freq') }}</span>
                 <span class="sval" id="freq-val">{{ cfg.frecuencia | capitalize }}</span>
             </div>
             <div class="inf-status-item">
-                <span class="slabel">Canal</span>
+                <span class="slabel">{{ t('inf.slbl_canal') }}</span>
                 <span class="sval" id="canal-val">{{ cfg.canal | capitalize }}</span>
             </div>
             {% if cfg.enabled and cfg.ultimo_envio %}
             <div class="inf-status-item">
-                <span class="slabel">Próximo envío en</span>
+                <span class="slabel">{{ t('inf.slbl_next') }}</span>
                 <span class="sval">{{ proximo_en }}</span>
             </div>
             {% endif %}
         </div>
 
         <form id="inf-form" autocomplete="off" onsubmit="return false;">
-            <!-- Toggle activar/desactivar -->
             <div class="inf-toggle-row">
                 <label class="toggle-switch" for="f-enabled">
                     <input type="checkbox" id="f-enabled" name="enabled" {% if cfg.enabled %}checked{% endif %}>
                     <span class="toggle-slider"></span>
                 </label>
-                <label for="f-enabled">Activar informes automáticos</label>
-                <span class="toggle-hint">El panel enviará el informe según la frecuencia elegida.</span>
+                <label for="f-enabled">{{ t('inf.toggle_label') }}</label>
+                <span class="toggle-hint">{{ t('inf.toggle_hint') }}</span>
             </div>
 
-            <!-- Frecuencia + canal -->
             <div class="inf-grid">
                 <div class="inf-field">
-                    <label for="f-freq">Frecuencia</label>
+                    <label for="f-freq">{{ t('inf.lbl_freq') }}</label>
                     <select id="f-freq" name="frecuencia">
-                        <option value="diario"   {% if cfg.frecuencia == 'diario'   %}selected{% endif %}>Diario</option>
-                        <option value="semanal"  {% if cfg.frecuencia == 'semanal'  %}selected{% endif %}>Semanal</option>
-                        <option value="mensual"  {% if cfg.frecuencia == 'mensual'  %}selected{% endif %}>Mensual</option>
+                        <option value="diario"  {% if cfg.frecuencia == 'diario'  %}selected{% endif %}>{{ t('inf.opt_diario') }}</option>
+                        <option value="semanal" {% if cfg.frecuencia == 'semanal' %}selected{% endif %}>{{ t('inf.opt_semanal') }}</option>
+                        <option value="mensual" {% if cfg.frecuencia == 'mensual' %}selected{% endif %}>{{ t('inf.opt_mensual') }}</option>
                     </select>
                 </div>
                 <div class="inf-field">
-                    <label for="f-canal">Canal de envío</label>
+                    <label for="f-canal">{{ t('inf.lbl_canal') }}</label>
                     <select id="f-canal" name="canal">
-                        <option value="email"    {% if cfg.canal == 'email'    %}selected{% endif %}>Email{% if not email_ok %} (sin configurar){% endif %}</option>
-                        <option value="telegram" {% if cfg.canal == 'telegram' %}selected{% endif %}>Telegram{% if not telegram_ok %} (sin configurar){% endif %}</option>
-                        <option value="ambos"    {% if cfg.canal == 'ambos'    %}selected{% endif %}>Email + Telegram</option>
+                        <option value="email"    {% if cfg.canal == 'email'    %}selected{% endif %}>Email{% if not email_ok %}{{ t('inf.opt_email_noconfig') }}{% endif %}</option>
+                        <option value="telegram" {% if cfg.canal == 'telegram' %}selected{% endif %}>Telegram{% if not telegram_ok %}{{ t('inf.opt_email_noconfig') }}{% endif %}</option>
+                        <option value="ambos"    {% if cfg.canal == 'ambos'    %}selected{% endif %}>{{ t('inf.opt_both') }}</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Secciones a incluir -->
             <div style="margin-bottom:1rem;">
-                <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.5rem;">
-                    Contenido del informe
+                <label style="font-size:.8rem;font-weight:600;color:var(--text);display:block;margin-bottom:.5rem;">
+                    {{ t('inf.lbl_content') }}
                 </label>
                 <div class="secciones-grid" id="secciones-grid">
-                    {% set secciones_labels = {
-                        'backups':   ('fa-archive',    'Copias de seguridad'),
-                        'disco':     ('fa-hard-drive', 'Disco'),
-                        'servicios': ('fa-server',     'Servicios'),
-                        'alertas':   ('fa-bell',       'Alertas'),
+                    {% set sec_icons = {
+                        'backups':   'fa-archive',
+                        'disco':     'fa-hard-drive',
+                        'servicios': 'fa-server',
+                        'alertas':   'fa-bell',
+                    } %}
+                    {% set sec_keys = {
+                        'backups':   'inf.sec_backups',
+                        'disco':     'inf.sec_disco',
+                        'servicios': 'inf.sec_servicios',
+                        'alertas':   'inf.sec_alertas',
                     } %}
                     {% for sec in secciones_validas %}
-                    {% set info = secciones_labels.get(sec, ('fa-circle', sec)) %}
                     <label class="seccion-chip {% if sec in cfg.secciones %}checked{% endif %}" data-sec="{{ sec }}">
                         <input type="checkbox" name="secciones" value="{{ sec }}"
                                {% if sec in cfg.secciones %}checked{% endif %}>
-                        <i class="fa-solid {{ info[0] }}"></i>
-                        {{ info[1] }}
+                        <i class="fa-solid {{ sec_icons.get(sec, 'fa-circle') }}"></i>
+                        {{ t(sec_keys.get(sec, sec)) }}
                     </label>
                     {% endfor %}
                 </div>
-                <div style="font-size:.74rem;color:#9ca3af;margin-top:.4rem;">
-                    Al menos una sección debe estar seleccionada.
+                <div style="font-size:.74rem;color:var(--muted);margin-top:.4rem;">
+                    {{ t('inf.hint_min_sec') }}
                 </div>
             </div>
 
-            <!-- Acciones -->
             <div class="inf-actions">
-                <button class="btn-inf-save" id="btn-save" type="button" onclick="guardarConfig()">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar configuración
+                <button class="btn-inf-save" id="btn-save" type="button">
+                    <i class="fa-solid fa-floppy-disk"></i> {{ t('inf.btn_save') }}
                 </button>
-                <button class="btn-inf-send" id="btn-send" type="button" onclick="enviarAhora()">
-                    <i class="fa-solid fa-paper-plane"></i> Enviar informe ahora
+                <button class="btn-inf-send" id="btn-send" type="button">
+                    <i class="fa-solid fa-paper-plane"></i> {{ t('inf.btn_send') }}
                 </button>
                 <span class="inf-feedback" id="inf-feedback"></span>
             </div>
@@ -339,13 +272,13 @@
 
 <!-- ── Historial de envíos ── -->
 <div>
-    <p class="inf-section-title">Historial de envíos</p>
+    <p class="inf-section-title">{{ t('inf.sec_history') }}</p>
     <div class="inf-card">
         <div class="inf-card-header">
             <div class="inf-card-icon slate"><i class="fa-solid fa-clock-rotate-left"></i></div>
             <div>
-                <p class="inf-card-title">Últimos informes enviados</p>
-                <p class="inf-card-desc">Se conservan los últimos {{ cfg.historial | length }} registros de esta sesión.</p>
+                <p class="inf-card-title">{{ t('inf.card_hist_title') }}</p>
+                <p class="inf-card-desc">{{ t('inf.card_hist_desc_pre') }}{{ cfg.historial | length }}{{ t('inf.card_hist_desc_suf') }}</p>
             </div>
         </div>
 
@@ -354,9 +287,9 @@
         <table class="hist-table">
             <thead>
                 <tr>
-                    <th>Fecha</th>
-                    <th>Canal</th>
-                    <th>Estado</th>
+                    <th>{{ t('inf.th_date') }}</th>
+                    <th>{{ t('inf.th_canal') }}</th>
+                    <th>{{ t('inf.th_status') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -366,9 +299,9 @@
                     <td>{{ entry.canal or "—" }}</td>
                     <td>
                         {% if entry.ok %}
-                        <span class="pill-ok">Enviado</span>
+                        <span class="pill-ok">{{ t('inf.pill_sent') }}</span>
                         {% else %}
-                        <span class="pill-err">Error</span>
+                        <span class="pill-err">{{ t('inf.pill_err') }}</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -376,52 +309,63 @@
             </tbody>
         </table>
         {% else %}
-        <p style="color:#9ca3af;font-size:.87rem;margin:0;">
-            Aún no se ha enviado ningún informe. Usa el botón
-            <strong>"Enviar informe ahora"</strong> para hacer una prueba.
+        <p style="color:var(--muted);font-size:.87rem;margin:0;">
+            {{ t('inf.no_history') | safe }}
         </p>
         {% endif %}
     </div>
 </div>
-
 {% endblock %}
 
 {% block sidebar_info %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Módulo</span>
-    <span>Informes</span>
+    <span class="sidebar-info-label">{{ t('sidebar.module') }}</span>
+    <span>{{ t('inf.sidebar_module') }}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Estado</span>
-    <span>{% if cfg.enabled %}Activos{% else %}Desactivados{% endif %}</span>
+    <span class="sidebar-info-label">{{ t('inf.sidebar_status') }}</span>
+    <span>{% if cfg.enabled %}{{ t('inf.st_active') }}{% else %}{{ t('inf.st_off') }}{% endif %}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Frecuencia</span>
+    <span class="sidebar-info-label">{{ t('inf.sidebar_freq') }}</span>
     <span>{{ cfg.frecuencia | capitalize }}</span>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<div id="inf-i18n" style="display:none"
+    data-min-sec="{{ t('inf.js_min_sec') }}"
+    data-saving="{{ t('inf.js_saving') }}"
+    data-btn-save="{{ t('inf.js_btn_save') }}"
+    data-net-err="{{ t('inf.js_net_err') }}"
+    data-sending="{{ t('inf.js_sending') }}"
+    data-btn-send="{{ t('inf.js_btn_send') }}">
+</div>
 <script>
 (function () {
     'use strict';
+    const _el  = document.getElementById('inf-i18n');
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const i18n = {
+        minSec:  _el.dataset.minSec,
+        saving:  _el.dataset.saving,
+        btnSave: _el.dataset.btnSave,
+        netErr:  _el.dataset.netErr,
+        sending: _el.dataset.sending,
+        btnSend: _el.dataset.btnSend,
+    };
 
-    // ── Chips de secciones ─────────────────────────────────────────────────
     document.querySelectorAll('.seccion-chip').forEach(chip => {
         const input = chip.querySelector('input');
         function sync() { chip.classList.toggle('checked', input.checked); }
         sync();
         input.addEventListener('change', sync);
         chip.addEventListener('click', e => {
-            /* Prevenir el toggle nativo del <label> para evitar doble inversión (R-083-fix-3) */
             e.preventDefault();
             input.checked = !input.checked;
             sync();
         });
     });
-
-    // ── Helpers ────────────────────────────────────────────────────────────
-    const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     function mostrarFeedback(ok, msg) {
         const fb = document.getElementById('inf-feedback');
@@ -433,72 +377,51 @@
         fb.className = 'inf-feedback visible ' + (ok ? 'ok' : 'error');
     }
 
-    // ── Guardar configuración ──────────────────────────────────────────────
-    function guardarConfig() {
+    document.getElementById('btn-save')?.addEventListener('click', function () {
         const btn  = document.getElementById('btn-save');
         const form = document.getElementById('inf-form');
-
         const secciones = Array.from(
             form.querySelectorAll('input[name="secciones"]:checked')
         ).map(el => el.value);
-
-        if (secciones.length === 0) {
-            mostrarFeedback(false, 'Selecciona al menos una sección para el informe.');
-            return;
-        }
-
+        if (secciones.length === 0) { mostrarFeedback(false, i18n.minSec); return; }
         const payload = {
             enabled:    document.getElementById('f-enabled').checked,
             frecuencia: document.getElementById('f-freq').value,
             canal:      document.getElementById('f-canal').value,
             secciones,
         };
-
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
-
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.saving}`;
         fetch('/informes/config', {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
             body:    JSON.stringify(payload),
         })
         .then(r => r.json())
-        .then(data => mostrarFeedback(data.ok, data.msg))
-        .catch(() => mostrarFeedback(false, 'Error de red.'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar configuración';
-        });
-    }
+        .then(d => mostrarFeedback(d.ok, d.msg))
+        .catch(() => mostrarFeedback(false, i18n.netErr))
+        .finally(() => { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ${i18n.btnSave}`; });
+    });
 
-    // ── Enviar informe ahora ───────────────────────────────────────────────
-    function enviarAhora() {
+    document.getElementById('btn-send')?.addEventListener('click', function () {
         const btn = document.getElementById('btn-send');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando…';
-
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.sending}`;
         fetch('/informes/enviar', {
             method:  'POST',
-            headers: { 'X-CSRF-Token': csrf() },
+            headers: { 'X-CSRF-Token': CSRF },
         })
         .then(r => r.json())
-        .then(data => {
-            mostrarFeedback(data.ok, data.msg);
-            if (data.ok) {
-                // Actualizar timestamp en pantalla tras 1 s
-                setTimeout(() => location.reload(), 1500);
-            }
+        .then(d => {
+            mostrarFeedback(d.ok, d.msg);
+            if (d.ok) setTimeout(() => location.reload(), 1500);
         })
-        .catch(() => mostrarFeedback(false, 'Error de red.'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar informe ahora';
-        });
-    }
+        .catch(() => mostrarFeedback(false, i18n.netErr))
+        .finally(() => { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${i18n.btnSend}`; });
+    });
 
-    // Exponer para los onclick
-    window.guardarConfig = guardarConfig;
-    window.enviarAhora   = enviarAhora;
+    window.guardarConfig = () => document.getElementById('btn-save')?.click();
+    window.enviarAhora   = () => document.getElementById('btn-send')?.click();
 }());
 </script>
 {% endblock %}
