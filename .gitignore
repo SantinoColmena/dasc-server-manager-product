@@ -64,6 +64,9 @@ Thumbs.db
 docker-compose.override.yml
 # Artefactos de build del instalador Windows (R-099) — generados por makensis
 deploy/docker/VigexSetup.exe
+# Binarios compilados del agente Go (R-100) — generados por go build
+deploy/agent/VigexAgent.exe
+deploy/agent/VigexAgent
 
 # Python cache
 *.pyc
