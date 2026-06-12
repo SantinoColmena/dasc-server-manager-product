@@ -250,6 +250,164 @@ def build_ssh_base_command(host: str) -> list[str]:
 
 
 # =====================
+# VIGEX AGENT (R-101) — hosts Windows gestionados por agente HTTP
+# =====================
+_VIGEX_AGENT_PORT = int(os.getenv("VIGEX_AGENT_PORT", "8050"))
+
+# Mapa host→token. Formato: "ip1:token1,ip2:token2"
+_VIGEX_AGENT_TOKEN_MAP: dict[str, str] = {}
+for _agt_entry in os.getenv("VIGEX_AGENT_TOKEN_MAP", "").split(","):
+    _agt_entry = _agt_entry.strip()
+    if ":" in _agt_entry:
+        _agt_h, _agt_t = _agt_entry.split(":", 1)
+        _VIGEX_AGENT_TOKEN_MAP[_agt_h.strip()] = _agt_t.strip()
+
+
+def _get_agent_cfg(host: str) -> dict[str, Any] | None:
+    """Devuelve config del agente si el host tiene uno, None si es SSH."""
+    token = _VIGEX_AGENT_TOKEN_MAP.get(host)
+    return {"port": _VIGEX_AGENT_PORT, "token": token} if token else None
+
+
+def _call_agent(
+    host: str,
+    endpoint: str,
+    method: str = "GET",
+    data: dict | None = None,
+    token: str = "",
+) -> Any:
+    """Llama a un endpoint REST del Vigex Agent y devuelve la respuesta JSON."""
+    url = f"http://{host}:{_VIGEX_AGENT_PORT}{endpoint}"
+    body = json.dumps(data).encode() if data is not None else None
+    req = UrlRequest(url, data=body, method=method, headers={
+        "User-Agent": "Vigex/1.0",
+        "Content-Type": "application/json",
+        "X-Vigex-Token": token,
+    })
+    try:
+        with urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        try:
+            msg = json.loads(raw).get("error", raw)
+        except Exception:
+            msg = raw
+        raise RuntimeError(f"Agente HTTP {exc.code}: {msg}")
+    except URLError as exc:
+        raise RuntimeError(f"Agente no accesible en {host}:{_VIGEX_AGENT_PORT} — {exc.reason}")
+
+
+def _agent_translate(
+    host: str,
+    script: str,
+    args: list[str],
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    """Traduce una llamada SSH a su equivalente en el agente HTTP y normaliza la respuesta."""
+    token = cfg["token"]
+    _base: dict[str, Any] = {"host": host, "script": script, "stdout": "", "stderr": "", "code": 0}
+    try:
+        # ── Servicios ──────────────────────────────────────────────────────────
+        if script == SCRIPT_SERVICIOS:
+            if args and args[0] == "list":
+                svcs = _call_agent(host, "/api/v1/services", token=token)
+                lines = [f"{s['name']}|{s['status']}" for s in (svcs if isinstance(svcs, list) else [])]
+                text = "\n".join(lines)
+                return {**_base, "ok": True, "text": text, "stdout": text}
+            action = args[0] if args else "start"
+            name   = args[1] if len(args) > 1 else ""
+            resp   = _call_agent(host, f"/api/v1/services/{name}/{action}", "POST", token=token)
+            ok     = bool(resp.get("ok"))
+            text   = f"{'OK' if ok else 'ERROR'}: {action} {name}"
+            return {**_base, "ok": ok, "text": text, "stdout": text}
+
+        # ── Backups ────────────────────────────────────────────────────────────
+        if script == SCRIPT_BACKUPS:
+            resp = _call_agent(host, "/api/v1/backups/create", "POST", token=token)
+            ok   = bool(resp.get("ok"))
+            fn   = resp.get("filename", "")
+            text = f"OK: backup {fn}" if ok else f"ERROR: {resp.get('error', 'desconocido')}"
+            return {**_base, "ok": ok, "text": text, "stdout": text}
+
+        # ── Restore ───────────────────────────────────────────────────────────
+        if script == SCRIPT_RESTORE:
+            filename = args[0] if args else ""
+            resp = _call_agent(host, f"/api/v1/backups/restore?filename={filename}", "POST", token=token)
+            ok   = bool(resp.get("ok"))
+            text = "OK: restauración completada" if ok else f"ERROR: {resp.get('error', 'desconocido')}"
+            return {**_base, "ok": ok, "text": text, "stdout": text}
+
+        # ── Disco (df -h /) ────────────────────────────────────────────────────
+        if script == "df" and args == ["-h", "/"]:
+            disks = _call_agent(host, "/api/v1/disk", token=token)
+            if isinstance(disks, list) and disks:
+                d = disks[0]
+                total = f"{d.get('total_gb', 0):.0f}G"
+                used  = f"{d.get('used_gb', 0):.0f}G"
+                free  = f"{d.get('free_gb', 0):.0f}G"
+                pct   = f"{d.get('percent_used', 0):.0f}%"
+                drive = d.get("drive", "C:\\")
+                # Formato compatible con _parse_df_output: partes[1]=total [2]=used [3]=free [4]=pct%
+                stdout = f"{drive:<15} {total:<6} {used:<6} {free:<6} {pct:<5} {drive}"
+                return {**_base, "ok": True, "text": stdout, "stdout": stdout}
+            return {**_base, "ok": False, "text": "Sin datos de disco"}
+
+        # ── Ficheros /proc/* → info del sistema vía agente ─────────────────────
+        if script == "cat" and args and args[0] in ("/proc/loadavg", "/proc/meminfo", "/proc/uptime"):
+            sys_info = _call_agent(host, "/api/v1/system", token=token)
+            if args[0] == "/proc/loadavg":
+                cpu   = sys_info.get("cpu_percent", 0.0)
+                load  = round(cpu / 100.0, 2)
+                stdout = f"{load} {load} {load} 1/1 0"
+            elif args[0] == "/proc/meminfo":
+                total_kb = sys_info.get("mem_total_mb", 0) * 1024
+                free_kb  = sys_info.get("mem_free_mb", 0) * 1024
+                stdout = (f"MemTotal:     {total_kb} kB\n"
+                          f"MemFree:      {free_kb} kB\n"
+                          f"MemAvailable: {free_kb} kB\n")
+            else:  # /proc/uptime
+                import datetime as _dt
+                boot_str = sys_info.get("boot_time", "")
+                try:
+                    boot = _dt.datetime.fromisoformat(boot_str.replace("Z", "+00:00"))
+                    secs = (_dt.datetime.now(_dt.timezone.utc) - boot).total_seconds()
+                except Exception:
+                    secs = 0.0
+                stdout = f"{secs:.2f} {secs:.2f}"
+            return {**_base, "ok": True, "text": stdout, "stdout": stdout}
+
+        # ── hostname && date ───────────────────────────────────────────────────
+        if script == "/bin/bash" and args == ["-lc", "hostname && date"]:
+            health = _call_agent(host, "/health", token=token)
+            hostname = health.get("hostname", host)
+            from datetime import datetime as _dt_cls
+            now  = _dt_cls.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y")
+            text = f"{hostname}\n{now}"
+            return {**_base, "ok": True, "text": text, "stdout": text}
+
+        # ── crontab -l (no aplica en Windows) ─────────────────────────────────
+        if script == "crontab" and args == ["-l"]:
+            return {**_base, "ok": True, "text": "no crontab for vigex", "stdout": ""}
+
+        # ── Ficheros Linux no disponibles en agente Windows ────────────────────
+        if script == "cat":
+            f = args[0] if args else ""
+            return {**_base, "ok": False, "text": f"Fichero no disponible en servidor Windows: {f}"}
+
+        return {**_base, "ok": False, "text": f"Operación no soportada por agente: {script}"}
+
+    except Exception as exc:
+        return {**_base, "ok": False, "text": f"Error agente: {exc}", "code": 1}
+
+
+def remote_run(host: str, script: str, args: list[str]) -> dict[str, Any]:
+    """SSH o agente HTTP según configuración del host. Drop-in para ssh_run."""
+    cfg = _get_agent_cfg(host)
+    return _agent_translate(host, script, args, cfg) if cfg else ssh_run(host, script, args)
+
+
+# =====================
 # ALERTAS TELEGRAM
 # =====================
 TELEGRAM_BOT_TOKEN    = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
@@ -1336,7 +1494,7 @@ def build_backup_automation_name(tipo: str, db: str) -> str:
 
 
 def cargar_automatizaciones_backups() -> list[dict[str, Any]]:
-    result = ssh_run(SERVIDOR_BACKUPS, "crontab", ["-l"])
+    result = remote_run(SERVIDOR_BACKUPS, "crontab", ["-l"])
 
     if not result.get("ok") and "no crontab" not in result.get("text", "").lower():
         return []
@@ -2138,7 +2296,7 @@ def dashboard_status(request: Request):
     services_block: dict[str, Any] = {"available": False}
     if perms_context.get("can_servicios"):
         try:
-            result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+            result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
             lista: list[dict[str, str]] = []
             for linea in result.get("text", "").split("\n"):
                 if "|" in linea:
@@ -2158,7 +2316,7 @@ def dashboard_status(request: Request):
     # ── Disco (SSH df -h /) ─────────────────────────────────────────────────
     disk_block: dict[str, Any] = {"available": False}
     try:
-        result_df = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        result_df = remote_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
         if result_df.get("ok"):
             disk_block = _parse_df_output(result_df.get("stdout", "") or result_df.get("text", ""))
     except Exception:
@@ -2261,7 +2419,7 @@ def monitoreo_metrics(request: Request):
     # ── Carga del sistema (/proc/loadavg) ──────────────────────────────────
     load_block: dict[str, Any] = {"available": False}
     try:
-        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/loadavg"])
+        r = remote_run(SERVIDOR_BACKUPS, "cat", ["/proc/loadavg"])
         if r.get("ok"):
             load_block = _parse_loadavg(r["stdout"])
     except Exception:
@@ -2270,7 +2428,7 @@ def monitoreo_metrics(request: Request):
     # ── Memoria (/proc/meminfo) ─────────────────────────────────────────────
     mem_block: dict[str, Any] = {"available": False}
     try:
-        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/meminfo"])
+        r = remote_run(SERVIDOR_BACKUPS, "cat", ["/proc/meminfo"])
         if r.get("ok"):
             mem_block = _parse_meminfo(r["stdout"])
     except Exception:
@@ -2279,7 +2437,7 @@ def monitoreo_metrics(request: Request):
     # ── Disco (df -h /, ya allowlisted) ────────────────────────────────────
     disk_block: dict[str, Any] = {"available": False}
     try:
-        r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        r = remote_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
         if r.get("ok"):
             disk_block = _parse_df_output(r["stdout"])
     except Exception:
@@ -2288,7 +2446,7 @@ def monitoreo_metrics(request: Request):
     # ── Tiempo activo (/proc/uptime) ────────────────────────────────────────
     uptime_block: dict[str, Any] = {"available": False}
     try:
-        r = ssh_run(SERVIDOR_BACKUPS, "cat", ["/proc/uptime"])
+        r = remote_run(SERVIDOR_BACKUPS, "cat", ["/proc/uptime"])
         if r.get("ok"):
             uptime_block = _parse_uptime_secs(r["stdout"])
     except Exception:
@@ -2446,7 +2604,7 @@ def _send_proactive_alert(tipo: str, tg_text: str, email_subject: str, email_bod
 def _check_disk_proactive() -> None:
     check = _proactivo_estado["checks"]["disk"]
     try:
-        r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        r = remote_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
         if not r.get("ok"):
             check["last_ok"] = None
             return
@@ -2510,7 +2668,7 @@ def _check_backup_proactive() -> None:
 def _check_services_proactive() -> None:
     check = _proactivo_estado["checks"]["services"]
     try:
-        result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+        result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
         lista: list[dict[str, str]] = []
         for linea in result.get("text", "").split("\n"):
             if "|" in linea:
@@ -3334,7 +3492,7 @@ def ver_servicios(request: Request):
     if not has_permission(request, "servicios"):
         return permission_redirect()
 
-    result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+    result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
     salida = result["text"]
 
     ok = request.query_params.get("ok")
@@ -3389,7 +3547,7 @@ def accion_servicio(
             status_code=303,
         )
 
-    result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, [action, service])
+    result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, [action, service])
     ok = 1 if result["ok"] else 0
 
     if result["ok"]:
@@ -3463,7 +3621,7 @@ def ejecutar_backup(request: Request, tipo: str):
             status_code=400,
         )
 
-    result = ssh_run(SERVIDOR_BACKUPS, SCRIPT_BACKUPS, [tipo])
+    result = remote_run(SERVIDOR_BACKUPS, SCRIPT_BACKUPS, [tipo])
     ok = result["ok"]
 
     if ok:
@@ -3508,7 +3666,7 @@ def test_backups(request: Request):
             status_code=403,
         )
 
-    result = ssh_run(SERVIDOR_BACKUPS, "/bin/bash", ["-lc", "hostname && date"])
+    result = remote_run(SERVIDOR_BACKUPS, "/bin/bash", ["-lc", "hostname && date"])
     return {
         "ok": result["ok"],
         "resultado": result["text"],
@@ -4055,7 +4213,7 @@ def backups_run(
         )
 
     args = [type, db, dest, name, compress, str(retention), base_ref, notes]
-    result = ssh_run(SERVIDOR_BACKUPS, SCRIPT_BACKUPS, args)
+    result = remote_run(SERVIDOR_BACKUPS, SCRIPT_BACKUPS, args)
     ok = 1 if (result["ok"] and is_ok(result["text"])) else 0
 
     if ok:
@@ -6497,7 +6655,7 @@ def _recopilar_datos_informe(secciones: list[str]) -> dict[str, Any]:
 
     if "disco" in secciones:
         try:
-            r = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+            r = remote_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
             info = _parse_df_output(r["stdout"]) if r.get("ok") else {}
             datos["disco"] = info if info.get("available") else None
         except Exception:
@@ -6511,7 +6669,7 @@ def _recopilar_datos_informe(secciones: list[str]) -> dict[str, Any]:
 
     if "servicios" in secciones:
         try:
-            result = ssh_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
+            result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
             lista: list[dict[str, str]] = []
             for linea in result.get("text", "").split("\n"):
                 if "|" in linea:
@@ -7052,7 +7210,7 @@ def _analizar_salud_copias() -> dict[str, Any]:
 
     # ── 2. Checksums.sha256 (total de ficheros con checksum registrado) ────
     try:
-        r_cs = ssh_run(SERVIDOR_BACKUPS, "cat", ["/home/vigex/backups/.vigex/checksums.sha256"])
+        r_cs = remote_run(SERVIDOR_BACKUPS, "cat", ["/home/vigex/backups/.vigex/checksums.sha256"])
         if r_cs.get("ok") and r_cs.get("stdout", "").strip():
             lineas_cs = [l for l in r_cs["stdout"].splitlines() if l.strip() and not l.startswith("#")]
             resultado["checksums_total_archivo"] = len(lineas_cs)
@@ -10248,10 +10406,10 @@ def _ev_monitorizacion() -> dict:
             ("/proc/meminfo", "meminfo"),
             ("/proc/uptime", "uptime"),
         ]:
-            r = ssh_run(SERVIDOR_BACKUPS, "cat", [proc_file])
+            r = remote_run(SERVIDOR_BACKUPS, "cat", [proc_file])
             resultados[label] = r.get("stdout", "")[:500] if r.get("ok") else None
 
-        r_df = ssh_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
+        r_df = remote_run(SERVIDOR_BACKUPS, "df", ["-h", "/"])
         resultados["df"] = r_df.get("stdout", "")[:500] if r_df.get("ok") else None
 
         return {"disponible": True, "raw": resultados}
