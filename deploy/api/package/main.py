@@ -266,6 +266,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "bkp.delete_warn_mid": ", también se eliminarán", "bkp.delete_warn_post": "copia(s) dependiente(s). Esta acción no se puede deshacer.",
         "bkp.delete_simple": "Se eliminará únicamente la copia seleccionada y su archivo físico del servidor de backups.",
         "bkp.btn_delete_chain": "Eliminar cadena completa", "bkp.btn_delete_single": "Eliminar copia",
+        # servicios.html
+        "svc.sidebar_title": "Resumen", "svc.sidebar_active": "Activos", "svc.sidebar_inactive": "No activos", "svc.sidebar_total": "Total",
+        "svc.page_title": "Servicios del sistema",
+        "svc.page_subtitle": "Arranca, para o reinicia los servicios del servidor. Sin complicaciones, desde el panel.",
+        "svc.kpi_total": "Servicios", "svc.kpi_active": "Activos", "svc.kpi_inactive": "No activos",
+        "svc.list_title": "Listado de servicios",
+        "svc.search_ph": "Filtrar por nombre de servicio...",
+        "svc.th_service": "Servicio", "svc.th_status": "Estado", "svc.th_actions": "Acciones",
+        "svc.badge_active": "Activo",
+        "svc.empty": "No se han podido cargar servicios. Revisa la conexión SSH con el servidor de servicios.",
     },
     "ca": {
         "nav.title": "Navegació", "nav.panel": "Tauler", "nav.monitoreo": "Monitoratge",
@@ -427,6 +437,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "bkp.delete_warn_mid": ", també s'eliminaran", "bkp.delete_warn_post": "còpia/es dependent/s. Aquesta acció no es pot desfer.",
         "bkp.delete_simple": "S'eliminarà únicament la còpia seleccionada i el seu fitxer físic del servidor de còpies.",
         "bkp.btn_delete_chain": "Eliminar cadena completa", "bkp.btn_delete_single": "Eliminar còpia",
+        # servicios.html
+        "svc.sidebar_title": "Resum", "svc.sidebar_active": "Actius", "svc.sidebar_inactive": "No actius",
+        "svc.page_title": "Serveis del sistema",
+        "svc.page_subtitle": "Engega, atura o reinicia els serveis del servidor. Sense complicacions, des del tauler.",
+        "svc.kpi_total": "Serveis", "svc.kpi_active": "Actius", "svc.kpi_inactive": "No actius",
+        "svc.list_title": "Llistat de serveis",
+        "svc.search_ph": "Filtrar per nom de servei...",
+        "svc.th_service": "Servei", "svc.th_status": "Estat", "svc.th_actions": "Accions",
+        "svc.badge_active": "Actiu",
+        "svc.empty": "No s'han pogut carregar serveis. Revisa la connexió SSH amb el servidor de serveis.",
     },
 }
 
