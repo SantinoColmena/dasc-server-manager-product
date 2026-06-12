@@ -202,6 +202,9 @@
         <i class="fa-solid fa-plus"></i> Registrar incidente
     </button>
     {% endif %}
+    <button class="inc-btn" id="btn-registro" onclick="exportarRegistro()" style="background:#0f766e;">
+        <i class="fa-solid fa-file-code"></i> Exportar registro
+    </button>
     <a href="/cumplimiento" class="inc-btn secondary" style="text-decoration:none;">
         <i class="fa-solid fa-arrow-left"></i> Volver a Cumplimiento
     </a>
@@ -459,6 +462,25 @@
             }
             await loadIncidentes();
         } catch { alert('Error de red'); }
+    };
+
+    window.exportarRegistro = async function () {
+        const btn = document.getElementById('btn-registro');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…'; }
+        try {
+            const r = await fetch('/api/cumplimiento/incidentes/registro', { headers: { 'X-CSRF-Token': CSRF } });
+            if (!r.ok) { alert('Error: ' + r.status); return; }
+            const blob  = await r.blob();
+            const cd    = r.headers.get('Content-Disposition') || '';
+            const match = cd.match(/filename="([^"]+)"/);
+            const nombre = match ? match[1] : 'registro_incidentes.html';
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
+            URL.revokeObjectURL(url);
+        } catch { alert('Error de red'); }
+        finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-code"></i> Exportar registro'; }
+        }
     };
 
     window.descargarPlantilla = async function (id, fase) {

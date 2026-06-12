@@ -11539,6 +11539,247 @@ async def api_incidentes_list(request: Request):
     return {"incidentes": [_inc_fila_a_dict(r) for r in filas]}
 
 
+# ── HTML: registro de incidentes para auditoría ──────────────────────
+
+def _generar_registro_incidentes_html(incidentes: list[dict]) -> str:
+    """
+    Registro completo de incidentes NIS2 como HTML auto-contenido (R-095).
+    Incluye portada, resumen por estado/severidad y ficha de cada incidente.
+    El token VIGEX_SHA256_PLACEHOLDER es reemplazado en el endpoint.
+    """
+    def esc(s) -> str:
+        return (str(s)
+                .replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace('"', "&quot;")
+                ) if s is not None else "—"
+
+    def fmt_ts(iso) -> str:
+        if not iso: return "—"
+        try:
+            dt = datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+            return dt.strftime("%d/%m/%Y %H:%M")
+        except Exception:
+            return str(iso)
+
+    ahora_iso     = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    ahora_legible = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+    total         = len(incidentes)
+
+    # ── Resumen por estado y severidad ────────────────────────────────
+    por_estado: dict = {}
+    por_sev: dict    = {}
+    for inc in incidentes:
+        e = inc.get("estado", "—")
+        por_estado[e] = por_estado.get(e, 0) + 1
+        s = inc.get("severidad", "—")
+        por_sev[s] = por_sev.get(s, 0) + 1
+
+    estado_rows = "".join(
+        f'<tr><td>{esc(_INC_ESTADOS_LABEL.get(e, e))}</td>'
+        f'<td class="num">{n}</td></tr>'
+        for e, n in por_estado.items()
+    )
+    sev_rows = "".join(
+        f'<tr><td>{esc(e.capitalize())}</td><td class="num">{n}</td></tr>'
+        for e, n in por_sev.items()
+    )
+
+    # ── Detalle por incidente ──────────────────────────────────────────
+    ESTADO_CLS = {
+        "detectado":         "est-det",
+        "notif_24h_enviada": "est-24h",
+        "notif_72h_enviada": "est-72h",
+        "resuelto":          "est-res",
+        "cerrado":           "est-cer",
+    }
+
+    def fmt_secs(s: int) -> str:
+        if s <= 0: return "Vencido"
+        h = s // 3600; m = (s % 3600) // 60
+        return f"{h // 24}d {h % 24}h" if h >= 24 else f"{h}h {m}min"
+
+    inc_html = ""
+    for inc in incidentes:
+        inc_id  = inc.get("id", 0)
+        sev     = inc.get("severidad", "bajo")
+        estado  = inc.get("estado", "detectado")
+        tipo    = inc.get("tipo_label") or _INC_TIPOS.get(inc.get("tipo", ""), "—")
+        ca      = inc.get("cuentas_atras", {})
+        venc24  = ca.get("vencido_24h", False)
+        venc72  = ca.get("vencido_72h", False)
+        n24_en  = fmt_ts(inc.get("notif_24h_en"))
+        n72_en  = fmt_ts(inc.get("notif_72h_en"))
+
+        p24_cls = ("pl-urgente" if venc24 and estado == "detectado"
+                   else "pl-ok" if not venc24 else "pl-cum")
+        p72_cls = ("pl-urgente" if venc72 and estado in ("detectado", "notif_24h_enviada")
+                   else "pl-ok" if not venc72 else "pl-cum")
+        p24_txt = fmt_secs(ca.get("seg_hasta_24h", 0)) if not venc24 else (n24_en if n24_en != "—" else "Enviado")
+        p72_txt = fmt_secs(ca.get("seg_hasta_72h", 0)) if not venc72 else (n72_en if n72_en != "—" else "Enviado")
+
+        el = _INC_ESTADOS_LABEL.get(estado, estado)
+        ec = ESTADO_CLS.get(estado, "est-cer")
+
+        notas_html = (f'<div class="inc-notas"><strong>Notas:</strong> {esc(inc.get("notas"))}</div>'
+                      if inc.get("notas") else "")
+
+        inc_html += (
+            f'<div class="inc-card sev-{sev}">'
+            f'<div class="inc-card-header">'
+            f'<div class="inc-id-title">'
+            f'<span class="inc-code">INC-{inc_id:04d}</span>'
+            f'<span class="inc-titulo">{esc(inc.get("titulo", "—"))}</span>'
+            f'</div>'
+            f'<div class="inc-badges">'
+            f'<span class="badge sev-{sev}">{esc(sev.capitalize())}</span>'
+            f'<span class="badge {ec}">{esc(el)}</span>'
+            f'</div></div>'
+            f'<div class="inc-card-body">'
+            f'<div class="inc-plazos">'
+            f'<div class="inc-plazo {p24_cls}"><div class="pl-label">Aviso 24 h</div>'
+            f'<div class="pl-val">{esc(p24_txt)}</div></div>'
+            f'<div class="inc-plazo {p72_cls}"><div class="pl-label">Notif. 72 h</div>'
+            f'<div class="pl-val">{esc(p72_txt)}</div></div>'
+            f'</div>'
+            f'<table class="dt"><tbody>'
+            f'<tr><td class="dk">Tipo</td><td>{esc(tipo)}</td>'
+            f'<td class="dk">Detectado</td><td>{esc(fmt_ts(inc.get("detectado_en")))}</td></tr>'
+            f'<tr><td class="dk">Creado por</td><td>{esc(inc.get("creado_por", "—"))}</td>'
+            f'<td class="dk">Ref. CSIRT</td><td>{esc(inc.get("csirt_ref") or "—")}</td></tr>'
+            f'<tr><td class="dk">Notif. 24 h</td><td>{esc(n24_en)}</td>'
+            f'<td class="dk">Notif. 72 h</td><td>{esc(n72_en)}</td></tr>'
+            f'<tr><td class="dk">Resuelto</td><td>{esc(fmt_ts(inc.get("resuelto_en")))}</td>'
+            f'<td class="dk">Cerrado</td><td>{esc(fmt_ts(inc.get("cerrado_en")))}</td></tr>'
+            f'</tbody></table>'
+            f'<div class="inc-field"><span class="dk">Descripción:</span> '
+            f'{esc(inc.get("descripcion", "—"))}</div>'
+            f'<div class="inc-field"><span class="dk">Sistemas afectados:</span> '
+            f'{esc(inc.get("sistemas_afect") or "—")}</div>'
+            f'<div class="inc-field"><span class="dk">Medidas adoptadas:</span> '
+            f'{esc(inc.get("medidas_tomadas") or "—")}</div>'
+            f'{notas_html}'
+            f'</div></div>'
+        )
+
+    css = """*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;line-height:1.55;color:#1f2937;background:#fff;max-width:960px;margin:0 auto;padding:2rem}
+.cover{border:2px solid #dc2626;border-radius:12px;padding:2rem;margin-bottom:2rem;background:linear-gradient(135deg,#fff5f5 0%,#fee2e2 100%)}
+.cover-brand{font-size:.78rem;font-weight:700;color:#dc2626;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.cover h1{font-size:1.6rem;color:#1e1b4b;margin-bottom:1.2rem;line-height:1.2}
+.meta-grid{display:grid;grid-template-columns:170px 1fr;gap:.3rem .7rem;font-size:.82rem}
+.meta-grid dt{font-weight:700;color:#6b7280}.meta-grid dd{color:#1e1b4b}
+h2{font-size:1rem;color:#1e1b4b;border-bottom:2px solid #e5e7eb;padding-bottom:.35rem;margin:2rem 0 .9rem}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.stat-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.stat-table th{background:#f3f4f6;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;padding:.45rem .7rem;border:1px solid #e5e7eb;color:#6b7280}
+.stat-table td{padding:.4rem .7rem;border:1px solid #e5e7eb}
+.stat-table td.num{text-align:center;font-weight:700}
+.inc-card{border:1px solid #e5e7eb;border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.inc-card.sev-critico{border-left:4px solid #dc2626}.inc-card.sev-alto{border-left:4px solid #f97316}
+.inc-card.sev-medio{border-left:4px solid #f59e0b}.inc-card.sev-bajo{border-left:4px solid #22c55e}
+.inc-card-header{background:#f9fafb;padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;border-bottom:1px solid #e5e7eb}
+.inc-id-title{display:flex;align-items:center;gap:.6rem;flex:1}
+.inc-code{font-family:monospace;font-size:.72rem;font-weight:700;color:#6b7280;background:#f3f4f6;padding:.1rem .4rem;border-radius:4px}
+.inc-titulo{font-weight:700;font-size:.9rem;color:#1e1b4b}
+.inc-badges{display:flex;gap:.4rem;flex-wrap:wrap}
+.badge{display:inline-block;font-size:.67rem;font-weight:700;padding:.14rem .48rem;border-radius:99px;white-space:nowrap}
+.sev-critico{background:#fee2e2;color:#991b1b}.sev-alto{background:#ffedd5;color:#9a3412}
+.sev-medio{background:#fef3c7;color:#92400e}.sev-bajo{background:#d1fae5;color:#065f46}
+.est-det{background:#fee2e2;color:#991b1b}.est-24h{background:#fef3c7;color:#92400e}
+.est-72h{background:#d1fae5;color:#065f46}.est-res{background:#ede9fe;color:#5b21b6}.est-cer{background:#f3f4f6;color:#9ca3af}
+.inc-card-body{padding:.85rem 1rem}
+.inc-plazos{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:.85rem}
+.inc-plazo{display:flex;flex-direction:column;align-items:center;padding:.45rem .8rem;border-radius:8px;min-width:110px;border:1px solid #e5e7eb;background:#f9fafb}
+.pl-urgente{background:#fef2f2;border-color:#fca5a5}.pl-ok{background:#f0fdf4;border-color:#86efac}.pl-cum{background:#f3f4f6;border-color:#e5e7eb}
+.pl-label{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;margin-bottom:.1rem}
+.pl-val{font-size:.95rem;font-weight:800;color:#1e1b4b}
+.dt{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.7rem}
+.dt td{padding:.38rem .6rem;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.dt tr:last-child td{border-bottom:none}
+.dk{font-weight:700;color:#6b7280;white-space:nowrap;width:90px}
+.inc-field{font-size:.8rem;color:#374151;margin-bottom:.4rem}
+.inc-field .dk{display:inline}
+.inc-notas{font-size:.78rem;color:#6b7280;font-style:italic;margin-top:.3rem}
+.seal{margin-top:3rem;padding:1rem 1.2rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px}
+.seal-title{font-weight:700;color:#374151;font-size:.82rem;margin-bottom:.35rem}
+.seal-hash{font-family:monospace;font-size:.68rem;color:#374151;word-break:break-all;background:#fff;padding:.3rem .5rem;border-radius:4px;border:1px solid #e5e7eb}
+.doc-footer{text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;font-size:.7rem;color:#9ca3af}
+@media print{body{max-width:100%;padding:.7cm 1cm;font-size:11px}.cover{background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.inc-card{break-inside:avoid}}"""
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Incidentes NIS2 — Vigex</title>
+<style>{css}</style>
+</head>
+<body>
+<div class="cover">
+  <div class="cover-brand">Vigex — Registro de Incidentes NIS2</div>
+  <h1>Registro de Incidentes NIS2</h1>
+  <dl class="meta-grid">
+    <dt>Fecha de exportación</dt><dd>{ahora_legible}</dd>
+    <dt>Total de incidentes</dt><dd>{total}</dd>
+    <dt>Referencia normativa</dt><dd>Art. 23 NIS2 (RD-ley 7/2025) — INCIBE-CERT / CCN-CERT</dd>
+    <dt>Timestamp ISO 8601</dt><dd>{ahora_iso}</dd>
+  </dl>
+</div>
+<h2>Resumen</h2>
+<div class="stats-grid">
+  <table class="stat-table">
+    <thead><tr><th>Estado</th><th>Incidentes</th></tr></thead>
+    <tbody>{estado_rows}</tbody>
+  </table>
+  <table class="stat-table">
+    <thead><tr><th>Severidad</th><th>Incidentes</th></tr></thead>
+    <tbody>{sev_rows}</tbody>
+  </table>
+</div>
+<h2>Detalle ({total} incidentes)</h2>
+{inc_html if inc_html else '<p style="color:#9ca3af;font-size:.85rem">Sin incidentes registrados.</p>'}
+<div class="seal">
+  <div class="seal-title">Sello de integridad del documento</div>
+  <div class="seal-hash">SHA256: VIGEX_SHA256_PLACEHOLDER</div>
+</div>
+<div class="doc-footer">Registro generado automáticamente por Vigex v1.0 — {ahora_iso}</div>
+</body>
+</html>"""
+
+
+@app.get("/api/cumplimiento/incidentes/registro")
+async def api_incidentes_registro_html(request: Request):
+    """
+    Descarga el registro completo de incidentes NIS2 como HTML auto-contenido (R-095).
+    Diseñado para imprimir a PDF desde el navegador (Ctrl+P → Guardar como PDF).
+    Requiere permiso `cumplimiento` o rol admin.
+    """
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    perms = get_permissions(request)
+    if "cumplimiento" not in perms and not is_admin(request):
+        raise HTTPException(status_code=403, detail="Sin permiso")
+
+    conn = get_cumplimiento_db()
+    filas = conn.execute(
+        "SELECT * FROM incidentes ORDER BY detectado_en DESC"
+    ).fetchall()
+    conn.close()
+
+    incidentes = [_inc_fila_a_dict(r) for r in filas]
+    cuerpo = _generar_registro_incidentes_html(incidentes)
+    sello  = hashlib.sha256(cuerpo.encode("utf-8")).hexdigest()
+    cuerpo = cuerpo.replace("VIGEX_SHA256_PLACEHOLDER", sello)
+
+    fecha_hoy = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return Response(
+        content=cuerpo.encode("utf-8"),
+        media_type="text/html; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="registro_incidentes_{fecha_hoy}.html"'},
+    )
+
+
 # ── API: crear incidente ─────────────────────────────────────────────
 
 @app.post("/api/cumplimiento/incidentes")
