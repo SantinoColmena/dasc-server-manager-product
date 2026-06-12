@@ -18,6 +18,7 @@ El técnico que instaló Vigex te habrá indicado una URL de acceso. Las formas 
 
 | Tipo de instalación | URL de ejemplo |
 |---|---|
+| Panel en Windows local (Docker) | `http://localhost:8000` |
 | Solo IP, HTTP (lab/pruebas) | `http://192.168.1.50:8000` |
 | Solo IP, HTTPS (producción) | `https://192.168.1.50` |
 | Con nombre de dominio | `https://vigex.tuempresa.com` |
@@ -70,8 +71,11 @@ Un usuario estándar puede ver:
 | **Copias de seguridad** | Ver el historial de backups, lanzar una copia manual, comprobar el resultado |
 | **Restauración** | Recuperar datos de una copia anterior (acción delicada, consultar al técnico) |
 | **Logs** | Ver eventos del sistema: quién accedió, qué acciones se ejecutaron, si hubo errores |
-| **Alertas** | Configurar o revisar notificaciones por Telegram u otros canales |
+| **Alertas** | Configurar notificaciones por Telegram (@VigexPanelBot) o email |
 | **Servicios** | Ver y controlar el estado de servicios del servidor (si tienes permiso) |
+| **Cumplimiento** | Panel de cobertura NIS2/ENS/ISO 27001, evidencias datadas y dossier para auditor |
+| **Incidentes** | Registrar y gestionar incidentes de seguridad con cuenta atrás NIS2 (24 h/72 h) |
+| **Asistente IA** | Chat inteligente sobre el sistema: consulta backups, logs y estado sin navegar |
 
 Los administradores además ven la sección **Administración** (usuarios, logs de acceso).
 

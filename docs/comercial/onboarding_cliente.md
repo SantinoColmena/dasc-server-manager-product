@@ -40,12 +40,17 @@ notepad /tmp/config_cliente_EMPRESA.env
 
 ### B2 — Ejecutar el instalador
 
+**Opción A — Panel en Windows del cliente (Docker):**
 ```powershell
-# Usar el asistente Windows (Ruta 8.2):
-.\tools\windows\instalar_vigex_windows.ps1
+# Ejecutar VigexSetup.exe como Administrador en el PC del cliente.
+# El instalador descarga Docker, la imagen y configura el autoarranque.
+# Panel disponible en http://localhost:8000 al terminar.
+.\VigexSetup.exe
+# Para modo desatendido (sin preguntas):
+.\VigexSetup.exe /S
 ```
 
-O desde SSH directamente:
+**Opción B — Panel en servidor Linux (clásico):**
 ```bash
 # Copiar el repo y ejecutar el instalador en el servidor API del cliente
 ssh admin@IP_SERVIDOR_CLIENTE
@@ -76,7 +81,7 @@ sudo bash /tmp/deploy/api/install_vigex_api.sh
 | C2 | Dashboard: qué significa cada tarjeta | 10 min |
 | C3 | Copias de seguridad: cuándo se hacen, cómo verificarlas | 15 min |
 | C4 | Servicios monitorizados: añadir/quitar servicios | 10 min |
-| C5 | Alertas: configurar email/Telegram, probar | 15 min |
+| C5 | Alertas: Telegram (@VigexPanelBot → /chatid → pegar en panel) y/o email | 10 min |
 | C6 | Cómo abrir un ticket de soporte desde el panel | 5 min |
 | C7 | Runbook `/recuperacion`: qué hacer si algo falla | 10 min |
 | C8 | Preguntas | ∞ |
@@ -85,7 +90,7 @@ sudo bash /tmp/deploy/api/install_vigex_api.sh
 
 - [ ] URL del panel con HTTPS
 - [ ] Usuario y contraseña admin (en papel o gestor de contraseñas)
-- [ ] Guía rápida PDF: `deploy/api/package/static/docs/guia_alertas_telegram.pdf`
+- [ ] Guía de alertas Telegram: `docs/guias/guia_alertas_telegram.md` (imprimible o enviar por email)
 - [ ] Contacto de soporte: `soporte@vigex.es` y cómo abrir ticket desde el panel
 
 ---

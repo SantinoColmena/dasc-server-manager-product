@@ -21,11 +21,13 @@ Para acceder al panel:
 3. Introducir usuario y contraseña.
 4. Pulsar en Entrar.
 
-Ejemplo de URL interna:
+El técnico te habrá indicado la URL. Las formas habituales son:
 
-http://IP_DEL_SERVIDOR:8000
-
-En una instalación real, esta dirección puede cambiar según la red del cliente.
+| Tipo | URL |
+|---|---|
+| Panel en tu PC Windows (Docker) | `http://localhost:8000` |
+| Servidor en red local | `http://192.168.1.50:8000` o `https://192.168.1.50` |
+| Con dominio propio | `https://vigex.tuempresa.com` |
 
 ## Pantalla principal
 
@@ -117,17 +119,57 @@ No se recomienda detener servicios si no se sabe exactamente qué función cumpl
 
 ## Alertas
 
-El sistema puede enviar alertas cuando se detectan eventos importantes.
+El sistema envía notificaciones automáticas cuando ocurren eventos importantes:
 
-Ejemplos de alertas:
+- Backup completado o con error.
+- Servicio caído o recuperado.
+- Error interno del sistema.
+- Nuevo incidente de seguridad registrado.
 
-- Backup correcto.
-- Error en backup.
-- Error de servicio.
-- Error de API.
-- Incidencia crítica.
+### Canal Telegram (@VigexPanelBot)
 
-Las alertas pueden configurarse para canales como Telegram u otros sistemas futuros.
+Vigex usa el bot centralizado **@VigexPanelBot** para enviar alertas a Telegram.
+Para configurarlo:
+
+1. Busca **@VigexPanelBot** en Telegram y pulsa Iniciar.
+2. Escribe `/chatid` — el bot te devuelve un número (tu Chat ID).
+3. En el panel: **Alertas → Telegram Chat ID** → pega ese número → Guardar.
+4. Pulsa **Enviar alerta de prueba** para verificar que llega.
+
+También puedes recibir alertas por **email** desde la misma pantalla.
+Consulta la guía completa: [`docs/guias/guia_alertas_telegram.md`](../guias/guia_alertas_telegram.md).
+
+## Asistente IA
+
+La sección **Asistente** permite hacer preguntas en lenguaje natural sobre el sistema:
+
+- "¿Cuándo se hizo el último backup?"
+- "¿Hay algún servicio caído?"
+- "¿Qué eventos de error hubo esta semana?"
+
+El asistente responde usando la documentación y el estado actual del sistema.
+No necesita configuración adicional — está disponible si tienes el permiso `asistente`.
+
+## Cumplimiento y evidencias
+
+La sección **Cumplimiento** muestra la cobertura de la empresa frente a normativas
+de seguridad (NIS2, ENS, ISO 27001):
+
+- Semáforo de controles cubiertos por norma.
+- Evidencias datadas con hash SHA256 que puedes presentar a un auditor.
+- Botón para generar un **dossier exportable** en Markdown con declaración de
+  conformidad parcial.
+
+> Vigex aporta evidencia técnica automática. No certifica cumplimiento normativo.
+
+## Gestión de incidentes
+
+La sección **Incidentes** gestiona el ciclo de vida de incidentes de seguridad:
+
+- Registra un incidente con descripción, gravedad y fecha de detección.
+- La cuenta atrás NIS2 muestra cuánto tiempo queda para notificar al CSIRT
+  (24 h para incidentes significativos, 72 h para el informe completo).
+- Descarga la plantilla de notificación para INCIBE-CERT o CCN-CERT.
 
 ## Usuarios y permisos
 
@@ -197,11 +239,13 @@ El cliente debe encargarse de:
 
 Vigex permite controlar desde un panel:
 
-- Copias de seguridad.
-- Restauraciones.
-- Logs.
-- Servicios.
-- Alertas.
-- Usuarios y permisos.
+- Copias de seguridad y restauraciones.
+- Logs y eventos del sistema.
+- Servicios monitorizados.
+- Alertas por Telegram (@VigexPanelBot) y email.
+- Asistente IA para consultas en lenguaje natural.
+- Módulo de cumplimiento NIS2/ENS/ISO 27001 con evidencias auditables.
+- Gestión de incidentes de seguridad con cuenta atrás NIS2.
+- Administración de usuarios y permisos.
 
 Su finalidad principal es dar tranquilidad al cliente, facilitando que pueda comprobar si sus datos están protegidos y si el sistema funciona correctamente.

@@ -1,9 +1,60 @@
 # R-055B — Despliegue de Vigex desde un PC Windows
 
-> **Destinatario:** técnico o reseller que instala Vigex en servidores Linux
-> desde un PC de desarrollo o administración con Windows 10/11.
+> **Destinatario:** técnico o reseller que instala Vigex desde un PC Windows 10/11.
 >
 > Para la guía del usuario final, ver [`R-055A`](R-055A_acceso_navegador_windows.md).
+
+---
+
+## ¿Qué escenario necesitas?
+
+Vigex soporta tres topologías. Elige la que corresponda al cliente:
+
+| Escenario | Descripción | Guía |
+|---|---|---|
+| **A — Panel en Windows** | El panel Vigex corre en un PC/servidor Windows usando Docker. Los servidores gestionados son Linux. | [Sección A](#escenario-a--panel-vigex-en-windows-con-docker) |
+| **B — Todo Linux** | Panel y servidores gestionados son Linux. Tú instalas desde tu PC Windows. | [Sección B](#escenario-b--panel-en-linux-instalacion-remota-desde-windows) |
+| **C — Topología mixta** | El panel está en Linux o Docker, pero algún servidor gestionado es Windows. | [Sección C](#escenario-c--servidores-gestionados-windows-vigex-agent) |
+
+---
+
+## Escenario A — Panel Vigex en Windows con Docker
+
+El cliente tiene un PC o servidor Windows y quiere que el panel Vigex corra ahí.
+
+### Instalación con VigexSetup.exe (R-099)
+
+1. Descarga `VigexSetup.exe` de la [distribución Vigex](https://vigex.es/descargar).
+2. Ejecútalo como **Administrador** en el PC del cliente.
+3. El instalador:
+   - Verifica requisitos (RAM ≥ 4 GB, disco ≥ 6 GB libres).
+   - Descarga e instala Docker Desktop si no está presente.
+   - Descarga la imagen `scolmena/vigex-panel:latest` de Docker Hub.
+   - Crea `C:\ProgramData\Vigex\config.env` con los valores del cliente.
+   - Registra una tarea de inicio automático en Windows.
+   - Despliega el contenedor en `localhost:8000`.
+4. Accede al panel en `http://localhost:8000` o `https://localhost:8000`.
+
+**Actualizar a una nueva versión:**
+```powershell
+# Opción 1 — doble clic en:
+C:\ProgramData\Vigex\vigex-update.bat
+
+# Opción 2 — PowerShell como Administrador:
+.\VigexSetup.ps1 -Update
+```
+
+**Desinstalar:**
+```powershell
+.\VigexSetup.ps1 -Uninstall
+```
+
+> Los servidores Linux gestionados se configuran igual que siempre (SSH).
+> El panel en Docker se conecta a ellos exactamente igual que el panel en Linux.
+
+---
+
+## Escenario B — Panel en Linux, instalación remota desde Windows
 
 ---
 
@@ -81,7 +132,7 @@ ssh ubuntu@192.168.1.50
 # En el servidor Linux:
 git clone https://github.com/<tu-org>/vigex-server-manager-product.git ~/vigex
 # O usa el tag/commit específico de la release:
-git -C ~/vigex checkout v1.0-rc1
+git -C ~/vigex checkout v1.1-rc1
 ```
 
 ### Opción B — Transferir el archivo desde Windows con SCP (red sin acceso a Internet)
@@ -231,3 +282,54 @@ ssh ubuntu@192.168.1.50
 | Transferir secretos entre servidores | Windows como intermediario | `scp` doble |
 | Hardening (UFW, nginx, fail2ban) | En cada servidor Linux | `ssh` |
 | Verificar el panel | PC Windows | Navegador (Chrome/Edge/Firefox) |
+
+---
+
+## Escenario C — Servidores gestionados Windows (Vigex Agent)
+
+Si uno o más servidores que Vigex debe monitorizar/gestionar corren **Windows Server**
+(no el panel — el servidor gestionado), se usa **Vigex Agent** en lugar de SSH.
+
+### Instalar VigexAgent.exe en el servidor Windows gestionado (R-100)
+
+1. Copia `deploy/agent/VigexAgent.exe` al servidor Windows (via red compartida o SCP).
+2. En el servidor Windows, crea el archivo de configuración:
+
+```powershell
+# C:\ProgramData\VigexAgent\agent.env
+VIGEX_AGENT_TOKEN=TOKEN_SECRETO_LARGO_Y_UNICO
+VIGEX_AGENT_PORT=8050
+VIGEX_MONITORED_SERVICES=NombreServicio1,NombreServicio2
+VIGEX_BACKUP_DIR=C:\Vigex\backups
+VIGEX_BACKUP_RETENTION=7
+```
+
+3. Ejecuta el agente (en producción, regístralo como servicio de Windows):
+
+```powershell
+# Prueba manual:
+.\VigexAgent.exe
+
+# Como servicio (recomendado):
+sc.exe create VigexAgent binPath= "C:\ProgramData\VigexAgent\VigexAgent.exe" start= auto
+sc.exe start VigexAgent
+```
+
+4. Abre el puerto 8050 en el firewall de Windows:
+
+```powershell
+netsh advfirewall firewall add rule name="VigexAgent" dir=in action=allow protocol=TCP localport=8050
+```
+
+### Configurar el panel para usar el agente
+
+En `config.env` del panel Vigex (Linux o Docker), añade:
+
+```env
+VIGEX_AGENT_PORT=8050
+# Formato: IP_SERVIDOR:TOKEN (separados por coma si hay varios)
+VIGEX_AGENT_TOKEN_MAP=192.168.1.60:TOKEN_SECRETO_LARGO_Y_UNICO
+```
+
+A partir de ese momento, el panel enruta automáticamente las operaciones de ese host
+por HTTP al agente en lugar de por SSH. El resto de hosts Linux no cambian.
