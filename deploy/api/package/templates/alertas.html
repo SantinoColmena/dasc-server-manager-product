@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Alertas — Vigex{% endblock %}
+{% block title %}{{ t('nav.alertas') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/servicios.css') }}">
@@ -45,31 +45,31 @@
 
 {% block sidebar_info %}
 <div class="history">
-    <h3>Estado del módulo</h3>
-    <p><span class="dot ok"></span> Canal listo</p>
-    <p><span class="dot ok"></span> Reglas activas</p>
-    <p><span class="dot ok"></span> Historial disponible</p>
-    <p><span class="dot warn"></span> Soporte multiempresa</p>
+    <h3>{{ t('alr.sidebar_title') }}</h3>
+    <p><span class="dot ok"></span> {{ t('alr.sidebar_ch') }}</p>
+    <p><span class="dot ok"></span> {{ t('alr.rules_title') }}</p>
+    <p><span class="dot ok"></span> {{ t('alr.sidebar_hist') }}</p>
+    <p><span class="dot warn"></span> {{ t('alr.sidebar_multi') }}</p>
 </div>
 {% endblock %}
 
 {% block content %}
 
 {% if ok == "1" %}
-<div class="alert-box success"><i class="fa-solid fa-circle-check"></i> {{ msg or "Cambios guardados correctamente." }}</div>
+<div class="alert-box success"><i class="fa-solid fa-circle-check"></i> {{ msg or t('alr.msg_ok') }}</div>
 {% elif ok == "0" %}
-<div class="alert-box error"><i class="fa-solid fa-triangle-exclamation"></i> {{ msg or "Se produjo un error al guardar los cambios." }}</div>
+<div class="alert-box error"><i class="fa-solid fa-triangle-exclamation"></i> {{ msg or t('alr.msg_error') }}</div>
 {% endif %}
 
 <div class="topbar">
     <div>
-        <h2 class="page-title">Alertas y avisos</h2>
-        <p class="page-subtitle">Define quién recibe avisos y cuándo. Nosotros nos encargamos del resto.</p>
+        <h2 class="page-title">{{ t('alr.page_title') }}</h2>
+        <p class="page-subtitle">{{ t('alr.page_subtitle') }}</p>
     </div>
     {% if is_admin %}
     <div class="topbar-actions">
         <a class="btn" href="/alertas/proactivas">
-            <i class="fa-solid fa-bell"></i> Notificaciones automáticas
+            <i class="fa-solid fa-bell"></i> {{ t('alr.btn_proactive') }}
         </a>
     </div>
     {% endif %}
@@ -77,19 +77,19 @@
 
 <section class="grid-3">
     <article class="mini-stat span-4">
-        <div class="stat-label">Eventos totales</div>
+        <div class="stat-label">{{ t('alr.stat_total') }}</div>
         <div class="stat-value">{{ alerts_total or 0 }}</div>
-        <div class="stat-sub">Eventos registrados en SQLite</div>
+        <div class="stat-sub">{{ t('alr.stat_total_sub') }}</div>
     </article>
     <article class="mini-stat span-4">
-        <div class="stat-label">Entregas correctas</div>
+        <div class="stat-label">{{ t('alr.stat_ok') }}</div>
         <div class="stat-value">{{ alerts_ok or 0 }}</div>
-        <div class="stat-sub">Mensajes enviados correctamente</div>
+        <div class="stat-sub">{{ t('alr.stat_ok_sub') }}</div>
     </article>
     <article class="mini-stat span-4">
-        <div class="stat-label">Entregas con error</div>
+        <div class="stat-label">{{ t('alr.stat_error') }}</div>
         <div class="stat-value">{{ alerts_error or 0 }}</div>
-        <div class="stat-sub">Revisar token, chat_id o conectividad</div>
+        <div class="stat-sub">{{ t('alr.stat_error_sub') }}</div>
     </article>
 </section>
 
@@ -98,8 +98,8 @@
         <div class="card-head">
             <div class="card-icon"><i class="fa-solid fa-paper-plane"></i></div>
             <div class="card-title">
-                <h3>Canal Telegram</h3>
-                <p>Estado general del canal y prueba manual.</p>
+                <h3>{{ t('alr.ch_title') }}</h3>
+                <p>{{ t('alr.ch_desc') }}</p>
             </div>
         </div>
 
@@ -107,16 +107,16 @@
         {% set tg = telegram_channel[0] if telegram_channel else None %}
 
         <div class="kv-grid">
-            <div class="kv-item"><div class="label">Canal</div><div class="value">Telegram</div></div>
+            <div class="kv-item"><div class="label">{{ t('alr.kv_channel') }}</div><div class="value">Telegram</div></div>
             <div class="kv-item">
-                <div class="label">Estado</div>
+                <div class="label">{{ t('alr.kv_status') }}</div>
                 <div class="value">
-                    {% if tg and tg.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> Activo</span>
-                    {% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> Inactivo</span>{% endif %}
+                    {% if tg and tg.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> {{ t('alr.badge_active') }}</span>
+                    {% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> {{ t('alr.badge_inactive') }}</span>{% endif %}
                 </div>
             </div>
-            <div class="kv-item"><div class="label">Destino por defecto</div><div class="value">{{ tg.destination if tg and tg.destination else 'Sin destino todavía' }}</div></div>
-            <div class="kv-item"><div class="label">Última entrega</div><div class="value">{{ alerts_last or 'Sin datos' }}</div></div>
+            <div class="kv-item"><div class="label">{{ t('alr.kv_dest') }}</div><div class="value">{{ tg.destination if tg and tg.destination else t('alr.no_dest') }}</div></div>
+            <div class="kv-item"><div class="label">{{ t('alr.kv_last') }}</div><div class="value">{{ alerts_last or t('alr.no_data') }}</div></div>
         </div>
 
         <div class="actions-row">
@@ -125,12 +125,12 @@
                 <input type="hidden" name="channel_code" value="telegram">
                 <button class="btn" type="submit">
                     <i class="fa-solid fa-power-off"></i>
-                    {% if tg and tg.is_enabled %}Desactivar canal{% else %}Activar canal{% endif %}
+                    {% if tg and tg.is_enabled %}{{ t('alr.btn_disable') }}{% else %}{{ t('alr.btn_enable') }}{% endif %}
                 </button>
             </form>
             <form method="post" action="/alertas/test" class="inline-form">
                 {{ csrf_input(request) }}
-                <button class="btn primary" type="submit"><i class="fa-solid fa-flask"></i> Enviar prueba al destino por defecto</button>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-flask"></i> {{ t('alr.btn_test') }}</button>
             </form>
         </div>
     </article>
@@ -139,40 +139,40 @@
         <div class="card-head">
             <div class="card-icon amber"><i class="fa-solid fa-comments"></i></div>
             <div class="card-title">
-                <h3>Obtener tu Chat ID</h3>
-                <p>Escribe <code>/chatid</code> a <strong>@VigexPanelBot</strong> en Telegram — el bot responde con tu ID en segundos.</p>
+                <h3>{{ t('alr.chatid_title') }}</h3>
+                <p>{{ t('alr.chatid_desc') | safe }}</p>
             </div>
         </div>
 
         <div class="actions-row">
-            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Abrir @VigexPanelBot</a>
+            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> {{ t('alr.btn_open_bot') }}</a>
             <form method="post" action="/alertas/detect" class="inline-form">
                 {{ csrf_input(request) }}
-                <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Detectar chats recientes</button>
+                <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i> {{ t('alr.btn_detect') }}</button>
             </form>
         </div>
 
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Username / nombre</th><th>Chat ID</th><th>Tipo</th><th>Acción</th></tr></thead>
+                <thead><tr><th>{{ t('alr.th_username') }}</th><th>Chat ID</th><th>{{ t('alr.th_type') }}</th><th>{{ t('alr.th_action') }}</th></tr></thead>
                 <tbody>
                     {% for d in detected_chats or [] %}
                     <tr>
                         <td>{{ d.username }}</td><td>{{ d.chat_id }}</td>
-                        <td>{% if d.kind == 'group' %}<span class="badge info"><i class="fa-solid fa-user-group"></i> Grupo</span>{% else %}<span class="badge warn"><i class="fa-solid fa-user"></i> Usuario</span>{% endif %}</td>
+                        <td>{% if d.kind == 'group' %}<span class="badge info"><i class="fa-solid fa-user-group"></i> {{ t('alr.badge_group') }}</span>{% else %}<span class="badge warn"><i class="fa-solid fa-user"></i> {{ t('alr.badge_user') }}</span>{% endif %}</td>
                         <td>
                             <form method="post" action="/alertas/recipient/add-detected" class="inline-form">
                                 {{ csrf_input(request) }}
                                 <input type="hidden" name="username" value="{{ d.username }}">
                                 <input type="hidden" name="chat_id" value="{{ d.chat_id }}">
                                 <input type="hidden" name="kind" value="{{ d.kind }}">
-                                <button class="btn" type="submit"><i class="fa-solid fa-plus"></i> Añadir</button>
+                                <button class="btn" type="submit"><i class="fa-solid fa-plus"></i> {{ t('alr.btn_add') }}</button>
                             </form>
                         </td>
                     </tr>
                     {% endfor %}
                     {% if not detected_chats %}
-                    <tr><td colspan="4" class="empty-state">Escribe <code>/chatid</code> a @VigexPanelBot en Telegram y pulsa "Detectar chats recientes".</td></tr>
+                    <tr><td colspan="4" class="empty-state">{{ t('alr.detect_empty') | safe }}</td></tr>
                     {% endif %}
                 </tbody>
             </table>
@@ -183,52 +183,48 @@
         <div class="card-head">
             <div class="card-icon green"><i class="fa-solid fa-users"></i></div>
             <div class="card-title">
-                <h3>Destinatarios Telegram</h3>
-                <p>Añade usuarios o grupos manualmente, o desde la detección automática.</p>
+                <h3>{{ t('alr.recip_title') }}</h3>
+                <p>{{ t('alr.recip_desc') }}</p>
             </div>
         </div>
 
-        <div class="muted-box">
-            <strong>Sin configuración extra:</strong> el bot <strong>@VigexPanelBot</strong> es gestionado por Vigex.
-            Solo necesitas tu <code>TELEGRAM_CHAT_ID</code> — obtenlo escribiendo <code>/chatid</code> al bot.
-            Cada empresa recibe únicamente sus propias alertas.
-        </div>
+        <div class="muted-box">{{ t('alr.recip_info') | safe }}</div>
 
         <form method="post" action="/alertas/recipient/add">
             {{ csrf_input(request) }}
             <div class="simple-form-grid">
-                <div class="field-block"><label>Empresa</label><input type="text" name="company" placeholder="Ej: Cliente Demo" required></div>
-                <div class="field-block"><label>Nombre visible</label><input type="text" name="name" placeholder="Ej: Alertas IT" required></div>
-                <div class="field-block"><label>Tipo</label><select name="kind" required><option value="user">Usuario individual</option><option value="group">Grupo</option></select></div>
-                <div class="field-block"><label>Chat ID</label><input type="text" name="destination" placeholder="Ej: 1827559281" required></div>
+                <div class="field-block"><label>{{ t('alr.field_company') }}</label><input type="text" name="company" placeholder="Ej: Cliente Demo" required></div>
+                <div class="field-block"><label>{{ t('alr.field_name') }}</label><input type="text" name="name" placeholder="Ej: Alertas IT" required></div>
+                <div class="field-block"><label>{{ t('alr.field_type') }}</label><select name="kind" required><option value="user">{{ t('alr.opt_user') }}</option><option value="group">{{ t('alr.opt_group') }}</option></select></div>
+                <div class="field-block"><label>{{ t('alr.field_chatid') }}</label><input type="text" name="destination" placeholder="Ej: 1827559281" required></div>
             </div>
             <div class="actions-row">
-                <button class="btn primary" type="submit"><i class="fa-solid fa-plus"></i> Guardar destinatario</button>
-                <a class="btn" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Obtener Chat ID</a>
+                <button class="btn primary" type="submit"><i class="fa-solid fa-plus"></i> {{ t('alr.btn_save_recip') }}</button>
+                <a class="btn" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> {{ t('alr.btn_get_chatid') }}</a>
             </div>
         </form>
 
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Empresa</th><th>Nombre</th><th>Tipo</th><th>Username</th><th>Destino</th><th>Estado</th><th>Default</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>{{ t('alr.th_company') }}</th><th>{{ t('alr.th_name') }}</th><th>{{ t('alr.th_type') }}</th><th>{{ t('alr.th_uname') }}</th><th>{{ t('alr.th_dest') }}</th><th>{{ t('alr.kv_status') }}</th><th>{{ t('alr.th_default') }}</th><th>{{ t('alr.th_actions') }}</th></tr></thead>
                 <tbody>
                     {% for r in recipients or [] %}
                     <tr>
                         <td>{{ r.company or '-' }}</td><td>{{ r.name }}</td>
-                        <td>{% if r.kind == 'group' %}<span class="badge info"><i class="fa-solid fa-user-group"></i> Grupo</span>{% else %}<span class="badge warn"><i class="fa-solid fa-user"></i> Usuario</span>{% endif %}</td>
+                        <td>{% if r.kind == 'group' %}<span class="badge info"><i class="fa-solid fa-user-group"></i> {{ t('alr.badge_group') }}</span>{% else %}<span class="badge warn"><i class="fa-solid fa-user"></i> {{ t('alr.badge_user') }}</span>{% endif %}</td>
                         <td>{{ r.username or '-' }}</td><td>{{ r.destination }}</td>
-                        <td>{% if r.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> Activo</span>{% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> Inactivo</span>{% endif %}</td>
-                        <td>{% if r.is_default %}<span class="badge info"><i class="fa-solid fa-star"></i> Sí</span>{% else %}<span class="badge warn"><i class="fa-regular fa-star"></i> No</span>{% endif %}</td>
+                        <td>{% if r.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> {{ t('alr.badge_active') }}</span>{% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> {{ t('alr.badge_inactive') }}</span>{% endif %}</td>
+                        <td>{% if r.is_default %}<span class="badge info"><i class="fa-solid fa-star"></i> {{ t('alr.badge_yes') }}</span>{% else %}<span class="badge warn"><i class="fa-regular fa-star"></i> {{ t('alr.badge_no') }}</span>{% endif %}</td>
                         <td>
                             <div class="row-actions">
-                                <form method="post" action="/alertas/recipient/default" class="inline-form">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-star"></i> Por defecto</button></form>
-                                <form method="post" action="/alertas/recipient/toggle" class="inline-form">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> Activar/desactivar</button></form>
-                                <form method="post" action="/alertas/recipient/delete" class="inline-form" onsubmit="return confirm('¿Eliminar destinatario?');">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-trash"></i> Eliminar</button></form>
+                                <form method="post" action="/alertas/recipient/default" class="inline-form">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-star"></i> {{ t('alr.btn_default') }}</button></form>
+                                <form method="post" action="/alertas/recipient/toggle" class="inline-form">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> {{ t('alr.btn_toggle') }}</button></form>
+                                <form method="post" action="/alertas/recipient/delete" class="inline-form" onsubmit="return confirm('{{ t('alr.confirm_delete') }}');">{{ csrf_input(request) }}<input type="hidden" name="recipient_id" value="{{ r.id }}"><button class="btn" type="submit"><i class="fa-solid fa-trash"></i> {{ t('alr.btn_delete') }}</button></form>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
-                    {% if not recipients %}<tr><td colspan="8" class="empty-state">No hay destinatarios guardados todavía.</td></tr>{% endif %}
+                    {% if not recipients %}<tr><td colspan="8" class="empty-state">{{ t('alr.no_recip') }}</td></tr>{% endif %}
                 </tbody>
             </table>
         </div>
@@ -239,28 +235,28 @@
     <article class="card span-6">
         <div class="card-head">
             <div class="card-icon violet"><i class="fa-solid fa-sliders"></i></div>
-            <div class="card-title"><h3>Reglas activas</h3><p>Decide qué eventos generan avisos.</p></div>
+            <div class="card-title"><h3>{{ t('alr.rules_title') }}</h3><p>{{ t('alr.rules_desc') }}</p></div>
         </div>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Evento</th><th>Severidad</th><th>Canal</th><th>Estado</th><th>Acción</th></tr></thead>
+                <thead><tr><th>{{ t('alr.th_event') }}</th><th>{{ t('alr.th_severity') }}</th><th>{{ t('alr.kv_channel') }}</th><th>{{ t('alr.th_status') }}</th><th>{{ t('alr.th_action') }}</th></tr></thead>
                 <tbody>
                     {% for rule in rules %}
                     <tr>
                         <td>{{ rule.event_code }}</td>
                         <td>{% if rule.severity == 'critical' %}<span class="badge error"><i class="fa-solid fa-triangle-exclamation"></i> Critical</span>{% elif rule.severity == 'warning' %}<span class="badge warn"><i class="fa-solid fa-circle-exclamation"></i> Warning</span>{% else %}<span class="badge info"><i class="fa-solid fa-circle-info"></i> {{ rule.severity }}</span>{% endif %}</td>
                         <td>{{ rule.channel_code }}</td>
-                        <td>{% if rule.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> Activa</span>{% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> Inactiva</span>{% endif %}</td>
+                        <td>{% if rule.is_enabled %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> {{ t('alr.badge_rule_on') }}</span>{% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> {{ t('alr.badge_rule_off') }}</span>{% endif %}</td>
                         <td>
                             <form method="post" action="/alertas/rule/toggle" class="inline-form">
                                 {{ csrf_input(request) }}
                                 <input type="hidden" name="rule_id" value="{{ rule.id }}">
-                                <button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> Cambiar</button>
+                                <button class="btn" type="submit"><i class="fa-solid fa-repeat"></i> {{ t('alr.btn_change') }}</button>
                             </form>
                         </td>
                     </tr>
                     {% endfor %}
-                    {% if not rules %}<tr><td colspan="5" class="empty-state">No hay reglas configuradas.</td></tr>{% endif %}
+                    {% if not rules %}<tr><td colspan="5" class="empty-state">{{ t('alr.no_rules') }}</td></tr>{% endif %}
                 </tbody>
             </table>
         </div>
@@ -269,15 +265,15 @@
     <article class="card span-6">
         <div class="card-head">
             <div class="card-icon blue"><i class="fa-brands fa-telegram"></i></div>
-            <div class="card-title"><h3>Cómo activar las alertas Telegram</h3><p>Tres pasos — sin crear bots ni tokens propios.</p></div>
+            <div class="card-title"><h3>{{ t('alr.guide_title') }}</h3><p>{{ t('alr.guide_desc') }}</p></div>
         </div>
         <ol class="help-list">
-            <li>Abre Telegram y busca <strong>@VigexPanelBot</strong>.</li>
-            <li>Escríbele <code>/chatid</code> — el bot responde con tu número de Chat ID.</li>
-            <li>Pega ese número como destinatario en esta página y haz una prueba.</li>
+            <li>{{ t('alr.guide_1') | safe }}</li>
+            <li>{{ t('alr.guide_2') | safe }}</li>
+            <li>{{ t('alr.guide_3') | safe }}</li>
         </ol>
         <div class="actions-row">
-            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> Abrir @VigexPanelBot</a>
+            <a class="btn primary" href="https://t.me/VigexPanelBot" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i> {{ t('alr.btn_open_bot') }}</a>
         </div>
     </article>
 </section>
@@ -285,11 +281,11 @@
 <section class="card card-mini">
     <div class="card-head">
         <div class="card-icon orange"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div class="card-title"><h3>Últimas entregas</h3><p>Historial reciente de envíos realizados por el sistema.</p></div>
+        <div class="card-title"><h3>{{ t('alr.deliv_title') }}</h3><p>{{ t('alr.deliv_desc') }}</p></div>
     </div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Fecha</th><th>Evento</th><th>Título</th><th>Canal</th><th>Destino</th><th>Estado</th></tr></thead>
+            <thead><tr><th>{{ t('alr.th_date') }}</th><th>{{ t('alr.th_event') }}</th><th>{{ t('alr.th_title') }}</th><th>{{ t('alr.kv_channel') }}</th><th>{{ t('alr.th_dest') }}</th><th>{{ t('alr.th_status') }}</th></tr></thead>
             <tbody>
                 {% for d in deliveries %}
                 <tr>
@@ -297,7 +293,7 @@
                     <td>{% if d.status == 'OK' %}<span class="badge ok"><i class="fa-solid fa-circle-check"></i> OK</span>{% else %}<span class="badge error"><i class="fa-solid fa-circle-xmark"></i> ERROR</span>{% endif %}</td>
                 </tr>
                 {% endfor %}
-                {% if not deliveries %}<tr><td colspan="8" class="empty-state">Aún no hay entregas registradas.</td></tr>{% endif %}
+                {% if not deliveries %}<tr><td colspan="8" class="empty-state">{{ t('alr.no_deliv') }}</td></tr>{% endif %}
             </tbody>
         </table>
     </div>
