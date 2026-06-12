@@ -99,4 +99,7 @@ esac
 echo
 echo "Siguiente paso:"
 echo "Edita ${DEST_CONFIG} y cambia contraseñas, IPs y rutas antes de instalar."
+echo
+echo "NOTA: si algún servidor gestionado es Windows, instala VigexAgent.exe en él"
+echo "y rellena VIGEX_AGENT_TOKEN_MAP con su IP y token. Déjalo vacío si todos son Linux."
 echo "============================================"
