@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ t('rec.page_title') }} — Vigex{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -120,8 +121,8 @@
 
 <div class="dro-header">
     <div>
-        <h1 class="dro-title">Recuperación ante desastres</h1>
-        <p class="dro-subtitle">Sigue los pasos en orden. No saltes ninguno salvo que no aplique.</p>
+        <h1 class="dro-title">{{ t('rec.page_title') }}</h1>
+        <p class="dro-subtitle">{{ t('rec.page_subtitle') }}</p>
     </div>
     <span class="dro-badge"><i class="fa-solid fa-triangle-exclamation"></i> DRO — Runbook</span>
 </div>
@@ -135,18 +136,18 @@
             <i class="fa-solid fa-hard-drive"></i>
         </div>
         <div>
-            <div class="dro-estado-label">Disco del servidor</div>
-            <div class="dro-estado-val">{{ e.disco_pct }}% usado</div>
-            <div class="dro-estado-sub">{{ e.disco_libre_gb }} GB libres</div>
+            <div class="dro-estado-label">{{ t('rec.stat_disk') }}</div>
+            <div class="dro-estado-val">{{ e.disco_pct }}{{ t('rec.used_suf') }}</div>
+            <div class="dro-estado-sub">{{ e.disco_libre_gb }}{{ t('rec.free_suf') }}</div>
         </div>
     </div>
     {% else %}
     <div class="dro-estado-card">
         <div class="dro-estado-icon gray"><i class="fa-solid fa-hard-drive"></i></div>
         <div>
-            <div class="dro-estado-label">Disco del servidor</div>
+            <div class="dro-estado-label">{{ t('rec.stat_disk') }}</div>
             <div class="dro-estado-val">—</div>
-            <div class="dro-estado-sub">Sin datos</div>
+            <div class="dro-estado-sub">{{ t('rec.no_data') }}</div>
         </div>
     </div>
     {% endif %}
@@ -157,7 +158,7 @@
             <i class="fa-solid fa-database"></i>
         </div>
         <div>
-            <div class="dro-estado-label">Última copia</div>
+            <div class="dro-estado-label">{{ t('rec.stat_last_copy') }}</div>
             <div class="dro-estado-val">
                 {% if e.ultima_copia_ok %}OK
                 {% elif e.ultima_copia_ok is none %}—
@@ -174,11 +175,11 @@
             <i class="fa-solid fa-bell"></i>
         </div>
         <div>
-            <div class="dro-estado-label">Alertas registradas</div>
+            <div class="dro-estado-label">{{ t('rec.stat_alerts') }}</div>
             <div class="dro-estado-val">
                 {% if e.alertas_activas is not none %}{{ e.alertas_activas }}{% else %}—{% endif %}
             </div>
-            <div class="dro-estado-sub">Total en el historial</div>
+            <div class="dro-estado-sub">{{ t('rec.hist_total') }}</div>
         </div>
     </div>
 </div>
@@ -186,15 +187,11 @@
 <!-- ── Aviso ── -->
 <div class="dro-aviso">
     <i class="fa-solid fa-circle-info"></i>
-    <div>
-        Este runbook guía la recuperación ante desastres. Sigue los pasos en orden.
-        El <strong>paso 3 (restauración)</strong> es destructivo e irreversible — asegúrate
-        de haber verificado la integridad de la copia antes de ejecutarlo.
-    </div>
+    <div>{{ t('rec.aviso') | safe }}</div>
 </div>
 
 <!-- ── Pasos del runbook ── -->
-<p class="dro-steps-title">Runbook de recuperación — 6 pasos</p>
+<p class="dro-steps-title">{{ t('rec.steps_title') }}</p>
 
 <div class="dro-steps">
     {% for paso in dro_pasos %}
@@ -204,7 +201,7 @@
             <div class="dro-step-content">
                 {% if paso.tipo == 'critico' %}
                 <div class="dro-step-critico-badge">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Acción destructiva
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ t('rec.badge_dest') }}
                 </div>
                 {% endif %}
                 <p class="dro-step-titulo">{{ paso.titulo }}</p>
@@ -223,17 +220,17 @@
 
 {% block sidebar_info %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Pasos runbook</span>
+    <span class="sidebar-info-label">{{ t('rec.sidebar_steps') }}</span>
     <span>{{ dro_pasos | length }}</span>
 </div>
 {% if estado.disco_pct is not none %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Disco usado</span>
+    <span class="sidebar-info-label">{{ t('rec.sidebar_disk') }}</span>
     <span>{{ estado.disco_pct }}%</span>
 </div>
 {% endif %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Última copia</span>
+    <span class="sidebar-info-label">{{ t('rec.stat_last_copy') }}</span>
     <span style="font-size:.78rem;">{{ estado.ultima_copia_fecha }}</span>
 </div>
 {% endblock %}

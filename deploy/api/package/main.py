@@ -340,6 +340,17 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "term.select_desc": "Elige Main, Backup o Database para abrir la terminal correspondiente.",
         "term.js_running": "Ejecutando", "term.js_run": "Ejecutar",
         "term.js_err_cmd": "ERROR ejecutando el comando.", "term.js_err_conn": "ERROR de conexión:",
+        # recuperacion.html
+        "rec.page_title": "Recuperación ante desastres",
+        "rec.page_subtitle": "Sigue los pasos en orden. No saltes ninguno salvo que no aplique.",
+        "rec.aviso": "Este runbook guía la recuperación ante desastres. Sigue los pasos en orden. El <strong>paso 3 (restauración)</strong> es destructivo e irreversible — asegúrate de haber verificado la integridad de la copia antes de ejecutarlo.",
+        "rec.steps_title": "Runbook de recuperación — 6 pasos",
+        "rec.badge_dest": "Acción destructiva",
+        "rec.stat_disk": "Disco del servidor", "rec.used_suf": "% usado", "rec.free_suf": " GB libres",
+        "rec.no_data": "Sin datos",
+        "rec.stat_last_copy": "Última copia", "rec.stat_alerts": "Alertas registradas",
+        "rec.hist_total": "Total en el historial",
+        "rec.sidebar_steps": "Pasos runbook", "rec.sidebar_disk": "Disco usado",
     },
     "ca": {
         "nav.title": "Navegació", "nav.panel": "Tauler", "nav.monitoreo": "Monitoratge",
@@ -567,6 +578,17 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "term.select_desc": "Tria Main, Backup o Database per obrir el terminal corresponent.",
         "term.js_running": "Executant", "term.js_run": "Executar",
         "term.js_err_cmd": "ERROR en executar l'ordre.", "term.js_err_conn": "ERROR de connexió:",
+        # recuperacion.html
+        "rec.page_title": "Recuperació de desastres",
+        "rec.page_subtitle": "Segueix els passos en ordre. No en saltis cap tret que no apliqui.",
+        "rec.aviso": "Aquest runbook guia la recuperació de desastres. Segueix els passos en ordre. El <strong>pas 3 (restauració)</strong> és destructiu i irreversible — assegura't d'haver verificat la integritat de la còpia abans d'executar-lo.",
+        "rec.steps_title": "Runbook de recuperació — 6 passos",
+        "rec.badge_dest": "Acció destructiva",
+        "rec.stat_disk": "Disc del servidor", "rec.used_suf": "% usat", "rec.free_suf": " GB lliures",
+        "rec.no_data": "Sense dades",
+        "rec.stat_last_copy": "Darrera còpia", "rec.stat_alerts": "Alertes registrades",
+        "rec.hist_total": "Total a l'historial",
+        "rec.sidebar_steps": "Passos runbook", "rec.sidebar_disk": "Disc usat",
     },
 }
 
