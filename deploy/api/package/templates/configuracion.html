@@ -281,49 +281,66 @@
         <form id="smtp-form" autocomplete="off" onsubmit="return false;">
             <div class="cfg-fields">
 
+                <!-- Selector de proveedor (rellena host+puerto automáticamente) -->
                 <div class="cfg-field" style="grid-column: span 2;">
+                    <label for="f-smtp-provider">Proveedor de correo</label>
+                    <select id="f-smtp-provider" onchange="smtpProviderChange(this.value)"
+                            style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:.93rem;">
+                        <option value="">— Selecciona tu proveedor —</option>
+                        <option value="gmail">Gmail (Google)</option>
+                        <option value="outlook">Outlook / Hotmail (Microsoft)</option>
+                        <option value="yahoo">Yahoo Mail</option>
+                        <option value="otro">Otro (configuración manual)</option>
+                    </select>
+                    <div class="field-hint" id="smtp-provider-hint"></div>
+                </div>
+
+                <div class="cfg-field" style="grid-column: span 2;" id="smtp-host-row">
                     <label for="f-smtp-host">Servidor SMTP</label>
                     <input type="text" id="f-smtp-host" name="smtp_host"
                            value="{{ smtp_host }}" placeholder="smtp.gmail.com">
-                    <div class="field-hint">Host del servidor de correo saliente (p.ej. smtp.gmail.com).</div>
+                    <div class="field-hint">Rellenado automáticamente al elegir proveedor, o escríbelo tú.</div>
                 </div>
 
-                <div class="cfg-field">
+                <div class="cfg-field" id="smtp-port-row">
                     <label for="f-smtp-port">Puerto</label>
                     <input type="number" id="f-smtp-port" name="smtp_port"
                            value="{{ smtp_port }}" min="1" max="65535" placeholder="587">
-                    <div class="field-hint">Normalmente 587 (STARTTLS) o 465 (SSL).</div>
+                    <div class="field-hint">587 (STARTTLS) · rellenado automáticamente.</div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-smtp-user">Usuario SMTP</label>
+                    <label for="f-smtp-user">Tu dirección de email</label>
                     <input type="text" id="f-smtp-user" name="smtp_user"
-                           value="{{ smtp_user }}" placeholder="tu@email.com">
-                    <div class="field-hint">Cuenta que autenticará el envío.</div>
+                           value="{{ smtp_user }}" placeholder="tu@gmail.com"
+                           oninput="smtpUserInput(this.value)">
+                    <div class="field-hint">La cuenta que envía los emails (ej: tu@gmail.com).</div>
                 </div>
 
                 <div class="cfg-field">
                     <label for="f-smtp-pass">
-                        Contraseña SMTP
+                        Contraseña
                         {% if smtp_pass_set %}<span class="pill-ok" style="font-size:.7rem;vertical-align:middle;">Configurada</span>{% endif %}
                     </label>
                     <input type="password" id="f-smtp-pass" name="smtp_pass"
-                           placeholder="{% if smtp_pass_set %}Dejar vacío para no cambiar{% else %}Contraseña de app{% endif %}">
-                    <div class="field-hint">Para Gmail usa una «contraseña de aplicación» con 2FA activo.</div>
+                           placeholder="{% if smtp_pass_set %}Dejar vacío para no cambiar{% else %}Contraseña (o contraseña de app){% endif %}">
+                    <div class="field-hint" id="smtp-pass-hint">
+                        {% if smtp_pass_set %}Dejar vacío si no quieres cambiarla.{% else %}Introduce tu contraseña o contraseña de aplicación.{% endif %}
+                    </div>
                 </div>
 
                 <div class="cfg-field">
                     <label for="f-email-from">Remitente (FROM)</label>
                     <input type="email" id="f-email-from" name="email_from"
                            value="{{ smtp_email_from }}" placeholder="vigex@tudominio.com">
-                    <div class="field-hint">Dirección que aparece como emisor en los emails.</div>
+                    <div class="field-hint">Normalmente igual que tu dirección de email.</div>
                 </div>
 
                 <div class="cfg-field">
                     <label for="f-email-to">Destinatario de alertas</label>
                     <input type="email" id="f-email-to" name="email_to"
                            value="{{ smtp_email_to }}" placeholder="admin@tudominio.com">
-                    <div class="field-hint">Recibe alertas proactivas e informes periódicos.</div>
+                    <div class="field-hint">¿A quién le llegan las alertas e informes?</div>
                 </div>
 
             </div><!-- cfg-fields -->
@@ -566,10 +583,71 @@
         .catch(() => { _mostrarFb(fb, false, 'Error de red.'); btn.disabled = false; });
     }
 
+    // ── Selector de proveedor SMTP ────────────────────────────────────────────
+    const _SMTP_PRESETS = {
+        gmail:   { host: 'smtp.gmail.com',          port: 587,
+                   hint: '💡 Gmail: activa la verificación en 2 pasos y genera una <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a>. Usa esa contraseña aquí, no la de tu cuenta.',
+                   passHint: 'Pega aquí la contraseña de aplicación de Google (16 caracteres, sin espacios).' },
+        outlook: { host: 'smtp-mail.outlook.com',   port: 587,
+                   hint: '💡 Outlook / Hotmail: usa tu contraseña de Microsoft habitual. Si tienes 2FA activado, genera una <a href="https://account.microsoft.com/security" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a> en tu cuenta.',
+                   passHint: 'Contraseña de tu cuenta Microsoft (o contraseña de app si tienes 2FA).' },
+        yahoo:   { host: 'smtp.mail.yahoo.com',     port: 587,
+                   hint: '💡 Yahoo: genera una contraseña de aplicación en <a href="https://login.yahoo.com/account/security" target="_blank" rel="noopener" style="color:var(--accent)">Seguridad de cuenta Yahoo</a>.',
+                   passHint: 'Contraseña de aplicación de Yahoo (no la contraseña principal).' },
+        otro:    { host: '', port: 587,
+                   hint: 'Introduce el servidor SMTP y puerto de tu proveedor de correo.',
+                   passHint: 'Contraseña de la cuenta de correo.' },
+    };
+
+    function smtpProviderChange(val) {
+        const p = _SMTP_PRESETS[val];
+        if (!p) return;
+        if (p.host) document.getElementById('f-smtp-host').value = p.host;
+        document.getElementById('f-smtp-port').value = p.port;
+        document.getElementById('smtp-provider-hint').innerHTML = p.hint;
+        document.getElementById('smtp-pass-hint').textContent = p.passHint;
+        // Mostrar/ocultar fila host manual solo para "otro"
+        document.getElementById('smtp-host-row').style.display = (val === 'otro') ? '' : 'none';
+        document.getElementById('smtp-port-row').style.display = (val === 'otro') ? '' : 'none';
+    }
+
+    function smtpUserInput(val) {
+        const fromField = document.getElementById('f-email-from');
+        // Auto-fill FROM solo si está vacío o igual al usuario anterior
+        if (!fromField.value || fromField.dataset.autofilled === 'true') {
+            fromField.value = val;
+            fromField.dataset.autofilled = 'true';
+        }
+    }
+
+    // Auto-detectar proveedor desde host ya guardado
+    (function smtpAutoDetect() {
+        const host = (document.getElementById('f-smtp-host')?.value || '').toLowerCase();
+        const sel  = document.getElementById('f-smtp-provider');
+        if (!host || !sel) return;
+        const map = { 'smtp.gmail.com': 'gmail', 'smtp-mail.outlook.com': 'outlook',
+                      'smtp.live.com': 'outlook', 'smtp.mail.yahoo.com': 'yahoo' };
+        const found = map[host];
+        if (found) {
+            sel.value = found;
+            smtpProviderChange(found);
+        } else {
+            sel.value = 'otro';
+            smtpProviderChange('otro');
+        }
+        // Si el host ya está configurado, ocultar siempre los campos técnicos
+        if (host && found) {
+            document.getElementById('smtp-host-row').style.display = 'none';
+            document.getElementById('smtp-port-row').style.display = 'none';
+        }
+    })();
+
     // Exponer para los onclick
-    window.guardarConfig     = guardarConfig;
-    window.guardarSmtp       = guardarSmtp;
-    window.guardarAutoLogout = guardarAutoLogout;
+    window.guardarConfig       = guardarConfig;
+    window.guardarSmtp         = guardarSmtp;
+    window.guardarAutoLogout   = guardarAutoLogout;
+    window.smtpProviderChange  = smtpProviderChange;
+    window.smtpUserInput       = smtpUserInput;
 }());
 </script>
 {% endblock %}
