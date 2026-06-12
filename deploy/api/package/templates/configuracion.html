@@ -5,163 +5,96 @@
 <style>
     /* ── Configuración del panel (Ruta 7.6) ── */
     .cfg-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-bottom: 1.75rem;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.75rem;
     }
-    .cfg-title { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin: 0; }
-    .cfg-subtitle { color: #6b7280; font-size: 0.95rem; margin: 0.2rem 0 0; }
+    .cfg-title    { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0; }
+    .cfg-subtitle { color: var(--muted); font-size: 0.95rem; margin: 0.2rem 0 0; }
 
     .cfg-section { margin-bottom: 1.5rem; }
     .cfg-section-title {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: #9ca3af;
-        margin: 0 0 0.75rem;
+        font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--muted); margin: 0 0 0.75rem;
     }
 
     /* ── Tarjeta base ── */
     .cfg-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
     }
     .cfg-card-header {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-        margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.25rem;
     }
     .cfg-card-icon {
-        width: 40px; height: 40px;
-        border-radius: 10px;
+        width: 40px; height: 40px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
+        font-size: 1rem; flex-shrink: 0;
     }
-    .cfg-card-icon.indigo  { background: #eef2ff; color: #4f46e5; }
-    .cfg-card-icon.amber   { background: #fffbeb; color: #d97706; }
-    .cfg-card-icon.slate   { background: #f8fafc; color: #475569; }
-    .cfg-card-title { font-size: 1rem; font-weight: 600; color: #1e1b4b; margin: 0; }
-    .cfg-card-desc  { font-size: 0.82rem; color: #6b7280; margin: 0.15rem 0 0; }
+    .cfg-card-icon.indigo { background: #eef2ff; color: #4f46e5; }
+    .cfg-card-icon.amber  { background: #fffbeb; color: #d97706; }
+    .cfg-card-icon.slate  { background: var(--bg); color: var(--muted); }
+    [data-theme="dark"] .cfg-card-icon.indigo { background: #1e1b4b; color: #a5b4fc; }
+    [data-theme="dark"] .cfg-card-icon.amber  { background: #1c1400; color: #fbbf24; }
+    .cfg-card-title { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+    .cfg-card-desc  { font-size: 0.82rem; color: var(--muted); margin: 0.15rem 0 0; }
 
     /* ── Grid de campos ── */
     .cfg-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; }
 
     .cfg-field label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.35rem;
+        display: block; font-size: 0.8rem; font-weight: 600;
+        color: var(--text); margin-bottom: 0.35rem;
     }
-    .cfg-field .field-hint {
-        font-size: 0.75rem;
-        color: #9ca3af;
-        margin-top: 0.3rem;
-        line-height: 1.4;
+    .cfg-field .field-hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
+    .cfg-field input[type="number"], .cfg-field input[type="text"],
+    .cfg-field input[type="email"], .cfg-field input[type="password"] {
+        width: 100%; padding: 0.55rem 0.75rem;
+        border: 1.5px solid var(--border); border-radius: 8px;
+        font-size: 0.9rem; font-family: inherit;
+        color: var(--text); background: var(--bg);
+        transition: border-color .15s; box-sizing: border-box;
     }
-    .cfg-field input[type="number"] {
-        width: 100%;
-        padding: 0.55rem 0.75rem;
-        border: 1.5px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-family: inherit;
-        color: #1e1b4b;
-        background: #f9fafb;
-        transition: border-color .15s;
-        box-sizing: border-box;
-    }
-    .cfg-field input[type="number"]:focus {
-        outline: none;
-        border-color: #4f46e5;
-        background: #fff;
-    }
-    .cfg-field .field-unit {
-        font-size: 0.75rem;
-        color: #6b7280;
-        margin-top: 0.2rem;
-    }
+    .cfg-field input:focus { outline: none; border-color: #4f46e5; background: var(--panel); }
+    .cfg-field .field-unit { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
 
     /* ── Fila de solo lectura ── */
     .cfg-readonly-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
     }
-    .cfg-readonly-item { }
     .cfg-readonly-item .ro-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: #9ca3af;
-        margin-bottom: 0.2rem;
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .04em; color: var(--muted); margin-bottom: 0.2rem;
     }
     .cfg-readonly-item .ro-value {
-        font-size: 0.88rem;
-        color: #374151;
-        font-family: 'JetBrains Mono', monospace;
-        word-break: break-all;
+        font-size: 0.88rem; color: var(--text);
+        font-family: 'JetBrains Mono', monospace; word-break: break-all;
     }
-    .pill-ok   { background: #d1fae5; color: #065f46; font-size:.75rem; padding:.15rem .55rem; border-radius:99px; font-weight:600; }
-    .pill-off  { background: #f3f4f6; color: #6b7280; font-size:.75rem; padding:.15rem .55rem; border-radius:99px; font-weight:600; }
+    .pill-ok  { background: var(--successBg); color: var(--successText); font-size:.75rem; padding:.15rem .55rem; border-radius:99px; font-weight:600; }
+    .pill-off { background: var(--bg); color: var(--muted); font-size:.75rem; padding:.15rem .55rem; border-radius:99px; font-weight:600; }
 
     /* ── Botón guardar ── */
-    .cfg-actions {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-top: 1.5rem;
-    }
+    .cfg-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
     .btn-cfg-save {
-        background: #4f46e5;
-        color: #fff;
-        border: none;
-        padding: 0.65rem 1.5rem;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
+        background: #4f46e5; color: #fff; border: none;
+        padding: 0.65rem 1.5rem; border-radius: 8px;
+        font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 0.5rem;
         transition: background .15s;
     }
-    .btn-cfg-save:hover { background: #4338ca; }
+    .btn-cfg-save:hover    { background: #4338ca; }
     .btn-cfg-save:disabled { background: #a5b4fc; cursor: not-allowed; }
 
-    .cfg-feedback {
-        font-size: 0.875rem;
-        display: none;
-        align-items: center;
-        gap: 0.5rem;
-    }
+    .cfg-feedback { font-size: 0.875rem; display: none; align-items: center; gap: 0.5rem; }
     .cfg-feedback.visible { display: flex; }
-    .cfg-feedback.ok    { color: #065f46; }
-    .cfg-feedback.error { color: #991b1b; }
+    .cfg-feedback.ok    { color: var(--successText); }
+    .cfg-feedback.error { color: var(--dangerText); }
 
     /* ── Banner aviso ── */
     .cfg-banner {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.9rem 1.1rem;
-        background: #fffbeb;
-        border: 1px solid #fde68a;
-        border-radius: 10px;
-        font-size: 0.85rem;
-        color: #92400e;
-        margin-bottom: 1.25rem;
+        display: flex; align-items: flex-start; gap: 0.75rem;
+        padding: 0.9rem 1.1rem; background: var(--warningBg);
+        border: 1px solid var(--warningBorder); border-radius: 10px;
+        font-size: 0.85rem; color: var(--warningText); margin-bottom: 1.25rem;
     }
     .cfg-banner i { margin-top: 0.05rem; flex-shrink: 0; }
 
@@ -175,34 +108,30 @@
 {% block content %}
 <div class="cfg-header">
     <div>
-        <h1 class="cfg-title">Configuración del panel</h1>
-        <p class="cfg-subtitle">Ajusta los parámetros operativos sin necesidad de editar config.env a mano.</p>
+        <h1 class="cfg-title">{{ t('cfg.page_title') }}</h1>
+        <p class="cfg-subtitle">{{ t('cfg.page_subtitle') }}</p>
     </div>
     <a class="btn" href="/alertas/proactivas" style="font-size:.85rem;">
-        <i class="fa-solid fa-bell"></i> Ver notificaciones
+        <i class="fa-solid fa-bell"></i> {{ t('cfg.btn_notif') }}
     </a>
 </div>
 
 {% if not notif_enabled %}
 <div class="cfg-banner">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>
-        Las notificaciones proactivas están <strong>desactivadas</strong>.
-        Los umbrales que configures aquí se guardan, pero las alertas automáticas no se enviarán hasta que actives
-        <code>NOTIF_ENABLED=true</code> en <code>config.env</code> y reinicies el panel.
-    </span>
+    <span>{{ t('cfg.banner_off') | safe }}</span>
 </div>
 {% endif %}
 
 <!-- ── Sección: umbrales editables ── -->
 <div class="cfg-section">
-    <p class="cfg-section-title">Notificaciones proactivas — umbrales</p>
+    <p class="cfg-section-title">{{ t('cfg.sec_thresholds') }}</p>
     <div class="cfg-card">
         <div class="cfg-card-header">
             <div class="cfg-card-icon indigo"><i class="fa-solid fa-sliders"></i></div>
             <div>
-                <p class="cfg-card-title">Parámetros operativos</p>
-                <p class="cfg-card-desc">Los cambios se aplican al instante, sin reiniciar el panel. También se escriben en <code>config.env</code> para que persistan.</p>
+                <p class="cfg-card-title">{{ t('cfg.card_params_title') }}</p>
+                <p class="cfg-card-desc">{{ t('cfg.card_params_desc') | safe }}</p>
             </div>
         </div>
 
@@ -210,52 +139,34 @@
             <div class="cfg-fields">
 
                 <div class="cfg-field">
-                    <label for="f-disk">Umbral de disco</label>
-                    <input
-                        type="number"
-                        id="f-disk"
-                        name="NOTIF_DISK_THRESHOLD"
-                        value="{{ config_actual.NOTIF_DISK_THRESHOLD }}"
-                        min="50" max="99"
-                        required
-                    >
-                    <div class="field-unit">% de uso de disco (50 – 99)</div>
-                    <div class="field-hint">Se envía alerta cuando el disco supera este porcentaje.</div>
+                    <label for="f-disk">{{ t('cfg.lbl_disk') }}</label>
+                    <input type="number" id="f-disk" name="NOTIF_DISK_THRESHOLD"
+                           value="{{ config_actual.NOTIF_DISK_THRESHOLD }}" min="50" max="99" required>
+                    <div class="field-unit">{{ t('cfg.unit_disk') }}</div>
+                    <div class="field-hint">{{ t('cfg.hint_disk') }}</div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-interval">Intervalo entre checks</label>
-                    <input
-                        type="number"
-                        id="f-interval"
-                        name="NOTIF_CHECK_INTERVAL"
-                        value="{{ config_actual.NOTIF_CHECK_INTERVAL }}"
-                        min="60" max="86400"
-                        required
-                    >
-                    <div class="field-unit">segundos (60 – 86 400) · ahora: {{ (config_actual.NOTIF_CHECK_INTERVAL // 60) }} min</div>
-                    <div class="field-hint">Cada cuánto comprueba el panel disco, backup y servicios.</div>
+                    <label for="f-interval">{{ t('cfg.lbl_interval') }}</label>
+                    <input type="number" id="f-interval" name="NOTIF_CHECK_INTERVAL"
+                           value="{{ config_actual.NOTIF_CHECK_INTERVAL }}" min="60" max="86400" required>
+                    <div class="field-unit">{{ t('cfg.unit_interval_pre') }}{{ config_actual.NOTIF_CHECK_INTERVAL // 60 }}{{ t('cfg.unit_interval_suf') }}</div>
+                    <div class="field-hint">{{ t('cfg.hint_interval') }}</div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-cooldown">Silencio entre alertas iguales</label>
-                    <input
-                        type="number"
-                        id="f-cooldown"
-                        name="NOTIF_COOLDOWN"
-                        value="{{ config_actual.NOTIF_COOLDOWN }}"
-                        min="300" max="86400"
-                        required
-                    >
-                    <div class="field-unit">segundos (300 – 86 400) · ahora: {{ (config_actual.NOTIF_COOLDOWN // 3600) }} h</div>
-                    <div class="field-hint">Tiempo mínimo entre dos alertas del mismo tipo para no saturar el canal.</div>
+                    <label for="f-cooldown">{{ t('cfg.lbl_cooldown') }}</label>
+                    <input type="number" id="f-cooldown" name="NOTIF_COOLDOWN"
+                           value="{{ config_actual.NOTIF_COOLDOWN }}" min="300" max="86400" required>
+                    <div class="field-unit">{{ t('cfg.unit_cooldown_pre') }}{{ config_actual.NOTIF_COOLDOWN // 3600 }}{{ t('cfg.unit_cooldown_suf') }}</div>
+                    <div class="field-hint">{{ t('cfg.hint_cooldown') }}</div>
                 </div>
 
-            </div><!-- cfg-fields -->
+            </div>
 
             <div class="cfg-actions">
-                <button class="btn-cfg-save" id="btn-save" type="button" onclick="guardarConfig()">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+                <button class="btn-cfg-save" id="btn-save" type="button">
+                    <i class="fa-solid fa-floppy-disk"></i> {{ t('cfg.btn_save') }}
                 </button>
                 <span class="cfg-feedback" id="cfg-feedback"></span>
             </div>
@@ -263,30 +174,26 @@
     </div>
 </div>
 
-<!-- ── Sección: Email / SMTP (editable desde el panel) ── -->
+<!-- ── Sección: Email / SMTP ── -->
 <div class="cfg-section">
-    <p class="cfg-section-title">Correo electrónico — SMTP</p>
+    <p class="cfg-section-title">{{ t('cfg.sec_smtp') }}</p>
     <div class="cfg-card">
         <div class="cfg-card-header">
             <div class="cfg-card-icon amber"><i class="fa-solid fa-envelope"></i></div>
             <div>
-                <p class="cfg-card-title">Configuración de correo saliente</p>
-                <p class="cfg-card-desc">
-                    Usado para alertas, informes periódicos y notificaciones a
-                    <strong>soporte@vigex.es</strong>. Compatible con Gmail, Outlook u otro SMTP con STARTTLS.
-                </p>
+                <p class="cfg-card-title">{{ t('cfg.card_smtp_title') }}</p>
+                <p class="cfg-card-desc">{{ t('cfg.card_smtp_desc') | safe }}</p>
             </div>
         </div>
 
         <form id="smtp-form" autocomplete="off" onsubmit="return false;">
             <div class="cfg-fields">
 
-                <!-- Selector de proveedor (rellena host+puerto automáticamente) -->
                 <div class="cfg-field" style="grid-column: span 2;">
-                    <label for="f-smtp-provider">Proveedor de correo</label>
+                    <label for="f-smtp-provider">{{ t('cfg.lbl_provider') }}</label>
                     <select id="f-smtp-provider" onchange="smtpProviderChange(this.value)"
-                            style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:.93rem;">
-                        <option value="">— Selecciona tu proveedor —</option>
+                            style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.93rem;">
+                        <option value="">{{ t('cfg.opt_provider_default') }}</option>
                         <option value="gmail">Gmail (Google)</option>
                         <option value="outlook">Outlook / Hotmail (Microsoft)</option>
                         <option value="yahoo">Yahoo Mail</option>
@@ -296,58 +203,58 @@
                 </div>
 
                 <div class="cfg-field" style="grid-column: span 2;" id="smtp-host-row">
-                    <label for="f-smtp-host">Servidor SMTP</label>
+                    <label for="f-smtp-host">{{ t('cfg.lbl_smtp_host') }}</label>
                     <input type="text" id="f-smtp-host" name="smtp_host"
                            value="{{ smtp_host }}" placeholder="smtp.gmail.com">
-                    <div class="field-hint">Rellenado automáticamente al elegir proveedor, o escríbelo tú.</div>
+                    <div class="field-hint">{{ t('cfg.hint_smtp_host') }}</div>
                 </div>
 
                 <div class="cfg-field" id="smtp-port-row">
-                    <label for="f-smtp-port">Puerto</label>
+                    <label for="f-smtp-port">{{ t('cfg.lbl_smtp_port') }}</label>
                     <input type="number" id="f-smtp-port" name="smtp_port"
                            value="{{ smtp_port }}" min="1" max="65535" placeholder="587">
-                    <div class="field-hint">587 (STARTTLS) · rellenado automáticamente.</div>
+                    <div class="field-hint">{{ t('cfg.hint_smtp_port') }}</div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-smtp-user">Tu dirección de email</label>
+                    <label for="f-smtp-user">{{ t('cfg.lbl_smtp_user') }}</label>
                     <input type="text" id="f-smtp-user" name="smtp_user"
                            value="{{ smtp_user }}" placeholder="tu@gmail.com"
                            oninput="smtpUserInput(this.value)">
-                    <div class="field-hint">La cuenta que envía los emails (ej: tu@gmail.com).</div>
+                    <div class="field-hint">{{ t('cfg.hint_smtp_user') }}</div>
                 </div>
 
                 <div class="cfg-field">
                     <label for="f-smtp-pass">
-                        Contraseña
-                        {% if smtp_pass_set %}<span class="pill-ok" style="font-size:.7rem;vertical-align:middle;">Configurada</span>{% endif %}
+                        {{ t('cfg.lbl_smtp_pass') }}
+                        {% if smtp_pass_set %}<span class="pill-ok" style="font-size:.7rem;vertical-align:middle;">{{ t('cfg.pill_configured') }}</span>{% endif %}
                     </label>
                     <input type="password" id="f-smtp-pass" name="smtp_pass"
-                           placeholder="{% if smtp_pass_set %}Dejar vacío para no cambiar{% else %}Contraseña (o contraseña de app){% endif %}">
+                           placeholder="{% if smtp_pass_set %}{{ t('cfg.ph_pass_nochange') }}{% else %}{{ t('cfg.ph_pass_new') }}{% endif %}">
                     <div class="field-hint" id="smtp-pass-hint">
-                        {% if smtp_pass_set %}Dejar vacío si no quieres cambiarla.{% else %}Introduce tu contraseña o contraseña de aplicación.{% endif %}
+                        {% if smtp_pass_set %}{{ t('cfg.hint_pass_nochange') }}{% else %}{{ t('cfg.hint_pass_new') }}{% endif %}
                     </div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-email-from">Remitente (FROM)</label>
+                    <label for="f-email-from">{{ t('cfg.lbl_email_from') }}</label>
                     <input type="email" id="f-email-from" name="email_from"
                            value="{{ smtp_email_from }}" placeholder="vigex@tudominio.com">
-                    <div class="field-hint">Normalmente igual que tu dirección de email.</div>
+                    <div class="field-hint">{{ t('cfg.hint_email_from') }}</div>
                 </div>
 
                 <div class="cfg-field">
-                    <label for="f-email-to">Destinatario de alertas</label>
+                    <label for="f-email-to">{{ t('cfg.lbl_email_to') }}</label>
                     <input type="email" id="f-email-to" name="email_to"
                            value="{{ smtp_email_to }}" placeholder="admin@tudominio.com">
-                    <div class="field-hint">¿A quién le llegan las alertas e informes?</div>
+                    <div class="field-hint">{{ t('cfg.hint_email_to') }}</div>
                 </div>
 
-            </div><!-- cfg-fields -->
+            </div>
 
             <div class="cfg-actions">
-                <button class="btn-cfg-save" id="btn-save-smtp" type="button" onclick="guardarSmtp()">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar configuración email
+                <button class="btn-cfg-save" id="btn-save-smtp" type="button">
+                    <i class="fa-solid fa-floppy-disk"></i> {{ t('cfg.btn_save_smtp') }}
                 </button>
                 <span class="cfg-feedback" id="smtp-feedback"></span>
             </div>
@@ -357,156 +264,134 @@
 
 <!-- ── Sección: Seguridad de sesión ── -->
 <div class="cfg-section">
-    <p class="cfg-section-title">Seguridad de sesión</p>
+    <p class="cfg-section-title">{{ t('cfg.sec_session') }}</p>
     <div class="cfg-card">
         <div class="cfg-card-header">
             <div class="cfg-card-icon indigo"><i class="fa-solid fa-clock"></i></div>
             <div>
-                <div class="cfg-card-title">Auto-logout por inactividad</div>
-                <div class="cfg-card-desc">Si el usuario no interactúa durante este tiempo, la sesión se cierra automáticamente. Pon 0 para desactivarlo.</div>
+                <div class="cfg-card-title">{{ t('cfg.card_logout_title') }}</div>
+                <div class="cfg-card-desc">{{ t('cfg.card_logout_desc') }}</div>
             </div>
         </div>
         <div class="cfg-field" style="max-width:220px;margin-top:14px;">
-            <label for="f-auto-logout">Tiempo de inactividad (minutos)</label>
+            <label for="f-auto-logout">{{ t('cfg.lbl_autologout') }}</label>
             <input type="number" id="f-auto-logout" name="auto_logout_minutes"
-                   value="{{ auto_logout_minutes }}" min="0" max="1440" step="5"
-                   placeholder="60">
-            <div class="field-hint">0 = desactivado · máximo 1440 (24 h)</div>
+                   value="{{ auto_logout_minutes }}" min="0" max="1440" step="5" placeholder="60">
+            <div class="field-hint">{{ t('cfg.hint_autologout') }}</div>
         </div>
         <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
-            <button class="btn primary" id="btn-save-autologout" type="button" onclick="guardarAutoLogout()">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar
+            <button class="btn primary" id="btn-save-autologout" type="button">
+                <i class="fa-solid fa-floppy-disk"></i> {{ t('cfg.btn_save_short') }}
             </button>
             <span class="cfg-feedback" id="autologout-feedback"></span>
         </div>
     </div>
 </div>
 
-<!-- ── Sección: solo lectura (SSH, Telegram, estado) ── -->
+<!-- ── Sección: solo lectura ── -->
 <div class="cfg-section">
-    <p class="cfg-section-title">Configuración de conexiones (solo lectura)</p>
+    <p class="cfg-section-title">{{ t('cfg.sec_readonly') }}</p>
     <div class="cfg-card">
         <div class="cfg-card-header">
             <div class="cfg-card-icon slate"><i class="fa-solid fa-lock"></i></div>
             <div>
-                <p class="cfg-card-title">Credenciales y hosts</p>
-                <p class="cfg-card-desc">Estos valores se cambian editando <code>config.env</code> y reiniciando el panel.</p>
+                <p class="cfg-card-title">{{ t('cfg.card_creds_title') }}</p>
+                <p class="cfg-card-desc">{{ t('cfg.card_creds_desc') | safe }}</p>
             </div>
         </div>
         <div class="cfg-readonly-grid">
             <div class="cfg-readonly-item">
-                <div class="ro-label">Canal Telegram</div>
+                <div class="ro-label">{{ t('cfg.ro_telegram') }}</div>
                 <div class="ro-value">
                     {% if telegram_ok %}
-                        <span class="pill-ok"><i class="fa-brands fa-telegram"></i> Configurado</span>
+                        <span class="pill-ok"><i class="fa-brands fa-telegram"></i> {{ t('cfg.pill_ok_telegram') }}</span>
                     {% else %}
-                        <span class="pill-off">Sin configurar</span>
+                        <span class="pill-off">{{ t('cfg.pill_off') }}</span>
                     {% endif %}
                 </div>
             </div>
             <div class="cfg-readonly-item">
-                <div class="ro-label">Correo SMTP</div>
+                <div class="ro-label">{{ t('cfg.ro_smtp') }}</div>
                 <div class="ro-value">
                     {% if smtp_host %}
                         <span class="pill-ok"><i class="fa-solid fa-envelope"></i> {{ smtp_host }}</span>
                     {% else %}
-                        <span class="pill-off">Sin configurar</span>
+                        <span class="pill-off">{{ t('cfg.pill_off') }}</span>
                     {% endif %}
                 </div>
             </div>
             <div class="cfg-readonly-item">
-                <div class="ro-label">Clave SSH</div>
+                <div class="ro-label">{{ t('cfg.ro_ssh_key') }}</div>
                 <div class="ro-value">{{ ssh_key }}</div>
             </div>
             <div class="cfg-readonly-item">
-                <div class="ro-label">Timeout SSH</div>
+                <div class="ro-label">{{ t('cfg.ro_ssh_timeout') }}</div>
                 <div class="ro-value">{{ ssh_timeout }} seg</div>
             </div>
             <div class="cfg-readonly-item">
-                <div class="ro-label">Notificaciones activas</div>
+                <div class="ro-label">{{ t('cfg.ro_notif') }}</div>
                 <div class="ro-value">
                     {% if notif_enabled %}
-                        <span class="pill-ok">Activadas</span>
+                        <span class="pill-ok">{{ t('cfg.pill_notif_on') }}</span>
                     {% else %}
-                        <span class="pill-off">Desactivadas</span>
+                        <span class="pill-off">{{ t('cfg.pill_notif_off') }}</span>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block sidebar_info %}
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Módulo</span>
-    <span>Configuración</span>
+    <span class="sidebar-info-label">{{ t('sidebar.module') }}</span>
+    <span>{{ t('cfg.sidebar_module') }}</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Umbral disco</span>
+    <span class="sidebar-info-label">{{ t('cfg.sidebar_threshold') }}</span>
     <span>{{ config_actual.NOTIF_DISK_THRESHOLD }}%</span>
 </div>
 <div class="sidebar-info-block">
-    <span class="sidebar-info-label">Check cada</span>
+    <span class="sidebar-info-label">{{ t('cfg.sidebar_interval') }}</span>
     <span>{{ config_actual.NOTIF_CHECK_INTERVAL // 60 }} min</span>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<div id="cfg-i18n" style="display:none"
+    data-lang="{{ lang }}"
+    data-validation-nums="{{ t('cfg.js_validation_nums') }}"
+    data-saving="{{ t('cfg.js_saving') }}"
+    data-saved="{{ t('cfg.js_saved') }}"
+    data-save-err="{{ t('cfg.js_save_err') }}"
+    data-net-err="{{ t('cfg.js_net_err') }}"
+    data-smtp-host-req="{{ t('cfg.js_smtp_host_req') }}"
+    data-smtp-err="{{ t('cfg.js_smtp_err') }}"
+    data-net-err-short="{{ t('cfg.js_net_err_short') }}"
+    data-logout-range="{{ t('cfg.js_logout_range') }}"
+    data-btn-save="{{ t('cfg.js_btn_save') }}"
+    data-btn-save-smtp="{{ t('cfg.js_btn_save_smtp') }}">
+</div>
 <script>
 (function () {
     'use strict';
-
-    function guardarConfig() {
-        const form    = document.getElementById('cfg-form');
-        const btn     = document.getElementById('btn-save');
-        const fb      = document.getElementById('cfg-feedback');
-        const csrf    = document.querySelector('meta[name="csrf-token"]')?.content || '';
-
-        // Recoger valores
-        const payload = {};
-        form.querySelectorAll('input[name]').forEach(input => {
-            payload[input.name] = parseInt(input.value, 10);
-        });
-
-        // Validación básica en cliente
-        for (const [key, val] of Object.entries(payload)) {
-            if (isNaN(val)) {
-                mostrarFeedback(false, 'Todos los campos deben ser números enteros.');
-                return;
-            }
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
-        fb.className  = 'cfg-feedback';
-
-        fetch('/configuracion', {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrf,
-            },
-            body: JSON.stringify(payload),
-        })
-        .then(r => r.json())
-        .then(data => {
-            mostrarFeedback(data.ok, data.msg || (data.ok ? 'Guardado.' : 'Error al guardar.'));
-        })
-        .catch(() => {
-            mostrarFeedback(false, 'Error de red. Comprueba la conexión con el panel.');
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios';
-        });
-    }
-
-    function mostrarFeedback(ok, msg) {
-        const fb = document.getElementById('cfg-feedback');
-        _mostrarFb(fb, ok, msg);
-    }
+    const _el  = document.getElementById('cfg-i18n');
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const LANG = _el.dataset.lang;
+    const i18n = {
+        validationNums: _el.dataset.validationNums,
+        saving:         _el.dataset.saving,
+        saved:          _el.dataset.saved,
+        saveErr:        _el.dataset.saveErr,
+        netErr:         _el.dataset.netErr,
+        smtpHostReq:    _el.dataset.smtpHostReq,
+        smtpErr:        _el.dataset.smtpErr,
+        netErrShort:    _el.dataset.netErrShort,
+        logoutRange:    _el.dataset.logoutRange,
+        btnSave:        _el.dataset.btnSave,
+        btnSaveSmtp:    _el.dataset.btnSaveSmtp,
+    };
 
     function _mostrarFb(fb, ok, msg) {
         fb.textContent = '';
@@ -517,13 +402,37 @@
         fb.className = 'cfg-feedback visible ' + (ok ? 'ok' : 'error');
     }
 
-    // ── Guardar SMTP ──────────────────────────────────────────────────────────
-    function guardarSmtp() {
+    /* ── Guardar umbrales ── */
+    document.getElementById('btn-save')?.addEventListener('click', function () {
+        const form = document.getElementById('cfg-form');
+        const btn  = document.getElementById('btn-save');
+        const fb   = document.getElementById('cfg-feedback');
+        const payload = {};
+        form.querySelectorAll('input[name]').forEach(input => {
+            payload[input.name] = parseInt(input.value, 10);
+        });
+        for (const val of Object.values(payload)) {
+            if (isNaN(val)) { _mostrarFb(fb, false, i18n.validationNums); return; }
+        }
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.saving}`;
+        fb.className = 'cfg-feedback';
+        fetch('/configuracion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(d => _mostrarFb(fb, d.ok, d.msg || (d.ok ? i18n.saved : i18n.saveErr)))
+        .catch(() => _mostrarFb(fb, false, i18n.netErr))
+        .finally(() => { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ${i18n.btnSave}`; });
+    });
+
+    /* ── Guardar SMTP ── */
+    document.getElementById('btn-save-smtp')?.addEventListener('click', function () {
         const form = document.getElementById('smtp-form');
         const btn  = document.getElementById('btn-save-smtp');
         const fb   = document.getElementById('smtp-feedback');
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-
         const payload = {
             smtp_host:  form.querySelector('#f-smtp-host').value.trim(),
             smtp_port:  parseInt(form.querySelector('#f-smtp-port').value, 10) || 587,
@@ -532,95 +441,85 @@
             email_from: form.querySelector('#f-email-from').value.trim(),
             email_to:   form.querySelector('#f-email-to').value.trim(),
         };
-
-        if (!payload.smtp_host) {
-            _mostrarFb(fb, false, 'El servidor SMTP es obligatorio.');
-            return;
-        }
-
+        if (!payload.smtp_host) { _mostrarFb(fb, false, i18n.smtpHostReq); return; }
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
-        fb.className  = 'cfg-feedback';
-
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${i18n.saving}`;
+        fb.className = 'cfg-feedback';
         fetch('/configuracion/smtp', {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrf,
-            },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
             body: JSON.stringify(payload),
         })
         .then(r => r.json())
-        .then(data => _mostrarFb(fb, data.ok, data.msg || (data.ok ? 'Guardado.' : 'Error.')))
-        .catch(() => _mostrarFb(fb, false, 'Error de red.'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar configuración email';
-        });
-    }
+        .then(d => _mostrarFb(fb, d.ok, d.msg || (d.ok ? i18n.saved : i18n.smtpErr)))
+        .catch(() => _mostrarFb(fb, false, i18n.netErrShort))
+        .finally(() => { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ${i18n.btnSaveSmtp}`; });
+    });
 
-    // ── Guardar auto-logout ───────────────────────────────────────────────────
-    function guardarAutoLogout() {
-        const input = document.getElementById('f-auto-logout');
-        const btn   = document.getElementById('btn-save-autologout');
-        const fb    = document.getElementById('autologout-feedback');
-        const csrf  = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    /* ── Guardar auto-logout ── */
+    document.getElementById('btn-save-autologout')?.addEventListener('click', function () {
+        const input   = document.getElementById('f-auto-logout');
+        const btn     = document.getElementById('btn-save-autologout');
+        const fb      = document.getElementById('autologout-feedback');
         const minutos = parseInt(input.value, 10);
-
         if (isNaN(minutos) || minutos < 0 || minutos > 1440) {
-            _mostrarFb(fb, false, 'Valor entre 0 y 1440 minutos.');
-            return;
+            _mostrarFb(fb, false, i18n.logoutRange); return;
         }
-
         btn.disabled = true;
         fetch('/configuracion/auto-logout', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
             body: JSON.stringify({ minutos }),
         })
         .then(r => r.json())
         .then(d => { _mostrarFb(fb, d.ok, d.msg); btn.disabled = false; })
-        .catch(() => { _mostrarFb(fb, false, 'Error de red.'); btn.disabled = false; });
-    }
+        .catch(() => { _mostrarFb(fb, false, i18n.netErrShort); btn.disabled = false; });
+    });
 
-    // ── Selector de proveedor SMTP ────────────────────────────────────────────
-    const _SMTP_PRESETS = {
-        gmail:   { host: 'smtp.gmail.com',          port: 587,
-                   hint: '💡 Gmail: activa la verificación en 2 pasos y genera una <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a>. Usa esa contraseña aquí, no la de tu cuenta.',
+    /* ── Selector de proveedor SMTP ── */
+    const _SMTP_CA = {
+        gmail:   { hint: '💡 Gmail: activa la verificació en 2 passos i genera una <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--accent)">contrasenya d\'aplicació</a>. Utilitza-la aquí, no la del teu compte.',
+                   passHint: 'Enganxa aquí la contrasenya d\'aplicació de Google (16 caràcters, sense espais).' },
+        outlook: { hint: '💡 Outlook / Hotmail: usa la teva contrasenya de Microsoft. Si tens 2FA, genera una <a href="https://account.microsoft.com/security" target="_blank" rel="noopener" style="color:var(--accent)">contrasenya d\'aplicació</a> al teu compte.',
+                   passHint: 'Contrasenya del teu compte Microsoft (o contrasenya d\'app si tens 2FA).' },
+        yahoo:   { hint: '💡 Yahoo: genera una contrasenya d\'aplicació a <a href="https://login.yahoo.com/account/security" target="_blank" rel="noopener" style="color:var(--accent)">Seguretat del compte Yahoo</a>.',
+                   passHint: 'Contrasenya d\'aplicació de Yahoo (no la contrasenya principal).' },
+        otro:    { hint: 'Introdueix el servidor SMTP i port del teu proveïdor de correu.',
+                   passHint: 'Contrasenya del compte de correu.' },
+    };
+    const _SMTP_ES = {
+        gmail:   { hint: '💡 Gmail: activa la verificación en 2 pasos y genera una <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a>. Usa esa contraseña aquí, no la de tu cuenta.',
                    passHint: 'Pega aquí la contraseña de aplicación de Google (16 caracteres, sin espacios).' },
-        outlook: { host: 'smtp-mail.outlook.com',   port: 587,
-                   hint: '💡 Outlook / Hotmail: usa tu contraseña de Microsoft habitual. Si tienes 2FA activado, genera una <a href="https://account.microsoft.com/security" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a> en tu cuenta.',
+        outlook: { hint: '💡 Outlook / Hotmail: usa tu contraseña de Microsoft habitual. Si tienes 2FA activado, genera una <a href="https://account.microsoft.com/security" target="_blank" rel="noopener" style="color:var(--accent)">contraseña de aplicación</a> en tu cuenta.',
                    passHint: 'Contraseña de tu cuenta Microsoft (o contraseña de app si tienes 2FA).' },
-        yahoo:   { host: 'smtp.mail.yahoo.com',     port: 587,
-                   hint: '💡 Yahoo: genera una contraseña de aplicación en <a href="https://login.yahoo.com/account/security" target="_blank" rel="noopener" style="color:var(--accent)">Seguridad de cuenta Yahoo</a>.',
+        yahoo:   { hint: '💡 Yahoo: genera una contraseña de aplicación en <a href="https://login.yahoo.com/account/security" target="_blank" rel="noopener" style="color:var(--accent)">Seguridad de cuenta Yahoo</a>.',
                    passHint: 'Contraseña de aplicación de Yahoo (no la contraseña principal).' },
-        otro:    { host: '', port: 587,
-                   hint: 'Introduce el servidor SMTP y puerto de tu proveedor de correo.',
+        otro:    { hint: 'Introduce el servidor SMTP y puerto de tu proveedor de correo.',
                    passHint: 'Contraseña de la cuenta de correo.' },
     };
+    const _SMTP_PRESETS_MAP = { host: { gmail: 'smtp.gmail.com', outlook: 'smtp-mail.outlook.com', yahoo: 'smtp.mail.yahoo.com', otro: '' }, port: 587 };
+    const _SMTP_HINTS = LANG === 'ca' ? _SMTP_CA : _SMTP_ES;
 
-    function smtpProviderChange(val) {
-        const p = _SMTP_PRESETS[val];
-        if (!p) return;
-        if (p.host) document.getElementById('f-smtp-host').value = p.host;
-        document.getElementById('f-smtp-port').value = p.port;
-        document.getElementById('smtp-provider-hint').innerHTML = p.hint;
-        document.getElementById('smtp-pass-hint').textContent = p.passHint;
-        // Mostrar/ocultar fila host manual solo para "otro"
+    window.smtpProviderChange = function (val) {
+        const h = _SMTP_HINTS[val];
+        if (!h) return;
+        const host = _SMTP_PRESETS_MAP.host[val] || '';
+        if (host) document.getElementById('f-smtp-host').value = host;
+        document.getElementById('f-smtp-port').value = 587;
+        document.getElementById('smtp-provider-hint').innerHTML = h.hint;
+        document.getElementById('smtp-pass-hint').textContent   = h.passHint;
         document.getElementById('smtp-host-row').style.display = (val === 'otro') ? '' : 'none';
         document.getElementById('smtp-port-row').style.display = (val === 'otro') ? '' : 'none';
-    }
+    };
 
-    function smtpUserInput(val) {
+    window.smtpUserInput = function (val) {
         const fromField = document.getElementById('f-email-from');
-        // Auto-fill FROM solo si está vacío o igual al usuario anterior
         if (!fromField.value || fromField.dataset.autofilled === 'true') {
             fromField.value = val;
             fromField.dataset.autofilled = 'true';
         }
-    }
+    };
 
-    // Auto-detectar proveedor desde host ya guardado
     (function smtpAutoDetect() {
         const host = (document.getElementById('f-smtp-host')?.value || '').toLowerCase();
         const sel  = document.getElementById('f-smtp-provider');
@@ -628,26 +527,17 @@
         const map = { 'smtp.gmail.com': 'gmail', 'smtp-mail.outlook.com': 'outlook',
                       'smtp.live.com': 'outlook', 'smtp.mail.yahoo.com': 'yahoo' };
         const found = map[host];
-        if (found) {
-            sel.value = found;
-            smtpProviderChange(found);
-        } else {
-            sel.value = 'otro';
-            smtpProviderChange('otro');
-        }
-        // Si el host ya está configurado, ocultar siempre los campos técnicos
+        if (found) { sel.value = found; smtpProviderChange(found); }
+        else        { sel.value = 'otro'; smtpProviderChange('otro'); }
         if (host && found) {
             document.getElementById('smtp-host-row').style.display = 'none';
             document.getElementById('smtp-port-row').style.display = 'none';
         }
     })();
 
-    // Exponer para los onclick
-    window.guardarConfig       = guardarConfig;
-    window.guardarSmtp         = guardarSmtp;
-    window.guardarAutoLogout   = guardarAutoLogout;
-    window.smtpProviderChange  = smtpProviderChange;
-    window.smtpUserInput       = smtpUserInput;
+    window.guardarConfig     = () => document.getElementById('btn-save')?.click();
+    window.guardarSmtp       = () => document.getElementById('btn-save-smtp')?.click();
+    window.guardarAutoLogout = () => document.getElementById('btn-save-autologout')?.click();
 }());
 </script>
 {% endblock %}
