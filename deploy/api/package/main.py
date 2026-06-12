@@ -11028,11 +11028,228 @@ def _generar_dossier_md(
     return "\n".join(lineas)
 
 
-@app.get("/api/cumplimiento/dossier")
-async def api_cumplimiento_dossier(request: Request):
+def _generar_dossier_html(
+    controles: list[dict],
+    evidencias_por_familia: dict[int, dict],
+    max_age_dias: int,
+) -> str:
     """
-    Genera y descarga el dossier Markdown de evidencias para auditor (R-094).
-    Sellado con SHA256 del contenido completo al final del fichero.
+    HTML auto-contenido del dossier (R-094). Diseñado para imprimir a PDF desde
+    el navegador (Ctrl+P → Guardar como PDF). No depende de assets externos.
+    El token VIGEX_SHA256_PLACEHOLDER es reemplazado por el hash real en el endpoint.
+    """
+    def esc(s) -> str:
+        return (str(s)
+                .replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace('"', "&quot;")
+                ) if s is not None else "—"
+
+    def badge(cls: str, txt: str) -> str:
+        return f'<span class="badge b-{cls}">{esc(txt)}</span>'
+
+    ahora_iso     = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    ahora_legible = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+    perfil        = os.getenv("VIGEX_PROFILE", "desconocido")
+
+    # ── Resumen ejecutivo ──────────────────────────────────────────────────
+    normas_vistas: list[str] = []
+    for c in controles:
+        if c["norma"] not in normas_vistas:
+            normas_vistas.append(c["norma"])
+
+    stats: dict = {}
+    fids_vistos: set = set()
+    for c in controles:
+        fid, norma = c["familia_id"], c["norma"]
+        if norma not in stats:
+            stats[norma] = {"total": 0, "fresca": 0, "caducada": 0, "sinev": 0}
+        if fid not in fids_vistos:
+            fids_vistos.add(fid)
+            ev       = evidencias_por_familia.get(fid)
+            frescura = _frescura_evidencia(ev["ts"] if ev else None) if ev else "sin_evidencia"
+            if fid in _EV_COLECTORES:
+                stats[norma]["total"] += 1
+                if frescura == "fresca":     stats[norma]["fresca"]   += 1
+                elif frescura == "caducada": stats[norma]["caducada"] += 1
+                else:                        stats[norma]["sinev"]    += 1
+
+    sum_rows = ""
+    for norma in normas_vistas:
+        s = stats.get(norma, {})
+        total  = s.get("total", 0)
+        fresca = s.get("fresca", 0)
+        pct    = round(fresca / total * 100) if total else 0
+        sum_rows += (
+            f'<tr><td><strong>{esc(norma)}</strong></td>'
+            f'<td class="num">{total}</td><td class="num">{badge("fresca", str(fresca))}</td>'
+            f'<td class="num">{s.get("caducada", 0)}</td>'
+            f'<td class="num">{s.get("sinev", 0)}</td>'
+            f'<td class="num">{pct} %</td></tr>'
+        )
+
+    # ── Detalle por norma → familia ────────────────────────────────────────
+    fams_por_norma: dict = {}
+    for c in controles:
+        norma, fid = c["norma"], c["familia_id"]
+        if norma not in fams_por_norma:
+            fams_por_norma[norma] = {}
+        if fid not in fams_por_norma[norma]:
+            fams_por_norma[norma][fid] = {"nombre": c["familia_nombre"], "cs": []}
+        fams_por_norma[norma][fid]["cs"].append(c)
+
+    MLABEL = {"completa": "Completa", "parcial": "Parcial", "ausente": "Ausente"}
+    FCLS   = {"fresca": "fresca", "caducada": "caducada",
+              "sin_evidencia": "sinev", "sin_colector": "sinco"}
+    FLABEL = {"fresca": "Fresca", "caducada": "Caducada",
+              "sin_evidencia": "Sin evidencia", "sin_colector": "Sin colector"}
+
+    norma_secs = ""
+    for norma in normas_vistas:
+        fams_html = ""
+        for fid, fam in fams_por_norma.get(norma, {}).items():
+            ev       = evidencias_por_familia.get(fid)
+            tc       = fid in _EV_COLECTORES
+            frescura = _frescura_evidencia(ev["ts"] if ev else None) if tc else "sin_colector"
+            mdom     = max(
+                (c["madurez"] for c in fam["cs"]),
+                key=lambda m: {"ausente": 2, "parcial": 1, "completa": 0}[m],
+            )
+            ctrl_rows = ""
+            for c in fam["cs"]:
+                note = (f'<div class="ctrl-note">{esc(c["notas"])}</div>'
+                        if c.get("notas") else "")
+                ctrl_rows += (
+                    f'<tr><td class="ctrl-art">{esc(c["articulo"])}</td>'
+                    f'<td>{esc(c["requisito"])}{note}</td></tr>'
+                )
+            ev_block = ""
+            if ev:
+                kv_html = ""
+                if ev.get("datos_json"):
+                    try:
+                        datos = json.loads(ev["datos_json"])
+                        if isinstance(datos, dict):
+                            count = 0
+                            for k, v in datos.items():
+                                if count >= 8:
+                                    break
+                                if not isinstance(v, (dict, list)):
+                                    kv_html += (
+                                        f'<div class="ev-kv">'
+                                        f'<div class="ev-k">{esc(k)}</div>'
+                                        f'<div class="ev-v">{esc(v)}</div></div>'
+                                    )
+                                    count += 1
+                    except Exception:
+                        pass
+                ev_block = (
+                    f'<div class="ev-block">'
+                    f'<div class="ev-block-title">Última evidencia recogida</div>'
+                    f'<div class="ev-kv-grid">{kv_html}</div>'
+                    f'<div class="ev-hash">Recogida: {esc(ev.get("ts", "—"))}'
+                    f' &nbsp;·&nbsp; SHA256: {esc(ev.get("sha256", "—"))}</div>'
+                    f'</div>'
+                )
+            fc = FCLS.get(frescura, "sinev")
+            fl = FLABEL.get(frescura, frescura)
+            fams_html += (
+                f'<div class="fam-card {mdom}">'
+                f'<div class="fam-header">'
+                f'<div class="fam-title">{esc(fam["nombre"])}</div>'
+                f'{badge(mdom, MLABEL.get(mdom, mdom))} {badge(fc, fl)}'
+                f'</div><div class="fam-body">'
+                f'<table class="ctrl-table"><tbody>{ctrl_rows}</tbody></table>'
+                f'{ev_block}</div></div>'
+            )
+        norma_secs += f'<section><h2>{esc(norma)}</h2>{fams_html}</section>'
+
+    decl = (
+        _DOSSIER_DECLARACION
+        .replace("**", "").replace("_", "").strip()
+        .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace("\n\n", " ").replace("\n", " ")
+    )
+
+    css = """*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;line-height:1.55;color:#1f2937;background:#fff;max-width:960px;margin:0 auto;padding:2rem}
+.cover{border:2px solid #6d28d9;border-radius:12px;padding:2rem;margin-bottom:2rem;background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%)}
+.cover-brand{font-size:.78rem;font-weight:700;color:#6d28d9;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.cover h1{font-size:1.6rem;color:#1e1b4b;margin-bottom:1.2rem;line-height:1.2}
+.meta-grid{display:grid;grid-template-columns:170px 1fr;gap:.3rem .7rem;font-size:.82rem}
+.meta-grid dt{font-weight:700;color:#6b7280}.meta-grid dd{color:#1e1b4b}
+.disclaimer{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:.9rem 1.1rem;margin-bottom:2rem;font-size:.8rem;color:#713f12}
+h2{font-size:1.05rem;color:#1e1b4b;border-bottom:2px solid #e5e7eb;padding-bottom:.4rem;margin:2rem 0 1rem}
+.summary-table{width:100%;border-collapse:collapse;margin-bottom:2rem;font-size:.82rem}
+.summary-table th{background:#f3f4f6;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;padding:.55rem .75rem;border:1px solid #e5e7eb;color:#6b7280}
+.summary-table td{padding:.5rem .75rem;border:1px solid #e5e7eb}
+.summary-table td.num{text-align:center}
+.summary-table tr:nth-child(even) td{background:#f9fafb}
+.fam-card{border:1px solid #e5e7eb;border-radius:10px;margin-bottom:.9rem;overflow:hidden}
+.fam-card.completa{border-left:4px solid #10b981}.fam-card.parcial{border-left:4px solid #f59e0b}.fam-card.ausente{border-left:4px solid #ef4444}
+.fam-header{background:#f9fafb;padding:.7rem 1rem;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;border-bottom:1px solid #e5e7eb}
+.fam-title{font-weight:700;font-size:.88rem;flex:1;color:#1e1b4b}.fam-body{padding:.8rem 1rem}
+.badge{display:inline-block;font-size:.67rem;font-weight:700;padding:.14rem .48rem;border-radius:99px;white-space:nowrap}
+.b-completa{background:#d1fae5;color:#065f46}.b-parcial{background:#fef3c7;color:#92400e}.b-ausente{background:#fee2e2;color:#991b1b}
+.b-fresca{background:#d1fae5;color:#065f46}.b-caducada{background:#fef3c7;color:#92400e}.b-sinev{background:#f3f4f6;color:#9ca3af}.b-sinco{background:#f3f4f6;color:#d1d5db}
+.ctrl-table{width:100%;border-collapse:collapse;font-size:.8rem;margin:.4rem 0}
+.ctrl-table td{padding:.42rem .6rem;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.ctrl-table tr:last-child td{border-bottom:none}
+.ctrl-art{font-weight:700;color:#6d28d9;white-space:nowrap;width:90px}.ctrl-note{font-size:.72rem;color:#9ca3af;font-style:italic;margin-top:.2rem}
+.ev-block{background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;padding:.65rem .9rem;margin-top:.65rem;font-size:.77rem}
+.ev-block-title{font-weight:700;color:#6b7280;margin-bottom:.45rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.ev-kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.25rem .65rem}
+.ev-k{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af}.ev-v{font-weight:600;color:#1e1b4b;word-break:break-all}
+.ev-hash{font-family:monospace;font-size:.67rem;color:#9ca3af;margin-top:.5rem;word-break:break-all;border-top:1px solid #e5e7eb;padding-top:.4rem}
+.seal{margin-top:3rem;padding:1rem 1.2rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px}
+.seal-title{font-weight:700;color:#374151;font-size:.82rem;margin-bottom:.35rem}
+.seal-hash{font-family:monospace;font-size:.68rem;color:#374151;word-break:break-all;background:#fff;padding:.3rem .5rem;border-radius:4px;border:1px solid #e5e7eb}
+.seal-note{font-size:.72rem;color:#9ca3af;margin-top:.4rem}
+.doc-footer{text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;font-size:.7rem;color:#9ca3af}
+@media print{body{max-width:100%;padding:.7cm 1cm;font-size:11px}.cover{background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.fam-card{break-inside:avoid}section h2{break-before:page}section:first-of-type h2{break-before:auto}}"""
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossier de Evidencias Técnicas — Vigex</title>
+<style>{css}</style>
+</head>
+<body>
+<div class="cover">
+  <div class="cover-brand">Vigex — Server Manager</div>
+  <h1>Dossier de Evidencias Técnicas</h1>
+  <dl class="meta-grid">
+    <dt>Fecha de generación</dt><dd>{ahora_legible}</dd>
+    <dt>Versión catálogo</dt><dd>{esc(_CUMPLIMIENTO_CATALOG_VERSION)}</dd>
+    <dt>Caducidad evidencia</dt><dd>{max_age_dias} días</dd>
+    <dt>Perfil de despliegue</dt><dd>{esc(perfil)}</dd>
+    <dt>Timestamp ISO 8601</dt><dd>{ahora_iso}</dd>
+  </dl>
+</div>
+<div class="disclaimer"><strong>⚠ Aviso de rigor:</strong> {decl}</div>
+<h2>Resumen ejecutivo</h2>
+<table class="summary-table">
+  <thead><tr><th>Norma</th><th>Familias con colector</th><th>Evidencia fresca</th><th>Caducada</th><th>Sin recoger</th><th>Cobertura</th></tr></thead>
+  <tbody>{sum_rows}</tbody>
+</table>
+{norma_secs}
+<div class="seal">
+  <div class="seal-title">Sello de integridad del documento</div>
+  <div class="seal-hash">SHA256: VIGEX_SHA256_PLACEHOLDER</div>
+  <div class="seal-note">Hash calculado sobre el contenido HTML completo antes de insertar este valor.</div>
+</div>
+<div class="doc-footer">Generado automáticamente por Vigex v1.0 — {ahora_iso} — Este dossier aporta evidencia técnica de soporte para una auditoría; no certifica cumplimiento normativo.</div>
+</body>
+</html>"""
+
+
+@app.get("/api/cumplimiento/dossier")
+async def api_cumplimiento_dossier(request: Request, formato: str = "md"):
+    """
+    Genera y descarga el dossier de evidencias para auditor (R-094).
+    ?formato=md  (por defecto) → Markdown sellado con SHA256.
+    ?formato=html             → HTML auto-contenido, apto para imprimir a PDF.
     Requiere permiso `cumplimiento` o rol admin.
     """
     user = request.session.get("user")
@@ -11070,20 +11287,27 @@ async def api_cumplimiento_dossier(request: Request):
                 "tipo":       r["tipo_evidencia"],
             }
 
-    cuerpo = _generar_dossier_md(controles, evidencias_por_familia, CUMPLIMIENTO_EV_MAX_AGE_DAYS)
-
-    # Sello SHA256 del documento completo
-    sello = hashlib.sha256(cuerpo.encode("utf-8")).hexdigest()
-    cuerpo += f"\n**SHA256 del dossier:** `{sello}`\n"
-
     fecha_hoy = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    nombre_fichero = f"dossier_cumplimiento_{fecha_hoy}.md"
 
+    if formato == "html":
+        cuerpo = _generar_dossier_html(controles, evidencias_por_familia, CUMPLIMIENTO_EV_MAX_AGE_DAYS)
+        sello  = hashlib.sha256(cuerpo.encode("utf-8")).hexdigest()
+        cuerpo = cuerpo.replace("VIGEX_SHA256_PLACEHOLDER", sello)
+        return Response(
+            content=cuerpo.encode("utf-8"),
+            media_type="text/html; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="dossier_cumplimiento_{fecha_hoy}.html"'},
+        )
+
+    # Formato MD (por defecto, retrocompatible)
+    cuerpo = _generar_dossier_md(controles, evidencias_por_familia, CUMPLIMIENTO_EV_MAX_AGE_DAYS)
+    sello  = hashlib.sha256(cuerpo.encode("utf-8")).hexdigest()
+    cuerpo += f"\n**SHA256 del dossier:** `{sello}`\n"
     return Response(
         content=cuerpo.encode("utf-8"),
         media_type="text/markdown; charset=utf-8",
         headers={
-            "Content-Disposition": f'attachment; filename="{nombre_fichero}"',
+            "Content-Disposition": f'attachment; filename="dossier_cumplimiento_{fecha_hoy}.md"',
             "X-Dossier-SHA256": sello,
         },
     )

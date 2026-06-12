@@ -201,8 +201,11 @@
         <i class="fa-solid fa-rotate"></i> Recoger evidencias ahora
     </button>
     {% endif %}
-    <button class="comp-btn" id="btn-dossier" onclick="exportarDossier()" style="background:#4f46e5;">
-        <i class="fa-solid fa-file-arrow-down"></i> Exportar dossier
+    <button class="comp-btn" id="btn-dossier-md" onclick="exportarDossier('md')" style="background:#4f46e5;" title="Descargar en Markdown (para integración técnica)">
+        <i class="fa-solid fa-file-lines"></i> Exportar MD
+    </button>
+    <button class="comp-btn" id="btn-dossier-html" onclick="exportarDossier('html')" style="background:#0f766e;" title="Descargar en HTML — imprime a PDF con Ctrl+P">
+        <i class="fa-solid fa-file-code"></i> Exportar HTML
     </button>
     <a href="/incidentes" class="comp-btn" style="background:#dc2626; text-decoration:none;">
         <i class="fa-solid fa-triangle-exclamation"></i> Incidentes NIS2
@@ -554,27 +557,32 @@
     /* ── Interacciones ─────────────────────────────────────────────── */
     window.toggleFam = id => document.getElementById(id)?.classList.toggle('open');
 
-    window.exportarDossier = async function () {
-        const btn = document.getElementById('btn-dossier');
+    window.exportarDossier = async function (fmt) {
+        fmt = fmt || 'md';
+        const isMd  = fmt === 'md';
+        const btnId = isMd ? 'btn-dossier-md' : 'btn-dossier-html';
+        const ico   = isMd ? 'fa-file-lines' : 'fa-file-code';
+        const label = isMd ? 'Exportar MD' : 'Exportar HTML';
+        const btn   = document.getElementById(btnId);
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando…'; }
         try {
-            const r = await fetch('/api/cumplimiento/dossier', { headers: { 'X-CSRF-Token': CSRF } });
+            const r = await fetch(`/api/cumplimiento/dossier?formato=${fmt}`, { headers: { 'X-CSRF-Token': CSRF } });
             if (!r.ok) {
                 const res = await r.json().catch(() => ({}));
                 alert('Error: ' + (res.detail || r.status));
                 return;
             }
-            const blob = await r.blob();
-            const cd = r.headers.get('Content-Disposition') || '';
+            const blob  = await r.blob();
+            const cd    = r.headers.get('Content-Disposition') || '';
             const match = cd.match(/filename="([^"]+)"/);
-            const nombre = match ? match[1] : 'dossier_cumplimiento.md';
+            const ext   = isMd ? '.md' : '.html';
+            const nombre = match ? match[1] : `dossier_cumplimiento${ext}`;
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = nombre; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
             URL.revokeObjectURL(url);
         } catch { alert('Error de red'); }
         finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Exportar dossier'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-solid ${ico}"></i> ${label}`; }
         }
     };
 
