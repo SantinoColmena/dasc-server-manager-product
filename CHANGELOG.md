@@ -5,6 +5,79 @@ Versiones en `MAJOR.MINOR-STAGE` según el ciclo del producto.
 
 ---
 
+## [v1.1-rc1] — 2026-06-12 (Fases 12+13 — IA · Cumplimiento · Windows)
+
+> Snapshot tras cerrar Fases 12 (R-085→R-104) y 13 (R-091→R-096).
+> El tag `v1.0-rc1` sigue apuntando al freeze de Fase 6 (2026-06-07).
+> `v1.1-rc1` documenta todas las funcionalidades añadidas desde entonces.
+
+### Asistente IA integrado (R-090)
+
+- Chat IA en el panel (`/asistente`): RAG sobre la documentación del producto.
+- 6 proveedores LLM: Ollama local (coste €0), Anthropic, Gemini, OpenAI, Groq y
+  **Central proxy** (sin API key en el cliente, por defecto).
+- Rate limiting por usuario, permiso nuevo `asistente`.
+
+### Proxy LLM centralizado en Central Support (R-097)
+
+- Central Support actúa como proxy LLM para todos los clientes.
+- 5 proveedores soportados; proveedor activo: Groq (`llama-3.3-70b-versatile`).
+- Ningún cliente necesita su propia API key.
+
+### Bot Telegram centralizado @VigexPanelBot (R-098)
+
+- Central gestiona un único bot; el cliente solo configura `TELEGRAM_CHAT_ID`.
+- Polling thread responde a `/start` y `/chatid`.
+
+### Vigex para Windows — instalador Docker (R-099)
+
+- `VigexSetup.exe` (NSIS): instala Docker Desktop, despliega el panel como
+  contenedor y registra tarea de autoarranque. El cliente nunca ve una terminal.
+- `Dockerfile` (python:3.11-slim + openssh-client), `docker-compose.yml` con
+  volúmenes persistentes (`vigex-data`, `vigex-reports`, `vigex-ssh`).
+- `vigex-update.bat`: actualización con doble clic.
+- Endpoint `GET /health` público para Docker healthcheck y sondeo del instalador.
+- Imagen publicada en Docker Hub: `scolmena/vigex-panel:latest` (251 MB).
+
+### Vigex Agent — gestión de servidores Windows (R-100→R-104)
+
+- `VigexAgent.exe`: servicio HTTP Go (7.2 MB, sin dependencias externas) para
+  servidores Windows gestionados. Puerto 8050, autenticación `X-Vigex-Token`.
+  Endpoints: `/api/v1/system`, `/api/v1/disk`, `/api/v1/services`,
+  `/api/v1/backups`, `/api/v1/logs`. 21/21 tests pasan.
+- `remote_run()`: sustituto drop-in de `ssh_run()` que enruta a HTTP si el host
+  está en `VIGEX_AGENT_TOKEN_MAP` o a SSH si no. Sin cambios en la lógica de negocio.
+- `VIGEX_AGENT_PORT` y `VIGEX_AGENT_TOKEN_MAP` en los tres perfiles de despliegue
+  y en `config.env.example`.
+- `Invoke-AgentWizard` en `VigexSetup.ps1`: genera tokens y configura el mapa
+  de agentes interactivamente tras el despliegue del panel.
+- Topología mixta Linux+Windows validada; 3 bugs corregidos en el agente
+  (disco 0 GB, `event_id` 0, encoding UTF-8 en pipes PowerShell).
+
+### Módulo de cumplimiento NIS2/ENS/ISO 27001 — Fase 13 (R-091→R-096)
+
+- Catálogo de controles v1.1 mapeado a evidencias que Vigex ya genera.
+- Motor de evidencias: snapshot con timestamp + hash SHA256 + origen append-only.
+- Panel semáforo `/cumplimiento`: cobertura real por norma, qué caduca.
+- Dossier exportable Markdown para auditor, sellado SHA256, declaración de
+  conformidad parcial (nunca "cumplimiento total").
+- Ciclo de vida de incidentes NIS2 24 h/72 h: `/incidentes` con cuenta atrás,
+  modal de registro y plantilla Art. 23 para INCIBE-CERT/CCN-CERT.
+- Validación contra texto normativo real (NIS2 Art. 21, ENS RD 311/2022 Anexo II,
+  ISO 27001:2022 Annex A); 4 correcciones aplicadas al catálogo.
+- F13-GATE superado. Recomendación: revisión por consultor externo antes de vender
+  a cliente con obligación NIS2 real.
+
+### Mejoras de infraestructura y calidad (Fases 7–8, R-058→R-084)
+
+- IA básica de soporte mejorada: FAQ 16 entradas con sinónimos y boost contextual.
+- API de producto documentada: `GET /api/v1/info` + `docs/tecnico/api_producto.md`.
+- Script de migración SQLite → MariaDB (`deploy/db/migrate_sqlite_to_mariadb.sh`).
+- Central Support desplegado en Google Cloud (IP `104.198.66.244:8010`).
+- F9-GATE superado: NIF en páginas legales + simulacro de recuperación (RTO ~48 s).
+
+---
+
 ## [v1.0-rc1] — 2026-06-07 (freeze Fase 6)
 
 > Tag movido al commit de cierre de R-057 (2026-06-07).

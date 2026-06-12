@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio Vigex
 
-Fecha: 2026-06-11 02:06:01
+Fecha: 2026-06-12 03:37:09
 
 Ruta revisada:
 
@@ -13,17 +13,8 @@ C:\Users\colme\Documents\dasc-server-manager-product
 - AVISO: hay cambios pendientes.
 
 ~~~text
- M README.md
- M deploy/api/harden_fail2ban_api.sh
- M deploy/api/install_central_retry_timer.sh
- M deploy/api/install_vigex_api.sh
- M deploy/api/onboarding_nuevo_cliente.sh
- M deploy/api/package/main.py
- M deploy/api/package/scripts/retry_central_pending.py
- M deploy/central-support/install_central_support.sh
- M deploy/central-support/package/main.py
- M deploy/db/migrate_sqlite_to_mariadb.sh
  M docs/validaciones/validacion_paquete_api_instalable.md
+?? deploy/docker/config.env.test
 ~~~
 
 ## 2. Estructura mínima obligatoria
@@ -75,6 +66,11 @@ C:\Users\colme\Documents\dasc-server-manager-product
   - deploy\api\package\config.env.example -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\package\config.env.example -> contiene patrón `LOGS_DB_PASS=`
   - deploy\api\package\config.env.example -> contiene patrón `SECRET_KEY=`
+  - deploy\docker\config.env.example -> contiene patrón `TELEGRAM_BOT_TOKEN=`
+  - deploy\docker\config.env.example -> contiene patrón `TELEGRAM_CHAT_ID=`
+  - deploy\docker\config.env.example -> contiene patrón `ADMIN_PASSWORD=`
+  - deploy\docker\config.env.example -> contiene patrón `LOGS_DB_PASS=`
+  - deploy\docker\config.env.example -> contiene patrón `SECRET_KEY=`
 
 ### 5.2 Código o instaladores
 
@@ -90,6 +86,7 @@ C:\Users\colme\Documents\dasc-server-manager-product
   - deploy\api\package\main.py -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\backup-services\install_backup_services.sh -> contiene patrón `DB_BACKUP_PASS=`
+  - deploy\central-support\install_central_support.sh -> contiene patrón `TELEGRAM_BOT_TOKEN=`
   - deploy\central-support\install_central_support.sh -> contiene patrón `SECRET_KEY=`
   - deploy\central-support\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\db\install_db.sh -> contiene patrón `LOGS_DB_PASS=`
