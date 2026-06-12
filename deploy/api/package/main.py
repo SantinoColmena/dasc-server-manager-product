@@ -1942,7 +1942,7 @@ class AuthAndLogMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         method = request.method
 
-        public_routes = {"/login"}
+        public_routes = {"/login", "/health"}
         public_prefixes = ("/static", "/favicon.ico")
 
         is_public = path in public_routes or any(path.startswith(p) for p in public_prefixes)
@@ -2078,6 +2078,14 @@ if CORS_ALLOWED_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# =====================
+# HEALTH (público — usado por Docker healthcheck y VigexSetup.ps1)
+# =====================
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "version": "1.0"}
+
 
 # =====================
 # LOGIN / LOGOUT
