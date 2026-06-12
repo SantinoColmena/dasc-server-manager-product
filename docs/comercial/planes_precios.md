@@ -6,110 +6,137 @@
 
 ---
 
-## Estructura de planes
+## Modelo comercial
 
-| Plan | Perfil cliente | Servidores | Precio/mes | Precio/año |
-|------|---------------|-----------|-----------|-----------|
-| **Vigex Lite** | Autónomo o microempresa (1–3 personas) | 1 | €15 | €150 (ahorro €30) |
-| **Vigex Standard** | PyME 5–50 empleados | Hasta 2 | €35 | €350 (ahorro €70) |
-| **Vigex Pro** | Empresa con criticidad media-alta | 3+ | €65 | €650 (ahorro €130) |
-| **Vigex Managed** | Cliente que delega la gestión | Según acuerdo | Consultar | Consultar |
+Vigex usa un modelo de **licencia de pago único** + soporte técnico opcional de suscripción mensual.
 
-> **Nota de posicionamiento:** La competencia (Nagios XI ~€1.650/año, Zabbix Enterprise ~€500+/año)
-> está pensada para equipos técnicos. Vigex es 10× más barato y no requiere conocimientos avanzados.
+- El cliente paga **una vez** por la licencia y el software es suyo para siempre.
+- La instalación está incluida en todos los planes de licencia.
+- El soporte técnico (actualizaciones, atención, IA avanzada) es **opcional** y mensual.
+- Sin soporte contratado, el panel sigue funcionando con normalidad.
 
 ---
 
-## Qué incluye cada plan
+## Licencias (pago único)
 
-### Vigex Lite (€15/mes)
-- ✅ Instalación en 1 servidor Ubuntu
-- ✅ Copias de seguridad completas (script backups_api.sh)
+| Plan | Servidores | Precio | Público objetivo |
+|------|-----------|--------|-----------------|
+| **Vigex Lite** | 1 | **€179** | Autónomo o microempresa (1–5 personas) |
+| **Vigex Standard** | Hasta 2 | **€299** | PYME 5–50 empleados (opción recomendada) |
+| **Vigex Pro** | Hasta 3 | **€499** | Empresa con criticidad media-alta |
+| **Vigex Managed** | Según acuerdo | Consultar | Cliente que delega la gestión completa |
+
+Todos los planes incluyen instalación. No hay coste adicional por instalar en 1 o 2 servidores dentro del límite del plan.
+
+---
+
+## Qué incluye cada licencia
+
+### Vigex Lite — €179
+- ✅ Panel instalado en 1 servidor Ubuntu
+- ✅ Copias de seguridad completas (programación automática)
 - ✅ Monitoreo básico: CPU, RAM, disco, uptime
 - ✅ Alertas por email cuando algo falla
-- ✅ Informes periódicos por email
-- ✅ Panel web con acceso por usuario y contraseña
-- ✅ Soporte por email (respuesta orientativa 48h laborables)
-- ❌ Backups incrementales/diferenciales
+- ✅ Informes periódicos automáticos por email
+- ✅ Control de usuarios con permisos por módulo
+- ✅ Instalación incluida
+- ❌ Copias incrementales/diferenciales
 - ❌ Alertas por Telegram
-- ❌ Logs avanzados con búsqueda
-- ❌ Test de restauración incluido
+- ❌ Asistente IA
+- ❌ Gestión de servicios remotos
 
-### Vigex Standard (€35/mes) — Recomendado PyME
+### Vigex Standard — €299 (recomendado)
 - ✅ Todo lo de Lite
-- ✅ Hasta 2 servidores (panel + backups separados)
-- ✅ Backups completos + incrementales
+- ✅ Hasta 2 servidores (panel + copias separados)
+- ✅ Copias completas + incrementales
 - ✅ Monitoreo avanzado con gráficas y tendencias
-- ✅ Alertas por email **y** Telegram
-- ✅ Verificación SHA256 de todas las copias
+- ✅ Alertas por email y Telegram
+- ✅ Verificación de integridad de copias
 - ✅ Informes personalizables (secciones, frecuencia, canal)
 - ✅ Gestión de servicios remotos
-- ✅ Control de usuarios con permisos por módulo
-- ✅ Soporte por email prioridad (respuesta garantizada 24h laborables)
-- ❌ Test de restauración mensual incluido
+- ✅ Asistente IA (modelo básico)
+- ✅ Instalación incluida
 
-### Vigex Pro (€65/mes)
+### Vigex Pro — €499
 - ✅ Todo lo de Standard
-- ✅ Hasta 3 servidores distribuidos (panel, DB, backups separados)
-- ✅ Backups completos + incrementales + diferenciales
-- ✅ Runbook DRO (Disaster Recovery Orchestration) en el panel
-- ✅ Test de restauración incluido trimestralmente
-- ✅ Revisión mensual del sistema por parte del proveedor
-- ✅ Soporte prioritario email + teléfono (respuesta 4h laborables)
-- ✅ Informe mensual ejecutivo para dirección
+- ✅ Hasta 3 servidores distribuidos (panel, BD, copias separados)
+- ✅ Copias completas + incrementales + diferenciales
+- ✅ Guía de recuperación integrada en el panel
+- ✅ Prueba de restauración incluida en la instalación
+- ✅ Informes con historial completo
+- ✅ Asistente IA avanzado incluido
+- ✅ Módulo de cumplimiento NIS2/ENS/ISO 27001
+- ✅ Instalación incluida
 
-### Vigex Managed (precio bajo consulta)
+### Vigex Managed — precio bajo consulta
 - ✅ Todo lo de Pro
 - ✅ Mantenimiento mensual activo (actualizaciones, revisiones)
 - ✅ Monitorización proactiva por parte del proveedor
 - ✅ SLA personalizado según criticidad del cliente
+- ✅ Informe mensual ejecutivo para dirección
 - ✅ Onboarding completo del equipo del cliente
 
 ---
 
-## Tarifas de instalación
+## Soporte técnico (suscripción mensual — opcional)
 
-| Concepto | Precio |
-|----------|--------|
-| Instalación incluida en plan anual | €0 |
-| Instalación en plan mensual | €150 (único pago) |
-| Instalación en entorno multi-servidor (Standard/Pro) | €150 (único pago) |
-| Migración desde otra herramienta | Consultar (€/hora) |
+| Plan | Precio | Canal | Tiempo de respuesta | Incluye |
+|------|--------|-------|---------------------|---------|
+| **Básico** | €19/mes | Email | 48h laborables (orientativo) | Actualizaciones del software |
+| **Plus** | €39/mes | Email | 24h laborables (garantizado) | Actualizaciones + asistente IA avanzado + acceso Central |
+| **Premium** | €59/mes | Email + Teléfono | 4h laborables (garantizado) | Todo Plus + revisión trimestral del sistema |
+
+- El soporte Plus y Premium incluyen acceso al asistente IA vía Vigex Central (cuota ampliada).
+- Sin plan de soporte: el panel funciona normalmente pero sin actualizaciones ni atención técnica garantizada.
+- El soporte base para plan Pro arranca en **€29/mes**.
+
+---
+
+## Comparativa con el mercado (referencia)
+
+| Competidor | Precio anual | Req. técnico | Backup incluido |
+|-----------|-------------|-------------|----------------|
+| Vigex Standard | **€299 one-time** | No | Sí |
+| PRTG Network Monitor | ~€1.650/año | Sí | No |
+| Checkmk Cloud | ~€2.400/año | Sí | No |
+| Atera / NinjaOne | ~€1.500–€1.800/año | Sí | No |
+| Better Stack | ~€600/año | No | No |
+| Acronis (backup solo) | ~€595/año/servidor | Sí | Sí |
+
+Vigex es la única opción del segmento que combina monitorización + copias + alertas en un panel no-técnico con licencia perpetua.
 
 ---
 
 ## Métodos de pago
 
-1. **Tarjeta bancaria** — via Stripe (Visa, Mastercard, Amex). Cobro automático.
-2. **Transferencia bancaria** — factura proforma previa. Para empresas que necesiten PO.
-3. **Domiciliación SEPA** — disponible para contratos anuales. Solicitar.
+1. **Tarjeta bancaria** — vía Stripe (Visa, Mastercard, Amex). Cobro inmediato.
+2. **Transferencia bancaria** — factura proforma previa. Para empresas que necesiten orden de compra.
 
-**Factura**: Se emite factura con todos los datos fiscales. IVA incluido en los precios listados.
-
----
-
-## Política de prueba / piloto
-
-- **Demo técnica gratuita**: 30-60 minutos en entorno controlado, sin acceso a datos reales. A solicitar por email.
-- **Piloto de 30 días**: precio reducido 50% el primer mes en plan Standard o Pro, con opción de cancelación sin coste.
-- **POC (Proof of Concept)**: instalación en VM del cliente por €0 si se convierte en cliente en 60 días.
+**Factura**: Se emite factura con todos los datos fiscales. IVA 21% incluido en los precios listados.
 
 ---
 
-## Criterios para subir de plan
+## Política de piloto / introducción
 
-| Indicador | Lite → Standard | Standard → Pro |
-|-----------|----------------|----------------|
-| Nº servidores | >1 | >2 |
-| Backups diferenciales necesarios | No disponible | Necesario |
-| Criticidad de los datos | Baja | Media-alta |
-| SLA exigido | No necesario | Necesario |
+- **Demo técnica gratuita**: 30–60 minutos en entorno controlado, sin acceso a datos reales.
+- **Piloto de 30 días**: 50% de descuento el primer mes de soporte Plus o Premium, con opción de cancelación sin coste.
+- **POC gratuito**: instalación en VM del cliente por €0 si se convierte en cliente en 60 días.
 
 ---
 
-## Notas para ajuste futuro de precios
+## Criterios para recomendar un plan
 
-- Los precios actuales son de introducción al mercado. Se revisarán cuando haya >5 clientes activos.
-- El IVA aplicable es el 21% (España). Los precios listados ya lo incluyen.
-- Para clientes con sede fuera de España (UE), el IVA puede variar por B2B intracomunitario.
-- Considerar plan anual con descuento del 15-17% para fidelizar.
+| Situación del cliente | Plan recomendado |
+|----------------------|-----------------|
+| 1 servidor, presupuesto ajustado | Lite |
+| 1–2 servidores, quiere copias verificadas + Telegram | Standard |
+| 3 servidores o datos críticos | Pro |
+| Sin tiempo para gestionar nada | Managed |
+
+---
+
+## Notas para revisión futura de precios
+
+- Los precios actuales son de introducción al mercado. Se revisarán cuando haya más de 5 clientes activos.
+- El IVA aplicable es el 21% (España). Para clientes UE fuera de España, aplicar B2B intracomunitario.
+- Considerar descuento por pago anticipado del soporte anual (~15%) cuando haya demanda suficiente.

@@ -8750,15 +8750,19 @@ _FAQ_ENTRIES: list[dict] = [
             "¿Cuánto cuesta Vigex? ¿Tiene planes o licencia?\n"
         ),
         "respuesta": (
-            "Vigex es un producto comercial self-hosted. Al ser auto-hospedado, pagas la licencia una sola vez (o con mantenimiento anual opcional) y lo instalas en tus propios servidores sin coste mensual adicional por el software. Los planes se adaptan al tamaño de empresa y número de servidores. Contacta con el equipo para un presupuesto personalizado.\n"
+            "Vigex funciona con un modelo de **licencia de pago único** — pagas una vez y el software es tuyo para siempre, instalado en tus propios servidores.\n"
             "\n"
-            "Respecto al **Asistente IA**, los costes aproximados por proveedor son:\n"
-            "• **Ollama (local)** — 0€, sin envío de datos a terceros.\n"
-            "• **Groq** — capa gratuita generosa (~100 req/día gratis), luego ~0,06€/M tokens.\n"
-            "• **Gemini 2.0 Flash** — ~0,22€/M tokens de entrada, muy económico.\n"
-            "• **OpenAI gpt-4o-mini** — ~0,15€/M tokens de entrada.\n"
-            "• **Anthropic claude-3-haiku** — ~0,25€/M tokens de entrada.\n"
-            "Para una PyME con uso moderado del asistente, el coste mensual en IA suele ser inferior a 1-2€.\n"
+            "Los planes según el tamaño de la empresa son:\n"
+            "• **Lite (€179)** — 1 servidor. Para autónomos o microempresas.\n"
+            "• **Standard (€299)** — hasta 2 servidores. La opción más habitual para PYMES.\n"
+            "• **Pro (€499)** — hasta 3 servidores. Para empresas con mayor criticidad.\n"
+            "La instalación está incluida en todos los planes.\n"
+            "\n"
+            "Si necesitas actualizaciones, soporte técnico por email o teléfono, o acceso al asistente IA avanzado, puedes contratar un plan de soporte opcional:\n"
+            "• **Básico (€19/mes)** — actualizaciones + email en 48h.\n"
+            "• **Plus (€39/mes)** — actualizaciones + email 24h + asistente IA.\n"
+            "• **Premium (€59/mes)** — todo lo anterior + teléfono en 4h + revisión trimestral.\n"
+            "El soporte es completamente opcional: sin él el panel sigue funcionando con normalidad.\n"
         ),
         "palabras_clave": ["precio", "coste", "licencia", "pagar", "gratuito", "gratis", "planes", "cuanto"],
     },
