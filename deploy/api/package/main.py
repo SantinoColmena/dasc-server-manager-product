@@ -1728,7 +1728,8 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 USERS_FILE = DATA_DIR / "users.json"
 _LICENSE_CACHE_PATH = DATA_DIR / "license_cache.json"
-_MAINTENANCE_FILE = DATA_DIR / "maintenance.json"
+_LICENSE_FILE       = DATA_DIR / "license.key"
+_MAINTENANCE_FILE   = DATA_DIR / "maintenance.json"
 
 _MAINTENANCE_LABELS: dict[str, str] = {
     "monitoreo": "Monitoreo",
@@ -5757,8 +5758,25 @@ def _verify_license(license_key: str) -> dict:
         return {"ok": False, "error": f"error_verificacion"}
 
 
-# Verificar en arranque y cachear en memoria (la licencia no cambia sin reiniciar el panel)
-_LICENSE_STATUS: dict = _verify_license(VIGEX_LICENSE_KEY)
+def _load_license_key() -> str:
+    """Lee la clave activa: primero data/license.key (activada desde el panel), luego config.env."""
+    if _LICENSE_FILE.exists():
+        try:
+            return _LICENSE_FILE.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+    return VIGEX_LICENSE_KEY
+
+
+def _reload_license() -> dict:
+    """Re-verifica la licencia activa y actualiza _LICENSE_STATUS en memoria."""
+    global _LICENSE_STATUS
+    _LICENSE_STATUS = _verify_license(_load_license_key())
+    return _LICENSE_STATUS
+
+
+# Verificar en arranque — se recarga sin reiniciar desde /configuracion/licencia
+_LICENSE_STATUS: dict = _verify_license(_load_license_key())
 
 
 SUPPORT_TYPES = [
@@ -8113,6 +8131,90 @@ async def mantenimiento_admin_save(request: Request):
         detalle=f"Mantenimiento {accion} en módulo '{modulo}'",
     )
     return JSONResponse({"ok": True, "activo": state[modulo]["activo"]})
+
+
+# ── Licencia ──────────────────────────────────────────────────────────────────
+
+@app.get("/configuracion/licencia")
+def licencia_admin_page(request: Request):
+    """Página de gestión de licencia Vigex (solo admins)."""
+    if not is_admin(request):
+        return permission_redirect("Solo el administrador puede gestionar la licencia.")
+    context = get_common_context(request)
+    context["current_path"] = "/configuracion/licencia"
+    context["licencia_local"] = _LICENSE_STATUS
+    context["license_key_raw"] = _load_license_key()
+    context["msg"] = request.query_params.get("msg")
+    context["msg_type"] = request.query_params.get("msg_type", "ok")
+    return templates.TemplateResponse(request, "licencia_admin.html", context)
+
+
+@app.post("/configuracion/licencia")
+async def licencia_admin_save(request: Request):
+    """Guarda y activa una nueva clave de licencia Vigex."""
+    if not is_admin(request):
+        return permission_redirect("Solo el administrador puede gestionar la licencia.")
+    form = await request.form()
+    nueva_clave = str(form.get("nueva_clave", "")).strip()
+
+    if not nueva_clave:
+        return RedirectResponse(
+            url=f"/configuracion/licencia?msg={quote('Introduce una clave de licencia.')}&msg_type=error",
+            status_code=303,
+        )
+
+    resultado = _verify_license(nueva_clave)
+    if not resultado.get("ok"):
+        errores = {
+            "formato_invalido": "Formato incorrecto. La clave debe empezar por VGX1.",
+            "firma_invalida":   "Firma no válida. La clave no pertenece a esta instalación de Vigex.",
+            "error_verificacion": "Error al verificar la clave. Comprueba que está copiada correctamente.",
+        }
+        msg = errores.get(resultado.get("error", ""), "Clave de licencia no válida.")
+        return RedirectResponse(
+            url=f"/configuracion/licencia?msg={quote(msg)}&msg_type=error",
+            status_code=303,
+        )
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    _LICENSE_FILE.write_text(nueva_clave, encoding="utf-8")
+    _reload_license()
+
+    log_event(
+        tipo="CONFIGURACION",
+        resultado="OK",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /configuracion/licencia",
+        detalle=f"Licencia activada: plan={resultado.get('plan')} client_id={resultado.get('client_id')}",
+    )
+    plan = resultado.get("plan", "").capitalize()
+    return RedirectResponse(
+        url=f"/configuracion/licencia?msg={quote(f'Licencia {plan} activada correctamente.')}&msg_type=ok",
+        status_code=303,
+    )
+
+
+@app.post("/configuracion/licencia/eliminar")
+async def licencia_admin_delete(request: Request):
+    """Elimina la clave de licencia guardada en el panel (vuelve a config.env o sin licencia)."""
+    if not is_admin(request):
+        return permission_redirect()
+    if _LICENSE_FILE.exists():
+        _LICENSE_FILE.unlink()
+    _reload_license()
+    log_event(
+        tipo="CONFIGURACION",
+        resultado="OK",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /configuracion/licencia/eliminar",
+        detalle="Clave de licencia eliminada del panel",
+    )
+    return RedirectResponse(
+        url=f"/configuracion/licencia?msg={quote('Clave de licencia eliminada.')}&msg_type=ok",
+        status_code=303,
+    )
 
 
 # =====================

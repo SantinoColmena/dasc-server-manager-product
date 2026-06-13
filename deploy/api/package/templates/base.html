@@ -179,6 +179,14 @@
                 <span class="maint-badge">{{ maint.values() | selectattr('activo') | list | length }}</span>
                 {% endif %}
             </a>
+            <a href="/configuracion/licencia" class="{{ 'active' if current_path == '/configuracion/licencia' else '' }}" style="padding-left:1.8rem;font-size:.83rem;">
+                <i class="fa-solid fa-key"></i> Licencia
+                {% if licencia_local and licencia_local.error and licencia_local.error != 'sin_licencia' %}
+                <span class="maint-badge" style="background:rgba(239,68,68,.2);color:#ef4444;">!</span>
+                {% elif licencia_local and licencia_local.ok and licencia_local.expired %}
+                <span class="maint-badge" style="background:rgba(245,158,11,.2);color:#f59e0b;">!</span>
+                {% endif %}
+            </a>
             <a href="/informes" class="{{ 'active' if current_path == '/informes' else '' }}">
                 <i class="fa-solid fa-file-lines"></i> {{ t('nav.informes') }}
                 {% if maint and maint.informes and maint.informes.activo %}<span class="maint-badge">🔧</span>{% endif %}

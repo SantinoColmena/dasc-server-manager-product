@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Licencia — Vigex{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 style="font-size:1.5rem;font-weight:800;margin:0 0 .25rem;">
+        Licencia Vigex
+    </h1>
+    <p style="color:#6b7280;font-size:.9rem;margin:0;">
+        Activa o actualiza tu clave de licencia. La clave se guarda de forma segura en el servidor
+        y tiene efecto inmediato — no es necesario reiniciar el panel.
+    </p>
+</div>
+
+{% if msg %}
+<div class="alert {{ 'alert-success' if msg_type == 'ok' else 'alert-danger' }}"
+     style="margin:1.25rem 0;display:flex;align-items:center;gap:.6rem;">
+    <span>{{ '✓' if msg_type == 'ok' else '✗' }}</span>
+    <span>{{ msg }}</span>
+</div>
+{% endif %}
+
+{# ── Estado actual ──────────────────────────────────────────────────────── #}
+<div style="
+    background:var(--card,#fff);
+    border:1.5px solid
+    {% if licencia_local.ok and not licencia_local.expired %}#22c55e
+    {% elif licencia_local.ok and licencia_local.expired %}#f59e0b
+    {% elif licencia_local.error == 'firma_invalida' %}#ef4444
+    {% else %}#e5e7eb{% endif %};
+    border-radius:16px;padding:1.5rem 2rem;margin-bottom:2rem;
+">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:.9rem;">
+            <span style="font-size:2rem;line-height:1;">
+                {% if licencia_local.ok and not licencia_local.expired %}✅
+                {% elif licencia_local.ok and licencia_local.expired %}⚠️
+                {% elif licencia_local.error == 'firma_invalida' %}❌
+                {% else %}🔓{% endif %}
+            </span>
+            <div>
+                <div style="font-weight:700;font-size:1.05rem;">
+                    {% if licencia_local.ok and not licencia_local.expired %}
+                        Licencia activa
+                    {% elif licencia_local.ok and licencia_local.expired %}
+                        Licencia caducada
+                    {% elif licencia_local.error == 'firma_invalida' %}
+                        Firma inválida
+                    {% elif licencia_local.error == 'formato_invalido' %}
+                        Formato incorrecto
+                    {% else %}
+                        Sin licencia
+                    {% endif %}
+                </div>
+                <div style="color:#6b7280;font-size:.85rem;margin-top:.15rem;">
+                    {% if licencia_local.ok %}
+                        Plan
+                        <strong style="text-transform:capitalize;">{{ licencia_local.plan }}</strong>
+                        &nbsp;·&nbsp;
+                        Cliente: <strong>{{ licencia_local.client_id }}</strong>
+                        &nbsp;·&nbsp;
+                        Emitida: {{ licencia_local.issued }}
+                    {% elif licencia_local.error == 'firma_invalida' %}
+                        La clave no corresponde a esta instalación de Vigex. Contacta con soporte.
+                    {% elif licencia_local.error == 'sin_licencia' %}
+                        Introduce tu clave de licencia en el formulario de abajo.
+                    {% else %}
+                        Error: {{ licencia_local.error }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if licencia_local.ok %}
+        <div style="text-align:right;">
+            {% if licencia_local.expiry %}
+            <div style="font-size:.8rem;color:#6b7280;">Válida hasta</div>
+            <div style="font-weight:700;font-size:1.1rem;
+                color:{% if licencia_local.expired %}#ef4444{% else %}#111{% endif %};">
+                {{ licencia_local.expiry }}
+                {% if licencia_local.expired %}
+                <span style="font-size:.75rem;font-weight:600;color:#ef4444;">(caducada)</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="font-size:.85rem;color:#22c55e;font-weight:600;">Perpetua</div>
+            {% endif %}
+
+            <span style="
+                display:inline-block;margin-top:.4rem;padding:.2rem .75rem;
+                border-radius:999px;font-size:.75rem;font-weight:700;text-transform:uppercase;
+                {% if licencia_local.plan == 'pro' %}background:#ede9fe;color:#7c3aed;
+                {% elif licencia_local.plan == 'standard' %}background:#dbeafe;color:#1d4ed8;
+                {% else %}background:#f3f4f6;color:#374151;{% endif %}
+            ">{{ licencia_local.plan }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ── Formulario nueva clave ─────────────────────────────────────────────── #}
+<div style="background:var(--card,#fff);border:1.5px solid #e5e7eb;border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;">
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 1rem;">Activar clave de licencia</h2>
+
+    <form method="post" action="/configuracion/licencia" id="form-licencia">
+        <label style="display:block;font-size:.85rem;font-weight:600;color:#374151;margin-bottom:.4rem;">
+            Clave de licencia <span style="color:#6b7280;font-weight:400;">(formato VGX1.xxxxx.yyyyy)</span>
+        </label>
+        <textarea
+            name="nueva_clave"
+            rows="3"
+            placeholder="VGX1.eyJjbGllbnRfaWQi..."
+            style="
+                width:100%;font-family:monospace;font-size:.82rem;padding:.6rem .85rem;
+                border:1.5px solid #d1d5db;border-radius:10px;resize:vertical;
+                background:var(--input-bg,#f9fafb);color:var(--text,#111);
+                box-sizing:border-box;line-height:1.5;
+            "
+            spellcheck="false"
+            autocomplete="off"
+        >{% if license_key_raw %}{{ license_key_raw }}{% endif %}</textarea>
+
+        <div style="display:flex;gap:.75rem;margin-top:1rem;flex-wrap:wrap;">
+            <button type="submit"
+                style="
+                    padding:.55rem 1.5rem;background:#2563eb;color:#fff;
+                    border:none;border-radius:10px;font-size:.9rem;font-weight:600;
+                    cursor:pointer;
+                "
+                onmouseover="this.style.background='#1d4ed8'"
+                onmouseout="this.style.background='#2563eb'">
+                Activar licencia
+            </button>
+            {% if license_key_raw %}
+            <button type="button" id="btn-limpiar"
+                style="
+                    padding:.55rem 1.2rem;background:transparent;
+                    border:1.5px solid #d1d5db;border-radius:10px;
+                    font-size:.9rem;font-weight:600;cursor:pointer;color:#6b7280;
+                "
+                onclick="document.querySelector('textarea[name=nueva_clave]').value='';">
+                Limpiar
+            </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{# ── Eliminar clave guardada ────────────────────────────────────────────── #}
+{% if license_key_raw %}
+<details style="background:var(--card,#fff);border:1.5px solid #fee2e2;border-radius:14px;padding:.9rem 1.25rem;">
+    <summary style="cursor:pointer;font-size:.85rem;font-weight:600;color:#ef4444;user-select:none;">
+        Zona de peligro — eliminar clave de licencia
+    </summary>
+    <p style="font-size:.85rem;color:#6b7280;margin:.75rem 0 .9rem;">
+        Elimina la clave guardada en el panel. El panel volverá a leer <code>VIGEX_LICENSE_KEY</code>
+        de <code>config.env</code> (o quedará sin licencia si no está definida allí).
+    </p>
+    <form method="post" action="/configuracion/licencia/eliminar"
+          onsubmit="return confirm('¿Eliminar la clave de licencia guardada en el panel?');">
+        <button type="submit"
+            style="padding:.45rem 1.2rem;background:#ef4444;color:#fff;border:none;border-radius:9px;font-size:.85rem;font-weight:600;cursor:pointer;">
+            Eliminar clave
+        </button>
+    </form>
+</details>
+{% endif %}
+
+{# ── Ayuda ──────────────────────────────────────────────────────────────── #}
+<div style="
+    background:var(--card,#fff);border:1.5px solid #e5e7eb;
+    border-radius:14px;padding:1.1rem 1.5rem;margin-top:1.5rem;
+    font-size:.85rem;color:#6b7280;
+">
+    <strong style="color:#374151;">¿Cómo obtengo mi clave de licencia?</strong>
+    <p style="margin:.5rem 0 0;">
+        Tu clave de licencia te llega por email tras la compra. Si no la encuentras,
+        contacta con soporte en
+        <a href="https://vigex.es" target="_blank" rel="noopener"
+           style="color:#2563eb;text-decoration:none;">vigex.es</a>
+        indicando tu ID de cliente.
+    </p>
+</div>
+
+{% endblock %}
