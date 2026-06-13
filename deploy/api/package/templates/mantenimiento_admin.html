@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Modo mantenimiento — Vigex{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 style="font-size:1.5rem;font-weight:800;margin:0 0 .25rem;">
+        🔧 Modo mantenimiento
+    </h1>
+    <p style="color:#6b7280;font-size:.9rem;margin:0;">
+        Activa el mantenimiento en un módulo para mostrar a los usuarios una pantalla informativa en lugar del contenido.
+        <strong>Los administradores siempre ven el módulo con normalidad.</strong>
+    </p>
+</div>
+
+{% if request.query_params.get('ok') %}
+<div class="alert alert-success" style="margin-bottom:1.25rem;">
+    Cambios guardados correctamente.
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-top:1.5rem;">
+
+{% for modulo, label in maintenance_labels.items() %}
+{% set estado = mantenimiento[modulo] %}
+{% set activo = estado.activo %}
+<div style="
+    background:var(--card,#fff);
+    border:1.5px solid {{ '#fbbf24' if activo else '#e5e7eb' }};
+    border-radius:16px;
+    padding:1.25rem 1.5rem;
+    box-shadow:0 2px 12px rgba(0,0,0,.05);
+    transition:border-color .2s;
+" id="card-{{ modulo }}">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;">
+        <div>
+            <span style="font-size:1.1rem;font-weight:700;color:var(--heading-color,#1e1b4b);">
+                {{ label }}
+            </span>
+            <span style="
+                display:inline-block;
+                margin-left:.5rem;
+                padding:.2rem .65rem;
+                border-radius:999px;
+                font-size:.75rem;
+                font-weight:700;
+                background:{{ '#fef3c7' if activo else '#dcfce7' }};
+                color:{{ '#92400e' if activo else '#166534' }};
+            " id="badge-{{ modulo }}">
+                {{ '🔧 En mantenimiento' if activo else '✅ Activo' }}
+            </span>
+        </div>
+
+        <!-- Toggle switch -->
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;" title="{{ 'Desactivar mantenimiento' if activo else 'Activar mantenimiento' }}">
+            <input type="checkbox"
+                   id="toggle-{{ modulo }}"
+                   data-modulo="{{ modulo }}"
+                   {{ 'checked' if activo else '' }}
+                   onchange="toggleMaint(this)"
+                   style="opacity:0;width:0;height:0;">
+            <span style="
+                position:absolute;inset:0;
+                border-radius:24px;
+                cursor:pointer;
+                background:{{ '#f59e0b' if activo else '#d1d5db' }};
+                transition:background .2s;
+            " id="slider-{{ modulo }}"></span>
+            <span style="
+                position:absolute;
+                top:3px;left:{{ '21px' if activo else '3px' }};
+                width:18px;height:18px;
+                border-radius:50%;
+                background:#fff;
+                box-shadow:0 1px 4px rgba(0,0,0,.2);
+                transition:left .2s;
+            " id="knob-{{ modulo }}"></span>
+        </label>
+    </div>
+
+    <div>
+        <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:.35rem;">
+            Mensaje para el usuario (opcional)
+        </label>
+        <textarea
+            id="msg-{{ modulo }}"
+            data-modulo="{{ modulo }}"
+            placeholder="Este módulo está en mantenimiento. Volverá pronto."
+            maxlength="500"
+            rows="2"
+            style="
+                width:100%;box-sizing:border-box;
+                padding:.55rem .75rem;
+                border:1.5px solid #e5e7eb;border-radius:10px;
+                font-size:.85rem;resize:vertical;
+                background:var(--input-bg,#f8fafc);
+                color:var(--text,#111827);
+                font-family:inherit;
+            "
+        >{{ estado.mensaje or '' }}</textarea>
+        <button
+            onclick="guardarMensaje('{{ modulo }}')"
+            style="
+                margin-top:.5rem;
+                padding:.4rem .9rem;
+                border:none;border-radius:8px;
+                background:#ede9fe;color:#5b21b6;
+                font-size:.8rem;font-weight:700;cursor:pointer;
+            ">Guardar mensaje</button>
+    </div>
+</div>
+{% endfor %}
+
+</div>
+
+<p style="margin-top:2rem;font-size:.8rem;color:#9ca3af;">
+    Los cambios son inmediatos — no es necesario reiniciar el panel.
+    El estado se guarda en <code>data/maintenance.json</code>.
+</p>
+
+<script>
+async function toggleMaint(checkbox) {
+    const modulo  = checkbox.dataset.modulo;
+    const activo  = checkbox.checked;
+    const mensaje = document.getElementById('msg-' + modulo).value.trim();
+
+    const res = await fetch('/configuracion/mantenimiento', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({modulo, activo, mensaje})
+    });
+    const data = await res.json();
+    if (!data.ok) { alert('Error: ' + data.msg); checkbox.checked = !activo; return; }
+
+    // Actualizar UI
+    const slider = document.getElementById('slider-' + modulo);
+    const knob   = document.getElementById('knob-'   + modulo);
+    const badge  = document.getElementById('badge-'  + modulo);
+    const card   = document.getElementById('card-'   + modulo);
+
+    if (activo) {
+        slider.style.background = '#f59e0b';
+        knob.style.left = '21px';
+        badge.textContent = '🔧 En mantenimiento';
+        badge.style.background = '#fef3c7';
+        badge.style.color = '#92400e';
+        card.style.borderColor = '#fbbf24';
+    } else {
+        slider.style.background = '#d1d5db';
+        knob.style.left = '3px';
+        badge.textContent = '✅ Activo';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#166534';
+        card.style.borderColor = '#e5e7eb';
+    }
+}
+
+async function guardarMensaje(modulo) {
+    const activo  = document.getElementById('toggle-' + modulo).checked;
+    const mensaje = document.getElementById('msg-'    + modulo).value.trim();
+    const res = await fetch('/configuracion/mantenimiento', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({modulo, activo, mensaje})
+    });
+    const data = await res.json();
+    if (data.ok) {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = '✓ Guardado';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+    } else {
+        alert('Error: ' + data.msg);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ modulo_nombre }} — Mantenimiento{% endblock %}
+
+{% block content %}
+<div style="
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 2rem 1.5rem;
+">
+    <div style="
+        background: var(--card, #fff);
+        border: 1.5px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 3rem 3.5rem;
+        max-width: 520px;
+        width: 100%;
+        box-shadow: 0 8px 32px rgba(0,0,0,.07);
+    ">
+        <div style="font-size: 3.5rem; margin-bottom: 1.25rem; line-height: 1;">🔧</div>
+
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--heading-color, #1e1b4b); margin: 0 0 .6rem;">
+            {{ modulo_nombre }} en mantenimiento
+        </h1>
+
+        <p style="color: #6b7280; font-size: .95rem; line-height: 1.65; margin: 0 0 1.5rem;">
+            {% if mantenimiento_mensaje %}
+                {{ mantenimiento_mensaje }}
+            {% else %}
+                Este módulo está temporalmente en mantenimiento.
+                Volverá a estar disponible en breve.
+            {% endif %}
+        </p>
+
+        <p style="font-size: .82rem; color: #9ca3af; margin: 0 0 1.75rem;">
+            Si tienes una incidencia urgente, contacta con soporte en
+            <a href="mailto:soporte@vigex.es" style="color: #4f46e5;">soporte@vigex.es</a>.
+        </p>
+
+        <a href="/" style="
+            display: inline-block;
+            background: #4f46e5;
+            color: #fff;
+            text-decoration: none;
+            padding: .65rem 1.5rem;
+            border-radius: 10px;
+            font-size: .875rem;
+            font-weight: 600;
+        ">← Volver al panel</a>
+    </div>
+</div>
+{% endblock %}

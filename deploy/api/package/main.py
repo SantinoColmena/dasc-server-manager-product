@@ -1728,6 +1728,46 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 USERS_FILE = DATA_DIR / "users.json"
 _LICENSE_CACHE_PATH = DATA_DIR / "license_cache.json"
+_MAINTENANCE_FILE = DATA_DIR / "maintenance.json"
+
+_MAINTENANCE_LABELS: dict[str, str] = {
+    "monitoreo": "Monitoreo",
+    "backups":   "Copias de seguridad",
+    "logs":      "Registros",
+    "servicios": "Servicios",
+    "terminal":  "Terminal",
+    "alertas":   "Alertas",
+    "soporte":   "Soporte",
+    "informes":  "Informes",
+}
+_MAINTENANCE_MODULES = list(_MAINTENANCE_LABELS.keys())
+
+
+def _load_maintenance() -> dict:
+    """Lee el estado de mantenimiento por módulo. Devuelve todos los módulos en estado inactivo si no existe."""
+    try:
+        if _MAINTENANCE_FILE.exists():
+            data = json.loads(_MAINTENANCE_FILE.read_text(encoding="utf-8"))
+            for m in _MAINTENANCE_MODULES:
+                data.setdefault(m, {"activo": False, "mensaje": ""})
+            return data
+    except Exception:
+        pass
+    return {m: {"activo": False, "mensaje": ""} for m in _MAINTENANCE_MODULES}
+
+
+def _save_maintenance(state: dict) -> None:
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        _MAINTENANCE_FILE.write_text(
+            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except Exception:
+        pass
+
+
+def _is_maintenance(modulo: str) -> bool:
+    return bool(_load_maintenance().get(modulo, {}).get("activo", False))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 PASSWORD_HASH_PREFIXES = ("$2a$", "$2b$", "$2y$")
@@ -2036,6 +2076,18 @@ def permission_labels_from_keys(keys: list[str]) -> list[str]:
     return [AVAILABLE_PERMISSIONS[k] for k in keys if k in AVAILABLE_PERMISSIONS]
 
 
+def _check_mantenimiento(request: Request, modulo: str):
+    """Si el módulo está en mantenimiento y el usuario no es admin, devuelve la página de mantenimiento."""
+    if not is_admin(request) and _is_maintenance(modulo):
+        state = _load_maintenance()
+        context = get_common_context(request)
+        context["modulo_nombre"] = _MAINTENANCE_LABELS.get(modulo, modulo)
+        context["mantenimiento_mensaje"] = state.get(modulo, {}).get("mensaje", "")
+        context["current_path"] = f"/{modulo}"
+        return templates.TemplateResponse(request, "mantenimiento_modulo.html", context)
+    return None
+
+
 def get_common_context(request: Request) -> dict[str, Any]:
     perms = get_permissions(request)
     admin = is_admin(request)
@@ -2058,6 +2110,7 @@ def get_common_context(request: Request) -> dict[str, Any]:
         "auto_logout_minutes": AUTO_LOGOUT_MINUTES,
         "lang": lang,
         "t": t_fn,
+        "maint": _load_maintenance(),
     }
 
 
@@ -3732,6 +3785,9 @@ def monitoreo_page(request: Request):
     """Página de monitorización del servidor (Ruta 7.4)."""
     if not is_authenticated(request):
         return RedirectResponse("/login")
+    guard = _check_mantenimiento(request, "monitoreo")
+    if guard is not None:
+        return guard
     context = get_common_context(request)
     context["monitor_host"] = SERVIDOR_BACKUPS
     return templates.TemplateResponse(request, "monitoreo.html", context)
@@ -4355,6 +4411,9 @@ def run_ssh_terminal_command(host: str, command: str) -> dict[str, Any]:
 def terminal_page(request: Request):
     if not has_permission(request, "terminal"):
         return permission_redirect()
+    guard = _check_mantenimiento(request, "terminal")
+    if guard is not None:
+        return guard
 
     machines = get_terminal_machines()
     context = get_common_context(request)
@@ -4458,6 +4517,9 @@ def terminal_run_command(
 def ver_logs(request: Request):
     if not has_permission(request, "logs"):
         return permission_redirect()
+    guard = _check_mantenimiento(request, "logs")
+    if guard is not None:
+        return guard
 
     try:
         conn = pymysql.connect(
@@ -4502,6 +4564,9 @@ def ver_logs(request: Request):
 def alertas(request: Request):
     if not has_permission(request, "alertas"):
         return permission_redirect()
+    guard = _check_mantenimiento(request, "alertas")
+    if guard is not None:
+        return guard
 
     ensure_default_recipient()
 
@@ -4820,6 +4885,9 @@ def alertas_channel_toggle(request: Request, channel_code: str = Form(...)):
 def ver_servicios(request: Request):
     if not has_permission(request, "servicios"):
         return permission_redirect()
+    guard = _check_mantenimiento(request, "servicios")
+    if guard is not None:
+        return guard
 
     result = remote_run(SERVIDOR_SERVICIOS, SCRIPT_SERVICIOS, ["list"])
     salida = result["text"]
@@ -4920,6 +4988,9 @@ def accion_servicio(
 def backups(request: Request):
     if not has_permission(request, "backups"):
         return permission_redirect()
+    guard = _check_mantenimiento(request, "backups")
+    if guard is not None:
+        return guard
 
     ok = request.query_params.get("ok")
     msg = request.query_params.get("msg")
@@ -6172,6 +6243,9 @@ def local_internal_support_redirect():
 def soporte_page(request: Request):
     if not is_admin(request):
         return permission_redirect("Acceso reservado al equipo técnico Vigex.")
+    guard = _check_mantenimiento(request, "soporte")
+    if guard is not None:
+        return guard
 
     context = get_common_context(request)
     context["local_internal_support_enabled"] = is_local_internal_support_enabled()
@@ -7929,6 +8003,53 @@ async def configuracion_auto_logout_save(request: Request):
 
 
 # =====================
+# Modo mantenimiento por módulo (admin)
+# =====================
+
+@app.get("/configuracion/mantenimiento")
+def mantenimiento_admin_page(request: Request):
+    """Página de gestión de modo mantenimiento por módulo (solo admins)."""
+    if not is_admin(request):
+        return permission_redirect("Solo el administrador puede gestionar el mantenimiento.")
+    context = get_common_context(request)
+    context["current_path"] = "/configuracion/mantenimiento"
+    context["mantenimiento"] = _load_maintenance()
+    context["maintenance_labels"] = _MAINTENANCE_LABELS
+    return templates.TemplateResponse(request, "mantenimiento_admin.html", context)
+
+
+@app.post("/configuracion/mantenimiento")
+async def mantenimiento_admin_save(request: Request):
+    """Activa o desactiva el modo mantenimiento de un módulo con mensaje opcional."""
+    if not is_admin(request):
+        return JSONResponse({"ok": False, "msg": "Acceso denegado."}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "msg": "Datos no válidos."}, status_code=400)
+
+    modulo = str(data.get("modulo", "")).strip()
+    if modulo not in _MAINTENANCE_MODULES:
+        return JSONResponse({"ok": False, "msg": f"Módulo desconocido: {modulo}"}, status_code=400)
+
+    state = _load_maintenance()
+    state[modulo]["activo"] = bool(data.get("activo", False))
+    state[modulo]["mensaje"] = str(data.get("mensaje", ""))[:500].strip()
+    _save_maintenance(state)
+
+    accion = "activado" if state[modulo]["activo"] else "desactivado"
+    log_event(
+        tipo="CONFIGURACION",
+        resultado="OK",
+        usuario=request.session.get("user", "anon"),
+        ip_origen=request.client.host if request.client else None,
+        recurso="POST /configuracion/mantenimiento",
+        detalle=f"Mantenimiento {accion} en módulo '{modulo}'",
+    )
+    return JSONResponse({"ok": True, "activo": state[modulo]["activo"]})
+
+
+# =====================
 # R-062 / Ruta 7.7 — Informes periódicos configurables
 # =====================
 # Genera y envía informes de estado (disco, backups, servicios, alertas)
@@ -8230,6 +8351,9 @@ def informes_page(request: Request):
     """Página de informes periódicos configurables (solo admins). R-062"""
     if not is_admin(request):
         return permission_redirect("Solo el administrador puede acceder a los informes periódicos.")
+    guard = _check_mantenimiento(request, "informes")
+    if guard is not None:
+        return guard
 
     cfg = _load_reports_config()
     ctx = get_common_context(request)

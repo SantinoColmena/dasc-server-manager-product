@@ -100,35 +100,41 @@
 
             <a href="/monitoreo" class="{{ 'active' if current_path.startswith('/monitoreo') else '' }}">
                 <i class="fa-solid fa-chart-area"></i> {{ t('nav.monitoreo') }}
+                {% if maint and maint.monitoreo and maint.monitoreo.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
 
             {% if can_backups %}
             <a href="/backups" class="{{ 'active' if current_path.startswith('/backups') else '' }}">
                 <i class="fa-solid fa-database"></i> {{ t('nav.copias') }}
+                {% if maint and maint.backups and maint.backups.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
 
             {% if can_logs %}
             <a href="/logs" class="{{ 'active' if current_path.startswith('/logs') else '' }}">
                 <i class="fa-solid fa-file-lines"></i> {{ t('nav.logs') }}
+                {% if maint and maint.logs and maint.logs.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
 
             {% if can_servicios %}
             <a href="/servicios" class="{{ 'active' if current_path.startswith('/servicios') else '' }}">
                 <i class="fa-solid fa-server"></i> {{ t('nav.servicios') }}
+                {% if maint and maint.servicios and maint.servicios.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
 
             {% if can_terminal %}
             <a href="/terminal" class="{{ 'active' if current_path.startswith('/terminal') else '' }}">
                 <i class="fa-solid fa-terminal"></i> {{ t('nav.terminal') }}
+                {% if maint and maint.terminal and maint.terminal.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
 
             {% if can_alertas %}
             <a href="/alertas" class="{{ 'active' if current_path.startswith('/alertas') else '' }}">
                 <i class="fa-solid fa-bell"></i> {{ t('nav.alertas') }}
+                {% if maint and maint.alertas and maint.alertas.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
 
@@ -153,6 +159,7 @@
             <div class="menu-section">{{ t('nav.admin') }}</div>
             <a href="/soporte" class="{{ 'active' if current_path.startswith('/soporte') and not current_path.startswith('/soporte/faq') and not current_path.startswith('/soporte/reportes') else '' }}">
                 <i class="fa-solid fa-headset"></i> {{ t('nav.tickets') }}
+                {% if maint and maint.soporte and maint.soporte.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             <a href="/soporte/reportes" class="{{ 'active' if current_path.startswith('/soporte/reportes') else '' }}">
                 <i class="fa-solid fa-flag"></i> {{ t('nav.reportes') }}
@@ -163,11 +170,18 @@
             <a href="/admin/login-logs" class="{{ 'active' if current_path.startswith('/admin/login-logs') else '' }}">
                 <i class="fa-solid fa-right-to-bracket"></i> {{ t('nav.accesos') }}
             </a>
-            <a href="/configuracion" class="{{ 'active' if current_path == '/configuracion' else '' }}">
+            <a href="/configuracion" class="{{ 'active' if current_path.startswith('/configuracion') else '' }}">
                 <i class="fa-solid fa-gear"></i> {{ t('nav.configuracion') }}
+            </a>
+            <a href="/configuracion/mantenimiento" class="{{ 'active' if current_path == '/configuracion/mantenimiento' else '' }}" style="padding-left:1.8rem;font-size:.83rem;">
+                <i class="fa-solid fa-wrench"></i> Mantenimiento
+                {% if maint and maint.values() | selectattr('activo') | list | length > 0 %}
+                <span class="maint-badge">{{ maint.values() | selectattr('activo') | list | length }}</span>
+                {% endif %}
             </a>
             <a href="/informes" class="{{ 'active' if current_path == '/informes' else '' }}">
                 <i class="fa-solid fa-file-lines"></i> {{ t('nav.informes') }}
+                {% if maint and maint.informes and maint.informes.activo %}<span class="maint-badge">🔧</span>{% endif %}
             </a>
             {% endif %}
         </nav>

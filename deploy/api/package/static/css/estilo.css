@@ -227,6 +227,24 @@ body {
     padding: 14px 10px 4px;
 }
 
+/* Badge de módulo en mantenimiento */
+.maint-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
 /* === ZONA CENTRAL DE SIDEBAR (info contextual por módulo) === */
 .sidebar-grow {
     flex: 1;
