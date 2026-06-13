@@ -3583,6 +3583,7 @@ def home(request: Request):
     context.update(get_alert_stats())
     context["central_enabled"] = CENTRAL_SUPPORT_ENABLED
     context["licencia_info"] = _load_license_cache() if CENTRAL_SUPPORT_ENABLED else {}
+    context["licencia_local"] = _LICENSE_STATUS
     return templates.TemplateResponse(request, "index.html", context)
 
 
@@ -5693,6 +5694,71 @@ CENTRAL_HEARTBEAT_URL = (
     f"{_CENTRAL_BASE_URL}/api/v1/heartbeat" if CENTRAL_SUPPORT_ENABLED else ""
 )
 CENTRAL_HEARTBEAT_INTERVAL = int(os.getenv("CENTRAL_HEARTBEAT_INTERVAL", "300"))  # segundos
+
+
+# =====================================================================
+# Sistema de licencias Ed25519 (Opción A — firma asimétrica local)
+# =====================================================================
+# Clave pública embebida. La clave privada NUNCA va en el repo;
+# se guarda en local y se usa solo con manage_licenses.py sign.
+_VIGEX_PUBLIC_KEY_B64 = "d5TkogxMzSI3VbRvlZ27o91nMRG6gxAo5vzR5hr/fzU="
+
+VIGEX_LICENSE_KEY = os.getenv("VIGEX_LICENSE_KEY", "").strip()
+
+
+def _verify_license(license_key: str) -> dict:
+    """
+    Verifica la firma Ed25519 de una clave de licencia Vigex.
+    Formato: VGX1.<payload_b64url>.<firma_b64url>
+    Devuelve dict con: ok, plan, client_id, expiry, expired, issued, error.
+    """
+    if not license_key:
+        return {"ok": False, "error": "sin_licencia"}
+    try:
+        import base64 as _b64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+        parts = license_key.strip().split(".")
+        if len(parts) != 3 or parts[0] != "VGX1":
+            return {"ok": False, "error": "formato_invalido"}
+
+        def _pad(s: str) -> str:
+            return s + "=" * (-len(s) % 4)
+
+        payload_bytes = _b64.urlsafe_b64decode(_pad(parts[1]))
+        payload = json.loads(payload_bytes)
+        sig = _b64.urlsafe_b64decode(_pad(parts[2]))
+
+        pub_key = Ed25519PublicKey.from_public_bytes(_b64.b64decode(_VIGEX_PUBLIC_KEY_B64))
+        pub_key.verify(sig, payload_bytes)  # lanza excepción si la firma no es válida
+
+        expiry = payload.get("expiry", "")
+        expired = False
+        if expiry:
+            try:
+                from datetime import datetime as _dt
+                expired = _dt.strptime(expiry, "%Y-%m-%d") < _dt.now()
+            except ValueError:
+                pass
+
+        return {
+            "ok": True,
+            "plan": payload.get("plan", "lite"),
+            "client_id": payload.get("client_id", ""),
+            "expiry": expiry,
+            "expired": expired,
+            "issued": payload.get("issued", ""),
+            "error": "",
+        }
+    except Exception as exc:
+        name = type(exc).__name__
+        if "InvalidSignature" in name or "invalid signature" in str(exc).lower():
+            return {"ok": False, "error": "firma_invalida"}
+        return {"ok": False, "error": f"error_verificacion"}
+
+
+# Verificar en arranque y cachear en memoria (la licencia no cambia sin reiniciar el panel)
+_LICENSE_STATUS: dict = _verify_license(VIGEX_LICENSE_KEY)
 
 
 SUPPORT_TYPES = [

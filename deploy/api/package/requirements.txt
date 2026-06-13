@@ -12,3 +12,5 @@ itsdangerous==2.2.0
 passlib[bcrypt]==1.7.4
 # bcrypt fijado <4.1: passlib 1.7.4 no es compatible con bcrypt>=4.1 (L-3)
 bcrypt==4.0.1
+# Verificación de licencias Ed25519 (firma asimétrica local, sin red)
+cryptography>=42.0.0

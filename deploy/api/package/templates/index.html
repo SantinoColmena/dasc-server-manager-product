@@ -106,8 +106,30 @@
     </div>
 </div>
 
+{# ── Banners de licencia local (verificación Ed25519) ── #}
+{% if licencia_local %}
+  {% if licencia_local.error == 'firma_invalida' %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#991b1b;">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:1.1rem;color:#ef4444;flex-shrink:0;"></i>
+      <span>La clave de licencia instalada no es válida. El panel sigue funcionando pero debes contactar con <a href="mailto:soporte@vigex.es" style="color:#991b1b;font-weight:700;">soporte@vigex.es</a> para resolverlo.</span>
+  </div>
+  {% elif licencia_local.error and licencia_local.error != 'sin_licencia' %}
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#991b1b;">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:1.1rem;color:#ef4444;flex-shrink:0;"></i>
+      <span>Error al verificar la licencia. Contacta con <a href="mailto:soporte@vigex.es" style="color:#991b1b;font-weight:700;">soporte@vigex.es</a>.</span>
+  </div>
+  {% elif licencia_local.ok and licencia_local.expired %}
+  <div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#92400e;">
+      <i class="fa-solid fa-circle-exclamation" style="font-size:1.1rem;color:#f59e0b;flex-shrink:0;"></i>
+      <span>Tu licencia Vigex ha caducado ({{ licencia_local.expiry }}). El panel sigue funcionando.
+      <a href="https://vigex.es/#precios" target="_blank" rel="noopener" style="color:#92400e;font-weight:700;margin-left:4px;">Renovar →</a></span>
+  </div>
+  {% endif %}
+{% endif %}
+
+{# ── Banner de soporte (via heartbeat a Central) ── #}
 {% if central_enabled and licencia_info and not licencia_info.get('soporte_activo', True) %}
-<div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#92400e;">
+<div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#92400e;">
     <i class="fa-solid fa-circle-exclamation" style="font-size:1.1rem;color:#f59e0b;flex-shrink:0;"></i>
     <span>Tu plan de soporte no está activo. El panel funciona con normalidad pero no recibirás actualizaciones ni atención técnica.
     <a href="https://vigex.es/#precios" target="_blank" rel="noopener" style="color:#92400e;font-weight:700;margin-left:4px;">Renovar soporte →</a></span>
