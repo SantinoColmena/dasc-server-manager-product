@@ -3867,6 +3867,13 @@ _proactivo_estado: dict[str, Any] = {
 }
 
 _last_alert_time: dict[str, float] = {}  # condition_key → timestamp último envío
+
+# Cooldowns propios para alertas de licencia (independientes de NOTIF_COOLDOWN)
+_LIC_ALERT_COOLDOWNS: dict[str, int] = {
+    "lic_30":      7 * 86400,   # aviso a 30 días: máx 1 vez por semana
+    "lic_7":       86400,        # urgente a 7 días: máx 1 vez al día
+    "lic_expirada": 86400,       # caducada: máx 1 vez al día
+}
 # Serializa el subsistema proactivo: el worker de fondo y el endpoint manual
 # /alertas/proactivas/check llaman ambos a _run_proactive_checks; el lock evita
 # que se solapen y corrompan _proactivo_estado o el cooldown. Auditoría 2026-06-11.
@@ -4087,14 +4094,75 @@ def _check_services_proactive() -> None:
         check["last_ok"] = None
 
 
+def _check_license_expiry_proactive() -> None:
+    """Alerta por Telegram/email cuando la licencia está próxima a caducar o ya caducada."""
+    lic = _LICENSE_STATUS
+    if not lic.get("ok"):
+        return  # sin licencia válida: nada que hacer
+
+    days = lic.get("days_until_expiry")
+    if days is None:
+        return  # licencia perpetua
+
+    def _lic_can(key: str) -> bool:
+        return (_time_mod.time() - _last_alert_time.get(key, 0.0)) >= _LIC_ALERT_COOLDOWNS[key]
+
+    plan   = lic.get("plan", "").capitalize()
+    expiry = lic.get("expiry", "")
+
+    if days < 0:
+        if not _lic_can("lic_expirada"):
+            return
+        _mark_alerted("lic_expirada")
+        n = abs(days)
+        tg = (f"🔴 <b>Vigex — Licencia caducada</b>\n\n"
+              f"Tu licencia <b>{plan}</b> caducó hace <b>{n} día{'s' if n != 1 else ''}</b> ({expiry}).\n\n"
+              f"El panel sigue funcionando, pero no recibes actualizaciones ni soporte.\n"
+              f"<a href='https://vigex.es/#precios'>Renueva tu licencia →</a>")
+        mail = (f"<p>Tu licencia <strong>{plan}</strong> caducó hace <strong>{n} día{'s' if n != 1 else ''}</strong> ({expiry}).</p>"
+                f"<p>El panel sigue funcionando, pero no recibirás actualizaciones ni soporte técnico.</p>"
+                f"<p><a href='https://vigex.es/#precios'>Renueva tu licencia →</a></p>")
+        _send_proactive_alert("licencia", tg, f"Licencia Vigex caducada ({expiry})", mail)
+
+    elif days <= 7:
+        if not _lic_can("lic_7"):
+            return
+        _mark_alerted("lic_7")
+        cuando = "mañana" if days == 1 else (f"hoy" if days == 0 else f"en <b>{days} días</b>")
+        tg = (f"⚠️ <b>Vigex — Licencia caduca pronto</b>\n\n"
+              f"Tu licencia <b>{plan}</b> caduca {cuando} ({expiry}).\n\n"
+              f"Renuévala para mantener el soporte y las actualizaciones.\n"
+              f"<a href='https://vigex.es/#precios'>Renovar →</a>")
+        mail = (f"<p>Tu licencia <strong>{plan}</strong> caduca "
+                f"{'mañana' if days == 1 else f'en <strong>{days} días</strong>'} ({expiry}).</p>"
+                f"<p>Renuévala para no perder el soporte y las actualizaciones.</p>"
+                f"<p><a href='https://vigex.es/#precios'>Renovar →</a></p>")
+        _send_proactive_alert("licencia", tg, f"Licencia Vigex caduca en {days} días", mail)
+
+    elif days <= 30:
+        if not _lic_can("lic_30"):
+            return
+        _mark_alerted("lic_30")
+        tg = (f"🔔 <b>Vigex — Licencia caduca en {days} días</b>\n\n"
+              f"Tu licencia <b>{plan}</b> caduca el <b>{expiry}</b>.\n\n"
+              f"Renuévala con tiempo para no perder la continuidad del soporte.\n"
+              f"<a href='https://vigex.es/#precios'>Ver planes →</a>")
+        mail = (f"<p>Tu licencia <strong>{plan}</strong> caduca el <strong>{expiry}</strong> "
+                f"({days} días restantes).</p>"
+                f"<p>Renuévala para mantener el acceso al soporte y las actualizaciones.</p>"
+                f"<p><a href='https://vigex.es/#precios'>Ver planes →</a></p>")
+        _send_proactive_alert("licencia", tg, f"Licencia Vigex caduca el {expiry}", mail)
+
+
 def _run_proactive_checks() -> None:
-    """Ejecuta las tres comprobaciones y actualiza el estado en memoria."""
+    """Ejecuta las comprobaciones y actualiza el estado en memoria."""
     with _proactivo_lock:
         _proactivo_estado["last_run"]   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         _proactivo_estado["runs_total"] += 1
         _check_disk_proactive()
         _check_backup_proactive()
         _check_services_proactive()
+        _check_license_expiry_proactive()
 
 
 def _proactivo_worker() -> None:
