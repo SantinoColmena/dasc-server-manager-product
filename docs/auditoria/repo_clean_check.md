@@ -1,6 +1,6 @@
 ﻿# Auditoría Clean del repositorio Vigex
 
-Fecha: 2026-06-12 03:37:09
+Fecha: 2026-06-13 02:03:35
 
 Ruta revisada:
 
@@ -14,7 +14,6 @@ C:\Users\colme\Documents\dasc-server-manager-product
 
 ~~~text
  M docs/validaciones/validacion_paquete_api_instalable.md
-?? deploy/docker/config.env.test
 ~~~
 
 ## 2. Estructura mínima obligatoria
@@ -81,8 +80,6 @@ C:\Users\colme\Documents\dasc-server-manager-product
   - deploy\api\install_vigex_api.sh -> contiene patrón `SECRET_KEY=`
   - deploy\api\onboarding_nuevo_cliente.sh -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\onboarding_nuevo_cliente.sh -> contiene patrón `SECRET_KEY=`
-  - deploy\api\package\main.py -> contiene patrón `TELEGRAM_BOT_TOKEN=`
-  - deploy\api\package\main.py -> contiene patrón `TELEGRAM_CHAT_ID=`
   - deploy\api\package\main.py -> contiene patrón `ADMIN_PASSWORD=`
   - deploy\api\package\main.py -> contiene patrón `SECRET_KEY=`
   - deploy\backup-services\install_backup_services.sh -> contiene patrón `DB_BACKUP_PASS=`

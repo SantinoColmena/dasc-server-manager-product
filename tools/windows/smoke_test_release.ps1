@@ -38,9 +38,14 @@ Write-Host ""
 # -----------------------------------------------------------------------
 Write-Host "-- 1. Estado git --"
 try {
-    $gitStatus = git -C $root status --porcelain 2>&1
-    $gitOk = ($gitStatus -eq $null) -or ($gitStatus.Trim() -eq "")
-    $gitDetail = if ($gitOk) { "Arbol limpio" } else { $gitStatus }
+    $gitRaw = git -C $root status --porcelain 2>&1
+    # Ignorar los informes generados automaticamente por los sub-scripts de validacion
+    $gitStatus = $gitRaw | Where-Object {
+        $_ -notmatch "docs[/\\]validaciones[/\\]" -and
+        $_ -notmatch "docs[/\\]auditoria[/\\]"
+    }
+    $gitOk = ($gitStatus -eq $null) -or ($gitStatus -join "").Trim() -eq ""
+    $gitDetail = if ($gitOk) { "Arbol limpio (informes de validacion excluidos)" } else { $gitStatus -join "; " }
     Add-Result "git status limpio" $gitOk $gitDetail
     Write-Status $gitOk "git status limpio"
 } catch {
