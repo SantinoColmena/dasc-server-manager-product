@@ -121,8 +121,18 @@
   {% elif licencia_local.ok and licencia_local.expired %}
   <div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:#92400e;">
       <i class="fa-solid fa-circle-exclamation" style="font-size:1.1rem;color:#f59e0b;flex-shrink:0;"></i>
-      <span>Tu licencia Vigex ha caducado ({{ licencia_local.expiry }}). El panel sigue funcionando.
+      <span>Tu licencia Vigex ha caducado hace {{ (licencia_local.days_until_expiry * -1) }} días. El panel sigue funcionando.
       <a href="https://vigex.es/#precios" target="_blank" rel="noopener" style="color:#92400e;font-weight:700;margin-left:4px;">Renovar →</a></span>
+  </div>
+  {% elif licencia_local.ok and not licencia_local.expired and licencia_local.days_until_expiry is not none and licencia_local.days_until_expiry <= 30 %}
+  {% set _d = licencia_local.days_until_expiry %}
+  <div style="background:{% if _d <= 7 %}#fef2f2;border-color:#fca5a5{% else %}#fffbeb;border-color:#fbbf24{% endif %};border:1px solid;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:.875rem;color:{% if _d <= 7 %}#991b1b{% else %}#92400e{% endif %};">
+      <i class="fa-solid fa-{% if _d <= 7 %}triangle-exclamation{% else %}clock{% endif %}" style="font-size:1.1rem;color:{% if _d <= 7 %}#ef4444{% else %}#f59e0b{% endif %};flex-shrink:0;"></i>
+      <span>
+          {% if _d <= 7 %}Tu licencia caduca <strong>en {{ _d }} día{% if _d != 1 %}s{% endif %}</strong>.{% else %}Tu licencia caduca en {{ _d }} días ({{ licencia_local.expiry }}).{% endif %}
+          Renuévala para no perder el acceso al soporte y actualizaciones.
+          <a href="/configuracion/licencia" style="color:{% if _d <= 7 %}#991b1b{% else %}#92400e{% endif %};font-weight:700;margin-left:4px;">Ver licencia →</a>
+      </span>
   </div>
   {% endif %}
 {% endif %}

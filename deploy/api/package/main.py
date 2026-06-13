@@ -5735,10 +5735,13 @@ def _verify_license(license_key: str) -> dict:
 
         expiry = payload.get("expiry", "")
         expired = False
+        days_until_expiry = None
         if expiry:
             try:
                 from datetime import datetime as _dt
-                expired = _dt.strptime(expiry, "%Y-%m-%d") < _dt.now()
+                expiry_dt = _dt.strptime(expiry, "%Y-%m-%d")
+                days_until_expiry = (expiry_dt - _dt.now()).days
+                expired = days_until_expiry < 0
             except ValueError:
                 pass
 
@@ -5748,6 +5751,7 @@ def _verify_license(license_key: str) -> dict:
             "client_id": payload.get("client_id", ""),
             "expiry": expiry,
             "expired": expired,
+            "days_until_expiry": days_until_expiry,
             "issued": payload.get("issued", ""),
             "error": "",
         }
@@ -5755,7 +5759,7 @@ def _verify_license(license_key: str) -> dict:
         name = type(exc).__name__
         if "InvalidSignature" in name or "invalid signature" in str(exc).lower():
             return {"ok": False, "error": "firma_invalida"}
-        return {"ok": False, "error": f"error_verificacion"}
+        return {"ok": False, "error": "error_verificacion"}
 
 
 def _load_license_key() -> str:
