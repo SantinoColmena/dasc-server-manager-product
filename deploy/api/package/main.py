@@ -5,6 +5,7 @@ from urllib.parse import quote, urlparse as _urlparse
 from urllib.request import Request as UrlRequest, urlopen
 from urllib.error import URLError, HTTPError
 import os
+import socket
 import asyncio
 import json
 import sqlite3
@@ -5801,6 +5802,13 @@ def _verify_license(license_key: str) -> dict:
         pub_key = Ed25519PublicKey.from_public_bytes(_b64.b64decode(_VIGEX_PUBLIC_KEY_B64))
         pub_key.verify(sig, payload_bytes)  # lanza excepción si la firma no es válida
 
+        # Comprobación opcional de hostname (si está en el payload)
+        payload_hostname = payload.get("hostname", "")
+        if payload_hostname and payload_hostname != socket.gethostname():
+            return {"ok": False, "error": "hostname_invalido",
+                    "expected_hostname": payload_hostname,
+                    "actual_hostname": socket.gethostname()}
+
         expiry = payload.get("expiry", "")
         expired = False
         days_until_expiry = None
@@ -5821,6 +5829,7 @@ def _verify_license(license_key: str) -> dict:
             "expired": expired,
             "days_until_expiry": days_until_expiry,
             "issued": payload.get("issued", ""),
+            "hostname": payload_hostname,
             "error": "",
         }
     except Exception as exc:
@@ -8237,9 +8246,14 @@ async def licencia_admin_save(request: Request):
 
     resultado = _verify_license(nueva_clave)
     if not resultado.get("ok"):
+        hostname_esperado = resultado.get("expected_hostname", "")
+        hostname_real     = resultado.get("actual_hostname", "")
         errores = {
-            "formato_invalido": "Formato incorrecto. La clave debe empezar por VGX1.",
-            "firma_invalida":   "Firma no válida. La clave no pertenece a esta instalación de Vigex.",
+            "formato_invalido":  "Formato incorrecto. La clave debe empezar por VGX1.",
+            "firma_invalida":    "Firma no válida. La clave no pertenece a esta instalación de Vigex.",
+            "hostname_invalido": (f"Esta licencia fue emitida para el servidor '{hostname_esperado}', "
+                                  f"pero este servidor se llama '{hostname_real}'. "
+                                  f"Contacta con soporte si necesitas reasignarla."),
             "error_verificacion": "Error al verificar la clave. Comprueba que está copiada correctamente.",
         }
         msg = errores.get(resultado.get("error", ""), "Clave de licencia no válida.")
@@ -11353,6 +11367,9 @@ def _collect_heartbeat_data() -> dict:
         data["uptime_segundos"] = int(_time.time() - _startup_ts)
     except Exception:
         data["uptime_segundos"] = None
+
+    # Estado de licencia local (para badge en Central)
+    data["licencia_local_ok"] = bool(_LICENSE_STATUS.get("ok", False))
 
     return data
 

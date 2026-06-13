@@ -232,12 +232,16 @@ def cmd_sign(args):
         print(f"[Error] Clave privada inválida: {e}", file=sys.stderr)
         sys.exit(1)
 
-    payload = json.dumps({
+    payload_dict: dict = {
         "client_id": args.cliente_id,
         "plan":      plan,
         "expiry":    expiry,
         "issued":    datetime.now().strftime("%Y-%m-%d"),
-    }, separators=(",", ":")).encode()
+    }
+    hostname = (getattr(args, "hostname", "") or "").strip()
+    if hostname:
+        payload_dict["hostname"] = hostname
+    payload = json.dumps(payload_dict, separators=(",", ":")).encode()
 
     sig = key.sign(payload)
     payload_b64 = base64.urlsafe_b64encode(payload).decode().rstrip("=")
@@ -248,9 +252,10 @@ def cmd_sign(args):
     print("=" * 60)
     print(f"  LICENCIA GENERADA — {args.cliente_id}")
     print("=" * 60)
-    print(f"  Plan   : {plan}")
-    print(f"  Expiry : {expiry or 'perpetua'}")
-    print(f"  Emitida: {datetime.now().strftime('%Y-%m-%d')}")
+    print(f"  Plan     : {plan}")
+    print(f"  Expiry   : {expiry or 'perpetua'}")
+    print(f"  Hostname : {hostname or 'sin restricción'}")
+    print(f"  Emitida  : {datetime.now().strftime('%Y-%m-%d')}")
     print()
     print("  Clave de licencia:")
     print(f"  {license_key}")
@@ -325,6 +330,7 @@ def main():
     p_sign.add_argument("cliente_id")
     p_sign.add_argument("--plan", choices=list(PLANES_VALIDOS), default="lite", help="Plan de licencia")
     p_sign.add_argument("--expiry", metavar="YYYY-MM-DD", default="", help="Fecha de expiración (vacío=perpetua)")
+    p_sign.add_argument("--hostname", default="", help="Hostname del servidor destino (vacío = sin restricción)")
 
     p_verify = sub.add_parser("verify", help="Verifica una clave de licencia (requiere VIGEX_PUBLIC_KEY)")
     p_verify.add_argument("license_key")

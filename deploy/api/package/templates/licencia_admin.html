@@ -64,6 +64,9 @@
                         Plan <strong style="text-transform:capitalize;">{{ licencia_local.plan }}</strong>
                         &nbsp;·&nbsp; Cliente: <strong>{{ licencia_local.client_id }}</strong>
                         &nbsp;·&nbsp; Emitida: {{ licencia_local.issued }}
+                        {% if licencia_local.hostname %}
+                        &nbsp;·&nbsp; Servidor: <strong>{{ licencia_local.hostname }}</strong>
+                        {% endif %}
                     {% elif _err == 'firma_invalida' %}
                         La clave no corresponde a esta instalación de Vigex. Contacta con
                         <a href="mailto:soporte@vigex.es" style="color:#991b1b;">soporte@vigex.es</a>.

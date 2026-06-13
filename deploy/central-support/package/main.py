@@ -147,9 +147,10 @@ def _migrate_license_columns():
     with db_connect() as conn:
         cols = {row[1] for row in conn.execute("PRAGMA table_info(central_clients)").fetchall()}
         pending = [
-            ("plan",             "TEXT NOT NULL DEFAULT 'lite'"),
-            ("expiry_licencia",  "TEXT"),
-            ("expiry_soporte",   "TEXT"),
+            ("plan",               "TEXT NOT NULL DEFAULT 'lite'"),
+            ("expiry_licencia",    "TEXT"),
+            ("expiry_soporte",     "TEXT"),
+            ("licencia_activada",  "INTEGER NOT NULL DEFAULT 0"),
         ]
         for col, definition in pending:
             if col not in cols:
@@ -994,7 +995,7 @@ def list_clients() -> list:
         rows = conn.execute(
             """
             SELECT id, nombre, token, activo, fecha_alta,
-                   plan, expiry_licencia, expiry_soporte
+                   plan, expiry_licencia, expiry_soporte, licencia_activada
             FROM central_clients
             ORDER BY fecha_alta DESC
             """
@@ -1323,6 +1324,7 @@ class HeartbeatIn(BaseModel):
     servicios_activos: Optional[int] = None
     uptime_segundos: Optional[int] = None
     datos_extra: Optional[str] = ""
+    licencia_local_ok: Optional[bool] = None
 
 
 @app.post("/api/v1/heartbeat")
@@ -1338,6 +1340,14 @@ def receive_heartbeat(
         nombre_cliente=payload.nombre_cliente,
         datos=payload.dict(),
     )
+    # Actualiza licencia_activada si el panel reporta su estado local
+    if payload.licencia_local_ok is not None:
+        with db_connect() as conn:
+            conn.execute(
+                "UPDATE central_clients SET licencia_activada = ? WHERE id = ?",
+                (1 if payload.licencia_local_ok else 0, payload.cliente_id),
+            )
+            conn.commit()
     licencia = _get_license_info(payload.cliente_id)
     return {"ok": True, "mensaje": "Heartbeat registrado", "licencia": licencia}
 
