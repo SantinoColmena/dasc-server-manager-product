@@ -3,7 +3,7 @@ param(
     [switch]$SkipPipAudit
 )
 
-# R-057C: Smoke test de release — ejecuta todas las validaciones estaticas
+# R-057C: Smoke test de release -- ejecuta todas las validaciones estaticas
 # y reporta un resultado consolidado (PASS / FAIL).
 # Uso: .\tools\windows\smoke_test_release.ps1 [-RepoRoot <ruta>] [-SkipPipAudit]
 
@@ -28,7 +28,7 @@ function Write-Status {
 }
 
 Write-Host ""
-Write-Host "=== Vigex Server Manager — Smoke Test Release ===" -ForegroundColor Cyan
+Write-Host "=== Vigex Server Manager -- Smoke Test Release ===" -ForegroundColor Cyan
 Write-Host "  Raiz del repo: $root"
 Write-Host "  Fecha        : $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 Write-Host ""
@@ -40,7 +40,8 @@ Write-Host "-- 1. Estado git --"
 try {
     $gitStatus = git -C $root status --porcelain 2>&1
     $gitOk = ($gitStatus -eq $null) -or ($gitStatus.Trim() -eq "")
-    Add-Result "git status limpio" $gitOk ($gitOk ? "Arbol limpio" : $gitStatus)
+    $gitDetail = if ($gitOk) { "Arbol limpio" } else { $gitStatus }
+    Add-Result "git status limpio" $gitOk $gitDetail
     Write-Status $gitOk "git status limpio"
 } catch {
     Add-Result "git status limpio" $false $_.Exception.Message
@@ -51,7 +52,8 @@ try {
 try {
     $tracked = git -C $root ls-files "config.env" 2>&1
     $noEnv = ($tracked -eq $null) -or ($tracked.Trim() -eq "")
-    Add-Result "config.env no commiteado" $noEnv ($noEnv ? "No rastreado" : "ALERTA: config.env esta commiteado")
+    $envDetail = if ($noEnv) { "No rastreado" } else { "ALERTA: config.env esta commiteado" }
+    Add-Result "config.env no commiteado" $noEnv $envDetail
     Write-Status $noEnv "config.env no commiteado"
 } catch {
     Add-Result "config.env no commiteado" $false $_.Exception.Message
@@ -136,7 +138,8 @@ foreach ($rel in $requiredFiles) {
     }
 }
 if ($allFilesOk) { Write-Host "  Todos los ficheros clave presentes." -ForegroundColor Green }
-Add-Result "Ficheros clave de release" $allFilesOk ($allFilesOk ? "Todos presentes" : "Algunos ficheros faltan (ver arriba)")
+$filesDetail = if ($allFilesOk) { "Todos presentes" } else { "Algunos ficheros faltan (ver arriba)" }
+Add-Result "Ficheros clave de release" $allFilesOk $filesDetail
 Write-Status $allFilesOk "Ficheros clave de release"
 
 Write-Host ""
@@ -163,15 +166,16 @@ if ($SkipPipAudit) {
 
     foreach ($pkg in @("deploy\api\package", "deploy\central-support\package")) {
         $reqFile = Join-Path $root "$pkg\requirements.txt"
-        $label   = ($pkg -replace "\\", "/") -replace "deploy/", "" -replace "/package", ""
+        $labelRaw = ($pkg -replace "\\", "/") -replace "deploy/", "" -replace "/package", ""
         if (Test-Path $reqFile) {
             python -m pip_audit -r $reqFile 2>&1 | Out-Null
             $auditOk = ($LASTEXITCODE -eq 0)
-            Add-Result "pip-audit $label" $auditOk ($auditOk ? "Sin vulnerabilidades" : "Vulnerabilidades detectadas — revisar requirements.txt")
-            Write-Status $auditOk "pip-audit $label"
+            $auditDetail = if ($auditOk) { "Sin vulnerabilidades" } else { "Vulnerabilidades detectadas - revisar requirements.txt" }
+            Add-Result "pip-audit ${labelRaw}" $auditOk $auditDetail
+            Write-Status $auditOk "pip-audit ${labelRaw}"
         } else {
-            Add-Result "pip-audit $label" $false "requirements.txt no encontrado: $reqFile"
-            Write-Status $false "pip-audit $label: requirements.txt no encontrado"
+            Add-Result "pip-audit ${labelRaw}" $false "requirements.txt no encontrado: $reqFile"
+            Write-Status $false "pip-audit ${labelRaw}: requirements.txt no encontrado"
         }
     }
 }
@@ -185,7 +189,8 @@ Write-Host "-- 6. Tags de version --"
 try {
     $tags = git -C $root tag 2>&1
     $hasRc1 = $tags -contains "v1.0-rc1"
-    Add-Result "Tag v1.0-rc1 existe" $hasRc1 ($hasRc1 ? "Presente" : "Tag no encontrado — ejecutar: git tag -f v1.0-rc1 && git push --force origin v1.0-rc1")
+    $tagDetail = if ($hasRc1) { "Presente" } else { "Tag no encontrado - ejecutar: git tag -f v1.0-rc1" }
+    Add-Result "Tag v1.0-rc1 existe" $hasRc1 $tagDetail
     Write-Status $hasRc1 "Tag v1.0-rc1 presente"
     Write-Host "  Tags existentes: $($tags -join ', ')"
 } catch {
@@ -216,13 +221,14 @@ foreach ($r in $results) {
 }
 
 Write-Host ""
-Write-Host "  Resultado: $passed OK / $failed FAIL" -ForegroundColor ($globalOk ? "Green" : "Red")
+$resultColor = if ($globalOk) { "Green" } else { "Red" }
+Write-Host "  Resultado: $passed OK / $failed FAIL" -ForegroundColor $resultColor
 Write-Host ""
 
 if ($globalOk) {
-    Write-Host "  SMOKE TEST PASADO — listo para crear/actualizar el tag." -ForegroundColor Green
+    Write-Host "  SMOKE TEST PASADO -- listo para crear/actualizar el tag." -ForegroundColor Green
 } else {
-    Write-Host "  SMOKE TEST FALLADO — corregir los errores antes de taggear." -ForegroundColor Red
+    Write-Host "  SMOKE TEST FALLADO -- corregir los errores antes de taggear." -ForegroundColor Red
 }
 
 Write-Host ""
