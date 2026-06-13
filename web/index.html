@@ -46,7 +46,7 @@
             </a>
             <ul class="nav-links" id="nav-links">
                 <li><a href="#funcionalidades">Funcionalidades</a></li>
-                <li><a href="#como-funciona">Cómo funciona</a></li>
+                <li><a href="#demo">Demo</a></li>
                 <li><a href="#precios">Precios</a></li>
                 <li><a href="#faq">FAQ</a></li>
                 <li><a href="#contacto">Contacto</a></li>
@@ -274,6 +274,253 @@
                 <p class="feature-desc">Consulta y filtra los registros del sistema de forma centralizada, sin acceso directo al servidor.</p>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DEMO INTERACTIVA
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="demo">
+    <div class="container">
+        <div class="section-header">
+            <span class="tag"><i class="fa-solid fa-play"></i> Demo interactiva</span>
+            <h2 class="section-title">Pruébalo ahora, sin instalar nada</h2>
+            <p class="section-subtitle">Explora el panel con datos de ejemplo. La interfaz y las funciones son las reales — solo los datos son ficticios.</p>
+        </div>
+
+        <div class="demo-wrapper">
+            <!-- Barra del navegador -->
+            <div class="demo-browser-bar">
+                <span class="mock-dot r"></span>
+                <span class="mock-dot y"></span>
+                <span class="mock-dot g"></span>
+                <span class="mock-url"><i class="fa-solid fa-lock" style="font-size:.6rem;margin-right:.3rem;"></i>panel.acme-empresa.es</span>
+            </div>
+
+            <div class="demo-panel">
+                <!-- Sidebar -->
+                <div class="demo-sidebar">
+                    <div class="demo-sidebar-logo">
+                        <div class="demo-sidebar-logo-icon">V</div>
+                        <span class="demo-sidebar-logo-name">Vigex</span>
+                    </div>
+                    <ul class="demo-nav" id="demo-nav">
+                        <li class="dn-active" onclick="demoNav('dashboard',this)"><i class="fa-solid fa-gauge-high"></i> Dashboard</li>
+                        <li onclick="demoNav('backups',this)"><i class="fa-solid fa-database"></i> Copias de seguridad</li>
+                        <li onclick="demoNav('monitoreo',this)"><i class="fa-solid fa-chart-area"></i> Monitoreo</li>
+                        <li onclick="demoNav('servicios',this)"><i class="fa-solid fa-server"></i> Servicios</li>
+                        <li onclick="demoNav('alertas',this)"><i class="fa-solid fa-bell"></i> Alertas <span id="demo-alert-badge" style="background:#f59e0b;color:#fff;border-radius:99px;font-size:.6rem;font-weight:700;padding:.05rem .4rem;margin-left:.3rem;">1</span></li>
+                    </ul>
+                    <div class="demo-sidebar-user"><i class="fa-solid fa-circle-user"></i> admin@acme-empresa.es</div>
+                </div>
+
+                <!-- Área de contenido -->
+                <div class="demo-content">
+
+                    <!-- ── Dashboard ── -->
+                    <div class="demo-screen ds-active" id="ds-dashboard">
+                        <div class="demo-page-title"><i class="fa-solid fa-gauge-high" style="color:var(--primary);"></i> Dashboard</div>
+                        <div class="demo-kpis">
+                            <div class="demo-kpi">
+                                <div class="demo-kpi-label">Último backup</div>
+                                <div class="demo-kpi-val green">✓ OK</div>
+                                <div class="demo-kpi-sub">hace 1 h 43 min</div>
+                            </div>
+                            <div class="demo-kpi">
+                                <div class="demo-kpi-label">Disco principal</div>
+                                <div class="demo-kpi-val">42%</div>
+                                <div class="demo-kpi-sub">57.3 GB libres</div>
+                            </div>
+                            <div class="demo-kpi">
+                                <div class="demo-kpi-label">Servicios</div>
+                                <div class="demo-kpi-val green">5 / 6</div>
+                                <div class="demo-kpi-sub">1 inactivo</div>
+                            </div>
+                            <div class="demo-kpi">
+                                <div class="demo-kpi-label">Alertas activas</div>
+                                <div class="demo-kpi-val amber">1</div>
+                                <div class="demo-kpi-sub">disco /var al 81%</div>
+                            </div>
+                        </div>
+                        <div class="demo-status-cards">
+                            <div class="demo-card demo-status-card">
+                                <strong><span class="ds-dot green"></span>Copias de seguridad</strong>
+                                <span>Última copia completada correctamente · hace 1 h 43 min · 2.3 GB</span>
+                            </div>
+                            <div class="demo-card demo-status-card">
+                                <strong><span class="ds-dot green"></span>Monitoreo</strong>
+                                <span>CPU 18% · RAM 61% · Disco /: 42% · Disco /var: 81%</span>
+                            </div>
+                            <div class="demo-card demo-status-card">
+                                <strong><span class="ds-dot amber"></span>Servicios</strong>
+                                <span>5 activos · 1 inactivo (redis) · uptime 47 días</span>
+                            </div>
+                            <div class="demo-card demo-status-card">
+                                <strong><span class="ds-dot amber"></span>Alerta activa</strong>
+                                <span>Disco /var al 81% — por encima del umbral configurado (80%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Copias de seguridad ── -->
+                    <div class="demo-screen" id="ds-backups">
+                        <div class="demo-page-title"><i class="fa-solid fa-database" style="color:var(--primary);"></i> Copias de seguridad</div>
+                        <div class="demo-card" style="margin-bottom:.75rem;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+                                <div style="font-size:.78rem;color:#6b7280;">Siguiente backup automático: hoy 14:00 · Retención: 10 copias</div>
+                                <button class="demo-btn demo-btn-primary" onclick="demoLanzarBackup()"><i class="fa-solid fa-play"></i> Lanzar backup ahora</button>
+                            </div>
+                            <div id="demo-backup-progress" style="margin-top:.6rem;">
+                                <div style="font-size:.75rem;font-weight:600;color:var(--primary);" id="demo-backup-status">Iniciando backup completo…</div>
+                                <div class="demo-progress-track"><div class="demo-progress-fill" id="demo-backup-bar"></div></div>
+                            </div>
+                        </div>
+                        <div class="demo-card" style="overflow-x:auto;">
+                            <table class="demo-table" id="demo-backups-table">
+                                <thead><tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Tamaño</th><th>Estado</th><th>SHA-256</th></tr></thead>
+                                <tbody>
+                                    <tr><td>5</td><td>2026-06-13 14:02</td><td>Completa</td><td>2.3 GB</td><td><span class="demo-badge db-ok">✓ OK</span></td><td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">a3f9c2d1…</td></tr>
+                                    <tr><td>4</td><td>2026-06-12 14:01</td><td>Completa</td><td>2.2 GB</td><td><span class="demo-badge db-ok">✓ OK</span></td><td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">b82d1ef4…</td></tr>
+                                    <tr><td>3</td><td>2026-06-11 14:03</td><td>Completa</td><td>2.2 GB</td><td><span class="demo-badge db-ok">✓ OK</span></td><td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">c47a93b2…</td></tr>
+                                    <tr><td>2</td><td>2026-06-10 14:00</td><td>Completa</td><td>2.3 GB</td><td><span class="demo-badge db-ok">✓ OK</span></td><td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">d19f84e7…</td></tr>
+                                    <tr><td>1</td><td>2026-06-09 03:00</td><td>Completa</td><td>—</td><td><span class="demo-badge db-fail">✗ Error</span></td><td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">—</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ── Monitoreo ── -->
+                    <div class="demo-screen" id="ds-monitoreo">
+                        <div class="demo-page-title"><i class="fa-solid fa-chart-area" style="color:var(--primary);"></i> Monitoreo en tiempo real</div>
+                        <div class="demo-card" style="margin-bottom:.75rem;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                                <div>
+                                    <div class="demo-meter">
+                                        <div class="demo-meter-label"><span>CPU</span><span>18%</span></div>
+                                        <div class="demo-meter-track"><div class="demo-meter-fill dmf-green" style="width:18%"></div></div>
+                                    </div>
+                                    <div class="demo-meter">
+                                        <div class="demo-meter-label"><span>RAM</span><span>61%</span></div>
+                                        <div class="demo-meter-track"><div class="demo-meter-fill dmf-amber" style="width:61%"></div></div>
+                                    </div>
+                                    <div class="demo-meter">
+                                        <div class="demo-meter-label"><span>Disco /</span><span>42%</span></div>
+                                        <div class="demo-meter-track"><div class="demo-meter-fill dmf-green" style="width:42%"></div></div>
+                                    </div>
+                                    <div class="demo-meter">
+                                        <div class="demo-meter-label"><span style="color:#dc2626;font-weight:700;">Disco /var ⚠</span><span style="color:#dc2626;font-weight:700;">81%</span></div>
+                                        <div class="demo-meter-track"><div class="demo-meter-fill dmf-red" style="width:81%"></div></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem;">CPU — últimas 24 h</div>
+                                    <div class="demo-chart" id="demo-chart-cpu"></div>
+                                    <div style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin:.75rem 0 .5rem;">RAM — últimas 24 h</div>
+                                    <div class="demo-chart" id="demo-chart-ram"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="demo-card">
+                            <div style="display:flex;gap:2rem;font-size:.78rem;">
+                                <div><span style="color:#6b7280;">Uptime:</span> <strong>47 días, 12 h</strong></div>
+                                <div><span style="color:#6b7280;">Carga media:</span> <strong>0.34</strong></div>
+                                <div><span style="color:#6b7280;">Procesos:</span> <strong>142</strong></div>
+                                <div><span style="color:#6b7280;">Kernel:</span> <strong>6.8.0-41-generic</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Servicios ── -->
+                    <div class="demo-screen" id="ds-servicios">
+                        <div class="demo-page-title"><i class="fa-solid fa-server" style="color:var(--primary);"></i> Servicios del sistema</div>
+                        <div class="demo-card">
+                            <div id="demo-svcs">
+                                <div class="demo-svc-row" data-svc="nginx">
+                                    <div><div class="demo-svc-name"><span class="ds-dot green"></span>nginx</div><div class="demo-svc-sub">Servidor web · activo 47d 12h</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-restart" onclick="demoRestart('nginx')">Reiniciar</button>
+                                        <button class="demo-btn demo-btn-stop" onclick="demoToggleSvc('nginx',this)">Parar</button>
+                                    </div>
+                                </div>
+                                <div class="demo-svc-row" data-svc="postgresql">
+                                    <div><div class="demo-svc-name"><span class="ds-dot green"></span>postgresql</div><div class="demo-svc-sub">Base de datos · activo 47d 12h</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-restart" onclick="demoRestart('postgresql')">Reiniciar</button>
+                                        <button class="demo-btn demo-btn-stop" onclick="demoToggleSvc('postgresql',this)">Parar</button>
+                                    </div>
+                                </div>
+                                <div class="demo-svc-row" data-svc="mysql">
+                                    <div><div class="demo-svc-name"><span class="ds-dot green"></span>mysql</div><div class="demo-svc-sub">Base de datos · activo 47d 11h</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-restart" onclick="demoRestart('mysql')">Reiniciar</button>
+                                        <button class="demo-btn demo-btn-stop" onclick="demoToggleSvc('mysql',this)">Parar</button>
+                                    </div>
+                                </div>
+                                <div class="demo-svc-row" data-svc="vigex-api">
+                                    <div><div class="demo-svc-name"><span class="ds-dot green"></span>vigex-api</div><div class="demo-svc-sub">Panel Vigex · activo 47d 12h</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-restart" onclick="demoRestart('vigex-api')">Reiniciar</button>
+                                        <button class="demo-btn demo-btn-stop" onclick="demoToggleSvc('vigex-api',this)">Parar</button>
+                                    </div>
+                                </div>
+                                <div class="demo-svc-row" data-svc="sshd">
+                                    <div><div class="demo-svc-name"><span class="ds-dot green"></span>sshd</div><div class="demo-svc-sub">Acceso remoto · activo 47d 12h</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-restart" onclick="demoRestart('sshd')">Reiniciar</button>
+                                        <button class="demo-btn demo-btn-stop" onclick="demoToggleSvc('sshd',this)">Parar</button>
+                                    </div>
+                                </div>
+                                <div class="demo-svc-row" data-svc="redis">
+                                    <div><div class="demo-svc-name"><span class="ds-dot grey"></span>redis</div><div class="demo-svc-sub">Caché · inactivo</div></div>
+                                    <div class="demo-svc-actions">
+                                        <button class="demo-btn demo-btn-start" onclick="demoToggleSvc('redis',this)">Iniciar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Alertas ── -->
+                    <div class="demo-screen" id="ds-alertas">
+                        <div class="demo-page-title"><i class="fa-solid fa-bell" style="color:var(--primary);"></i> Alertas</div>
+                        <div id="demo-alert-active">
+                            <div class="demo-alert-item da-active">
+                                <div class="demo-alert-icon">⚠️</div>
+                                <div style="flex:1;">
+                                    <div class="demo-alert-title">Disco /var casi lleno (81%)</div>
+                                    <div class="demo-alert-sub">Servidor: srv-principal · Umbral: 80% · Detectado hace 3 horas</div>
+                                    <div><span class="demo-alert-badge dab-active">ACTIVA</span></div>
+                                </div>
+                                <button class="demo-btn demo-btn-restart" style="flex-shrink:0;font-size:.67rem;" onclick="demoResolveAlert()">Marcar resuelta</button>
+                            </div>
+                        </div>
+                        <div class="demo-alert-item da-ok">
+                            <div class="demo-alert-icon">✅</div>
+                            <div>
+                                <div class="demo-alert-title">Servicio nginx reiniciado automáticamente</div>
+                                <div class="demo-alert-sub">Servidor: srv-principal · hace 1 día, 4 horas</div>
+                                <div><span class="demo-alert-badge dab-ok">RESUELTA</span></div>
+                            </div>
+                        </div>
+                        <div class="demo-alert-item da-ok">
+                            <div class="demo-alert-icon">✅</div>
+                            <div>
+                                <div class="demo-alert-title">Backup fallido recuperado correctamente</div>
+                                <div class="demo-alert-sub">La copia del 09/06 falló pero la del 10/06 fue exitosa · hace 3 días</div>
+                                <div><span class="demo-alert-badge dab-ok">RESUELTA</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /demo-content -->
+            </div><!-- /demo-panel -->
+        </div><!-- /demo-wrapper -->
+
+        <p style="text-align:center;font-size:.8rem;color:var(--text-xlight);margin-top:1rem;">
+            <i class="fa-solid fa-circle-info"></i>
+            Demo con datos ficticios. El panel real se conecta a tu propio servidor.
+            <a href="#contacto" style="color:var(--primary);font-weight:600;text-decoration:none;">¿Quieres verlo con tus datos? →</a>
+        </p>
     </div>
 </section>
 
@@ -817,6 +1064,185 @@
 
         dibujar();
     }
+
+}());
+</script>
+
+<!-- ── Demo interactiva ── -->
+<script>
+(function () {
+    'use strict';
+
+    /* ── Navegación entre pantallas ───────────────────────────────────────── */
+    window.demoNav = function (screen, liEl) {
+        document.querySelectorAll('.demo-screen').forEach(function (el) {
+            el.classList.remove('ds-active');
+        });
+        var target = document.getElementById('ds-' + screen);
+        if (target) target.classList.add('ds-active');
+
+        document.querySelectorAll('#demo-nav li').forEach(function (li) {
+            li.classList.remove('dn-active');
+        });
+        if (liEl) liEl.classList.add('dn-active');
+
+        if (screen === 'monitoreo') renderCharts();
+    };
+
+    /* ── Backup: barra de progreso animada ───────────────────────────────── */
+    var _backupRunning = false;
+    window.demoLanzarBackup = function () {
+        if (_backupRunning) return;
+        _backupRunning = true;
+        var bar    = document.getElementById('demo-backup-bar');
+        var status = document.getElementById('demo-backup-status');
+        var prog   = document.getElementById('demo-backup-progress');
+        if (!bar) return;
+        prog.style.display = '';
+        bar.style.width = '0%';
+        bar.style.background = '#2563eb';
+        var steps = [
+            [300,  8,  'Conectando con servidor de backups…'],
+            [600,  22, 'Volcando base de datos…'],
+            [900,  45, 'Comprimiendo ficheros…'],
+            [1300, 68, 'Transfiriendo al almacenamiento externo…'],
+            [1700, 89, 'Verificando integridad (SHA-256)…'],
+            [2000, 100,'Backup completado correctamente.'],
+        ];
+        steps.forEach(function (s) {
+            setTimeout(function () {
+                bar.style.width = s[1] + '%';
+                status.textContent = s[2];
+                if (s[1] === 100) {
+                    bar.style.background = '#16a34a';
+                    // Añadir fila nueva a la tabla
+                    var tbody = document.querySelector('#demo-backups-table tbody');
+                    if (tbody) {
+                        var now = new Date();
+                        var pad = function (n) { return n < 10 ? '0' + n : n; };
+                        var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+                                + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+                        var tr  = document.createElement('tr');
+                        tr.innerHTML = '<td>6</td><td>' + ts + '</td><td>Completa</td><td>2.3 GB</td>'
+                            + '<td><span class="demo-badge db-ok">✓ OK</span></td>'
+                            + '<td style="font-family:monospace;font-size:.65rem;color:#9ca3af;">e5b721a3…</td>';
+                        tbody.insertBefore(tr, tbody.firstChild);
+                    }
+                    setTimeout(function () { _backupRunning = false; }, 3000);
+                }
+            }, s[0]);
+        });
+    };
+
+    /* ── Servicios: toggle parar / iniciar ───────────────────────────────── */
+    var _svcState = {};
+    window.demoToggleSvc = function (svc, btn) {
+        var row     = document.querySelector('[data-svc="' + svc + '"]');
+        var dotEl   = row ? row.querySelector('.ds-dot') : null;
+        var nameEl  = row ? row.querySelector('.demo-svc-name') : null;
+        var subEl   = row ? row.querySelector('.demo-svc-sub') : null;
+        var actionsEl = row ? row.querySelector('.demo-svc-actions') : null;
+        if (!row) return;
+
+        var running = !_svcState[svc]; // por defecto running salvo redis
+        if (svc === 'redis' && _svcState[svc] === undefined) running = false;
+
+        if (running) {
+            // → parar
+            _svcState[svc] = false;
+            if (dotEl) { dotEl.className = 'ds-dot grey'; }
+            if (subEl) subEl.textContent = svc + ' · inactivo';
+            actionsEl.innerHTML = '<button class="demo-btn demo-btn-start" onclick="demoToggleSvc(\'' + svc + '\',this)">Iniciar</button>';
+        } else {
+            // → iniciar
+            _svcState[svc] = true;
+            if (dotEl) { dotEl.className = 'ds-dot green'; }
+            if (subEl) subEl.textContent = svc + ' · activo (recién iniciado)';
+            actionsEl.innerHTML = '<button class="demo-btn demo-btn-restart" onclick="demoRestart(\'' + svc + '\')">Reiniciar</button>'
+                + '<button class="demo-btn demo-btn-stop" onclick="demoToggleSvc(\'' + svc + '\',this)">Parar</button>';
+        }
+    };
+
+    /* ── Servicios: reinicio ──────────────────────────────────────────────── */
+    window.demoRestart = function (svc) {
+        var row  = document.querySelector('[data-svc="' + svc + '"]');
+        var sub  = row ? row.querySelector('.demo-svc-sub') : null;
+        var dot  = row ? row.querySelector('.ds-dot') : null;
+        if (!sub) return;
+        var orig = sub.textContent;
+        if (dot) dot.className = 'ds-dot amber';
+        sub.textContent = svc + ' · reiniciando…';
+        setTimeout(function () {
+            if (dot) dot.className = 'ds-dot green';
+            sub.textContent = svc + ' · activo (recién reiniciado)';
+        }, 1200);
+    };
+
+    /* ── Alertas: marcar resuelta ─────────────────────────────────────────── */
+    window.demoResolveAlert = function () {
+        var box   = document.getElementById('demo-alert-active');
+        var badge = document.getElementById('demo-alert-badge');
+        if (!box) return;
+        var item = box.querySelector('.demo-alert-item');
+        if (!item) return;
+        item.classList.remove('da-active');
+        item.classList.add('da-ok');
+        var badgeInner = item.querySelector('.demo-alert-badge');
+        if (badgeInner) { badgeInner.className = 'demo-alert-badge dab-ok'; badgeInner.textContent = 'RESUELTA'; }
+        var resolveBtn = item.querySelector('button');
+        if (resolveBtn) resolveBtn.remove();
+        if (badge) badge.style.display = 'none';
+    };
+
+    /* ── Mini-gráficos CPU y RAM ─────────────────────────────────────────── */
+    function renderCharts() {
+        drawChart('demo-chart-cpu',
+            [12,18,22,15,10,8,14,20,25,30,18,16,19,22,18,13,11,15,20,24,18,16,18,14],
+            '#2563eb', 'rgba(37,99,235,.12)');
+        drawChart('demo-chart-ram',
+            [55,57,58,59,60,61,62,61,59,60,61,62,63,61,60,59,60,61,60,61,62,61,60,61],
+            '#d97706', 'rgba(217,119,6,.12)');
+    }
+
+    function drawChart(id, values, color, fill) {
+        var el = document.getElementById(id);
+        if (!el || el.children.length) return; // ya renderizado
+        var w = el.offsetWidth || 200, h = el.offsetHeight || 56;
+        var canvas = document.createElement('canvas');
+        canvas.width  = w * 2; canvas.height = h * 2;
+        canvas.style.width = '100%'; canvas.style.height = '100%';
+        el.appendChild(canvas);
+        var ctx = canvas.getContext('2d');
+        ctx.scale(2, 2);
+        var max = Math.max.apply(null, values), min = Math.min.apply(null, values);
+        var pad = 4;
+        var W = w - pad * 2, H = h - pad * 2;
+        var xs = values.map(function (_, i) { return pad + (i / (values.length - 1)) * W; });
+        var ys = values.map(function (v) { return pad + H - ((v - min) / (max - min || 1)) * H; });
+
+        // fill
+        ctx.beginPath();
+        ctx.moveTo(xs[0], ys[0]);
+        for (var i = 1; i < xs.length; i++) ctx.lineTo(xs[i], ys[i]);
+        ctx.lineTo(xs[xs.length-1], h - pad);
+        ctx.lineTo(xs[0], h - pad);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        // line
+        ctx.beginPath();
+        ctx.moveTo(xs[0], ys[0]);
+        for (var j = 1; j < xs.length; j++) ctx.lineTo(xs[j], ys[j]);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+    }
+
+    /* ── Ocultar barra de progreso al cargar ─────────────────────────────── */
+    var progBar = document.getElementById('demo-backup-progress');
+    if (progBar) progBar.style.display = 'none';
 
 }());
 </script>
