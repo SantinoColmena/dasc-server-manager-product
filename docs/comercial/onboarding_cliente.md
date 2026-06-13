@@ -12,7 +12,7 @@ hasta que el panel esté funcionando en producción y el cliente lo use con auto
 |---|-------|-------------|--------|
 | A1 | Enviar propuesta comercial (`docs/comercial/plantilla_propuesta.md`) | Vigex | ☐ |
 | A2 | Clarificar perfil: número de servidores, servicios monitorizados, BD | Vigex | ☐ |
-| A3 | Confirmar plan (Lite / Standard / Pro) y precio mensual | Vigex + Cliente | ☐ |
+| A3 | Confirmar plan de licencia (Lite €179 / Standard €299 / Pro €499, pago único) e informar del soporte opcional (Básico €19 / Plus €39 / Premium €59/mes) | Vigex + Cliente | ☐ |
 | A4 | Acordar fecha de instalación (recomendar: martes-jueves, horario de menos actividad) | Vigex + Cliente | ☐ |
 | A5 | Obtener datos técnicos: IPs de los servidores, OS, acceso SSH root/sudo | Cliente | ☐ |
 | A6 | Cliente acepta términos y política de privacidad | Cliente | ☐ |
@@ -112,9 +112,9 @@ sudo bash /tmp/deploy/api/install_vigex_api.sh
 | Acción | Herramienta | Notas |
 |--------|-------------|-------|
 | Alta en panel central | Central → Clientes → Nuevo | Genera token, configúralo en config.env del cliente |
-| Alta en hoja de clientes | Propia hoja de cálculo | Nombre, plan, IP, fecha alta, próxima renovación |
+| Alta en hoja de clientes | Propia hoja de cálculo | Nombre, plan, IP, fecha alta, fecha fin soporte (si aplica) |
 | Crear carpeta del cliente | `docs/clientes/<empresa>/` | IP, notas técnicas, incidencias |
-| Configurar recordatorio de renovación | Calendario | 7 días antes del vencimiento |
+| Configurar recordatorio | Calendario | 7 días antes del vencimiento del soporte (no de la licencia — es perpetua) |
 | Registrar factura inicial | Holded / Quipu | Número de factura, importe, fecha |
 
 ---
@@ -132,7 +132,7 @@ sudo bash /tmp/deploy/api/install_vigex_api.sh
 - [ ] Primer pago recibido (Stripe o transferencia)
 - [ ] Factura emitida
 - [ ] Datos del cliente registrados en hoja de clientes
-- [ ] Recordatorio de renovación en el calendario
+- [ ] Recordatorio de vencimiento de soporte en el calendario (si el cliente ha contratado soporte)
 
 **Relación:**
 - [ ] Formación realizada y confirmada por el cliente

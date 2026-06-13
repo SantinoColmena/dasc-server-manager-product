@@ -15,19 +15,22 @@ No es burocracia: cada punto evita un problema real.
 
 ## 2. Infraestructura de negocio lista
 
-- [ ] **Dominio profesional activo** (p.ej. `vigex.es`) ⏳
-- [ ] **Email profesional** (`soporte@vigex.es`) funcionando ⏳
-- [ ] **Cuenta Stripe activa** con verificación KYC completada ⏳
-- [ ] **Payment Links** creados para cada plan ⏳
-- [ ] **Landing page publicada** con HTTPS real ⏳
-- [ ] **Términos de servicio** con datos fiscales reales publicados ⏳
-- [ ] **Política de privacidad** con datos fiscales reales publicados ⏳
+- [x] **Dominio profesional activo** — `vigex.es` ✅ 2026-06-13
+- [x] **Email profesional** — `soporte@vigex.es` funcionando ✅ 2026-06-13
+- [x] **Cuenta Stripe activa** con Payment Links creados ✅ 2026-06-13
+  - Lite €179 · Standard €299 · Pro €499 (pago único)
+  - Soporte Básico €19 · Plus €39 · Premium €59 · Básico Pro €29 (mensual)
+- [x] **Landing page publicada** en `vigex.es` con HTTPS (Netlify) ✅ 2026-06-13
+- [x] **Términos de servicio** con datos fiscales y NIF reales publicados ✅ 2026-06-13
+- [x] **Política de privacidad** con datos fiscales reales publicados ✅ 2026-06-13
+- [ ] **Vigex Central en VPS con HTTPS** — actualmente en instancia temporal; mover a VPS
+      antes de la primera renovación de soporte. No bloquea la primera venta.
 
 ## 3. Legal y fiscal
 
-- [ ] **Alta como autónomo o empresa** en la Agencia Tributaria ⏳
-      *(si no tienes alta, no puedes emitir facturas)*
-- [ ] **Número de factura registrado** en tu sistema de facturación (Holded/Quipu) ⏳
+- [ ] **Alta como autónomo** en la Agencia Tributaria — hacer antes de emitir la primera factura.
+      El DNI (55325787T) ya consta en los documentos legales.
+- [ ] **Número de factura registrado** en sistema de facturación (Holded/Quipu) ⏳
 - [ ] **Entiende las obligaciones fiscales**: IVA trimestral, IRPF si procede ⏳
       *(recomendado: consultar con gestor antes de la primera factura)*
 
