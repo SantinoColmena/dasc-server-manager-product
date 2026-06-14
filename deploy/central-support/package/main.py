@@ -267,8 +267,9 @@ def init_db():
 
 
 def validate_client_token(cliente_id, token):
-    init_db()
-
+    # (auditoría 2026-06-14) init_db() ya se ejecuta en el lifespan al arranque;
+    # no es necesario re-crear el esquema en cada request autenticado (hot-path:
+    # cada heartbeat y cada push de ticket pasa por aquí).
     if not token:
         return False
 

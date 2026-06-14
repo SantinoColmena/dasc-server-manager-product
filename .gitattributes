@@ -7,6 +7,9 @@
 # Scripts Python con LF
 *.py text eol=lf
 
+# requirements.txt se instala con pip en Linux: siempre LF
+requirements.txt text eol=lf
+
 # Markdown con LF
 *.md text eol=lf
 

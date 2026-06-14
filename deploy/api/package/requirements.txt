@@ -1,6 +1,6 @@
 fastapi==0.135.1
 # R-054D: starlette actualizado 0.52.1→1.0.1 (PYSEC-2026-161). Salto de versión mayor;
-# compatibilidad con fastapi 0.135.1 verificada (pip --dry-run). Requiere prueba en VM.
+# compatibilidad con fastapi 0.135.1 verificada en VM vigex-demo Ubuntu 22.04 (2026-06-14).
 starlette==1.0.1
 uvicorn==0.42.0
 jinja2==3.1.6

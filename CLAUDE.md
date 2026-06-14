@@ -10,7 +10,7 @@ Vigex is a self-hosted FastAPI web panel for SMEs to centralize backups, service
 
 The top-level `app/` directory is an **empty legacy placeholder** (only stub subdirs, no source). All real, deployable code lives under `deploy/`, shipped as self-contained "packages" installed on Ubuntu servers via bash + systemd:
 
-- `deploy/api/package/` — **the client panel/API** (`main.py`, single ~5000-line file). Installed to `/opt/vigex/api`, systemd service `vigex-api`, Uvicorn on port `8000`.
+- `deploy/api/package/` — **the client panel/API** (`main.py`, single ~13.6k-line file — split into modules pending). Installed to `/opt/vigex/api`, systemd service `vigex-api`, Uvicorn on port `8000`.
 - `deploy/central-support/package/` — **Vigex Central** (`main.py`, ~870 lines), a multi-client ticket aggregator. Installed to `/opt/vigex/central-support`, service `vigex-central`, port `8010`. SQLite-backed.
 - `deploy/backup-services/package/` — bash scripts (`backups_api.sh`, `restore_api.sh`, `servicios_api.sh`, `sync_external_backup.sh`) that run on the backup/services host and are invoked **remotely over SSH** by the panel.
 - `deploy/db/`, `deploy/proxy/` — installers for the MariaDB host and the HTTPS reverse proxy (nginx).

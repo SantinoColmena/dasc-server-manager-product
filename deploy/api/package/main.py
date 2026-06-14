@@ -17,6 +17,7 @@ import smtplib
 import threading
 import time as _time_mod
 import hashlib
+import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
@@ -39,6 +40,11 @@ from markupsafe import Markup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # L-5: inicialización al arranque (sustituye a @app.on_event("startup")).
+    # (auditoría 2026-06-14) Fail-closed: si la configuración crítica de seguridad
+    # quedó con los valores por defecto del código (config.env mal cargado o
+    # incompleto), abortamos el arranque en lugar de servir con una SECRET_KEY
+    # pública (cookies falsificables) o la contraseña de admin de ejemplo.
+    _validar_config_segura()
     ensure_users_file()
     init_alerts_db()
     ensure_default_recipient()
@@ -101,6 +107,48 @@ app = FastAPI(lifespan=lifespan, dependencies=[Depends(csrf_protect)])
 SECRET_KEY = os.getenv("SECRET_KEY", "cambia-esta-clave-por-una-segura")
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+
+# Valores inseguros conocidos (auditoría 2026-06-14): tanto los defaults del código
+# (config.env no cargado) como los placeholders de config.env.example (copiado sin
+# editar). Cualquiera de ellos es público y debe impedir el arranque en producción.
+_SECRET_KEYS_INSEGURAS = {"cambia-esta-clave-por-una-segura", "CAMBIAR_SECRET_KEY_SEGURA"}
+_ADMIN_PASSWORDS_INSEGURAS = {"admin123", "CAMBIAR_PASSWORD_ADMIN"}
+
+
+def _validar_config_segura() -> None:
+    """Fail-closed de la configuración crítica de seguridad (auditoría 2026-06-14).
+
+    Si SECRET_KEY o ADMIN_PASSWORD conservan un valor de ejemplo/placeholder, el panel
+    no debe servir: la SECRET_KEY por defecto es pública (permite falsificar cookies de
+    sesión) y la contraseña de admin de ejemplo es de dominio público. El instalador
+    genera ambos valores. Para desarrollo puede degradarse a aviso con
+    VIGEX_ALLOW_INSECURE_CONFIG=true.
+    """
+    inseguros = []
+    if SECRET_KEY in _SECRET_KEYS_INSEGURAS:
+        inseguros.append("SECRET_KEY (firma de sesiones)")
+    if ADMIN_PASSWORD in _ADMIN_PASSWORDS_INSEGURAS:
+        inseguros.append("ADMIN_PASSWORD (contraseña de administrador)")
+
+    if not inseguros:
+        return
+
+    detalle = ", ".join(inseguros)
+    permitir = os.getenv("VIGEX_ALLOW_INSECURE_CONFIG", "").strip().lower() in ("1", "true", "yes")
+    if permitir:
+        print(
+            f"[SEGURIDAD][AVISO] Valores por defecto en config crítica: {detalle}. "
+            "Arranque permitido por VIGEX_ALLOW_INSECURE_CONFIG; NO usar así en producción.",
+            flush=True,
+        )
+        return
+
+    raise RuntimeError(
+        f"Configuración de seguridad inválida: {detalle} conserva(n) el valor de ejemplo "
+        "del código. Define valores reales en config.env (el instalador los genera) o, "
+        "solo para desarrollo, arranca con VIGEX_ALLOW_INSECURE_CONFIG=true."
+    )
+
 
 # ── i18n — traducciones ES / CA (R-096) ──────────────────────────────
 DEFAULT_LANG    = "es"
@@ -3250,6 +3298,9 @@ def log_event(
     if detalle and len(detalle) > 240:
         detalle = detalle[:237] + "..."
 
+    # (auditoría 2026-06-14) cierre garantizado en finally: si execute() falla,
+    # la conexión no debe quedar abierta (agota el pool de MariaDB).
+    conn = None
     try:
         conn = pymysql.connect(
             host=LOGS_DB_HOST,
@@ -3267,9 +3318,14 @@ def log_event(
                 """,
                 (LOGS_ORIGIN, tipo, usuario, ip_origen, recurso, resultado, detalle),
             )
-        conn.close()
     except Exception as e:
         print(f"Error guardando evento: {e}")
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 class AuthAndLogMiddleware(BaseHTTPMiddleware):
@@ -4173,7 +4229,9 @@ def _proactivo_worker() -> None:
         try:
             _run_proactive_checks()
         except Exception:
-            pass
+            # (auditoría 2026-06-14) No silenciar: un fallo recurrente del worker de
+            # alertas dejaría al cliente sin notificaciones sin dejar rastro.
+            print(f"[vigex-notif] error en _run_proactive_checks:\n{traceback.format_exc()}", flush=True)
         _time_mod.sleep(NOTIF_CHECK_INTERVAL)
 
 
@@ -4592,6 +4650,8 @@ def ver_logs(request: Request):
     if guard is not None:
         return guard
 
+    # (auditoría 2026-06-14) cierre garantizado en finally (ver log_event).
+    conn = None
     try:
         conn = pymysql.connect(
             host=LOGS_DB_HOST,
@@ -4612,10 +4672,15 @@ def ver_logs(request: Request):
                 """
             )
             eventos = cur.fetchall()
-        conn.close()
     except Exception as e:
         eventos = []
         print(f"Error cargando eventos: {e}")
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     context = get_common_context(request)
     context["cacti_url"] = CACTI_URL
@@ -8596,7 +8661,8 @@ def _reports_worker() -> None:
                 if elapsed >= intervalo:
                     _enviar_informe(cfg)
         except Exception:
-            pass
+            # (auditoría 2026-06-14) Registrar el fallo en lugar de silenciarlo.
+            print(f"[vigex-reports] error en el ciclo de informes:\n{traceback.format_exc()}", flush=True)
         _time_mod.sleep(1800)   # comprueba cada 30 min
 
 
@@ -8932,6 +8998,8 @@ def _analizar_salud_copias() -> dict[str, Any]:
         resultado["checksums_total_archivo"] = None
 
     # ── 3. Integridad de tablas de la BD de logs (pymysql) ─────────────────
+    # (auditoría 2026-06-14) cierre garantizado en finally (ver log_event).
+    conn = None
     try:
         conn = pymysql.connect(
             host=LOGS_DB_HOST,
@@ -8944,7 +9012,6 @@ def _analizar_salud_copias() -> dict[str, Any]:
         with conn.cursor() as cur:
             cur.execute("SHOW TABLE STATUS")
             tablas = cur.fetchall()
-        conn.close()
         resultado["db_tables"] = [
             {
                 "nombre":     t.get("Name", "?"),
@@ -8957,6 +9024,12 @@ def _analizar_salud_copias() -> dict[str, Any]:
         ]
     except Exception as e:
         resultado["db_error"] = str(e)
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     return resultado
 
@@ -11374,8 +11447,8 @@ def _collect_heartbeat_data() -> dict:
     return data
 
 
-# Timestamp de arranque del proceso (para calcular uptime)
-import time as _time_mod
+# Timestamp de arranque del proceso (para calcular uptime).
+# (auditoría 2026-06-14) _time_mod ya está importado arriba; no re-importar.
 _startup_ts: float = _time_mod.time()
 
 
@@ -12335,7 +12408,8 @@ def _cumplimiento_worker() -> None:
         try:
             recoger_todas_evidencias()
         except Exception:
-            pass
+            # (auditoría 2026-06-14) Registrar el fallo en lugar de silenciarlo.
+            print(f"[vigex-cumplimiento] error en recoger_todas_evidencias:\n{traceback.format_exc()}", flush=True)
         _time_mod.sleep(max(3600, CUMPLIMIENTO_COLLECT_INTERVAL))
 
 
