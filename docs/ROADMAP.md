@@ -173,8 +173,9 @@ restauración) · `F6-GATE-04` (instaladores y perfiles) · `F6-GATE-05`
     de R-053B cubren también el perfil Pro. SSH sin contraseña a 2 hosts remotos,
     backup real vía SSH panel→backup→db y HTTP 200 verificados. **Cerrada 2026-06-07.**
     Evidencia: `docs/validaciones/R-053C_validacion_pro.md`.
-  - `R-053D` 🔵 — Checklist reproducible + informe consolidado por perfil
-    (creado: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`).
+  - `R-053D` ✅ — Checklist reproducible + informe consolidado por perfil.
+    Nomenclatura actualizada a Vigex (era DASC), sección Pro añadida, cierre formal.
+    **Cerrada 2026-06-14.** Evidencia: `docs/validaciones/R-053D_checklist_instalacion_desde_cero.md`.
 
 #### Ruta 6.8 — Cierre de endurecimiento de infraestructura · ✅ Cerrada
 > Pendientes explícitamente listados en `R-052H` y en la auditoría de código.
